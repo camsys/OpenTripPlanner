@@ -9,6 +9,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.webcohesion.enunciate.metadata.Ignore;
 import org.opentripplanner.api.parameter.BoundingBox;
 import org.opentripplanner.geocoder.Geocoder;
 import org.opentripplanner.geocoder.GeocoderResults;
@@ -18,6 +19,7 @@ import org.locationtech.jts.geom.Envelope;
 /**
  * Maybe the internal geocoder resource should just chain to defined external geocoders?
  */
+@Ignore
 @Path("/geocode")
 public class ExternalGeocoderResource {
   

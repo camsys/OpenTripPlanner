@@ -9,6 +9,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.webcohesion.enunciate.metadata.Ignore;
 import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -26,6 +27,7 @@ import com.google.common.base.Charsets;
  * @author laurent
  */
 // @RolesAllowed({ "SCRIPTING" })
+@Ignore
 @Path("/scripting")
 public class ScriptResource extends RoutingResource {
 

@@ -11,6 +11,8 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.opentripplanner.model.FeedScopedId;
+import com.webcohesion.enunciate.metadata.Ignore;
+import org.onebusaway.gtfs.model.AgencyAndId;
 import org.opentripplanner.api.parameter.QualifiedModeSet;
 import org.opentripplanner.routing.core.OptimizeType;
 import org.opentripplanner.routing.core.RoutingRequest;
@@ -44,7 +46,8 @@ public abstract class RoutingResource {
      * a path because we don't want it to be instantiated as an endpoint. Instead, the {routerId}
      * path parameter should be included in the path annotations of all its subclasses.
      */
-    @PathParam("routerId") 
+    @Ignore
+    @PathParam("routerId")
     public String routerId;
 
     /** The start location -- either latitude, longitude pair in degrees or a Vertex
@@ -61,11 +64,11 @@ public abstract class RoutingResource {
     @QueryParam("intermediatePlaces")
     protected List<String> intermediatePlaces;
 
-    /** The date that the trip should depart (or arrive, for requests where arriveBy is true). */
+    /** The date that the trip should depart (or arrive, for requests where arriveBy is true). For example: <code>09/01/2017</code> */
     @QueryParam("date")
     protected String date;
     
-    /** The time that the trip should depart (or arrive, for requests where arriveBy is true). */
+    /** The time that the trip should depart (or arrive, for requests where arriveBy is true). Example: <code>9:00 am</code> */
     @QueryParam("time")
     protected String time;
     
@@ -73,7 +76,7 @@ public abstract class RoutingResource {
     @QueryParam("arriveBy")
     protected Boolean arriveBy;
     
-    /** Whether the trip must be wheelchair accessible. */
+    /** Whether the trip must be wheelchair accessible. <code>true</code> or <code>false</code>.*/
     @QueryParam("wheelchair")
     protected Boolean wheelchair;
 
@@ -86,6 +89,7 @@ public abstract class RoutingResource {
      * ride or kiss and ride). Defaults to unlimited.
      */
     @QueryParam("maxPreTransitTime")
+    @Ignore
     protected Integer maxPreTransitTime;
 
     /**
@@ -94,6 +98,7 @@ public abstract class RoutingResource {
      * of not wanting to walk too much without asking for totally ridiculous itineraries, but this
      * observation should in no way be taken as scientific or definitive. Your mileage may vary.
      */
+    @Ignore
     @QueryParam("walkReluctance")
     protected Double walkReluctance;
 
@@ -110,10 +115,12 @@ public abstract class RoutingResource {
      * If we only tried the shortest possible transfer at each stop to neighboring stop patterns,
      * this problem could disappear.
      */
+    @Ignore
     @QueryParam("waitReluctance")
     protected Double waitReluctance;
 
     /** How much less bad is waiting at the beginning of the trip (replaces waitReluctance) */
+    @Ignore
     @QueryParam("waitAtBeginningFactor")
     protected Double waitAtBeginningFactor;
 
@@ -127,27 +134,35 @@ public abstract class RoutingResource {
 
     /** The time it takes the user to fetch their bike and park it again in seconds.
      *  Defaults to 0. */
+    @Ignore
     @QueryParam("bikeSwitchTime")
     protected Integer bikeSwitchTime;
 
     /** The cost of the user fetching their bike and parking it again.
      *  Defaults to 0. */
+    @Ignore
     @QueryParam("bikeSwitchCost")
     protected Integer bikeSwitchCost;
 
     /** For bike triangle routing, how much safety matters (range 0-1). */
+    @Ignore
     @QueryParam("triangleSafetyFactor")
     protected Double triangleSafetyFactor;
     
     /** For bike triangle routing, how much slope matters (range 0-1). */
+    @Ignore
     @QueryParam("triangleSlopeFactor")
     protected Double triangleSlopeFactor;
     
-    /** For bike triangle routing, how much time matters (range 0-1). */            
+    /** For bike triangle routing, how much time matters (range 0-1). */
+    @Ignore
     @QueryParam("triangleTimeFactor")
     protected Double triangleTimeFactor;
 
-    /** The set of characteristics that the user wants to optimize for. @See OptimizeType */
+    /** The set of characteristics that the user wants to optimize for. See {@link OptimizeType}.
+     *  NOTE: This only affects bicycle routing. To penalize transfers in transit searches, use transferPenalty..
+     */
+    @Ignore
     @QueryParam("optimize")
     protected OptimizeType optimize;
     
@@ -158,6 +173,7 @@ public abstract class RoutingResource {
     /** The minimum time, in seconds, between successive trips on different vehicles.
      *  This is designed to allow for imperfect schedule adherence.  This is a minimum;
      *  transfers over longer distances might use a longer time. */
+    @Ignore
     @QueryParam("minTransferTime")
     protected Integer minTransferTime;
 
@@ -174,6 +190,7 @@ public abstract class RoutingResource {
 
     /** Penalty added for using every route that is not preferred if user set any route as preferred, i.e. number of seconds that we are willing
      * to wait for preferred route. */
+    @Ignore
     @QueryParam("otherThanPreferredRoutesPenalty")
     protected Integer otherThanPreferredRoutesPenalty;
     
@@ -203,6 +220,7 @@ public abstract class RoutingResource {
      * Prevents unnecessary transfers by adding a cost for boarding a vehicle. This is the cost that
      * is used when boarding while walking.
      */
+    @Ignore
     @QueryParam("walkBoardCost")
     protected Integer walkBoardCost;
     
@@ -210,6 +228,7 @@ public abstract class RoutingResource {
      * Prevents unnecessary transfers by adding a cost for boarding a vehicle. This is the cost that
      * is used when boarding while cycling. This is usually higher that walkBoardCost.
      */
+    @Ignore
     @QueryParam("bikeBoardCost")
     protected Integer bikeBoardCost;
     
@@ -225,8 +244,16 @@ public abstract class RoutingResource {
      */
     @QueryParam("whiteListedRoutes")
     protected String whiteListedRoutes;
-    
-    /** The comma-separated list of banned agencies. */
+
+    /**
+     * The comma-separated list of banned agencies. For any entity (route, agency, trip, or stop), if it is:
+     *  <ul>
+     *      <li><b>banned</b>: will not appear in trip plan results</li>
+     *      <li><b>unpreferred</b>: a penalty is applied during the graph search; may still appear in results.</li>
+     *      <li><b>preferred</b>: a penalty is applied to other entities during the graph search.</li>
+     *  </ul>
+     *
+     */
     @QueryParam("bannedAgencies")
     protected String bannedAgencies;
 
@@ -235,7 +262,7 @@ public abstract class RoutingResource {
      */
     @QueryParam("whiteListedAgencies")
     protected String whiteListedAgencies;
-    
+
     /** The comma-separated list of banned trips.  The format is agency_trip[:stop*], so:
      * TriMet_24601 or TriMet_24601:0:1:2:17:18:19
      */
@@ -267,6 +294,7 @@ public abstract class RoutingResource {
      * value to discourage transfers.  Of course, transfers that save significant
      * time or walking will still be taken.
      */
+    @Ignore
     @QueryParam("transferPenalty")
     protected Integer transferPenalty;
     
@@ -278,25 +306,37 @@ public abstract class RoutingResource {
      * significant time or walking will still be taken.
      * When no preferred or timed transfer is defined, this value is ignored.
      */
+    @Ignore
     @QueryParam("nonpreferredTransferPenalty")
     protected Integer nonpreferredTransferPenalty;
     
     /** The maximum number of transfers (that is, one plus the maximum number of boardings)
-     *  that a trip will be allowed.  Larger values will slow performance, but could give
-     *  better routes.  This is limited on the server side by the MAX_TRANSFERS value in
-     *  org.opentripplanner.api.ws.Planner. */
+     *  that a trip will be allowed for non-long distance search.  Larger values will slow performance, but could give
+     *  better routes. Defaults to 2.
+     *
+     *  NOTE: This value is no longer respected for /plan calls.
+     */
+    @Ignore
+    @Deprecated
     @QueryParam("maxTransfers")
     protected Integer maxTransfers;
 
-    /** If true, goal direction is turned off and a full path tree is built (specify only once) */
+    /**
+     *  If true, goal direction is turned off and a full path tree is built (specify only once)
+     *
+     *  MTA NOTE: this parameter should not be used for trip planning.
+     */
+    @Ignore
     @QueryParam("batch")
     protected Boolean batch;
 
     /** A transit stop required to be the first stop in the search (AgencyId_StopId) */
+    @Ignore
     @QueryParam("startTransitStopId")
     protected String startTransitStopId;
 
     /** A transit trip acting as a starting "state" for depart-onboard routing (AgencyId_TripId) */
+    @Ignore
     @QueryParam("startTransitTripId")
     protected String startTransitTripId;
 
@@ -314,6 +354,7 @@ public abstract class RoutingResource {
      * A value of -1 (the default) means that clamping is disabled, so any amount of initial wait 
      * time will be subtracted out.
      */
+    @Ignore
     @QueryParam("clampInitialWait")
     protected Long clampInitialWait;
 
@@ -321,15 +362,28 @@ public abstract class RoutingResource {
      * If true, this trip will be reverse-optimized on the fly. Otherwise, reverse-optimization
      * will occur once a trip has been chosen (in Analyst, it will not be done at all).
      */
+    @Ignore
     @QueryParam("reverseOptimizeOnTheFly")
     protected Boolean reverseOptimizeOnTheFly;
-        
+
+    /**
+     * Minimum time it takes to board a vehicle (default is 0).
+     */
+    @Ignore
     @QueryParam("boardSlack")
     private Integer boardSlack;
-    
+
+    /**
+     * Minimum time it takes to alight a vehicle (default is 0).
+     */
+    @Ignore
     @QueryParam("alightSlack")
     private Integer alightSlack;
 
+    /**
+     * Locale for dates, times, etc. Defaults to en_US.
+     */
+    @Ignore
     @QueryParam("locale")
     private String locale;
 
@@ -343,6 +397,7 @@ public abstract class RoutingResource {
      * If true, the remaining weight heuristic is disabled. Currently only implemented for the long
      * distance path service.
      */
+    @Ignore
     @QueryParam("disableRemainingWeightHeuristic")
     protected Boolean disableRemainingWeightHeuristic;
 
@@ -379,15 +434,24 @@ public abstract class RoutingResource {
     @QueryParam("maxHours")
     private Double maxHours;
 
+    /** Whether maxHours limit should consider wait/idle time between the itinerary and the requested arrive/depart time. Defaults to false. */
+    @Ignore
     @QueryParam("useRequestedDateTimeInMaxHours")
     private Boolean useRequestedDateTimeInMaxHours;
 
+    /**
+     * Option to disable the default filtering of GTFS-RT alerts by time. Defaults to false.
+     *
+     * MTA NOTE: This should be considered a developer option.
+     */
+    @Ignore
     @QueryParam("disableAlertFiltering")
     private Boolean disableAlertFiltering;
 
     /**
      * If true, the Graph's ellipsoidToGeoidDifference is applied to all elevations returned by this query.
      */
+    @Ignore
     @QueryParam("geoidElevation")
     private Boolean geoidElevation;
 
@@ -398,7 +462,7 @@ public abstract class RoutingResource {
     @QueryParam("pathComparator")
     private String pathComparator;
 
-    /* 
+    /*
      * somewhat ugly bug fix: the graphService is only needed here for fetching per-graph time zones. 
      * this should ideally be done when setting the routing context, but at present departure/
      * arrival time is stored in the request as an epoch time with the TZ already resolved, and other
@@ -550,7 +614,7 @@ public abstract class RoutingResource {
             request.setWhiteListedAgencies(whiteListedAgencies);
 
         HashMap<FeedScopedId, BannedStopSet> bannedTripMap = makeBannedTripMap(bannedTrips);
-      
+
         if (bannedTripMap != null)
             request.bannedTrips = bannedTripMap;
 

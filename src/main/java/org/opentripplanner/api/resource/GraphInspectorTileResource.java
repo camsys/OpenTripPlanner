@@ -13,6 +13,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.webcohesion.enunciate.metadata.Ignore;
 import org.geotools.geometry.Envelope2D;
 import org.opentripplanner.analyst.core.SlippyTile;
 import org.opentripplanner.analyst.request.TileRequest;
@@ -48,6 +49,7 @@ import org.opentripplanner.standalone.Router;
  * @author laurent
  * 
  */
+@Ignore
 @Path("/routers/{routerId}/inspector")
 public class GraphInspectorTileResource extends RoutingResource {
 

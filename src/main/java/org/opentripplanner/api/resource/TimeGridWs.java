@@ -8,6 +8,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Response;
 
+import com.webcohesion.enunciate.metadata.Ignore;
 import org.apache.commons.codec.binary.Base64;
 import org.opentripplanner.analyst.request.SampleGridRenderer.WTWD;
 import org.opentripplanner.analyst.request.SampleGridRequest;
@@ -38,6 +39,7 @@ import ar.com.hjg.pngj.chunks.PngChunkTextVar;
  * 
  * @author laurent
  */
+@Ignore
 @Path("/routers/{routerId}/timegrid")
 public class TimeGridWs extends RoutingResource {
 
