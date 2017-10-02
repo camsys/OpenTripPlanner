@@ -74,6 +74,10 @@ public abstract class RoutingResource {
     @QueryParam("intermediatePlaces")
     protected List<String> intermediatePlaces;
 
+    /** An un-ordered list of destination locations **/
+    @QueryParam("toPlaces")
+    protected List<String> toPlaces;
+
     /** The date that the trip should depart (or arrive, for requests where arriveBy is true). */
     @QueryParam("date")
     protected String date;
@@ -384,9 +388,11 @@ public abstract class RoutingResource {
         request.routerId = routerId;
         // The routing request should already contain defaults, which are set when it is initialized or in the JSON
         // router configuration and cloned. We check whether each parameter was supplied before overwriting the default.
+
+        //DEREK these strings will need to be changed with multi-OD
         if (fromPlace != null)
             request.setFromString(fromPlace);
-
+        //DEREK these strings will need to be changed with multi-OD
         if (toPlace != null)
             request.setToString(toPlace);
 
@@ -477,6 +483,9 @@ public abstract class RoutingResource {
 
         if (intermediatePlaces != null)
             request.setIntermediatePlacesFromStrings(intermediatePlaces);
+
+        if (toPlaces != null)
+            request.setToPlacesFromStrings(toPlaces);
 
         if (preferredRoutes != null)
             request.setPreferredRoutes(preferredRoutes);

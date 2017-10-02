@@ -276,7 +276,9 @@ public class AStar {
                     runState.rctx.origin, runState.rctx.target, runState.u, runState.spt, runState.options)) {
                     break;
                 }
-            }  else if (!runState.options.batch && runState.u_vertex == runState.rctx.target && runState.u.isFinal()) {
+            }  else if (!runState.options.batch && (runState.u_vertex == runState.rctx.target || runState.rctx.targets.contains(runState.u_vertex)) && runState.u.isFinal()) {
+
+
                 if (runState.options.onlyTransitTrips && !runState.u.isEverBoarded()) {
                     continue;
                 }
