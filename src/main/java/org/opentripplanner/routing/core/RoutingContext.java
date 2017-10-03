@@ -272,12 +272,10 @@ public class RoutingContext implements Cloneable {
                 toVertex = graph.streetIndex.getVertexForLocation(opt.to, opt, true);
 
                 //DEREK
-
                 for(int i = 0; i < opt.toPlaces.size(); i++){
                     toVertices.add(graph.streetIndex.getVertexForLocation(opt.toPlaces.get(i), opt, true));
                     //graph.streetIndex.getVertexForLocation(opt.to, opt, true);
                 }
-
 
                 if (opt.to.hasEdgeId()) {
                     toBackEdge = graph.getEdgeById(opt.to.edgeId);

@@ -76,6 +76,9 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
     /** The vertex that the main search is working towards. */
     Vertex target;
 
+    /** The additional/option vertices that the main search is working towards. DEREK */
+    Vertex targets;
+
     /** All vertices within walking distance of the origin (the vertex at which the main search begins). */
     Set<Vertex> preTransitVertices;
 
@@ -108,6 +111,7 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
     @Override
     public void initialize(RoutingRequest request, long abortTime) {
         Vertex target = request.rctx.target;
+        //DEREKList<Vertex> targets = request.rctx.targets;
         if (target == this.target) {
             LOG.debug("Reusing existing heuristic, the target vertex has not changed.");
             return;
@@ -116,6 +120,7 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
         this.graph = request.rctx.graph;
         long start = System.currentTimeMillis();
         this.target = target;
+        this.targets = targets;
         this.routingRequest = request;
         request.softWalkLimiting = false;
         request.softPreTransitLimiting = false;
@@ -278,6 +283,15 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
         Vertex initVertex = fromTarget ? rr.rctx.target : rr.rctx.origin;
         State initState = new State(initVertex, rr);
         pq.insert(initState, 0);
+
+        // DEREK Add a loop to add all the targets
+        for(int i = 0; i < rr.rctx.targets.size(); i++){
+            Vertex anotherVertex = rr.rctx.targets.get(i);
+            State anotherState = new State(anotherVertex, rr);
+            pq.insert(anotherState, 0);
+
+        }
+
         while ( ! pq.empty()) {
             if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime) {
                 return null;

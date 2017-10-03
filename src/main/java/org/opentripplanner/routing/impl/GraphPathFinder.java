@@ -110,6 +110,7 @@ public class GraphPathFinder {
         RemainingWeightHeuristic heuristic;
         RemainingWeightHeuristic reversedSearchHeuristic;
         if (options.disableRemainingWeightHeuristic) {
+        //if (true) { DEREK
             heuristic = new TrivialRemainingWeightHeuristic();
             reversedSearchHeuristic = new TrivialRemainingWeightHeuristic();
         } else if (options.modes.isTransit()) {
