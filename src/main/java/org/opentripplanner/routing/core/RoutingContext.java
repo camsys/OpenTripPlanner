@@ -80,6 +80,7 @@ public class RoutingContext implements Cloneable {
 
     // origin means "where the initial state will be located" not "the beginning of the trip from the user's perspective"
     public final Vertex origin;
+    public final List<Vertex> origins;
 
     // target means "where this search will terminate" not "the end of the trip from the user's perspective"
     public final Vertex target;
@@ -335,6 +336,7 @@ public class RoutingContext implements Cloneable {
         target = opt.arriveBy ? fromVertex : toVertex;
         //DEREK
         targets = opt.arriveBy ? fromVertices : toVertices;
+        origins = opt.arriveBy ? toVertices : fromVertices;
         transferTable = graph.getTransferTable();
         if (opt.batch)
             remainingWeightHeuristic = new TrivialRemainingWeightHeuristic();
