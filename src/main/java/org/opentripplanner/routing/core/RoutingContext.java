@@ -76,6 +76,7 @@ public class RoutingContext implements Cloneable {
     public final Vertex toVertex;
 
     public final List<Vertex> toVertices;
+    public final List<Vertex> fromVertices;
 
     // origin means "where the initial state will be located" not "the beginning of the trip from the user's perspective"
     public final Vertex origin;
@@ -248,6 +249,7 @@ public class RoutingContext implements Cloneable {
             this.streetSpeedSnapshot = null;
 
         toVertices = new ArrayList();
+        fromVertices = new ArrayList();
         Edge fromBackEdge = null;
         Edge toBackEdge = null;
         if (findPlaces) {
@@ -274,6 +276,12 @@ public class RoutingContext implements Cloneable {
                 //DEREK
                 for(int i = 0; i < opt.toPlaces.size(); i++){
                     toVertices.add(graph.streetIndex.getVertexForLocation(opt.toPlaces.get(i), opt, true));
+                    //graph.streetIndex.getVertexForLocation(opt.to, opt, true);
+                }
+
+                //DEREK
+                for(int i = 0; i < opt.fromPlaces.size(); i++){
+                    fromVertices.add(graph.streetIndex.getVertexForLocation(opt.fromPlaces.get(i), opt, false));
                     //graph.streetIndex.getVertexForLocation(opt.to, opt, true);
                 }
 
@@ -326,7 +334,7 @@ public class RoutingContext implements Cloneable {
         originBackEdge = opt.arriveBy ? toBackEdge : fromBackEdge;
         target = opt.arriveBy ? fromVertex : toVertex;
         //DEREK
-        targets = toVertices;
+        targets = opt.arriveBy ? fromVertices : toVertices;
         transferTable = graph.getTransferTable();
         if (opt.batch)
             remainingWeightHeuristic = new TrivialRemainingWeightHeuristic();

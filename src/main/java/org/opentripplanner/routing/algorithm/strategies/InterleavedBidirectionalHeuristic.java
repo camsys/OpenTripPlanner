@@ -111,7 +111,6 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
     @Override
     public void initialize(RoutingRequest request, long abortTime) {
         Vertex target = request.rctx.target;
-        //DEREKList<Vertex> targets = request.rctx.targets;
         if (target == this.target) {
             LOG.debug("Reusing existing heuristic, the target vertex has not changed.");
             return;
