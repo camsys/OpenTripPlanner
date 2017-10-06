@@ -274,13 +274,12 @@ public class RoutingContext implements Cloneable {
                 // normal mode, search for vertices based RoutingRequest and split streets
                 toVertex = graph.streetIndex.getVertexForLocation(opt.to, opt, true);
 
-                //DEREK
+                // For requests with multiple possible toPlaces, add them all to the Graph
                 for(int i = 0; i < opt.toPlaces.size(); i++){
                     toVertices.add(graph.streetIndex.getVertexForLocation(opt.toPlaces.get(i), opt, true));
-                    //graph.streetIndex.getVertexForLocation(opt.to, opt, true);
                 }
 
-                //DEREK
+                // For requets with multiple possible fromPlaces, add them all to the Graph.
                 for(int i = 0; i < opt.fromPlaces.size(); i++){
                     fromVertices.add(graph.streetIndex.getVertexForLocation(opt.fromPlaces.get(i), opt, false));
                     //graph.streetIndex.getVertexForLocation(opt.to, opt, true);
@@ -334,7 +333,7 @@ public class RoutingContext implements Cloneable {
         origin = opt.arriveBy ? toVertex : fromVertex;
         originBackEdge = opt.arriveBy ? toBackEdge : fromBackEdge;
         target = opt.arriveBy ? fromVertex : toVertex;
-        //DEREK
+        //Add multiple targets and origins for trips with multiple possible origins/destinations
         targets = opt.arriveBy ? fromVertices : toVertices;
         origins = opt.arriveBy ? toVertices : fromVertices;
         transferTable = graph.getTransferTable();

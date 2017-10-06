@@ -138,13 +138,12 @@ public class AStar {
         runState.nVisited = 0;
         runState.targetAcceptedStates = Lists.newArrayList();
         
-        // Derek Maybe here add new initial states
         if (addToQueue) {
             State initialState = new State(options);
             runState.spt.add(initialState);
             runState.pq.insert(initialState, 0);
 
-            //DEREK riht here create more states and add them
+            // For queries with multiple origins.  Add them all to the initial priority queue
             for(int i = 0; i < options.rctx.origins.size(); i++){
                 State anotherState = new State(options.rctx.origins.get(i), options);
                 runState.spt.add(anotherState);

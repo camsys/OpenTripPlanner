@@ -393,10 +393,9 @@ public abstract class RoutingResource {
         // The routing request should already contain defaults, which are set when it is initialized or in the JSON
         // router configuration and cloned. We check whether each parameter was supplied before overwriting the default.
 
-        //DEREK these strings will need to be changed with multi-OD
         if (fromPlace != null)
             request.setFromString(fromPlace);
-        //DEREK these strings will need to be changed with multi-OD
+
         if (toPlace != null)
             request.setToString(toPlace);
 
