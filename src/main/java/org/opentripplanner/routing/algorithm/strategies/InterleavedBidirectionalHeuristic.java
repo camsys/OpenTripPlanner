@@ -78,6 +78,7 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
 
     /** The additional/option vertices that the main search is working towards. */
     Vertex targets;
+    Vertex origins;
 
     /** All vertices within walking distance of the origin (the vertex at which the main search begins). */
     Set<Vertex> preTransitVertices;
@@ -283,12 +284,21 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
         State initState = new State(initVertex, rr);
         pq.insert(initState, 0);
 
-        // Add all the targets for trips with multiple possible targets.
-        for(int i = 0; i < rr.rctx.targets.size(); i++){
-            Vertex anotherVertex = rr.rctx.targets.get(i);
-            State anotherState = new State(anotherVertex, rr);
-            pq.insert(anotherState, 0);
-
+        if(fromTarget) {
+            // Add all the targets for trips with multiple possible targets.
+            for (int i = 0; i < rr.rctx.targets.size(); i++) {
+                Vertex anotherVertex = rr.rctx.targets.get(i);
+                State anotherState = new State(anotherVertex, rr);
+                pq.insert(anotherState, 0);
+            }
+        }
+        else{
+            // Add all the origins for trips with multiple possible targets.
+            for (int i = 0; i < rr.rctx.origins.size(); i++) {
+                Vertex anotherVertex = rr.rctx.origins.get(i);
+                State anotherState = new State(anotherVertex, rr);
+                pq.insert(anotherState, 0);
+            }
         }
 
         while ( ! pq.empty()) {
