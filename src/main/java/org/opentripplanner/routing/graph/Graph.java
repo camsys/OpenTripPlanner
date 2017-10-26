@@ -50,6 +50,7 @@ import org.opentripplanner.common.TurnRestriction;
 import org.opentripplanner.common.geometry.GraphUtils;
 import org.opentripplanner.graph_builder.annotation.GraphBuilderAnnotation;
 import org.opentripplanner.graph_builder.annotation.NoFutureDates;
+import org.opentripplanner.graph_builder.model.GraphVersion;
 import org.opentripplanner.kryo.HashBiMapSerializer;
 import org.opentripplanner.model.GraphBundle;
 import org.opentripplanner.model.translation.TranslationService;
@@ -232,6 +233,8 @@ public class Graph implements Serializable {
 
     /** Areas for flex service */
     public Map<FeedScopedId, Geometry> flexAreasById = new HashMap<>();
+
+    public GraphVersion graphVersion = null;
 
     public Graph(Graph basedOn) {
         this();
@@ -1119,5 +1122,17 @@ public class Graph implements Serializable {
             flexIndex.init(this);
         }
         this.useFlexService = useFlexService;
+    }
+
+    public void setGraphVersion(GraphVersion gi) {
+        if (gi == null) {
+            // default if not found
+            gi = new GraphVersion();
+            gi.setCreatedDate(new Date());
+        }
+        graphVersion = gi;
+    }
+    public GraphVersion getGraphVersion() {
+        return graphVersion;
     }
 }
