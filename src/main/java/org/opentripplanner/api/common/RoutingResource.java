@@ -214,7 +214,14 @@ public abstract class RoutingResource {
      */
     @QueryParam("unpreferredRoutes")
     protected String unpreferredRoutes;
-    
+
+    /**
+     * The list of preferred start routes. The format is agency_[routename][_routeid], so TriMet_100 (100 is route short name) or Trimet__42 (two
+     * underscores, 42 is the route internal ID).
+     */
+    @QueryParam("preferredStartRoutes")
+    protected String preferredStartRoutes;
+
     /** The comma-separated list of unpreferred agencies. */
     @QueryParam("unpreferredAgencies")
     protected String unpreferredAgencies;
@@ -531,6 +538,9 @@ public abstract class RoutingResource {
 
         if (unpreferredRoutes != null)
             request.setUnpreferredRoutes(unpreferredRoutes);
+
+        if (preferredStartRoutes != null)
+            request.setPreferredStartRoutes(preferredStartRoutes);
 
         if (unpreferredAgencies != null)
             request.setUnpreferredAgencies(unpreferredAgencies);

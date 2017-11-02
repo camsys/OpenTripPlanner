@@ -92,6 +92,7 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
             return ((PatternStopVertex) tov).getTripPattern();
         else
             return ((PatternStopVertex) fromv).getTripPattern();
+
     }
                            
     public String getDirection() {
@@ -294,7 +295,8 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
             if (options.tripIsBanned(trip)) return null;
 
             /* Check if route is preferred by the user. */
-            long preferences_penalty = options.preferencesPenaltyForRoute(getPattern().route);
+
+            long preferences_penalty = options.preferencesPenaltyForRoute(getPattern().route, s0);
             
             /* Compute penalty for non-preferred transfers. */
             int transferPenalty = 0;

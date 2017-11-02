@@ -17,6 +17,7 @@ import com.google.common.base.Objects;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.Trip;
+import org.opentripplanner.routing.core.State;
 import org.opentripplanner.api.parameter.QualifiedModeSet;
 import org.opentripplanner.common.MavenVersion;
 import org.opentripplanner.common.model.GenericLocation;
@@ -283,6 +284,9 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     /** Set of unpreferred routes for given user. */
     public RouteMatcher unpreferredRoutes = RouteMatcher.emptyMatcher();
+
+    /** Set of preferred start routes for given user. */
+    public RouteMatcher preferredStartRoutes = RouteMatcher.emptyMatcher();
     
     /** Set of unpreferred agencies for given user. */
     public HashSet<String> unpreferredAgencies = new HashSet<String>();
@@ -290,7 +294,7 @@ public class RoutingRequest implements Cloneable, Serializable {
     /**
      * Penalty added for using every unpreferred route. We return number of seconds that we are willing to wait for preferred route.
      */
-    public int useUnpreferredRoutesPenalty = 300;
+    public int useUnpreferredRoutesPenalty = 30000;
 
     /**
      * A global minimum transfer time (in seconds) that specifies the minimum amount of time that must pass between exiting one transit vehicle and
@@ -660,6 +664,13 @@ public class RoutingRequest implements Cloneable, Serializable {
             unpreferredRoutes = RouteMatcher.emptyMatcher();
     }
 
+    public void setPreferredStartRoutes(String s) {
+        if (s != null && !s.equals(""))
+            preferredStartRoutes = RouteMatcher.parse(s);
+        else
+            preferredStartRoutes = RouteMatcher.emptyMatcher();
+    }
+
     public void setBannedRoutes(String s) {
         if (s != null && !s.equals(""))
             bannedRoutes = RouteMatcher.parse(s);
@@ -853,6 +864,7 @@ public class RoutingRequest implements Cloneable, Serializable {
             clone.bannedStopsHard = bannedStopsHard.clone();
             clone.preferredAgencies = (HashSet<String>) preferredAgencies.clone();
             clone.preferredRoutes = preferredRoutes.clone();
+            clone.preferredStartRoutes = preferredStartRoutes.clone();
             clone.unpreferredAgencies = (HashSet<String>) unpreferredAgencies.clone();
             clone.unpreferredRoutes = unpreferredRoutes.clone();
             if (this.bikeWalkingOptions != this)
@@ -971,6 +983,7 @@ public class RoutingRequest implements Cloneable, Serializable {
                 && bannedTrips.equals(other.bannedTrips)
                 && preferredRoutes.equals(other.preferredRoutes)
                 && unpreferredRoutes.equals(other.unpreferredRoutes)
+                && preferredStartRoutes.equals(other.preferredStartRoutes)
                 && transferSlack == other.transferSlack
                 && boardSlack == other.boardSlack
                 && alightSlack == other.alightSlack
@@ -1202,9 +1215,22 @@ public class RoutingRequest implements Cloneable, Serializable {
     }
 
     /** Check if route is preferred according to this request. */
-    public long preferencesPenaltyForRoute(Route route) {
+    public long preferencesPenaltyForRoute(Route route, State state ) {
         long preferences_penalty = 0;
         String agencyID = route.getAgency().getId();
+
+        boolean isUnpreferredStart = false;
+        if (preferredStartRoutes != null){
+            if (!state.isEverBoarded() && !this.arriveBy){
+                if (!preferredStartRoutes.matches(route)) {
+                    System.out.println("Oh No!!");
+                    isUnpreferredStart = true;
+                }
+                else
+                    System.out.println("Oh YEAH!!");
+            }
+        }
+
         if ((preferredRoutes != null && !preferredRoutes.equals(RouteMatcher.emptyMatcher())) ||
                 (preferredAgencies != null && !preferredAgencies.isEmpty())) {
             boolean isPreferedRoute = preferredRoutes != null && preferredRoutes.matches(route);
@@ -1218,9 +1244,11 @@ public class RoutingRequest implements Cloneable, Serializable {
         }
         boolean isUnpreferedRoute  = unpreferredRoutes   != null && unpreferredRoutes.matches(route);
         boolean isUnpreferedAgency = unpreferredAgencies != null && unpreferredAgencies.contains(agencyID);
-        if (isUnpreferedRoute || isUnpreferedAgency) {
-            preferences_penalty += useUnpreferredRoutesPenalty;
+        if (isUnpreferedRoute || isUnpreferedAgency || isUnpreferredStart) {
+            System.out.println("ADDING THAT PENALTY!");
+            preferences_penalty += 30000;//useUnpreferredRoutesPenalty;
         }
+        System.out.println(preferences_penalty);
         return preferences_penalty;
     }
 
