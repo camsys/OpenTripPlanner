@@ -1226,6 +1226,18 @@ public class RoutingRequest implements Cloneable, Serializable {
         return false;
     }
 
+    /** Check if final route before walking is unpreferred. */
+    public long preferencesPenaltyForFinalRoute(State state) {
+        boolean isUnpreferredEnd = false;
+        if (preferredEndRoutes != null && !this.arriveBy && !preferredEndRoutes.matches(state.getRoute()) ){
+            return 30000;
+        }
+        if (preferredStartRoutes != null && this.arriveBy && !preferredStartRoutes.matches(state.getRoute()) ){
+            return 30000;
+        }
+        return 0;
+    }
+
     /** Check if route is preferred according to this request. */
     public long preferencesPenaltyForRoute(Route route, State state ) {
         long preferences_penalty = 0;
