@@ -1220,14 +1220,18 @@ public class RoutingRequest implements Cloneable, Serializable {
         String agencyID = route.getAgency().getId();
 
         boolean isUnpreferredStart = false;
-        if (preferredStartRoutes != null){
-            if (!state.isEverBoarded() && !this.arriveBy){
+        System.out.println(!state.isEverBoarded());
+        if (preferredStartRoutes != null && route != null && !state.isEverBoarded()){
+            if (!this.arriveBy){
                 if (!preferredStartRoutes.matches(route)) {
-                    System.out.println("Oh No!!");
+                    //System.out.println("Oh No!!");
+                    //System.out.println(route);
                     isUnpreferredStart = true;
                 }
-                else
+                else {
                     System.out.println("Oh YEAH!!");
+                    System.out.println(route);
+                }
             }
         }
 
@@ -1245,10 +1249,8 @@ public class RoutingRequest implements Cloneable, Serializable {
         boolean isUnpreferedRoute  = unpreferredRoutes   != null && unpreferredRoutes.matches(route);
         boolean isUnpreferedAgency = unpreferredAgencies != null && unpreferredAgencies.contains(agencyID);
         if (isUnpreferedRoute || isUnpreferedAgency || isUnpreferredStart) {
-            System.out.println("ADDING THAT PENALTY!");
             preferences_penalty += 30000;//useUnpreferredRoutesPenalty;
         }
-        System.out.println(preferences_penalty);
         return preferences_penalty;
     }
 
