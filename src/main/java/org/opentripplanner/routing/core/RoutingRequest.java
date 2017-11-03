@@ -297,7 +297,12 @@ public class RoutingRequest implements Cloneable, Serializable {
     /**
      * Penalty added for using every unpreferred route. We return number of seconds that we are willing to wait for preferred route.
      */
-    public int useUnpreferredRoutesPenalty = 30000;
+    public int useUnpreferredRoutesPenalty = 300;
+
+    /**
+     * Penalty added for using an unpreferred route at the start or end. We return number of seconds that we are willing to wait for preferred route.
+     */
+    public int useUnpreferredStartEndPenalty = 3600;
 
     /**
      * A global minimum transfer time (in seconds) that specifies the minimum amount of time that must pass between exiting one transit vehicle and
@@ -655,6 +660,12 @@ public class RoutingRequest implements Cloneable, Serializable {
         this.useUnpreferredRoutesPenalty = penalty;
     }
 
+    public void setUseUnpreferredStartEndPenalty(int penalty) {
+        if (penalty < 0)
+            penalty = 0;
+        this.useUnpreferredStartEndPenalty = penalty;
+    }
+
     public void setUnpreferredAgencies(String s) {
         if (s != null && !s.equals(""))
             unpreferredAgencies = new HashSet<String>(Arrays.asList(s.split(",")));
@@ -1003,6 +1014,7 @@ public class RoutingRequest implements Cloneable, Serializable {
                 && unknownTransfersAreForbidden == other.unknownTransfersAreForbidden
                 && otherThanPreferredRoutesPenalty == other.otherThanPreferredRoutesPenalty
                 && useUnpreferredRoutesPenalty == other.useUnpreferredRoutesPenalty
+                && useUnpreferredStartEndPenalty == other.useUnpreferredStartEndPenalty
                 && triangleSafetyFactor == other.triangleSafetyFactor
                 && triangleSlopeFactor == other.triangleSlopeFactor
                 && triangleTimeFactor == other.triangleTimeFactor
@@ -1228,12 +1240,11 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     /** Check if final route before walking is unpreferred. */
     public long preferencesPenaltyForFinalRoute(Route route) {
-        System.out.println(route);
         if (preferredEndRoutes != null && !this.arriveBy && !preferredEndRoutes.matches(route)){
-            return 30000;
+            return useUnpreferredStartEndPenalty;
         }
         if (preferredStartRoutes != null && this.arriveBy && !preferredStartRoutes.matches(route)){
-            return 30000;
+            return useUnpreferredStartEndPenalty;
         }
         return 0;
     }
@@ -1276,9 +1287,14 @@ public class RoutingRequest implements Cloneable, Serializable {
         }
         boolean isUnpreferedRoute  = unpreferredRoutes   != null && unpreferredRoutes.matches(route);
         boolean isUnpreferedAgency = unpreferredAgencies != null && unpreferredAgencies.contains(agencyID);
-        if (isUnpreferedRoute || isUnpreferedAgency || isUnpreferredStart || isUnpreferredEnd) {
-            preferences_penalty += 30000;//useUnpreferredRoutesPenalty;
+        if (isUnpreferedRoute || isUnpreferedAgency) {
+            preferences_penalty += useUnpreferredRoutesPenalty;
         }
+
+        if (isUnpreferredStart || isUnpreferredEnd) {
+            preferences_penalty += useUnpreferredStartEndPenalty;
+        }
+
         return preferences_penalty;
     }
 

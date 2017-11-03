@@ -228,6 +228,12 @@ public abstract class RoutingResource {
     @QueryParam("preferredEndRoutes")
     protected String preferredEndRoutes;
 
+    /**
+     * Penalty added for using every unpreferred start or end routes, i.e. number of seconds that we are willing to wait for preferred route.
+     */
+    @QueryParam("useUnpreferredStartEndPenalty")
+    protected Integer useUnpreferredStartEndPenalty;
+
     /** The comma-separated list of unpreferred agencies. */
     @QueryParam("unpreferredAgencies")
     protected String unpreferredAgencies;
@@ -550,6 +556,9 @@ public abstract class RoutingResource {
 
         if (preferredEndRoutes != null)
             request.setPreferredEndRoutes(preferredEndRoutes);
+
+        if (useUnpreferredStartEndPenalty != null)
+            request.setUseUnpreferredStartEndPenalty(useUnpreferredStartEndPenalty);
 
         if (unpreferredAgencies != null)
             request.setUnpreferredAgencies(unpreferredAgencies);
