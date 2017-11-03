@@ -176,7 +176,7 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
             s1.setLastPattern(this.getPattern());
 
             // Check to see if we have a preferred starting or ending route when leaving transit
-            long preferences_penalty = options.preferencesPenaltyForFinalRoute(s0);
+            long preferences_penalty = options.preferencesPenaltyForFinalRoute(getPattern().route);
             s1.incrementWeight(preferences_penalty);
 
             if (boarding) {

@@ -1227,12 +1227,12 @@ public class RoutingRequest implements Cloneable, Serializable {
     }
 
     /** Check if final route before walking is unpreferred. */
-    public long preferencesPenaltyForFinalRoute(State state) {
-        boolean isUnpreferredEnd = false;
-        if (preferredEndRoutes != null && !this.arriveBy && !preferredEndRoutes.matches(state.getRoute()) ){
+    public long preferencesPenaltyForFinalRoute(Route route) {
+        System.out.println(route);
+        if (preferredEndRoutes != null && !this.arriveBy && !preferredEndRoutes.matches(route)){
             return 30000;
         }
-        if (preferredStartRoutes != null && this.arriveBy && !preferredStartRoutes.matches(state.getRoute()) ){
+        if (preferredStartRoutes != null && this.arriveBy && !preferredStartRoutes.matches(route)){
             return 30000;
         }
         return 0;
