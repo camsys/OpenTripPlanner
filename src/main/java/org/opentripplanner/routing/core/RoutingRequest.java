@@ -287,6 +287,9 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     /** Set of preferred start routes for given user. */
     public RouteMatcher preferredStartRoutes = RouteMatcher.emptyMatcher();
+
+    /** Set of preferred end routes for given user. */
+    public RouteMatcher preferredEndRoutes = RouteMatcher.emptyMatcher();
     
     /** Set of unpreferred agencies for given user. */
     public HashSet<String> unpreferredAgencies = new HashSet<String>();
@@ -671,6 +674,13 @@ public class RoutingRequest implements Cloneable, Serializable {
             preferredStartRoutes = RouteMatcher.emptyMatcher();
     }
 
+    public void setPreferredEndRoutes(String s) {
+        if (s != null && !s.equals(""))
+            preferredEndRoutes = RouteMatcher.parse(s);
+        else
+            preferredEndRoutes = RouteMatcher.emptyMatcher();
+    }
+
     public void setBannedRoutes(String s) {
         if (s != null && !s.equals(""))
             bannedRoutes = RouteMatcher.parse(s);
@@ -865,6 +875,7 @@ public class RoutingRequest implements Cloneable, Serializable {
             clone.preferredAgencies = (HashSet<String>) preferredAgencies.clone();
             clone.preferredRoutes = preferredRoutes.clone();
             clone.preferredStartRoutes = preferredStartRoutes.clone();
+            clone.preferredEndRoutes = preferredEndRoutes.clone();
             clone.unpreferredAgencies = (HashSet<String>) unpreferredAgencies.clone();
             clone.unpreferredRoutes = unpreferredRoutes.clone();
             if (this.bikeWalkingOptions != this)
@@ -984,6 +995,7 @@ public class RoutingRequest implements Cloneable, Serializable {
                 && preferredRoutes.equals(other.preferredRoutes)
                 && unpreferredRoutes.equals(other.unpreferredRoutes)
                 && preferredStartRoutes.equals(other.preferredStartRoutes)
+                && preferredEndRoutes.equals(other.preferredEndRoutes)
                 && transferSlack == other.transferSlack
                 && boardSlack == other.boardSlack
                 && alightSlack == other.alightSlack
@@ -1219,18 +1231,22 @@ public class RoutingRequest implements Cloneable, Serializable {
         long preferences_penalty = 0;
         String agencyID = route.getAgency().getId();
 
+        // Add penalty if we have a preferred start that is violated
         boolean isUnpreferredStart = false;
-        System.out.println(!state.isEverBoarded());
         if (preferredStartRoutes != null && route != null && !state.isEverBoarded()){
             if (!this.arriveBy){
                 if (!preferredStartRoutes.matches(route)) {
-                    //System.out.println("Oh No!!");
-                    //System.out.println(route);
                     isUnpreferredStart = true;
                 }
-                else {
-                    System.out.println("Oh YEAH!!");
-                    System.out.println(route);
+            }
+        }
+
+        // Add penalty if we have a preferred end that is vioalated
+        boolean isUnpreferredEnd = false;
+        if (preferredEndRoutes != null && route != null && !state.isEverBoarded()){
+            if (this.arriveBy){
+                if (!preferredEndRoutes.matches(route)) {
+                    isUnpreferredEnd = true;
                 }
             }
         }
@@ -1248,7 +1264,7 @@ public class RoutingRequest implements Cloneable, Serializable {
         }
         boolean isUnpreferedRoute  = unpreferredRoutes   != null && unpreferredRoutes.matches(route);
         boolean isUnpreferedAgency = unpreferredAgencies != null && unpreferredAgencies.contains(agencyID);
-        if (isUnpreferedRoute || isUnpreferedAgency || isUnpreferredStart) {
+        if (isUnpreferedRoute || isUnpreferedAgency || isUnpreferredStart || isUnpreferredEnd) {
             preferences_penalty += 30000;//useUnpreferredRoutesPenalty;
         }
         return preferences_penalty;
