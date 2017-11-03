@@ -1256,7 +1256,7 @@ public class RoutingRequest implements Cloneable, Serializable {
 
         // Add penalty if we have a preferred start that is violated
         boolean isUnpreferredStart = false;
-        if (preferredStartRoutes != null && route != null && !state.isEverBoarded()){
+        if (state != null && preferredStartRoutes != null && route != null && !state.isEverBoarded()){
             if (!this.arriveBy){
                 if (!preferredStartRoutes.matches(route)) {
                     isUnpreferredStart = true;
@@ -1266,7 +1266,7 @@ public class RoutingRequest implements Cloneable, Serializable {
 
         // Add penalty if we have a preferred end that is vioalated
         boolean isUnpreferredEnd = false;
-        if (preferredEndRoutes != null && route != null && !state.isEverBoarded()){
+        if (state != null && preferredEndRoutes != null && route != null && !state.isEverBoarded()){
             if (this.arriveBy){
                 if (!preferredEndRoutes.matches(route)) {
                     isUnpreferredEnd = true;
