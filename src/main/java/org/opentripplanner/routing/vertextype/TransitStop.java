@@ -36,6 +36,10 @@ public class TransitStop extends TransitStationStop {
 
     private boolean isEntrance;
 
+    //Checks to see if the location type is > 2.
+    //Offical GTFS only lists 0,1,2 as supported location types.
+    private boolean isExtendedLocationType;
+
     /**
      * For stops that are deep underground, there is a time cost to entering and exiting the stop;
      * all stops are assumed to be at street level unless we have configuration to the contrary
@@ -55,6 +59,7 @@ public class TransitStop extends TransitStationStop {
         super(graph, stop);
         this.wheelchairEntrance = stop.getWheelchairBoarding() != 2;
         isEntrance = stop.getLocationType() == 2;
+        isExtendedLocationType = stop.getLocationType() > 2;
         //Adds this vertex into graph envelope so that we don't need to loop over all vertices
         graph.expandToInclude(stop.getLon(), stop.getLat());
     }
@@ -65,6 +70,10 @@ public class TransitStop extends TransitStationStop {
 
     public boolean isEntrance() {
         return isEntrance;
+    }
+
+    public boolean isExtendedLocationType(){
+        return isExtendedLocationType;
     }
 
     public boolean hasEntrances() {

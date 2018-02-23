@@ -51,7 +51,7 @@ public class StopFinder implements TraverseVisitor, SearchTerminationStrategy {
         distSearched = Math.max(distSearched, state.getWalkDistance());
         if (state.getVertex() instanceof TransitStop) {
             TransitStop tstop = (TransitStop) state.getVertex();
-            if (!tstop.isEntrance()) {
+            if (!tstop.isEntrance() && !tstop.isExtendedLocationType()) {
                 transitStopStates.put(tstop, state);
             }
         }
