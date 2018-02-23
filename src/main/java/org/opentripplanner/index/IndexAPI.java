@@ -70,6 +70,7 @@ import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -321,15 +322,19 @@ public class IndexAPI {
     }
     
    /** Return a list of all routes in the graph. */
+   // with mode paramter, only return routes within the comma-seperated list e.g., "SUBWAY,TRAM" etc.
    // with repeated hasStop parameters, replaces old routesBetweenStops
    @GET
    @Path("/routes")
-   public Response getRoutes (@QueryParam("hasStop") List<String> stopIds) {
+   public Response getRoutes (@QueryParam("mode") String mode, @QueryParam("hasStop") List<String> stopIds) {
+
        Collection<Route> routes = index.routeForId.values();
+
+       // Protective copy, we are going to calculate the intersection destructively when we filter Modes and Stops
+       routes = Lists.newArrayList(routes);
+
        // Filter routes to include only those that pass through all given stops
        if (stopIds != null) {
-           // Protective copy, we are going to calculate the intersection destructively
-           routes = Lists.newArrayList(routes);
            for (String stopId : stopIds) {
                Stop stop = index.stopForId.get(GtfsLibrary.convertIdFromString(stopId));
                if (stop == null) return Response.status(Status.NOT_FOUND).entity(MSG_404).build();
@@ -340,6 +345,19 @@ public class IndexAPI {
                routes.retainAll(routesHere);
            }
        }
+
+       // Filter routes that don't include the modes that we care about
+       if (mode != null) {
+           List<String> modeList = Arrays.asList(mode.split("\\s*,\\s*"));
+           Set<Route> routesHere = Sets.newHashSet();
+           for( Route route : routes ){
+               if(modeList.contains(GtfsLibrary.getTraverseMode(route).name())){
+                   routesHere.add(route);
+               }
+           }
+           routes.retainAll(routesHere);
+       }
+
        return Response.status(Status.OK).entity(RouteShort.list(routes)).build();
    }
 
