@@ -322,7 +322,7 @@ public class IndexAPI {
     }
     
    /** Return a list of all routes in the graph. */
-   // with mode paramter, only return routes within the comma-seperated list e.g., "SUBWAY,TRAM" etc. 
+   // with mode paramter, only return routes within the comma-seperated list e.g., "SUBWAY,TRAM" etc.
    // with repeated hasStop parameters, replaces old routesBetweenStops
    @GET
    @Path("/routes")
@@ -353,7 +353,6 @@ public class IndexAPI {
            for( Route route : routes ){
                if(modeList.contains(GtfsLibrary.getTraverseMode(route).name())){
                    routesHere.add(route);
-                   //GtfsLibrary.getTraverseMode(route).name();
                }
            }
            routes.retainAll(routesHere);
