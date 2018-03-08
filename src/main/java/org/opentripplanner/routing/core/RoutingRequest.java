@@ -1353,38 +1353,6 @@ public class RoutingRequest implements Cloneable, Serializable {
         return false;
     }
 
-    /** Check if final route before walking is unpreferred. */
-    public boolean violatesFinalRoute(Route route) {
-        if (preferredEndRoutes != null && !this.arriveBy && !preferredEndRoutes.isEmpty() && !preferredEndRoutes.matches(route)){
-            return true;
-        }
-        if (preferredStartRoutes != null && this.arriveBy && !preferredStartRoutes.isEmpty() && !preferredStartRoutes.matches(route)){
-            return true;
-        }
-        return false;
-    }
-
-    /** Check if route is preferred according to this request. */
-    public boolean violatesStartRoute(Route route, State state) {
-
-        if (state != null && preferredStartRoutes != null && !preferredStartRoutes.isEmpty() && !state.isEverBoarded()) {
-            if (!this.arriveBy) {
-                if (!preferredStartRoutes.matches(route)) {
-                    return true;
-                }
-            }
-        }
-
-        if (state != null && preferredEndRoutes != null && !preferredEndRoutes.isEmpty() && !state.isEverBoarded()) {
-            if (this.arriveBy) {
-                if (!preferredEndRoutes.matches(route)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     /** Check if route is preferred according to this request. */
     public long preferencesPenaltyForRoute(Route route, State state) {
         long preferences_penalty = 0;

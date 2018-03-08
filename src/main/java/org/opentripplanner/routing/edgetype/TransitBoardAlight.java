@@ -236,11 +236,6 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
             return s1.makeState();
         } else {
 
-            // Check to see if we have a preferred starting or ending route when leaving transit
-            if(options.violatesStartRoute(getPattern().route, s0)) {
-                return null;
-            }
-
             /* We are going onto transit and must look for a suitable transit trip on this pattern. */   
             
             /* Disallow ever re-boarding the same trip pattern. */

@@ -123,6 +123,16 @@ public class RouteMatcher implements Cloneable, Serializable {
         return false;
     }
 
+
+    public boolean matchesAgencyAndId(AgencyAndId route) {
+        if (isEmpty())
+            return false;
+        if (agencyAndRouteIds.contains(route))
+            return true;
+        return false;
+    }
+
+
     public boolean isEmpty() {
         return agencyAndRouteIds.isEmpty() && agencyIdAndRouteNames.isEmpty() && routeNames.isEmpty();
     }

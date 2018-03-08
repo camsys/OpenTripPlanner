@@ -211,6 +211,23 @@ public class GraphPathFinder {
                     else
                         options.banPath(path);
                 }
+
+                // If this Path Violates the End Route Preference, Keep Looking
+                if (!options.preferredEndRoutes.isEmpty()) {
+                    AgencyAndId final_route = path.getRoutes().get(path.getRoutes().size() - 1);
+                    if (!options.preferredEndRoutes.matchesAgencyAndId(final_route)) {
+                        continue;
+                    }
+                }
+
+                // If this Path Violates the Start Route Preference, Keep Looking
+                if (!options.preferredStartRoutes.isEmpty()) {
+                  AgencyAndId first_route = path.getRoutes().get(0);
+                  if (!options.preferredStartRoutes.matchesAgencyAndId(first_route)){
+                    continue;
+                  }
+                }
+
                 // add consequences
                 path.setRealtimeConsequences(realtimeConsequences);
 
