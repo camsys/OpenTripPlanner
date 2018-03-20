@@ -164,6 +164,8 @@ public class GraphPathFinder {
         List<Alert> realtimeConsequences = Lists.newArrayList();
         while (paths.size() < options.numItineraries) {
             // TODO pull all this timeout logic into a function near org.opentripplanner.util.DateUtils.absoluteTimeout()
+
+
             int timeoutIndex = paths.size();
             if (timeoutIndex >= router.timeouts.length) {
                 timeoutIndex = router.timeouts.length - 1;
@@ -201,6 +203,7 @@ public class GraphPathFinder {
             }
 
             // Find all trips used in this path and ban them for the remaining searches
+            double bestDuration = -1.0;
             for (GraphPath path : newPaths) {
                 // path.dump();
                 List<AgencyAndId> tripIds = path.getTrips();
@@ -227,10 +230,23 @@ public class GraphPathFinder {
 
                 // If this Path Violates the Start Route Preference, Keep Looking
                 if (!options.preferredStartRoutes.isEmpty()) {
-                  AgencyAndId first_route = path.getRoutes().get(0);
-                  if (!options.preferredStartRoutes.matchesAgencyAndId(first_route)){
+                    AgencyAndId first_route = path.getRoutes().get(0);
+                    if (!options.preferredStartRoutes.matchesAgencyAndId(first_route)) {
+                        continue;
+                    }
+                }
+
+                // Keep Track of the shortest duration of all paths found so far.
+                if (bestDuration == -1.0) {
+                    bestDuration = path.getDuration();
+                } else if (bestDuration > path.getDuration()) {
+                    bestDuration = path.getDuration();
+                }
+
+                // Absurd Paths is a final check where various sanity checks can be applie to the path
+                // e.g., don't include routes that involve 95% walking before getting on a very short bus ride.
+                if (pathIsAbsurd(path, bestDuration)){
                     continue;
-                  }
                 }
 
                 // add consequences
@@ -523,6 +539,23 @@ public class GraphPathFinder {
             lastVertex = path.getEndVertex();
         }
         return newPath;
+    }
+
+    private boolean pathIsAbsurd(GraphPath path, double bestDuration) {
+
+        // Check for Absurd Walks (e.g., walking 95% of the time and then taking something else for 5%.)
+        // Question: What if that 1 thing is a ferry over water that you can't walk over?
+        double walkRatio = path.getWalkTime() / path.getDuration();
+        if (walkRatio > .95 && path.getRoutes().size() > 0)
+            return true;
+
+        // Check for Absurdly Long Trips when better options are better.
+        // This says, if the trip is longer than 30 minutes and there is a solution that is twice as good that is already found, then don't include it.
+        if (bestDuration * 2 < path.getDuration() && path.getDuration() > 1800) {
+            return true;
+        }
+
+        return false;
     }
 
 /*

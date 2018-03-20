@@ -244,7 +244,10 @@ public class GraphPath {
     public double getWalkDistance() {
         return walkDistance;
     }
-    
+    public double getWalkTime() {
+        return walkDistance/rctx.opt.walkSpeed;
+    }
+
     public RoutingContext getRoutingContext() {
         return rctx;
     }
