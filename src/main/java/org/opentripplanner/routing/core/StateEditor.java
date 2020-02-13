@@ -141,8 +141,13 @@ public class StateEditor {
     public boolean weHaveWalkedTooFar(RoutingRequest options) {
         // Only apply limit in transit-only case, unless this is a one-to-many request with hard
         // walk limiting, in which case we want to cut off the search.
-        if (options.modes.isTransit() || !options.softWalkLimiting && options.batch)
-            return child.walkDistance >= options.maxWalkDistance;
+        if (options.modes.isTransit() || !options.softWalkLimiting && options.batch) {
+            if (options.walkLimitingByLeg) {
+                return getWalkSinceLastTransit() >= options.maxWalkDistance;
+            } else {
+                return child.walkDistance >= options.maxWalkDistance;
+            }
+        }
 
         return false;
     }
@@ -264,6 +269,7 @@ public class StateEditor {
     }
 
     public void setEnteredNoThroughTrafficArea() {
+        cloneStateDataAsNeeded();
         child.stateData.enteredNoThroughTrafficArea = true;
     }
     
@@ -346,14 +352,16 @@ public class StateEditor {
         child.stateData.everBoarded = true;
     }
 
-    public void setBikeRenting(boolean bikeRenting) {
+    public void beginVehicleRenting(TraverseMode vehicleMode) {
         cloneStateDataAsNeeded();
-        child.stateData.usingRentedBike = bikeRenting;
-        if (bikeRenting) {
-            child.stateData.nonTransitMode = TraverseMode.BICYCLE;
-        } else {
-            child.stateData.nonTransitMode = TraverseMode.WALK;
-        }
+        child.stateData.usingRentedBike = true;
+        child.stateData.nonTransitMode = vehicleMode;
+    }
+
+    public void doneVehicleRenting() {
+        cloneStateDataAsNeeded();
+        child.stateData.usingRentedBike = false;
+        child.stateData.nonTransitMode = TraverseMode.WALK;
     }
 
     /**
@@ -369,6 +377,21 @@ public class StateEditor {
         } else {
             child.stateData.nonTransitMode = TraverseMode.CAR;
         }
+    }
+
+    public void setUsingCar() {
+        cloneStateDataAsNeeded();
+        child.stateData.carState = StateData.CarState.USING;
+    }
+
+    public void setUsedCar() {
+        cloneStateDataAsNeeded();
+        child.stateData.carState = StateData.CarState.USED;
+    }
+
+    public void setUnusedCar() {
+        cloneStateDataAsNeeded();
+        child.stateData.carState = StateData.CarState.UNUSED;
     }
 
     public void setBikeParked(boolean bikeParked) {
@@ -400,6 +423,21 @@ public class StateEditor {
         child.stateData.startTime = seconds;
     }
 
+    public void setPreTransitNumBoardings() {
+        cloneStateDataAsNeeded();
+        child.stateData.preTransitNumBoardings = child.stateData.numBoardings;
+    }
+
+    public void setTransferNotPermissible() {
+        cloneStateDataAsNeeded();
+        child.stateData.transferPermissible = false;
+    }
+
+    public void setTransferPermissible() {
+        cloneStateDataAsNeeded();
+        child.stateData.transferPermissible = true;
+    }
+
     /**
      * Set non-incremental state values (ex. {@link State#getRoute()}) from an existing state.
      * Incremental values (ex. {@link State#getNumBoardings()}) are not currently set.
@@ -419,6 +457,20 @@ public class StateEditor {
         child.stateData.usingRentedBike = state.stateData.usingRentedBike;
         child.stateData.carParked = state.stateData.carParked;
         child.stateData.bikeParked = state.stateData.bikeParked;
+        child.stateData.transferPermissible = state.stateData.transferPermissible;
+        child.stateData.carState = state.stateData.carState;
+    }
+
+    public void setNonTransitOptionsFromState(State state){
+        cloneStateDataAsNeeded();
+        child.stateData.nonTransitMode = state.getNonTransitMode();
+        child.stateData.carParked = state.isCarParked();
+        child.stateData.bikeParked = state.isBikeParked();
+        child.stateData.usingRentedBike = state.isBikeRenting();
+        // this state is necessary for no-shortcuts check
+        child.stateData.numBoardings = state.getNumBoardings();
+        child.stateData.transferPermissible = state.stateData.transferPermissible;
+        child.stateData.carState = state.stateData.carState;
     }
 
     /* PUBLIC GETTER METHODS */
@@ -524,4 +576,17 @@ public class StateEditor {
         return child.hasEnteredNoThruTrafficArea();
     }
 
+    public double getWalkSinceLastTransit() {
+        return child.walkDistance - child.stateData.lastTransitWalk;
+    }
+
+    public void setNonTransitMode(TraverseMode mode) {
+        cloneStateDataAsNeeded();;
+        child.stateData.nonTransitMode = mode;
+    }
+
+    public void recalculateNonTransitMode() {
+        cloneStateDataAsNeeded();
+        child.stateData.calculateNonTransitMode(child.stateData.opt);
+    }
 }

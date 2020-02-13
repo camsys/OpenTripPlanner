@@ -17,11 +17,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.opentripplanner.common.StreetUtils;
-import org.opentripplanner.graph_builder.linking.TransitToStreetNetworkModule;
+import org.opentripplanner.common.geometry.Subgraph;
+import org.opentripplanner.extra_graph.SubgraphForVertex;
 import org.opentripplanner.graph_builder.services.GraphBuilderModule;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.routing.graph.Vertex;
 import org.slf4j.*;
 
 /**
@@ -38,13 +41,13 @@ public class PruneFloatingIslands implements GraphBuilderModule {
      * this field indicate the maximum size for island without stops
      * island under this size will be pruned.
      */
-    private int islandWithoutStopsMaxSize = 40;
+    private int pruningThresholdIslandWithoutStops;
 
     /**
      * this field indicate the maximum size for island with stops
      * island under this size will be pruned.
      */
-    private int islandWithStopsMaxSize = 5;
+    private int pruningThresholdIslandWithStops;
 
     /**
      * The name for output file for this process. The file will store information about the islands 
@@ -72,8 +75,8 @@ public class PruneFloatingIslands implements GraphBuilderModule {
     public void buildGraph(Graph graph, HashMap<Class<?>, Object> extra) {
         LOG.info("Pruning isolated islands in street network");
         
-        StreetUtils.pruneFloatingIslands(graph, islandWithoutStopsMaxSize, 
-                islandWithStopsMaxSize, islandLogFile);
+        Map<Vertex, Subgraph> map = StreetUtils.pruneFloatingIslands(graph, pruningThresholdIslandWithoutStops,
+        		pruningThresholdIslandWithStops, islandLogFile);
         if (transitToStreetNetwork == null) {
             LOG.debug("TransitToStreetNetworkGraphBuilder was not provided to PruneFloatingIslands. Not attempting to reconnect stops.");
         } else {
@@ -81,11 +84,18 @@ public class PruneFloatingIslands implements GraphBuilderModule {
             transitToStreetNetwork.buildGraph(graph,extra);
         }
         LOG.debug("Done pruning isolated islands");
+        extra.put(SubgraphForVertex.class, new SubgraphForVertex(map));
     }
 
     @Override
     public void checkInputs() {
         //no inputs
+    }
+    public void setPruningThresholdIslandWithoutStops(int pruningThresholdIslandWithoutStops) {
+    	this.pruningThresholdIslandWithoutStops = pruningThresholdIslandWithoutStops;
+    }
+    public void setPruningThresholdIslandWithStops(int pruningThresholdIslandWithStops) {
+    	this.pruningThresholdIslandWithStops = pruningThresholdIslandWithStops;
     }
 
 }

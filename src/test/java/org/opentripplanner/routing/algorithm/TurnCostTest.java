@@ -107,6 +107,7 @@ public class TurnCostTest {
         proto.bikeSpeed = 1.0;
         proto.turnReluctance = (1.0);
         proto.setWalkReluctance(1.0);
+        proto.setCarReluctance(1.0);
         proto.stairsReluctance = (1.0);
         
         // Turn costs are all 0 by default.

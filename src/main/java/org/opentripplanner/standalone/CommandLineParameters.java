@@ -32,7 +32,6 @@ public class CommandLineParameters implements Cloneable {
     private static final int    DEFAULT_PORT        = 8080;
     private static final int    DEFAULT_SECURE_PORT = 8081;
     private static final String DEFAULT_BASE_PATH   = "/var/otp";
-    private static final String DEFAULT_ROUTER_ID   = "";
 
     /* Options for the command itself, rather than build or server sub-tasks. */
 
@@ -94,6 +93,9 @@ public class CommandLineParameters implements Cloneable {
             description = "Server port for plain HTTP.")
     public Integer port;
 
+    @Parameter(names = {"--maxThreads"}, description = "The maximum number of HTTP handler threads in the pool.")
+    public Integer maxThreads;
+
     @Parameter(names = {"--graphs"}, validateWith = ReadableDirectory.class,
             description = "Path to directory containing graphs. Defaults to BASE_PATH/graphs.")
     public File graphDirectory;
@@ -105,6 +107,13 @@ public class CommandLineParameters implements Cloneable {
     @Parameter(names = {"--clientFiles"}, validateWith = ReadableDirectory.class,
             description = "Path to directory containing local client files to serve.")
     public File clientDirectory = null;
+
+    @Parameter(names = {"--clientPath"},
+            description = "Path --clientFiles will be served from, default /local.")
+    public String clientPath = "/local";
+
+    @Parameter(names = {"--disableNativeClient"}, description = "Disable default ui, if for instance clientFiles is provided.")
+    public boolean disableNativeClient = false;
 
     @Parameter(names = {"--disableFileCache"}, description = "Disable http server static file cache. Handy for development.")
     public boolean disableFileCache = false;
@@ -135,6 +144,10 @@ public class CommandLineParameters implements Cloneable {
 
     @Parameter(names = { "--enableScriptingWebService" }, description = "enable scripting through a web-service (Warning! Very unsafe for public facing servers)")
     boolean enableScriptingWebService = false;
+
+    @Parameter(names = {"--awsConfig"}, validateWith = ReadableFile.class,
+            description = "Path to aws configuration file")
+    public String awsConfig = null;
 
     /** Set some convenience parameters based on other parameters' values. */
     public void infer() {

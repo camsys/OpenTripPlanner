@@ -38,7 +38,7 @@ public class StreetUtils {
     private static Logger LOG = LoggerFactory.getLogger(StreetUtils.class);
     private static int islandCounter = 0;
 
-    public static void pruneFloatingIslands(Graph graph, int maxIslandSize, 
+    public static Map<Vertex, Subgraph> pruneFloatingIslands(Graph graph, int maxIslandSize,
             int islandWithStopMaxSize, String islandLogName) {
         LOG.debug("pruning");
         PrintWriter islandLog = null;
@@ -137,6 +137,8 @@ public class StreetUtils {
         if (graph.removeEdgelessVertices() > 0) {
             LOG.warn("Removed edgeless vertices after pruning islands");
         }
+
+        return subgraphs;
     }
 
     private static void depedestrianizeOrRemove(Graph graph, Subgraph island) {

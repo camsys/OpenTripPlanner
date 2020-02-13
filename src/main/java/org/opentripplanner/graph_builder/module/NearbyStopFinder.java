@@ -11,11 +11,13 @@ import org.opentripplanner.api.resource.SimpleIsochrone;
 import org.opentripplanner.common.geometry.GeometryUtils;
 import org.opentripplanner.common.geometry.PackedCoordinateSequence;
 import org.opentripplanner.common.geometry.SphericalDistanceLibrary;
-import org.opentripplanner.routing.algorithm.EarliestArrivalSearch;
+import org.opentripplanner.routing.algorithm.GenericDijkstra;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.core.TraverseMode;
+import org.opentripplanner.routing.edgetype.PathwayEdge;
 import org.opentripplanner.routing.edgetype.StreetEdge;
+import org.opentripplanner.routing.edgetype.TransferEdge;
 import org.opentripplanner.routing.edgetype.TripPattern;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
@@ -43,10 +45,10 @@ public class NearbyStopFinder {
 
     public  final boolean useStreets;
     private Graph graph;
-    private double radius;
+    private double radiusMeters;
 
     /* Fields used when finding stops via the street network. */
-    private EarliestArrivalSearch earliestArrivalSearch;
+    private GenericDijkstra streetSearch;
 
     /* Fields used when finding stops without a street network. */
     private StreetVertexIndexService streetIndex;
@@ -55,23 +57,26 @@ public class NearbyStopFinder {
      * Construct a NearbyStopFinder for the given graph and search radius, choosing whether to search via the street
      * network or straight line distance based on the presence of OSM street data in the graph.
      */
-    public NearbyStopFinder(Graph graph, double radius) {
-        this (graph, radius, graph.hasStreets);
+    public NearbyStopFinder(Graph graph, double radiusMeters) {
+        this (graph, radiusMeters, graph.hasStreets);
     }
 
     /**
      * Construct a NearbyStopFinder for the given graph and search radius.
      * @param useStreets if true, search via the street network instead of using straight-line distance.
      */
-    public NearbyStopFinder(Graph graph, double radius, boolean useStreets) {
+    public NearbyStopFinder(Graph graph, double radiusMeters, boolean useStreets) {
         this.graph = graph;
         this.useStreets = useStreets;
-        this.radius = radius;
+        this.radiusMeters = radiusMeters;
         if (useStreets) {
-            earliestArrivalSearch = new EarliestArrivalSearch();
-            earliestArrivalSearch.maxDuration = (int) radius; // FIXME assuming 1 m/sec, use hard distance limiting to match straight-line mode
+            streetSearch = new GenericDijkstra(new RoutingRequest(TraverseMode.WALK));
+            streetSearch.setSearchTerminationStrategy((v, w, s, spt, opt) -> s.getWalkDistance() > radiusMeters);
+            // Don't find transfers that use other transfers
+            streetSearch.setSkipEdgeStrategy((o, t, c, edge, s, opt) -> edge instanceof TransferEdge || edge instanceof PathwayEdge);
         } else {
-            streetIndex = new StreetVertexIndexServiceImpl(graph); // FIXME use the one already in the graph if it exists
+            // FIXME use the vertex index already in the graph if it exists.
+            streetIndex = new StreetVertexIndexServiceImpl(graph);
         }
     }
 
@@ -87,12 +92,21 @@ public class NearbyStopFinder {
         SimpleIsochrone.MinMap<TripPattern, StopAtDistance> closestStopForPattern =
                 new SimpleIsochrone.MinMap<TripPattern, StopAtDistance>();
 
+        // Add ALL station entrances, because there can be cases where some entrances are inaccessible
+        // (wheelchair accessibility, opening/closing times, etc), and station entrances are not
+        // associated with trip patterns.
+        Set<StopAtDistance> stationEntrances = Sets.newHashSet();
+
         /* Iterate over nearby stops via the street network or using straight-line distance, depending on the graph. */
-        for (NearbyStopFinder.StopAtDistance stopAtDistance : findNearbyStops(vertex)) {
+        List<NearbyStopFinder.StopAtDistance> stops = findNearbyStops(vertex);
+        for (NearbyStopFinder.StopAtDistance stopAtDistance : stops) {
             /* Filter out destination stops that are already reachable via pathways or transfers. */
             // FIXME why is the above comment relevant here? how does the next line achieve this?
             TransitStop ts1 = stopAtDistance.tstop;
             if (!ts1.isStreetLinkable()) continue;
+            if (ts1.isEntrance()) {
+                stationEntrances.add(stopAtDistance);
+            }
             /* Consider this destination stop as a candidate for every trip pattern passing through it. */
             for (TripPattern pattern : graph.index.patternsForStop.get(ts1.getStop())) {
                 closestStopForPattern.putMin(pattern, stopAtDistance);
@@ -102,6 +116,7 @@ public class NearbyStopFinder {
         /* Make a transfer from the origin stop to each destination stop that was the closest stop on any pattern. */
         Set<StopAtDistance> uniqueStops = Sets.newHashSet();
         uniqueStops.addAll(closestStopForPattern.values());
+        uniqueStops.addAll(stationEntrances);
         return uniqueStops;
 
     }
@@ -127,7 +142,7 @@ public class NearbyStopFinder {
         RoutingRequest routingRequest = new RoutingRequest(TraverseMode.WALK);
         routingRequest.clampInitialWait = (0L);
         routingRequest.setRoutingContext(graph, originVertex, null);
-        ShortestPathTree spt = earliestArrivalSearch.getShortestPathTree(routingRequest);
+        ShortestPathTree spt = streetSearch.getShortestPathTree(new State(routingRequest));
 
         List<StopAtDistance> stopsFound = Lists.newArrayList();
         if (spt != null) {
@@ -156,9 +171,9 @@ public class NearbyStopFinder {
     public List<StopAtDistance> findNearbyStopsEuclidean (Vertex originVertex) {
         List<StopAtDistance> stopsFound = Lists.newArrayList();
         Coordinate c0 = originVertex.getCoordinate();
-        for (TransitStop ts1 : streetIndex.getNearbyTransitStops(c0, radius)) {
+        for (TransitStop ts1 : streetIndex.getNearbyTransitStops(c0, radiusMeters)) {
             double distance = SphericalDistanceLibrary.distance(c0, ts1.getCoordinate());
-            if (distance < radius) {
+            if (distance < radiusMeters) {
                 Coordinate coordinates[] = new Coordinate[] {c0, ts1.getCoordinate()};
                 StopAtDistance sd = new StopAtDistance(ts1, distance);
                 sd.geom = geometryFactory.createLineString(coordinates);
@@ -176,6 +191,7 @@ public class NearbyStopFinder {
         public TransitStop tstop;
         public double      dist;
         public LineString  geom;
+        public List<Edge>  edges;
 
         public StopAtDistance(TransitStop tstop, double dist) {
             this.tstop = tstop;
@@ -203,6 +219,7 @@ public class NearbyStopFinder {
         double distance = 0.0;
         GraphPath graphPath = new GraphPath(state, false);
         CoordinateArrayListSequence coordinates = new CoordinateArrayListSequence();
+        List<Edge> edges = new ArrayList<>();
         for (Edge edge : graphPath.edges) {
             if (edge instanceof StreetEdge) {
                 LineString geometry = edge.getGeometry();
@@ -215,6 +232,7 @@ public class NearbyStopFinder {
                 }
                 distance += edge.getDistance();
             }
+            edges.add(edge);
         }
         if (coordinates.size() < 2) {   // Otherwise the walk step generator breaks.
             ArrayList<Coordinate> coordinateList = new ArrayList<Coordinate>(2);
@@ -225,6 +243,7 @@ public class NearbyStopFinder {
         }
         StopAtDistance sd = new StopAtDistance((TransitStop) state.getVertex(), distance);
         sd.geom = geometryFactory.createLineString(new PackedCoordinateSequence.Double(coordinates.toCoordinateArray()));
+        sd.edges = edges;
         return sd;
     }
 

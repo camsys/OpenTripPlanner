@@ -23,6 +23,7 @@ import javax.xml.datatype.DatatypeConstants;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import com.webcohesion.enunciate.metadata.Ignore;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.opentripplanner.api.parameter.QualifiedModeSet;
 import org.opentripplanner.routing.core.OptimizeType;
@@ -53,16 +54,17 @@ public abstract class RoutingResource {
 
     /**
      * The routerId selects between several graphs on the same server. The routerId is pulled from
-     * the path, not the query parameters. However, the class RoutingResource is not annotated with
-     * a path because we don't want it to be instantiated as an endpoint. Instead, the {routerId}
-     * path parameter should be included in the path annotations of all its subclasses.
+     * the path, not the query parameters.
+     *
+     * For default router, use "default".
      */
-    @PathParam("routerId") 
+    @PathParam("routerId")
     public String routerId;
 
     /** The start location -- either latitude, longitude pair in degrees or a Vertex
      *  label. For example, <code>40.714476,-74.005966</code> or
-     *  <code>mtanyctsubway_A27_S</code>.  */
+     *  <code>mtanyctsubway_A27_S</code>. If the graph contains landmarks, a landmark can also be
+     *  used, for example, <code>Chinatown</code>.*/
     @QueryParam("fromPlace")
     protected String fromPlace;
 
@@ -74,19 +76,27 @@ public abstract class RoutingResource {
     @QueryParam("intermediatePlaces")
     protected List<String> intermediatePlaces;
 
-    /** The date that the trip should depart (or arrive, for requests where arriveBy is true). */
+    /** An un-ordered list of destination locations **/
+    @QueryParam("toPlaces")
+    protected List<String> toPlaces;
+
+    /** An un-ordered list of origin locations **/
+    @QueryParam("fromPlaces")
+    protected List<String> fromPlaces;
+
+    /** The date that the trip should depart (or arrive, for requests where arriveBy is true). For example: <code>09/01/2017</code> */
     @QueryParam("date")
     protected String date;
     
-    /** The time that the trip should depart (or arrive, for requests where arriveBy is true). */
+    /** The time that the trip should depart (or arrive, for requests where arriveBy is true). Example: <code>9:00 am</code> */
     @QueryParam("time")
     protected String time;
     
-    /** Whether the trip should depart or arrive at the specified date and time. */
+    /** Whether the trip should depart or arrive at the specified date and time. Defaults to false (depart-at specified time). */
     @QueryParam("arriveBy")
     protected Boolean arriveBy;
     
-    /** Whether the trip must be wheelchair accessible. */
+    /** Whether the trip must be wheelchair accessible. <code>true</code> or <code>false</code>.*/
     @QueryParam("wheelchair")
     protected Boolean wheelchair;
 
@@ -94,11 +104,16 @@ public abstract class RoutingResource {
     @QueryParam("maxWalkDistance")
     protected Double maxWalkDistance;
 
+    /** Maximum walk distance for heuristic */
+    @QueryParam("maxWalkDistanceHeuristic")
+    protected Double maxWalkDistanceHeuristic;
+
     /**
      * The maximum time (in seconds) of pre-transit travel when using drive-to-transit (park and
      * ride or kiss and ride). Defaults to unlimited.
      */
     @QueryParam("maxPreTransitTime")
+    @Ignore
     protected Integer maxPreTransitTime;
 
     /**
@@ -107,8 +122,14 @@ public abstract class RoutingResource {
      * of not wanting to walk too much without asking for totally ridiculous itineraries, but this
      * observation should in no way be taken as scientific or definitive. Your mileage may vary.
      */
+    @Ignore
     @QueryParam("walkReluctance")
     protected Double walkReluctance;
+
+    /* Multiplier for how bad driving is, compared to being in transit for equal lengths of time. */
+    @Ignore
+    @QueryParam("carReluctance")
+    protected Double carReluctance;
 
     /**
      * How much worse is waiting for a transit vehicle than being on a transit vehicle, as a
@@ -123,10 +144,12 @@ public abstract class RoutingResource {
      * If we only tried the shortest possible transfer at each stop to neighboring stop patterns,
      * this problem could disappear.
      */
+    @Ignore
     @QueryParam("waitReluctance")
     protected Double waitReluctance;
 
     /** How much less bad is waiting at the beginning of the trip (replaces waitReluctance) */
+    @Ignore
     @QueryParam("waitAtBeginningFactor")
     protected Double waitAtBeginningFactor;
 
@@ -140,40 +163,68 @@ public abstract class RoutingResource {
 
     /** The time it takes the user to fetch their bike and park it again in seconds.
      *  Defaults to 0. */
+    @Ignore
     @QueryParam("bikeSwitchTime")
     protected Integer bikeSwitchTime;
 
     /** The cost of the user fetching their bike and parking it again.
      *  Defaults to 0. */
+    @Ignore
     @QueryParam("bikeSwitchCost")
     protected Integer bikeSwitchCost;
 
     /** For bike triangle routing, how much safety matters (range 0-1). */
+    @Ignore
     @QueryParam("triangleSafetyFactor")
     protected Double triangleSafetyFactor;
     
     /** For bike triangle routing, how much slope matters (range 0-1). */
+    @Ignore
     @QueryParam("triangleSlopeFactor")
     protected Double triangleSlopeFactor;
     
-    /** For bike triangle routing, how much time matters (range 0-1). */            
+    /** For bike triangle routing, how much time matters (range 0-1). */
+    @Ignore
     @QueryParam("triangleTimeFactor")
     protected Double triangleTimeFactor;
 
-    /** The set of characteristics that the user wants to optimize for. @See OptimizeType */
+    /**
+     * The set of characteristics that the user wants to optimize for. See {@link OptimizeType}.
+     * Only QUICK, TRANSFERS, and WALKING are relevant for transit routing; all other values are for
+     * bike routing.
+     */
     @QueryParam("optimize")
     protected OptimizeType optimize;
     
-    /** The set of modes that a user is willing to use, with qualifiers stating whether vehicles should be parked, rented, etc. */
+    /** The set of modes that a user is willing to use, with qualifiers stating whether vehicles should be parked, rented, etc.
+     * Allowable values (order of modes in set is not significant):
+     * <table class="table">
+     *     <tr><th>mode</th><th>Parameter value</th></tr>
+     *     <tr><td>Walk only</td><td>WALK</td></tr>
+     *     <tr><td>Drive only</td><td>CAR</td></tr>
+     *     <tr><td>Bicycle only</td><td>BICYCLE</td></tr>
+     *     <tr><td>Transit</td><td>TRANSIT,WALK</td></tr>
+     *     <tr><td>Park-and-ride</td><td>CAR_PARK,TRANSIT</td></tr>
+     *     <tr><td>Kiss-and-ride</td><td>CAR,TRANSIT</td></tr>
+     *     <tr><td>Bicycle and transit</td><td>BICYCLE,TRANSIT</td></tr>
+     *     <tr><td>Bicycle and ride</td><td>BICYCLE_PARK,TRANSIT</td></tr>
+     *     <tr><td>Bikeshare</td><td>BICYCLE_RENT</td></tr>
+     *     <tr><td>Bikeshare and transit</td><td>BICYCLE_RENT,TRANSIT</td></tr>
+     * </table>
+     *
+     * In addition, restrict transit usage to a mode by replacing TRANSIT with any subset of the following:
+     * SUBWAY, RAIL, BUS, FERRY, CABLE_CAR, GONDOLA, FUNICULAR, AIRPLANE
+     */
     @QueryParam("mode")
     protected QualifiedModeSet modes;
 
     /** The minimum time, in seconds, between successive trips on different vehicles.
      *  This is designed to allow for imperfect schedule adherence.  This is a minimum;
      *  transfers over longer distances might use a longer time. */
+    @Ignore
     @QueryParam("minTransferTime")
     protected Integer minTransferTime;
-    
+
     /** Maximum time in seconds between successive trips on different vehicles. */
     @QueryParam("maxTransferTime")
     protected Integer maxTransferTime;
@@ -187,8 +238,8 @@ public abstract class RoutingResource {
      */
     @QueryParam("tripShownRangeTime")
     protected Integer tripShownRangeTime;
-    
-    /** The maximum number of possible itineraries to return. */
+
+    /** The maximum number of possible itineraries to return. Default is 3. */
     @QueryParam("numItineraries")
     protected Integer numItineraries;
 
@@ -201,20 +252,60 @@ public abstract class RoutingResource {
 
     /** Penalty added for using every route that is not preferred if user set any route as preferred, i.e. number of seconds that we are willing
      * to wait for preferred route. */
+    @Ignore
     @QueryParam("otherThanPreferredRoutesPenalty")
     protected Integer otherThanPreferredRoutesPenalty;
-    
+
+    /**
+     * Penalty added for using every unpreferred route, i.e. number of seconds that we are willing to wait for preferred route.
+     */
+    @QueryParam("useUnpreferredRoutesPenalty")
+    protected Integer useUnpreferredRoutesPenalty;
+
     /** The comma-separated list of preferred agencies. */
     @QueryParam("preferredAgencies")
     protected String preferredAgencies;
-    
+
+    /**
+     * Comma-separated list of preferred route types
+     * See route types <a href="https://developers.google.com/transit/gtfs/reference/extended-route-types">reference.</a>
+     */
+    @QueryParam("preferredRouteTypes")
+    protected String preferredRouteTypes;
+
+    /**
+     * Comma-separated list of banned route types
+     * See route types <a href="https://developers.google.com/transit/gtfs/reference/extended-route-types">reference.</a>
+     */
+    @QueryParam("bannedRouteTypes")
+    protected String bannedRouteTypes;
+
     /**
      * The list of unpreferred routes. The format is agency_[routename][_routeid], so TriMet_100 (100 is route short name) or Trimet__42 (two
      * underscores, 42 is the route internal ID).
      */
     @QueryParam("unpreferredRoutes")
     protected String unpreferredRoutes;
-    
+
+    /**
+     * The list of preferred start routes. The format is agency_[routename][_routeid], so TriMet_100 (100 is route short name) or Trimet__42 (two
+     * underscores, 42 is the route internal ID).
+     */
+    @QueryParam("preferredStartRoutes")
+    protected String preferredStartRoutes;
+
+    /** The list of preferred end routes. The format is agency_[routename][_routeid], so TriMet_100 (100 is route short name) or Trimet__42 (two
+     * underscores, 42 is the route internal ID).
+     */
+    @QueryParam("preferredEndRoutes")
+    protected String preferredEndRoutes;
+
+    /**
+     * Penalty added for using every unpreferred start or end routes, i.e. number of seconds that we are willing to wait for preferred route.
+     */
+    @QueryParam("useUnpreferredStartEndPenalty")
+    protected Integer useUnpreferredStartEndPenalty;
+
     /** The comma-separated list of unpreferred agencies. */
     @QueryParam("unpreferredAgencies")
     protected String unpreferredAgencies;
@@ -230,13 +321,15 @@ public abstract class RoutingResource {
      * Prevents unnecessary transfers by adding a cost for boarding a vehicle. This is the cost that
      * is used when boarding while walking.
      */
+    @Ignore
     @QueryParam("walkBoardCost")
     protected Integer walkBoardCost;
     
     /**
      * Prevents unnecessary transfers by adding a cost for boarding a vehicle. This is the cost that
-     * is used when boarding while cycling. This is usually higher that walkBoardCost.
+     * is used when boarding while cycling. This is usually higher that walkBoardCost. Defaults to 600.
      */
+    @Ignore
     @QueryParam("bikeBoardCost")
     protected Integer bikeBoardCost;
     
@@ -247,7 +340,15 @@ public abstract class RoutingResource {
     @QueryParam("bannedRoutes")
     protected String bannedRoutes;
     
-    /** The comma-separated list of banned agencies. */
+    /**
+     * The comma-separated list of banned agencies. For any entity (route, agency, trip, or stop), if it is:
+     *  <ul>
+     *      <li><b>banned</b>: will not appear in trip plan results</li>
+     *      <li><b>unpreferred</b>: a penalty is applied during the graph search; may still appear in results.</li>
+     *      <li><b>preferred</b>: a penalty is applied to other entities during the graph search.</li>
+     *  </ul>
+     *
+     */
     @QueryParam("bannedAgencies")
     protected String bannedAgencies;
     
@@ -282,6 +383,7 @@ public abstract class RoutingResource {
      * value to discourage transfers.  Of course, transfers that save significant
      * time or walking will still be taken.
      */
+    @Ignore
     @QueryParam("transferPenalty")
     protected Integer transferPenalty;
     
@@ -293,25 +395,41 @@ public abstract class RoutingResource {
      * significant time or walking will still be taken.
      * When no preferred or timed transfer is defined, this value is ignored.
      */
+    @Ignore
     @QueryParam("nonpreferredTransferPenalty")
     protected Integer nonpreferredTransferPenalty;
-    
+
+    /**
+     * If unknown transfers should be forbidden
+     */
+    @QueryParam("allowUnknownTransfers")
+    protected Boolean allowUnknownTransfers;
+
     /** The maximum number of transfers (that is, one plus the maximum number of boardings)
-     *  that a trip will be allowed.  Larger values will slow performance, but could give
-     *  better routes.  This is limited on the server side by the MAX_TRANSFERS value in
-     *  org.opentripplanner.api.ws.Planner. */
+     *  that a trip will be allowed for non-long distance search.  Larger values will slow performance, but could give
+     *  better routes. Defaults to 2.
+     *
+     *  NOTE: This value is no longer respected for /plan calls.
+     */
+    @Ignore
+    @Deprecated
     @QueryParam("maxTransfers")
     protected Integer maxTransfers;
 
-    /** If true, goal direction is turned off and a full path tree is built (specify only once) */
+    /**
+     *  If true, goal direction is turned off and a full path tree is built (specify only once)
+     */
+    @Ignore
     @QueryParam("batch")
     protected Boolean batch;
 
     /** A transit stop required to be the first stop in the search (AgencyId_StopId) */
+    @Ignore
     @QueryParam("startTransitStopId")
     protected String startTransitStopId;
 
     /** A transit trip acting as a starting "state" for depart-onboard routing (AgencyId_TripId) */
+    @Ignore
     @QueryParam("startTransitTripId")
     protected String startTransitTripId;
 
@@ -328,28 +446,44 @@ public abstract class RoutingResource {
      * A value of 0 means that initial wait time will not be subtracted out (will be clamped to 0).
      * A value of -1 (the default) means that clamping is disabled, so any amount of initial wait 
      * time will be subtracted out.
+     *
      */
+    @Ignore
     @QueryParam("clampInitialWait")
     protected Long clampInitialWait;
 
     /**
      * If true, this trip will be reverse-optimized on the fly. Otherwise, reverse-optimization
      * will occur once a trip has been chosen (in Analyst, it will not be done at all).
+     *
      */
+    @Ignore
     @QueryParam("reverseOptimizeOnTheFly")
     protected Boolean reverseOptimizeOnTheFly;
-        
+
+    /**
+     * Minimum time it takes to board a vehicle (default is 0).
+     */
+    @Ignore
     @QueryParam("boardSlack")
     private Integer boardSlack;
-    
+
+    /**
+     * Minimum time it takes to alight a vehicle (default is 0).
+     */
+    @Ignore
     @QueryParam("alightSlack")
     private Integer alightSlack;
 
+    /**
+     * Locale for dates, times, etc. Defaults to en_US.
+     */
+    @Ignore
     @QueryParam("locale")
     private String locale;
 
     /**
-     * If true, realtime updates are ignored during this search.
+     * If true, realtime updates are ignored during this search. Defaults to false.
      */
     @QueryParam("ignoreRealtimeUpdates")
     protected Boolean ignoreRealtimeUpdates;
@@ -358,23 +492,85 @@ public abstract class RoutingResource {
      * If true, the remaining weight heuristic is disabled. Currently only implemented for the long
      * distance path service.
      */
+    @Ignore
     @QueryParam("disableRemainingWeightHeuristic")
     protected Boolean disableRemainingWeightHeuristic;
-    
+
+    /** The maximum duration of a returned itinerary, in hours. Default to unlimited. */
+    @Ignore
+    @QueryParam("maxHours")
+    private Double maxHours;
+
+    /** Whether maxHours limit should consider wait/idle time between the itinerary and the requested arrive/depart time. Defaults to false. */
+    @Ignore
+    @QueryParam("useRequestedDateTimeInMaxHours")
+    private Boolean useRequestedDateTimeInMaxHours;
+
     /**
-     * 
+     * Option to disable the default filtering of GTFS-RT alerts by time. Defaults to false.
+     */
+    @Ignore
+    @QueryParam("disableAlertFiltering")
+    private Boolean disableAlertFiltering;
+
+    /** How far to look out, in seconds, to add upcoming trips. Defaults to 1800 seconds (half an hour). */
+    @QueryParam("nextDepartureWindow")
+    private Integer nextDepartureWindow = 1800;
+
+    /** How many upcoming departures to add. Defaults to 3 */
+    @QueryParam("numberOfDepartures")
+    private Integer numberOfDepartures = 3;
+
+    /** Whether to turn on "smart kiss-an-ride" */
+    @QueryParam("smartKissAndRide")
+    private Boolean smartKissAndRide;
+
+    /** Whether to use soft walk limiting or hard walk limiting */
+    @QueryParam("softWalkLimiting")
+    private Boolean softWalkLimiting;
+
+    /** Whether walk limiting is per-leg or overall */
+    @QueryParam("walkLimitingByLeg")
+    private Boolean walkLimitingByLeg;
+
+    /** Which agencies to use hard path banning with */
+    @QueryParam("hardPathBanningAgencies")
+    private String hardPathBanningAgencies;
+
+    /** Penalty for jumping over the maxWalkLimit if softWalkLimiting = true */
+    @QueryParam("softWalkPenalty")
+    private Double softWalkPenalty;
+
+    /** Additional reluctance multiplier when over the maxWalkLimit if softWalkLimiting = true.
+     * options.softWalkOverageRate = walkReluctance * softWalkOverageMultiplier
+     */
+    @QueryParam("softWalkOverageMultiplier")
+    private Double softWalkOverageMultiplier;
+
+    /** Whether to try to link endpoints to stops with the same location */
+    @QueryParam("stopLinking")
+    private Boolean stopLinking;
+
+    /**
+     *
      */
     @QueryParam("showNextFromDeparture")
     protected Boolean showNextFromDeparture;
-    
+
     /**
      * If true, API call will return stop times for all the trips in the TripPlan.
      */
     @QueryParam("showStopTimes")
     protected Boolean showStopTimes;
-    
-    /* 
-     * somewhat ugly bug fix: the graphService is only needed here for fetching per-graph time zones. 
+
+    /**
+     * If true, the Graph's ellipsoidToGeoidDifference is applied to all elevations returned by this query.
+     */
+    @QueryParam("geoidElevation")
+    private Boolean geoidElevation;
+
+    /*
+     * somewhat ugly bug fix: the graphService is only needed here for fetching per-graph time zones.
      * this should ideally be done when setting the routing context, but at present departure/
      * arrival time is stored in the request as an epoch time with the TZ already resolved, and other
      * code depends on this behavior. (AMB)
@@ -395,6 +591,7 @@ public abstract class RoutingResource {
         request.routerId = routerId;
         // The routing request should already contain defaults, which are set when it is initialized or in the JSON
         // router configuration and cloned. We check whether each parameter was supplied before overwriting the default.
+
         if (fromPlace != null)
             request.setFromString(fromPlace);
 
@@ -423,21 +620,20 @@ public abstract class RoutingResource {
             } else {
                 request.setDateTime(date, time, tz);
                 request.setRunboardEndDate(router.graph.getTransitServiceEnds() * 1000);
-                
                 //check if date is exceed end time of GTFS.
-                if (request.getDateTime().getTime() > router.graph.getTransitServiceEnds()*1000 ) {
+                if (request.getDateTime().getTime() > router.graph.getTransitServiceEnds()*1000 && request.useTransitServiceExtension) {
                     LOG.warn("********* request time beyond the range");
                     //back up original travel time
                     request.setOrigTravelDateTime(request.getDateTime());
                     request.setRunboard(router.graph.getFeedInfo());
-                                        
+
                     //set transit time as the one within the GTFS calendar
                     LOG.warn("********* user given date: " + request.getDateTime());
                     //get the day of the week
                     Calendar c = Calendar.getInstance();
                     c.setTimeInMillis(router.graph.getTransitServiceEnds()*1000);
                     int serviceEndWeek = c.get(Calendar.WEEK_OF_YEAR);
-                    
+
                     c.setTimeInMillis(request.getDateTime().getTime());
                     int userGivendayOfWeek = c.get(Calendar.DAY_OF_WEEK);
                     int userGivenHour = c.get(Calendar.HOUR_OF_DAY);
@@ -455,8 +651,8 @@ public abstract class RoutingResource {
                     c.set(Calendar.SECOND, userGivenSec);
 
                     LOG.warn("********* user given date (new): " + c.getTime());
-                                        
-                    request.setDateTime(c.getTime()); 
+
+                    request.setDateTime(c.getTime());
 
                 }
             }
@@ -471,13 +667,22 @@ public abstract class RoutingResource {
         if (maxWalkDistance != null) {
             request.setMaxWalkDistance(maxWalkDistance);
             request.maxTransferWalkDistance = maxWalkDistance;
+            if (request.maxWalkDistanceHeuristic == Double.MAX_VALUE) {
+                request.maxWalkDistanceHeuristic = maxWalkDistance;
+            }
         }
+
+        if (maxWalkDistanceHeuristic != null)
+            request.maxWalkDistanceHeuristic = maxWalkDistanceHeuristic;
 
         if (maxPreTransitTime != null)
             request.setMaxPreTransitTime(maxPreTransitTime);
 
         if (walkReluctance != null)
             request.setWalkReluctance(walkReluctance);
+
+        if (carReluctance != null)
+            request.setCarReluctance(carReluctance);
 
         if (waitReluctance != null)
             request.setWaitReluctance(waitReluctance);
@@ -497,8 +702,8 @@ public abstract class RoutingResource {
         if (bikeSwitchCost != null)
             request.bikeSwitchCost = bikeSwitchCost;
 
-        
-        
+
+
         if (optimize != null) {
             // Optimize types are basically combined presets of routing parameters, except for triangle
             request.setOptimize(optimize);
@@ -528,17 +733,54 @@ public abstract class RoutingResource {
         if (intermediatePlaces != null)
             request.setIntermediatePlacesFromStrings(intermediatePlaces);
 
+        // Make sure we handle null places and empty toPlaces
+        if (toPlaces != null){
+            if(toPlaces.size() > 0){
+                if(!toPlaces.get(0).equals("")) {
+                    request.setToPlacesFromStrings(toPlaces);
+                }
+            }
+        }
+
+        // Make sure we handle null places and empty toPlaces
+        if (fromPlaces != null) {
+            if(fromPlaces.size() > 0) {
+                if (!fromPlaces.get(0).equals("")) {
+                    request.setFromPlacesFromStrings(fromPlaces);
+                }
+            }
+        }
+
         if (preferredRoutes != null)
             request.setPreferredRoutes(preferredRoutes);
 
         if (otherThanPreferredRoutesPenalty != null)
             request.setOtherThanPreferredRoutesPenalty(otherThanPreferredRoutesPenalty);
 
+        if (useUnpreferredRoutesPenalty != null)
+            request.setUseUnpreferredRoutesPenalty(useUnpreferredRoutesPenalty);
+
         if (preferredAgencies != null)
             request.setPreferredAgencies(preferredAgencies);
 
+        if (preferredRouteTypes != null)
+            request.setPreferredRouteTypes(preferredRouteTypes);
+
+        if (bannedRouteTypes != null) {
+            request.setBannedRouteTypes(bannedRouteTypes);
+        }
+
         if (unpreferredRoutes != null)
             request.setUnpreferredRoutes(unpreferredRoutes);
+
+        if (preferredStartRoutes != null)
+            request.setPreferredStartRoutes(preferredStartRoutes);
+
+        if (preferredEndRoutes != null)
+            request.setPreferredEndRoutes(preferredEndRoutes);
+
+        if (useUnpreferredStartEndPenalty != null)
+            request.setUseUnpreferredStartEndPenalty(useUnpreferredStartEndPenalty);
 
         if (unpreferredAgencies != null)
             request.setUnpreferredAgencies(unpreferredAgencies);
@@ -549,9 +791,27 @@ public abstract class RoutingResource {
         if (bikeBoardCost != null)
             request.setBikeBoardCost(bikeBoardCost);
 
-        if (bannedRoutes != null)
-            request.setBannedRoutes(bannedRoutes);
-
+        if (bannedRoutes != null) {
+            if (bannedRoutes.indexOf("1_61AV") < 0) {
+                Calendar c = Calendar.getInstance();
+                c.set(Calendar.YEAR, 2019);
+                c.set(Calendar.DAY_OF_YEAR, 28);
+                c.set(Calendar.HOUR_OF_DAY, 14);
+                if (request.getDateTime().getTime() < c.getTimeInMillis()) {
+                    request.setBannedRoutes(bannedRoutes + ",1_61AV");
+                }
+            } else {
+                request.setBannedRoutes(bannedRoutes);
+            }
+        } else {
+            Calendar c = Calendar.getInstance();
+            c.set(Calendar.YEAR, 2019);
+            c.set(Calendar.DAY_OF_YEAR, 28);
+            c.set(Calendar.HOUR_OF_DAY, 14);
+            if (request.getDateTime().getTime() < c.getTimeInMillis()) {
+                request.setBannedRoutes("1_61AV");
+            }
+        }
         if (bannedAgencies != null)
             request.setBannedAgencies(bannedAgencies);
 
@@ -571,6 +831,9 @@ public abstract class RoutingResource {
         if (optimize == OptimizeType.TRANSFERS) {
             optimize = OptimizeType.QUICK;
             request.transferPenalty += 1800;
+        } else if (optimize == OptimizeType.WALKING) {
+            optimize = OptimizeType.QUICK;
+            request.walkReluctance *= request.optimizeWalkMultiplier;
         }
 
         if (batch != null)
@@ -604,12 +867,15 @@ public abstract class RoutingResource {
 
         if (minTransferTimeHard != null)
             request.minTransferTimeHard = minTransferTimeHard;
-        
-        if (tripShownRangeTime != null) 
+
+        if (tripShownRangeTime != null)
             request.tripShownRangeTime = tripShownRangeTime;
-        
+
         if (nonpreferredTransferPenalty != null)
             request.nonpreferredTransferPenalty = nonpreferredTransferPenalty;
+
+        if (allowUnknownTransfers != null)
+            request.allowUnknownTransfers = allowUnknownTransfers;
 
         if (request.boardSlack + request.alightSlack > request.transferSlack) {
             throw new RuntimeException("Invalid parameters: " +
@@ -641,12 +907,51 @@ public abstract class RoutingResource {
         if (disableRemainingWeightHeuristic != null)
             request.disableRemainingWeightHeuristic = disableRemainingWeightHeuristic;
 
+        if (maxHours != null)
+            request.maxHours = maxHours;
+
+        if (useRequestedDateTimeInMaxHours != null)
+            request.useRequestedDateTimeInMaxHours = useRequestedDateTimeInMaxHours;
+
+        if (disableAlertFiltering != null)
+            request.disableAlertFiltering = disableAlertFiltering;
+
+        if (geoidElevation != null)
+            request.geoidElevation = geoidElevation;
+
         if (showNextFromDeparture != null)
             request.showNextFromDeparture = showNextFromDeparture;
-        
+
+        if (nextDepartureWindow != null)
+            request.nextDepartureWindow = nextDepartureWindow;
+
+        if (numberOfDepartures != null)
+            request.numberOfDepartures = numberOfDepartures;
+
+        if (smartKissAndRide != null)
+            request.smartKissAndRide = smartKissAndRide;
+
+        if (softWalkLimiting != null)
+            request.softWalkLimiting = softWalkLimiting;
+
+        if (hardPathBanningAgencies != null)
+            request.setHardPathBanningAgencies(hardPathBanningAgencies);
+
+        if (walkLimitingByLeg != null)
+            request.walkLimitingByLeg = walkLimitingByLeg;
+
+        if (softWalkPenalty != null)
+            request.softWalkPenalty = softWalkPenalty;
+
+        if (softWalkOverageMultiplier != null)
+            request.softWalkOverageRate = request.walkReluctance * softWalkOverageMultiplier;
+
+        if (stopLinking != null)
+            request.stopLinking = stopLinking;
+
         //getLocale function returns defaultLocale if locale is null
         request.locale = ResourceBundleSingleton.INSTANCE.getLocale(locale);
-        
+
         return request;
     }
 

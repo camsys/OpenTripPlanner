@@ -1,6 +1,7 @@
 package org.opentripplanner.api.resource;
 
 import com.google.common.collect.Maps;
+import com.webcohesion.enunciate.metadata.Ignore;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.geojson.feature.FeatureJSON;
 import org.geotools.geometry.Envelope2D;
@@ -52,6 +53,7 @@ import java.util.Map;
  * Surfaces cannot be isolated per-router because sometimes you want to compare two surfaces from different router IDs.
  * Though one could question whether that really makes sense (perhaps alternative scenarios should be "within" the same router)
  */
+@Ignore
 @Path("/surfaces")
 @Produces({ MediaType.APPLICATION_JSON })
 public class SurfaceResource extends RoutingResource {
@@ -112,7 +114,14 @@ public class SurfaceResource extends RoutingResource {
         // DEBUG return Response.ok().entity(surface).build();
     }
 
-    /** Evaluate a surface at all the points in a PointSet. */
+    /**
+     * Evaluate a surface at all the points in a PointSet.
+     * This sends back a ResultSet serialized as JSON.
+     * Normally we return historgrams with the number of points reached (in field 'counts') and the number of
+     * opportunities reached (i.e. the sum of the magnitudes of all points reached) in each one-minute bin of travel
+     * time.
+     * @param detail if true, include the travel time to every point in the pointset (which is in fact an ordered list)
+     */
     @GET @Path("/{surfaceId}/indicator")
     public Response getIndicator (@PathParam("surfaceId") Integer surfaceId,
                                   @QueryParam("targets")  String  targetPointSetId,

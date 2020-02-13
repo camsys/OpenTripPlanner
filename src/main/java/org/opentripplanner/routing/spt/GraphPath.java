@@ -13,13 +13,20 @@
 
 package org.opentripplanner.routing.spt;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.StringJoiner;
 
 import org.onebusaway.gtfs.model.AgencyAndId;
+import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.Trip;
+import org.opentripplanner.routing.alertpatch.Alert;
 import org.opentripplanner.routing.core.RoutingContext;
 import org.opentripplanner.routing.core.State;
+import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
 import org.slf4j.Logger;
@@ -42,6 +49,8 @@ public class GraphPath {
 
     // don't really need to save this (available through State) but why not
     private RoutingContext rctx;
+
+    private List<Alert> planAlerts = new ArrayList<>();
 
     /**
      * Construct a GraphPath based on the given state by following back-edge fields all the way back
@@ -102,6 +111,7 @@ public class GraphPath {
             }
         }
         // dump();
+        addPlanAlerts(s.getOptions().planAlerts);
     }
 
     /**
@@ -158,6 +168,34 @@ public class GraphPath {
         return ret;
     }
 
+    /**
+     * @return all routes boarded in this graph path
+     */
+    public List<AgencyAndId> getRoutes() {
+        List<AgencyAndId> ret = new LinkedList<AgencyAndId>();
+        Route lastRoute = null;
+        Iterator<State> iter = back ? states.descendingIterator() : states.iterator();
+        while(iter.hasNext()) {
+            State s = iter.next();
+            if (s.getBackEdge() != null && s.getBackTrip() != null) {
+                Route route = s.getBackTrip().getRoute();
+                if (route != null && route != lastRoute) {
+                    ret.add(route.getId());
+                    lastRoute = route;
+                }
+            }
+        }
+        return ret;
+    }
+
+    public String getRoutePatternHash() {
+        StringJoiner hash = new StringJoiner("#");
+        for (AgencyAndId r : getRoutes()) {
+            hash.add(r.toString());
+        }
+        return hash.toString();
+    }
+
     public String toString() {
     	return "GraphPath(nStates=" + states.size() + ")";
     }
@@ -198,34 +236,42 @@ public class GraphPath {
     }
 
     public void dumpPathParser() {
-        LOG.info(" --- BEGIN GRAPHPATH DUMP ---");
-        LOG.info(this.toString());
-        String str = "";
-        String r = "";
-        long st = 0;
-        for (State s : states) {
-            //System.out.println(s.getPathParserStates() + s + " via " + s.getBackEdge());
-            if (s != null && s.getBackEdge() != null && s.getBackTrip() != null && s.getBackTrip().getRoute() != null) {
-                if (!s.getBackTrip().getRoute().getId().getId().equals(r)) {
-                    str = str + "---" + r + "---" + (st > 0 ? String.valueOf(st):"");
-                    r = s.getBackTrip().getRoute().getId().getId();
-                    st = s.getTimeInMillis();
-                }
-            }
-        }
-        if (r.length() > 0) {
-            str = str + "---" + r + "---" + String.valueOf(st);;
-        }
-        LOG.info(str);
-        LOG.info(" --- END GRAPHPATH DUMP ---");
+        System.out.println(" --- BEGIN GRAPHPATH DUMP ---");
+        System.out.println(this.toString());
+        for (State s : states) 
+            System.out.println(s.getPathParserStates() + s + " via " + s.getBackEdge());
+        System.out.println(" --- END GRAPHPATH DUMP ---");
     }
 
     public double getWalkDistance() {
         return walkDistance;
     }
-    
+    public double getWalkTime() {
+        return walkDistance/rctx.opt.walkSpeed;
+    }
+
     public RoutingContext getRoutingContext() {
         return rctx;
     }
 
+    public List<Alert> getPlanAlerts() {
+        return planAlerts;
+    }
+
+    public void addPlanAlerts(List<Alert> planAlerts) {
+        this.planAlerts.addAll(planAlerts);
+    }
+
+    public void addPlanAlert(Alert alert) {
+        planAlerts.add(alert);
+    }
+
+    public boolean pathIncludesMode(TraverseMode mode) {
+        for (State s : states) {
+            if (mode.equals(s.getBackMode())) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

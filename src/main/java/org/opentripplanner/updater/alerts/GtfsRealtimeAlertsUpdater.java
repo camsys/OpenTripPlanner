@@ -16,6 +16,8 @@ package org.opentripplanner.updater.alerts;
 import java.io.InputStream;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.protobuf.ExtensionRegistry;
+import com.google.transit.realtime.GtfsRealtimeExtensions;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.impl.AlertPatchServiceImpl;
 import org.opentripplanner.routing.services.AlertPatchService;
@@ -45,6 +47,8 @@ import com.google.transit.realtime.GtfsRealtime.FeedMessage;
 public class GtfsRealtimeAlertsUpdater extends PollingGraphUpdater {
     private static final Logger LOG = LoggerFactory.getLogger(GtfsRealtimeAlertsUpdater.class);
 
+    private static final ExtensionRegistry _extensionRegistry;
+
     private GraphUpdaterManager updaterManager;
 
     private Long lastTimestamp = Long.MIN_VALUE;
@@ -59,7 +63,18 @@ public class GtfsRealtimeAlertsUpdater extends PollingGraphUpdater {
 
     private long earlyStart;
 
-    private AlertsUpdateHandler updateHandler = null;
+    private AbstractUpdateHandler updateHandler = null;
+
+    private boolean vehiclePositions = false;
+
+    private String username;
+
+    private String password;
+
+    static {
+        _extensionRegistry = ExtensionRegistry.newInstance();
+        GtfsRealtimeExtensions.registerExtensions(_extensionRegistry);
+    }
 
     @Override
     public void setGraphUpdaterManager(GraphUpdaterManager updaterManager) {
@@ -81,13 +96,16 @@ public class GtfsRealtimeAlertsUpdater extends PollingGraphUpdater {
         if (config.path("fuzzyTripMatching").asBoolean(false)) {
             this.fuzzyTripMatcher = new GtfsRealtimeFuzzyTripMatcher(graph.index);
         }
-        LOG.info("Creating real-time alert updater running every {} seconds : {}", frequencySec, url);
+        vehiclePositions = config.path("vehiclePositions").asBoolean(false);
+        username = config.path("username").asText();
+        password = config.path("password").asText();
+        LOG.info("Creating real-time alert updater running every {} seconds : {}", pollingPeriodSeconds, url);
     }
 
     @Override
     public void setup() {
         if (updateHandler == null) {
-            updateHandler = new AlertsUpdateHandler();
+            updateHandler = vehiclePositions ? new VehiclePositionsUpdateHandler() : new AlertsUpdateHandler();
         }
         updateHandler.setEarlyStart(earlyStart);
         updateHandler.setFeedId(feedId);
@@ -98,12 +116,12 @@ public class GtfsRealtimeAlertsUpdater extends PollingGraphUpdater {
     @Override
     protected void runPolling() {
         try {
-            InputStream data = HttpUtils.getData(url);
+            InputStream data = HttpUtils.getData(url, null, null, username, password);
             if (data == null) {
                 throw new RuntimeException("Failed to get data from url " + url);
             }
 
-            final FeedMessage feed = FeedMessage.PARSER.parseFrom(data);
+            final FeedMessage feed = FeedMessage.PARSER.parseFrom(data, _extensionRegistry);
 
             long feedTimestamp = feed.getHeader().getTimestamp();
             if (feedTimestamp <= lastTimestamp) {

@@ -38,6 +38,8 @@ public class NamedArea implements Serializable {
 
     private StreetTraversalPermission permission;
 
+    private long wayId;
+
     public String getName() {
         return name.toString();
     }
@@ -80,5 +82,13 @@ public class NamedArea implements Serializable {
 
     public void setPermission(StreetTraversalPermission permission) {
         this.permission = permission;
+    }
+
+    public long getWayId() {
+        return wayId;
+    }
+
+    public void setWayId(long wayId) {
+        this.wayId = wayId;
     }
 }

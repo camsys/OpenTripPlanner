@@ -14,10 +14,11 @@
 package org.opentripplanner.api.resource;
 
 import java.util.List;
+import java.util.TimeZone;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.util.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,5 +95,13 @@ public class DebugOutput {
         LOG.debug("times to find each path: {}", pathTimes);
         renderingTime = finishedRendering - finishedCalculating;
         totalTime = finishedRendering - startedCalculating;
+    }
+
+    public long getStartedCalculating() {
+        return startedCalculating;
+    }
+
+    public String getStartedCalculatingFmt() {
+        return DateUtils.formatDateIso(startedCalculating/1000,  TimeZone.getDefault());
     }
 }

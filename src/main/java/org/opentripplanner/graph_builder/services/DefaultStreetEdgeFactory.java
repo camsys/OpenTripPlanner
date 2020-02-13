@@ -30,14 +30,14 @@ public class DefaultStreetEdgeFactory implements StreetEdgeFactory {
     @Override
     public StreetEdge createEdge(IntersectionVertex startEndpoint, IntersectionVertex endEndpoint,
             LineString geometry, I18NString name, double length, StreetTraversalPermission permissions,
-            boolean back) {
+            boolean back, long wayId) {
         StreetEdge pse;
         if (useElevationData) {
             pse = new StreetWithElevationEdge(startEndpoint, endEndpoint, geometry, name, length,
-                    permissions, back);
+                    permissions, back, wayId);
         } else {
             pse = new StreetEdge(startEndpoint, endEndpoint, geometry, name, length, permissions,
-                    back);
+                    back, wayId);
         }
         return pse;
     }
@@ -45,10 +45,10 @@ public class DefaultStreetEdgeFactory implements StreetEdgeFactory {
     @Override
     public AreaEdge createAreaEdge(IntersectionVertex startEndpoint,
             IntersectionVertex endEndpoint, LineString geometry, I18NString name, double length,
-            StreetTraversalPermission permissions, boolean back, AreaEdgeList area) {
+            StreetTraversalPermission permissions, boolean back, AreaEdgeList area, long wayId) {
         // By default AreaEdge are elevation-capable so nothing to do.
         AreaEdge ae = new AreaEdge(startEndpoint, endEndpoint, geometry, name, length, permissions,
-                back, area);
+                back, area, wayId);
         return ae;
     }
 }

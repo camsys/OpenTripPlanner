@@ -103,7 +103,7 @@ public class FrequencyEntry implements Serializable {
      * This delegation is a sign that maybe FrequencyEntry should subclass TripTimes.
      */
     public TripTimes materialize (int stop, int time, boolean depart) {
-        return tripTimes.timeShift(stop, time, depart);
+        return tripTimes.timeShift(stop, time, depart, this);
     }
 
     /** @return the maximum number of trips this frequency entry could represent, given its headway. */

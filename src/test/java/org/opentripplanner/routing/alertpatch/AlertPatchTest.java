@@ -87,14 +87,14 @@ public class AlertPatchTest extends TestCase {
         HashSet<Alert> expectedAlerts = new HashSet<Alert>();
         expectedAlerts.add(note1);
 
-        Edge optimizedEdge = optimizedPath.states.get(1).getBackEdge();
+        Edge optimizedEdge = optimizedPath.states.get(2).getBackEdge();
         HashSet<Alert> optimizedAlerts = new HashSet<Alert>();
         for (AlertPatch alertPatch : graph.getAlertPatches(optimizedEdge)) {
             optimizedAlerts.add(alertPatch.getAlert());
         }
         assertEquals(expectedAlerts, optimizedAlerts);
 
-        Edge unoptimizedEdge = unoptimizedPath.states.get(1).getBackEdge();
+        Edge unoptimizedEdge = unoptimizedPath.states.get(2).getBackEdge();
         HashSet<Alert> unoptimizedAlerts = new HashSet<Alert>();
         for (AlertPatch alertPatch : graph.getAlertPatches(unoptimizedEdge)) {
             unoptimizedAlerts.add(alertPatch.getAlert());
@@ -150,7 +150,7 @@ public class AlertPatchTest extends TestCase {
         assertNotNull(path);
         HashSet<Alert> expectedNotes = new HashSet<Alert>();
         expectedNotes.add(note1);
-        State oneAlertPatchState = path.states.get(1);
+        State oneAlertPatchState = path.states.get(2);
         Edge oneAlertPatchEdge = oneAlertPatchState.getBackEdge();
         HashSet<Alert> oneAlertPatchAlerts = new HashSet<Alert>();
         for (AlertPatch alertPatch : graph.getAlertPatches(oneAlertPatchEdge)) {

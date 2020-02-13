@@ -48,6 +48,8 @@ public class GtfsRealtimeFileTripUpdateSource implements TripUpdateSource, JsonC
      */
     private String feedId;
 
+    private long timestamp;
+
     @Override
     public void configure(Graph graph, JsonNode config) throws Exception {
         this.feedId = config.path("feedId").asText();
@@ -74,6 +76,8 @@ public class GtfsRealtimeFileTripUpdateSource implements TripUpdateSource, JsonC
                                 .equals(GtfsRealtime.FeedHeader.Incrementality.DIFFERENTIAL)) {
                     fullDataset = false;
                 }
+
+                timestamp = feedMessage.getHeader().getTimestamp();
                 
                 // Create List of TripUpdates
                 updates = new ArrayList<TripUpdate>(feedEntityList.size());
@@ -99,5 +103,10 @@ public class GtfsRealtimeFileTripUpdateSource implements TripUpdateSource, JsonC
     @Override
     public String getFeedId() {
         return this.feedId;
+    }
+
+    @Override
+    public long getTimestamp() {
+        return timestamp;
     }
 }

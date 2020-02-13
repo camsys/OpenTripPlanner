@@ -13,7 +13,6 @@
 
 package org.opentripplanner.routing.core;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Set;
 
@@ -21,14 +20,12 @@ import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.Trip;
 import org.opentripplanner.routing.algorithm.NegativeWeightException;
-import org.opentripplanner.routing.edgetype.OnboardEdge;
-import org.opentripplanner.routing.edgetype.TablePatternEdge;
-import org.opentripplanner.routing.edgetype.StreetEdge;
-import org.opentripplanner.routing.edgetype.TransitBoardAlight;
-import org.opentripplanner.routing.edgetype.TripPattern;
+import org.opentripplanner.routing.edgetype.*;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.trippattern.TripTimes;
+import org.opentripplanner.routing.vertextype.BikeRentalStationVertex;
+import org.opentripplanner.routing.vertextype.TransitVertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -271,6 +268,14 @@ public class State implements Cloneable {
         return stateData.carParked;
     }
 
+    public boolean isCarUnused() {
+        return stateData.carState.equals(StateData.CarState.UNUSED);
+    }
+
+    public boolean isUsingCar() {
+        return stateData.carState.equals(StateData.CarState.USING);
+    }
+
     public boolean isBikeParked() {
         return stateData.bikeParked;
     }
@@ -394,7 +399,7 @@ public class State implements Cloneable {
      * right thing to do.
      */
     public Trip getBackTrip () {
-        if (backEdge instanceof TablePatternEdge) {
+        if (backEdge instanceof TablePatternEdge || backEdge instanceof PatternInterlineDwell) {
             return stateData.tripTimes.trip;
         }
         else {
@@ -667,7 +672,7 @@ public class State implements Cloneable {
 
         while (orig.getBackState() != null) {
             edge = orig.getBackEdge();
-            
+
             if (optimize) {
                 // first board/last alight: figure in wait time in on the fly optimization
                 if (edge instanceof TransitBoardAlight &&
@@ -707,6 +712,9 @@ public class State implements Cloneable {
                         return unoptimized.reverse();
                 }
             }
+            // Not reverse-optimizing, so we don't re-traverse the edges backward.
+            // Instead we just replicate all the states, and replicate the deltas between the state's incremental fields.
+            // TODO determine whether this is really necessary, and whether there's a more maintainable way to do this.
             else {
                 StateEditor editor = ret.edit(edge);
                 // note the distinction between setFromState and setBackState
@@ -720,8 +728,11 @@ public class State implements Cloneable {
                 // propagate the modes through to the reversed edge
                 editor.setBackMode(orig.getBackMode());
 
-                if (orig.isBikeRenting() != orig.getBackState().isBikeRenting())
-                    editor.setBikeRenting(!orig.isBikeRenting());
+                if (orig.isBikeRenting() && !orig.getBackState().isBikeRenting()) {
+                    editor.doneVehicleRenting();
+                } else if (!orig.isBikeRenting() && orig.getBackState().isBikeRenting()) {
+                    editor.beginVehicleRenting(((BikeRentalStationVertex)orig.vertex).getVehicleMode());
+                }
                 if (orig.isCarParked() != orig.getBackState().isCarParked())
                     editor.setCarParked(!orig.isCarParked());
                 if (orig.isBikeParked() != orig.getBackState().isBikeParked())
@@ -838,4 +849,21 @@ public class State implements Cloneable {
         return stateData.enteredNoThroughTrafficArea;
     }
 
+    public int getPreTransitNumBoardings() {
+        return stateData.preTransitNumBoardings;
+    }
+
+    /**
+     * Check that transfer is allowed - after transit, or if we've started at a TransitVertex.
+     */
+    public boolean isTransferPermissible() {
+        return stateData.transferPermissible || backEdge == null;
+    }
+
+    // allow one transfer, needed for DirectTransferGenerator
+    public static State stateAllowingTransfer(Vertex v, RoutingRequest options) {
+        State s = new State(v, options);
+        s.stateData.transferPermissible = true;
+        return s;
+    }
 }

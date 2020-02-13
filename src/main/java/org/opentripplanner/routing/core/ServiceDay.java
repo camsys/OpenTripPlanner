@@ -53,7 +53,8 @@ public class ServiceDay implements Serializable {
     }
 
     public ServiceDay(Graph graph, ServiceDate serviceDate, CalendarService cs, String agencyId) {
-        TimeZone timeZone = cs.getTimeZoneForAgencyId(agencyId);
+        // ADDED trips have an empty agencyId, use the graph TimeZone
+        TimeZone timeZone = "".equals(agencyId) ? graph.getTimeZone() : cs.getTimeZoneForAgencyId(agencyId);
         this.serviceDate = new ServiceDate(serviceDate);
 
         init(graph, cs, timeZone);

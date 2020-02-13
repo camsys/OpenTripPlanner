@@ -115,7 +115,7 @@ public class PollingStoptimeUpdater extends PollingGraphUpdater {
         if (config.path("fuzzyTripMatching").asBoolean(false)) {
             this.fuzzyTripMatcher = new GtfsRealtimeFuzzyTripMatcher(graph.index);
         }
-        LOG.info("Creating stop time updater running every {} seconds : {}", frequencySec, updateSource);
+        LOG.info("Creating stop time updater running every {} seconds : {}", pollingPeriodSeconds, updateSource);
     }
 
     @Override
@@ -158,11 +158,12 @@ public class PollingStoptimeUpdater extends PollingGraphUpdater {
         // Get update lists from update source
         List<TripUpdate> updates = updateSource.getUpdates();
         boolean fullDataset = updateSource.getFullDatasetValueOfLastUpdates();
+        long timestamp = updateSource.getTimestamp();
 
         if (updates != null) {
             // Handle trip updates via graph writer runnable
             TripUpdateGraphWriterRunnable runnable =
-                    new TripUpdateGraphWriterRunnable(fullDataset, updates, feedId);
+                    new TripUpdateGraphWriterRunnable(fullDataset, updates, feedId, timestamp);
             updaterManager.execute(runnable);
         }
     }

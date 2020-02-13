@@ -174,6 +174,7 @@ public class WebsocketGtfsRealtimeUpdater implements GraphUpdater {
             List<FeedEntity> feedEntityList = null;
             List<TripUpdate> updates = null;
             boolean fullDataset = true;
+            long timestamp = -1;
             try {
                 // Decode message
                 feedMessage = FeedMessage.PARSER.parseFrom(message);
@@ -185,6 +186,10 @@ public class WebsocketGtfsRealtimeUpdater implements GraphUpdater {
                         && feedMessage.getHeader().getIncrementality()
                                 .equals(GtfsRealtime.FeedHeader.Incrementality.DIFFERENTIAL)) {
                     fullDataset = false;
+                }
+
+                if (feedMessage.hasHeader()) {
+                    timestamp = feedMessage.getHeader().getTimestamp();
                 }
                 
                 // Create List of TripUpdates
@@ -201,7 +206,7 @@ public class WebsocketGtfsRealtimeUpdater implements GraphUpdater {
             if (updates != null) {
                 // Handle trip updates via graph writer runnable
                 TripUpdateGraphWriterRunnable runnable = new TripUpdateGraphWriterRunnable(
-                        fullDataset, updates, feedId);
+                        fullDataset, updates, feedId, timestamp);
                 updaterManager.execute(runnable);
             }
         }

@@ -7,18 +7,35 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.FileAppender;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.onebusaway.gtfs.model.AgencyAndId;
 import org.opentripplanner.analyst.request.*;
 import org.opentripplanner.analyst.scenario.ScenarioStore;
 import org.opentripplanner.inspector.TileRendererManager;
 import org.opentripplanner.reflect.ReflectiveInitializer;
+import org.opentripplanner.routing.accessibility.DefaultStopAccessibilityStrategy;
+import org.opentripplanner.routing.accessibility.MTAStopAccessibilityStrategy;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.routing.consequences.ConsequencesStrategyFactory;
+import org.opentripplanner.routing.consequences.ElevatorConsequencesStrategy;
+import org.opentripplanner.routing.consequences.MultipleConsequencesStrategy;
+import org.opentripplanner.routing.consequences.UnknownTransferConsequencesStrategy;
+import org.opentripplanner.routing.transfers.DefaultTransferPermissionStrategy;
+import org.opentripplanner.routing.transfers.MTATransferPermissionStrategy;
 import org.opentripplanner.updater.GraphUpdaterConfigurator;
+import org.opentripplanner.util.ElevationUtils;
+import org.opentripplanner.util.WorldEnvelope;
 import org.opentripplanner.visualizer.GraphVisualizer;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Represents the configuration of a single router (a single graph for a specific geographic area)
@@ -53,6 +70,9 @@ public class Router {
 
     // A RoutingRequest containing default parameters that will be cloned when handling each request
     public RoutingRequest defaultRoutingRequest;
+
+    // save what is serialized into routingDefaultsNode so it's available for introspection
+    public JsonNode routingDefaultsNode;
 
     /** A graphical window that is used for visualizing search progress (debugging). */
     public GraphVisualizer graphVisualizer = null;
@@ -94,6 +114,7 @@ public class Router {
             LOG.info("Loading default routing parameters from JSON:");
             ReflectiveInitializer<RoutingRequest> scraper = new ReflectiveInitializer(RoutingRequest.class);
             this.defaultRoutingRequest = scraper.scrape(routingDefaultsNode);
+            this.routingDefaultsNode = routingDefaultsNode;
         } else {
             LOG.info("No default routing parameters were found in the router config JSON. Using built-in OTP defaults.");
             this.defaultRoutingRequest = new RoutingRequest();
@@ -151,10 +172,84 @@ public class Router {
                 }
             }
         }
+        
+        JsonNode stopClusterMode = config.get("stopClusterMode");
+        if (stopClusterMode != null) {
+            graph.stopClusterMode = stopClusterMode.asText();    
+        } else {
+            graph.stopClusterMode = "proximity";
+        }
+
+        JsonNode kissAndRideWhitelist = config.get("kissAndRideWhitelist");
+        if (kissAndRideWhitelist != null) {
+            Set<AgencyAndId> stopList = new HashSet<>();
+            String stopsStr = kissAndRideWhitelist.asText();
+            for (String idStr : stopsStr.split(",")) {
+                AgencyAndId id = AgencyAndId.convertFromString(idStr, ':');
+                stopList.add(id);
+            }
+            defaultRoutingRequest.kissAndRideWhitelist = stopList;
+        }
+
+        JsonNode kissAndRideOverrides = config.get("kissAndRideOverrides");
+        if (kissAndRideOverrides != null) {
+            defaultRoutingRequest.kissAndRideOverrides = new HashSet<>(Arrays.asList(kissAndRideOverrides.asText().split(",")));
+        }
+
+        graph.consequencesStrategy = getConsequencesStrategyConfig(config.get("consequences"));
+
+        graph.stopAccessibilityStrategy = new DefaultStopAccessibilityStrategy();
+        JsonNode stopAccessibilityStrategy = config.get("stopAccessibilityStrategy");
+        if (stopAccessibilityStrategy != null) {
+            if (stopAccessibilityStrategy.asText().equals("mta")) {
+                graph.stopAccessibilityStrategy = new MTAStopAccessibilityStrategy(graph);
+            }
+        }
+
+        graph.transferPermissionStrategy = new DefaultTransferPermissionStrategy();
+        JsonNode transferPermissionStrategy = config.get("transferPermissionStrategy");
+        if (transferPermissionStrategy != null) {
+            if (transferPermissionStrategy.asText().equals("mta")) {
+                graph.transferPermissionStrategy = new MTATransferPermissionStrategy(graph);
+            }
+        }
 
         /* Create Graph updater modules from JSON config. */
         GraphUpdaterConfigurator.setupGraph(this.graph, config);
 
+        /* Compute ellipsoidToGeoidDifference for this Graph */
+        try {
+            WorldEnvelope env = graph.getEnvelope();
+            double lat = (env.getLowerLeftLatitude() + env.getUpperRightLatitude()) / 2;
+            double lon = (env.getLowerLeftLongitude() + env.getUpperRightLongitude()) / 2;
+            graph.ellipsoidToGeoidDifference = ElevationUtils.computeEllipsoidToGeoidDifference(lat, lon);
+            LOG.info("Computed ellipsoid/geoid offset at (" + lat + ", " + lon + ") as " + graph.ellipsoidToGeoidDifference);
+        } catch (Exception e) {
+            LOG.error("Error computing ellipsoid/geoid difference");
+        }
+    }
+
+    private ConsequencesStrategyFactory getConsequencesStrategyConfig(JsonNode config) {
+        if (config == null) {
+            return null;
+        }
+        if (config.isTextual()) {
+            if (config.asText().equals("elevator")) {
+                return ElevatorConsequencesStrategy::new;
+            } else if (config.asText().equals("transfers")) {
+                return UnknownTransferConsequencesStrategy::new;
+            } else {
+                throw new IllegalArgumentException("Bad configuration for consequences strategy");
+            }
+        } else if (config.isArray()) {
+            List<ConsequencesStrategyFactory> factoryList = new ArrayList<>();
+            Iterator<JsonNode> iter = config.iterator();
+            while (iter.hasNext()) {
+                factoryList.add(getConsequencesStrategyConfig(iter.next()));
+            }
+            return opt -> new MultipleConsequencesStrategy(opt, factoryList);
+        }
+        return null;
     }
 
     /** Shut down this router when evicted or (auto-)reloaded. Stop any real-time updater threads. */

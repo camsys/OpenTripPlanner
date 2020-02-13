@@ -18,7 +18,7 @@ import com.google.common.collect.Maps;
 
 /**
  * This file contains experimental classes demonstrating how to avoid using Jersey.
- * It would work well with ReflectiveQueryScraper.
+ * It would work well with ReflectiveQueryScraper .
  * Of course then the API docs would have to be maintained manually.
  * @author abyrd
  */

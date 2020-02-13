@@ -16,18 +16,27 @@ package org.opentripplanner.routing.core;
 import com.google.common.base.Objects;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Route;
+import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.Trip;
 import org.opentripplanner.api.parameter.QualifiedModeSet;
 import org.opentripplanner.common.MavenVersion;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.common.model.NamedPlace;
+import org.opentripplanner.routing.alertpatch.Alert;
 import org.opentripplanner.routing.edgetype.StreetEdge;
 import org.opentripplanner.routing.error.TrivialPathException;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.Vertex;
+import org.opentripplanner.routing.ignore.DefaultPathIgnoreStrategy;
+import org.opentripplanner.routing.ignore.PathIgnoreStrategy;
+import org.opentripplanner.routing.impl.MTAPathIgnoreStrategy;
+import org.opentripplanner.routing.impl.MtaPathComparator;
+import org.opentripplanner.routing.impl.PathComparator;
+import org.opentripplanner.routing.impl.RTDPathIgnoreStrategy;
 import org.opentripplanner.routing.request.BannedStopSet;
 import org.opentripplanner.routing.spt.DominanceFunction;
+import org.opentripplanner.routing.spt.GraphPath;
 import org.opentripplanner.routing.spt.ShortestPathTree;
 import org.opentripplanner.util.DateUtils;
 import org.slf4j.Logger;
@@ -36,12 +45,15 @@ import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 
 /**
@@ -81,11 +93,22 @@ public class RoutingRequest implements Cloneable, Serializable {
     /** An ordered list of intermediate locations to be visited. */
     public List<GenericLocation> intermediatePlaces;
 
+    /** An un-ordered list of multiple locations that can be used as possible destinations. */
+    public List<GenericLocation> toPlaces;
+
+    /** An un-ordered list of multiple locations that can be used as possible origins. */
+    public List<GenericLocation> fromPlaces;
+
     /**
      * The maximum distance (in meters) the user is willing to walk for access/egress legs.
      * Defaults to unlimited.
      */
     public double maxWalkDistance = Double.MAX_VALUE;
+
+    /**
+     * Maximum walking distance for heuristic.
+     */
+    public double maxWalkDistanceHeuristic = Double.MAX_VALUE;
 
     /**
      * The maximum distance (in meters) the user is willing to walk for transfer legs.
@@ -106,6 +129,12 @@ public class RoutingRequest implements Cloneable, Serializable {
     /** The worst possible weight that we will accept when planning a trip. */
     public double maxWeight = Double.MAX_VALUE;
 
+    /** The maximum duration of a returned itinerary, in hours. */
+    public double maxHours = Double.MAX_VALUE;
+
+    /** Whether maxHours limit should consider wait/idle time between the itinerary and the requested arrive/depart time. */
+    public boolean useRequestedDateTimeInMaxHours = false;
+
     /** The set of TraverseModes that a user is willing to use. Defaults to WALK | TRANSIT. */
     public TraverseModeSet modes = new TraverseModeSet("TRANSIT,WALK"); // defaults in constructor overwrite this
 
@@ -117,13 +146,13 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     /** The epoch date/time that the trip should depart (or arrive, for requests where arriveBy is true) */
     public long dateTime = new Date().getTime() / 1000;
-    
+
     /** The date/time that the original travel time requested by customer */
     public long origTravelDateTime = Long.MIN_VALUE;
-    
+
     /** The run board name in current GTFS file. This name will be used in the warning message if the user given travel date is beyond the current runboard. */
     public String runboard = null;
-    
+
     public Long runboardEndDate = null;
 
     /** Whether the trip should depart at dateTime (false, the default), or arrive at dateTime. */
@@ -171,6 +200,17 @@ public class RoutingRequest implements Cloneable, Serializable {
      *  of not wanting to walk too much without asking for totally ridiculous itineraries, but this
      *  observation should in no way be taken as scientific or definitive. Your mileage may vary.*/
     public double walkReluctance = 2.0;
+
+    /** Whether to use walkReluctance in TransferEdges */
+    public boolean applyWalkReluctanceInTransfers = false;
+
+    /** Multiplier for how bad driving is - similar to walkReluctance. Set equal to walkReluctance
+     * to match previous OTP behavior, but it may be reasonable to set this value to higher than
+     * walkReluctance. */
+    public double carReluctance = 2.0;
+
+    /** Multiplier for OptimizeType = walking */
+    public double optimizeWalkMultiplier = 3.5;
 
     /** Used instead of walk reluctance for stairs */
     public double stairsReluctance = 2.0;
@@ -270,7 +310,13 @@ public class RoutingRequest implements Cloneable, Serializable {
     
     /** Set of preferred agencies by user. */
     public HashSet<String> preferredAgencies = new HashSet<String>();
-    
+
+    public HashSet<Integer> preferredRouteTypes = new HashSet<>();
+
+    public HashSet<Integer> bannedRouteTypes = new HashSet<>();
+
+    private Set<String> bannedPaths = new HashSet<>();
+
     /**
      * Penalty added for using every route that is not preferred if user set any route as preferred. We return number of seconds that we are willing
      * to wait for preferred route.
@@ -279,7 +325,13 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     /** Set of unpreferred routes for given user. */
     public RouteMatcher unpreferredRoutes = RouteMatcher.emptyMatcher();
-    
+
+    /** Set of preferred start routes for given user. */
+    public RouteMatcher preferredStartRoutes = RouteMatcher.emptyMatcher();
+
+    /** Set of preferred end routes for given user. */
+    public RouteMatcher preferredEndRoutes = RouteMatcher.emptyMatcher();
+
     /** Set of unpreferred agencies for given user. */
     public HashSet<String> unpreferredAgencies = new HashSet<String>();
 
@@ -289,13 +341,18 @@ public class RoutingRequest implements Cloneable, Serializable {
     public int useUnpreferredRoutesPenalty = 300;
 
     /**
+     * Penalty added for using an unpreferred route at the start or end. We return number of seconds that we are willing to wait for preferred route.
+     */
+    public int useUnpreferredStartEndPenalty = 3600;
+
+    /**
      * A global minimum transfer time (in seconds) that specifies the minimum amount of time that must pass between exiting one transit vehicle and
      * boarding another. This time is in addition to time it might take to walk between transit stops. This time should also be overridden by specific
      * transfer timing information in transfers.txt
      */
     // initialize to zero so this does not inadvertently affect tests, and let Planner handle defaults
     public int transferSlack = 0;
-    
+
     /**
      * Max transfer time
      */
@@ -305,15 +362,21 @@ public class RoutingRequest implements Cloneable, Serializable {
      * Min transfer time as hard limit
      */
     public int minTransferTimeHard = Integer.MIN_VALUE;
-    
+
     /**
      * Trip shown range. eg. trip starts 3 hours later than the departure time; or trip arrives before 3 hours than arrive by time.
      */
     public int tripShownRangeTime = Integer.MAX_VALUE;
 
     /** Invariant: boardSlack + alightSlack <= transferSlack. */
+    /**
+     * Minimum time it takes to board a vehicle (default is 0).
+     */
     public int boardSlack = 0;
 
+    /**
+     * Minimum time it takes to alight a vehicle (default is 0).
+     */
     public int alightSlack = 0;
 
     public int maxTransfers = 2;
@@ -327,6 +390,9 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     /** Penalty for using a non-preferred transfer */
     public int nonpreferredTransferPenalty = 180;
+
+    /** Whether unknown transfers should be treated as forbidden */
+    public boolean allowUnknownTransfers = true;
 
     /**
      * For the bike triangle, how important time is. 
@@ -363,6 +429,11 @@ public class RoutingRequest implements Cloneable, Serializable {
      * When true, reverse optimize this search on the fly whenever needed, rather than reverse-optimizing the entire path when it's done.
      */
     public boolean reverseOptimizeOnTheFly = false;
+
+    /**
+     * When true, do a full reversed search to compact the legs of the GraphPath.
+     */
+    public boolean compactLegsByReversedSearch = false;
 
     /**
      * If true, cost turns as they would be in a country where driving occurs on the right; otherwise, cost them as they would be in a country where
@@ -416,6 +487,8 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     public boolean walkingBike;
 
+    public boolean walkLimitingByLeg = false;
+
     public boolean softWalkLimiting = true;
     public boolean softPreTransitLimiting = true;
 
@@ -434,6 +507,13 @@ public class RoutingRequest implements Cloneable, Serializable {
     public boolean parkAndRide  = false;
     public boolean kissAndRide  = false;
 
+    // smart kiss and ride - if this option is turned on, intelligently use pre-transit and post-transit kiss-and-ride
+    public boolean smartKissAndRide = false;
+    public boolean preTransitKissAndRide = false;
+    public boolean postTransitKissAndRide = false;
+    public Set<AgencyAndId> kissAndRideWhitelist = Collections.emptySet();
+    public Set<String> kissAndRideOverrides = Collections.emptySet();
+
     /* Whether we are in "long-distance mode". This is currently a server-wide setting, but it could be made per-request. */
     // TODO remove
     public boolean longDistance = false;
@@ -447,6 +527,36 @@ public class RoutingRequest implements Cloneable, Serializable {
     /** Accept only paths that use transit (no street-only paths). */
     public boolean onlyTransitTrips = false;
 
+    /** Option to disable the default filtering of GTFS-RT alerts by time. */
+    public boolean disableAlertFiltering = false;
+
+    /** Whether to apply the ellipsoid->geoid offset to all elevations in the response */
+    public boolean geoidElevation = false;
+
+    /** Whether to find impacts of realtime alerts */
+    public boolean findRealtimeConsequences = true;
+
+    /** Which path comparator to use */
+    public String pathComparator = null;
+
+    /** Which PathIgnoreStrategy to use */
+    public String pathIgnoreStrategy = null;
+
+    /** How far to look out, in seconds, to add upcoming trips. Defaults to half an hour. */
+    public int nextDepartureWindow = 1800;
+
+    /** How many upcoming departures to add. Defaults to 3 */
+    public int numberOfDepartures = 3;
+
+    /** Whether to apply "hard path banning", where after a sequence of routes is used, it can't be used again */
+    public boolean hardPathBanning = false;
+
+    /** What agencies to apply hard path banning to */
+    public HashSet<String> hardPathBanningAgencies = new HashSet<>();
+
+    /** Whether to try to link endpoints to stops with the same location */
+    public boolean stopLinking = false;
+
     /** Saves split edge which can be split on origin/destination search
      *
      * This is used so that TrivialPathException is thrown if origin and destination search would split the same edge
@@ -455,6 +565,15 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     /** Should attempt to determine when the enxt bus goes through this stop. */
     public boolean showNextFromDeparture = false;
+
+    /** Keep track of alerts to add to GraphPath */
+    public List<Alert> planAlerts = new ArrayList<>();
+
+    /** Whether to use feature where dates are extended when past transit service */
+    public boolean useTransitServiceExtension = false;
+
+
+    public boolean farEndpointsException = false;
 
     /* CONSTRUCTORS */
 
@@ -630,6 +749,24 @@ public class RoutingRequest implements Cloneable, Serializable {
             preferredAgencies = new HashSet<String>(Arrays.asList(s.split(",")));
     }
 
+    public void setPreferredRouteTypes(String s) {
+        if (s != null && !s.equals("")) {
+            preferredRouteTypes = new HashSet<>();
+            for (String si : s.split(",")) {
+                preferredRouteTypes.add(Integer.parseInt(si));
+            }
+        }
+    }
+
+    public void setBannedRouteTypes(String s) {
+        if (s != null && !s.equals("")) {
+            bannedRouteTypes = new HashSet<>();
+            for (String si : s.split(",")) {
+                bannedRouteTypes.add(Integer.parseInt(si));
+            }
+        }
+    }
+
     public void setPreferredRoutes(String s) {
         if (s != null && !s.equals(""))
             preferredRoutes = RouteMatcher.parse(s);
@@ -641,17 +778,43 @@ public class RoutingRequest implements Cloneable, Serializable {
         if(penalty < 0) penalty = 0;
         this.otherThanPreferredRoutesPenalty = penalty;
     }
-    
+
+    public void setUseUnpreferredRoutesPenalty(int penalty) {
+        if (penalty < 0)
+            penalty = 0;
+        this.useUnpreferredRoutesPenalty = penalty;
+    }
+
+    public void setUseUnpreferredStartEndPenalty(int penalty) {
+        if (penalty < 0)
+            penalty = 0;
+        this.useUnpreferredStartEndPenalty = penalty;
+    }
+
     public void setUnpreferredAgencies(String s) {
         if (s != null && !s.equals(""))
             unpreferredAgencies = new HashSet<String>(Arrays.asList(s.split(",")));
     }
-    
+
     public void setUnpreferredRoutes(String s) {
         if (s != null && !s.equals(""))
             unpreferredRoutes = RouteMatcher.parse(s);
         else
             unpreferredRoutes = RouteMatcher.emptyMatcher();
+    }
+
+    public void setPreferredStartRoutes(String s) {
+        if (s != null && !s.equals(""))
+            preferredStartRoutes = RouteMatcher.parse(s);
+        else
+            preferredStartRoutes = RouteMatcher.emptyMatcher();
+    }
+
+    public void setPreferredEndRoutes(String s) {
+        if (s != null && !s.equals(""))
+            preferredEndRoutes = RouteMatcher.parse(s);
+        else
+            preferredEndRoutes = RouteMatcher.emptyMatcher();
     }
 
     public void setBannedRoutes(String s) {
@@ -678,10 +841,16 @@ public class RoutingRequest implements Cloneable, Serializable {
             bannedStopsHard = StopMatcher.emptyMatcher();
         }
     }
-    
+
     public void setBannedAgencies(String s) {
         if (s != null && !s.equals(""))
             bannedAgencies = new HashSet<String>(Arrays.asList(s.split(",")));
+    }
+
+    public void setHardPathBanningAgencies(String s) {
+        if (s != null && !s.equals("")) {
+            hardPathBanningAgencies = new HashSet<>(Arrays.asList(s.split(",")));
+        }
     }
 
     public final static int MIN_SIMILARITY = 1000;
@@ -692,6 +861,14 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     public void setToString(String to) {
         this.to = GenericLocation.fromOldStyleString(to);
+    }
+
+    public void setFrom(double lat, double lon) {
+        this.from = new GenericLocation(lat, lon);
+    }
+
+    public void setTo(double lat, double lon) {
+        this.to = new GenericLocation(lat, lon);
     }
 
     /**
@@ -716,7 +893,7 @@ public class RoutingRequest implements Cloneable, Serializable {
             addMode(m);
         }
     }
-    
+
     public Date getOrigTravelDateTime() {
         if (origTravelDateTime == Long.MIN_VALUE) {
             return null;
@@ -724,25 +901,29 @@ public class RoutingRequest implements Cloneable, Serializable {
             return new Date(origTravelDateTime*1000);
         }
     }
-    
+
     public void setOrigTravelDateTime(Date origTravelDateTime) {
         this.origTravelDateTime = origTravelDateTime.getTime() / 1000;
     }
-    
+
     public String getRunboard() {
         return runboard;
     }
-    
+
     public void setRunboard(String runboard) {
         this.runboard = runboard;
     }
-    
+
     public Long getRunboardEndDate() {
         return runboardEndDate;
     }
-    
+
     public void setRunboardEndDate(long date) {
         this.runboardEndDate = date;
+    }
+
+    public boolean hasRunboardEndDate() {
+        return runboardEndDate != null;
     }
 
     public Date getDateTime() {
@@ -758,7 +939,7 @@ public class RoutingRequest implements Cloneable, Serializable {
         setDateTime(dateObject);
     }
 
-    public int getNumItineraries() { 
+    public int getNumItineraries() {
         if (modes.isTransit()) {
             return numItineraries;
         } else {
@@ -798,14 +979,34 @@ public class RoutingRequest implements Cloneable, Serializable {
             intermediatePlaces.add(GenericLocation.fromOldStyleString(place));
         }
     }
-    
+
+    /**
+     * Sets multiToPlaces by parsing GenericLocations from a list of string.
+     */
+    public void  setToPlacesFromStrings(List<String> places) {
+        this.toPlaces = new ArrayList<GenericLocation>(places.size());
+        for (String place : places) {
+            toPlaces.add(GenericLocation.fromOldStyleString(place));
+        }
+    }
+
+    /**
+     * Sets multiFromPlaces by parsing GenericLocations from a list of string.
+     */
+    public void  setFromPlacesFromStrings(List<String> places) {
+        this.fromPlaces = new ArrayList<GenericLocation>(places.size());
+        for (String place : places) {
+            fromPlaces.add(GenericLocation.fromOldStyleString(place));
+        }
+    }
+
     /** Clears any intermediate places from this request. */
     public void clearIntermediatePlaces() {
         if (this.intermediatePlaces != null) {
             this.intermediatePlaces.clear();
         }
     }
-    
+
     /**
      * Returns true if there are any intermediate places set.
      */
@@ -857,10 +1058,23 @@ public class RoutingRequest implements Cloneable, Serializable {
             clone.bannedTrips = (HashMap<AgencyAndId, BannedStopSet>) bannedTrips.clone();
             clone.bannedStops = bannedStops.clone();
             clone.bannedStopsHard = bannedStopsHard.clone();
+            clone.preferredAgencies = (HashSet<String>) preferredAgencies.clone();
+            clone.preferredRouteTypes = (HashSet<Integer>) preferredRouteTypes.clone();
+            clone.bannedRouteTypes = (HashSet<Integer>) bannedRouteTypes.clone();
+            clone.preferredRoutes = preferredRoutes.clone();
+            clone.preferredStartRoutes = preferredStartRoutes.clone();
+            clone.preferredEndRoutes = preferredEndRoutes.clone();
+            clone.unpreferredAgencies = (HashSet<String>) unpreferredAgencies.clone();
+            clone.unpreferredRoutes = unpreferredRoutes.clone();
+            clone.bannedPaths = new HashSet<>(bannedPaths);
+            clone.kissAndRideOverrides = new HashSet<>(kissAndRideOverrides);
+            clone.kissAndRideWhitelist = new HashSet<>(kissAndRideWhitelist);
             if (this.bikeWalkingOptions != this)
                 clone.bikeWalkingOptions = this.bikeWalkingOptions.clone();
             else
                 clone.bikeWalkingOptions = clone;
+            clone.hardPathBanningAgencies = (HashSet<String>) hardPathBanningAgencies.clone();
+            clone.planAlerts = new ArrayList<>();
             return clone;
         } catch (CloneNotSupportedException e) {
             /* this will never happen since our super is the cloneable object */
@@ -873,6 +1087,8 @@ public class RoutingRequest implements Cloneable, Serializable {
         ret.setArriveBy(!ret.arriveBy);
         ret.reverseOptimizing = !ret.reverseOptimizing; // this is not strictly correct
         ret.useBikeRentalAvailabilityInformation = false;
+        ret.preTransitKissAndRide = this.postTransitKissAndRide;
+        ret.postTransitKissAndRide = this.preTransitKissAndRide;
         return ret;
     }
 
@@ -903,7 +1119,7 @@ public class RoutingRequest implements Cloneable, Serializable {
         this.rctx = new RoutingContext(this, graph, from, to);
         this.rctx.originBackEdge = fromBackEdge;
     }
-    
+
     public void setRoutingContext(Graph graph, Vertex from, Vertex to) {
         setRoutingContext(graph, null, from, to);
     }
@@ -965,6 +1181,8 @@ public class RoutingRequest implements Cloneable, Serializable {
                 && transferPenalty == other.transferPenalty
                 && maxSlope == other.maxSlope
                 && walkReluctance == other.walkReluctance
+                && applyWalkReluctanceInTransfers == other.applyWalkReluctanceInTransfers
+                && carReluctance == other.carReluctance
                 && waitReluctance == other.waitReluctance
                 && waitAtBeginningFactor == other.waitAtBeginningFactor
                 && walkBoardCost == other.walkBoardCost
@@ -973,6 +1191,8 @@ public class RoutingRequest implements Cloneable, Serializable {
                 && bannedTrips.equals(other.bannedTrips)
                 && preferredRoutes.equals(other.preferredRoutes)
                 && unpreferredRoutes.equals(other.unpreferredRoutes)
+                && preferredStartRoutes.equals(other.preferredStartRoutes)
+                && preferredEndRoutes.equals(other.preferredEndRoutes)
                 && transferSlack == other.transferSlack
                 && maxTransferTime == other.maxTransferTime
                 && minTransferTimeHard == other.minTransferTimeHard
@@ -980,8 +1200,10 @@ public class RoutingRequest implements Cloneable, Serializable {
                 && boardSlack == other.boardSlack
                 && alightSlack == other.alightSlack
                 && nonpreferredTransferPenalty == other.nonpreferredTransferPenalty
+                && allowUnknownTransfers == other.allowUnknownTransfers
                 && otherThanPreferredRoutesPenalty == other.otherThanPreferredRoutesPenalty
                 && useUnpreferredRoutesPenalty == other.useUnpreferredRoutesPenalty
+                && useUnpreferredStartEndPenalty == other.useUnpreferredStartEndPenalty
                 && triangleSafetyFactor == other.triangleSafetyFactor
                 && triangleSlopeFactor == other.triangleSlopeFactor
                 && triangleTimeFactor == other.triangleTimeFactor
@@ -1003,7 +1225,21 @@ public class RoutingRequest implements Cloneable, Serializable {
                 && ignoreRealtimeUpdates == other.ignoreRealtimeUpdates
                 && disableRemainingWeightHeuristic == other.disableRemainingWeightHeuristic
                 && Objects.equal(startingTransitTripId, other.startingTransitTripId)
-                && useTraffic == other.useTraffic;
+                && useTraffic == other.useTraffic
+                && disableAlertFiltering == other.disableAlertFiltering
+                && geoidElevation == other.geoidElevation
+                && nextDepartureWindow == other.nextDepartureWindow
+                && hardPathBanning == other.hardPathBanning
+                && smartKissAndRide == other.smartKissAndRide
+                && kissAndRideWhitelist.equals(other.kissAndRideWhitelist)
+                && kissAndRideOverrides.equals(other.kissAndRideOverrides)
+                && maxWalkDistanceHeuristic == other.maxWalkDistanceHeuristic
+                && hardPathBanningAgencies.equals(other.hardPathBanningAgencies)
+                && numberOfDepartures == other.numberOfDepartures
+                && stopLinking == other.stopLinking
+                && pathIgnoreStrategy.equals(pathIgnoreStrategy)
+                && useTransitServiceExtension == other.useTransitServiceExtension
+                && farEndpointsException == other.farEndpointsException;
     }
 
     /**
@@ -1019,11 +1255,13 @@ public class RoutingRequest implements Cloneable, Serializable {
                 + optimize.hashCode() + new Double(maxWalkDistance).hashCode()
                 + new Double(maxTransferWalkDistance).hashCode()
                 + new Double(transferPenalty).hashCode() + new Double(maxSlope).hashCode()
-                + new Double(walkReluctance).hashCode() + new Double(waitReluctance).hashCode()
+                + new Double(walkReluctance).hashCode() + new Double(waitReluctance).hashCode() + new Double(carReluctance).hashCode()
+                + Boolean.hashCode(applyWalkReluctanceInTransfers) * 39330359
                 + new Double(waitAtBeginningFactor).hashCode() * 15485863
                 + walkBoardCost + bikeBoardCost + bannedRoutes.hashCode()
                 + bannedTrips.hashCode() * 1373 + transferSlack * 20996011
                 + (int) nonpreferredTransferPenalty + (int) transferPenalty * 163013803
+                + (allowUnknownTransfers ? 15486157 : 0)
                 + new Double(triangleSafetyFactor).hashCode() * 195233277
                 + new Double(triangleSlopeFactor).hashCode() * 136372361
                 + new Double(triangleTimeFactor).hashCode() * 790052899
@@ -1034,9 +1272,22 @@ public class RoutingRequest implements Cloneable, Serializable {
                 + new Boolean(ignoreRealtimeUpdates).hashCode() * 154329
                 + new Boolean(disableRemainingWeightHeuristic).hashCode() * 193939
                 + new Boolean(useTraffic).hashCode() * 10169
+                + Integer.hashCode(nextDepartureWindow) * 1373
+                + Boolean.hashCode(hardPathBanning) * 63061489
+                + Boolean.hashCode(smartKissAndRide) * 10169
+                + kissAndRideWhitelist.hashCode() * 63061489
+                + kissAndRideOverrides.hashCode() * 731980
+                + Double.hashCode(maxWalkDistanceHeuristic) * 731980
+                + hardPathBanningAgencies.hashCode() * 209477
+                + numberOfDepartures * 15485863
+                + Boolean.hashCode(stopLinking) * 18253
+                + new Boolean(useTraffic).hashCode() * 10169
                 + new Double(maxTransferTime).hashCode() * 790052909
                 + new Double(minTransferTimeHard).hashCode() * 31
-                + new Double(tripShownRangeTime).hashCode() * 790052909;
+                + new Double(tripShownRangeTime).hashCode() * 790052909
+                + pathIgnoreStrategy.hashCode() * 1301081
+                + Boolean.hashCode(useTransitServiceExtension) * 1300931
+                + Boolean.hashCode(farEndpointsException) * 538799;
         if (batch) {
             hashCode *= -1;
             // batch mode, only one of two endpoints matters
@@ -1161,6 +1412,18 @@ public class RoutingRequest implements Cloneable, Serializable {
         }
     }
 
+    public void setCarReluctance(double carReluctance) {
+        if (carReluctance > 0) {
+            this.carReluctance = carReluctance;
+        }
+    }
+
+    public void setOptimizeWalkMultiplier(double optimizeWalkMultiplier) {
+        if (optimizeWalkMultiplier > 0) {
+            this.optimizeWalkMultiplier = optimizeWalkMultiplier;
+        }
+    }
+
     public void setWaitReluctance(double waitReluctance) {
         if (waitReluctance > 0) {
             this.waitReluctance = waitReluctance;
@@ -1176,7 +1439,11 @@ public class RoutingRequest implements Cloneable, Serializable {
     public void banTrip(AgencyAndId trip) {
         bannedTrips.put(trip, BannedStopSet.ALL);
     }
-    
+
+    public void addUnpreferredRoute(AgencyAndId routeId) {
+        unpreferredRoutes.addRouteId(routeId);
+    }
+
     /** 
      * tripIsBanned is a misnomer: this checks whether the agency or route are banned.
      * banning of individual trips is actually performed inside the trip search, 
@@ -1198,18 +1465,49 @@ public class RoutingRequest implements Cloneable, Serializable {
             }
         }
 
+        /* check if route type is banned */
+        if (bannedRouteTypes != null) {
+            if (bannedRouteTypes.contains(trip.getRoute().getType())) {
+                return true;
+            }
+        }
+
         return false;
     }
 
     /** Check if route is preferred according to this request. */
-    public long preferencesPenaltyForRoute(Route route) {
+    public long preferencesPenaltyForRoute(Route route, State state) {
         long preferences_penalty = 0;
-        String agencyID = route.getId().getAgencyId();
-        if ((preferredRoutes != null && !preferredRoutes.equals(RouteMatcher.emptyMatcher())) ||
-                (preferredAgencies != null && !preferredAgencies.isEmpty())) {
+        String agencyID = route.getAgency().getId();
+
+        // Add penalty if we have a preferred start that is violated
+        boolean isUnpreferredStart = false;
+        if (state != null && preferredStartRoutes != null && !preferredStartRoutes.isEmpty() && !state.isEverBoarded()) {
+            if (!this.arriveBy) {
+                if (!preferredStartRoutes.matches(route)) {
+                    isUnpreferredStart = true;
+                }
+            }
+        }
+
+        // Add penalty if we have a preferred end that is vioalated
+        boolean isUnpreferredEnd = false;
+        if (state != null && preferredEndRoutes != null && !preferredEndRoutes.isEmpty() && !state.isEverBoarded()) {
+            if (this.arriveBy) {
+                if (!preferredEndRoutes.matches(route)) {
+                    isUnpreferredEnd = true;
+                }
+            }
+        }
+
+        if ((preferredRoutes != null && !preferredRoutes.isEmpty()) ||
+                (preferredAgencies != null && !preferredAgencies.isEmpty()) ||
+                (preferredRouteTypes != null && !preferredRouteTypes.isEmpty())) {
+
             boolean isPreferedRoute = preferredRoutes != null && preferredRoutes.matches(route);
             boolean isPreferedAgency = preferredAgencies != null && preferredAgencies.contains(agencyID);
-            if (!isPreferedRoute && !isPreferedAgency) {
+            boolean isPreferredType = preferredRouteTypes != null && preferredRouteTypes.contains(route.getType());
+            if (!isPreferedRoute && !isPreferedAgency && !isPreferredType) {
                 preferences_penalty += otherThanPreferredRoutesPenalty;
             }
             else {
@@ -1221,6 +1519,11 @@ public class RoutingRequest implements Cloneable, Serializable {
         if (isUnpreferedRoute || isUnpreferedAgency) {
             preferences_penalty += useUnpreferredRoutesPenalty;
         }
+
+        if (isUnpreferredStart || isUnpreferredEnd) {
+            preferences_penalty += useUnpreferredStartEndPenalty;
+        }
+
         return preferences_penalty;
     }
 
@@ -1276,5 +1579,62 @@ public class RoutingRequest implements Cloneable, Serializable {
             }
         }
 
+    }
+
+    public Comparator<GraphPath> getPathComparator(boolean compareStartTimes) {
+        if ("mta".equals(pathComparator)) {
+            return new MtaPathComparator(compareStartTimes);
+        }
+        return new PathComparator(compareStartTimes);
+    }
+
+    public PathIgnoreStrategy getPathIgnoreStrategy() {
+        if ("mta".equals(pathIgnoreStrategy)) {
+            return new MTAPathIgnoreStrategy();
+        } else if ("rtd".equals(pathIgnoreStrategy)) {
+            return new RTDPathIgnoreStrategy();
+        }
+        return new DefaultPathIgnoreStrategy();
+    }
+
+    public void banPath(GraphPath path) {
+        bannedPaths.add(path.getRoutePatternHash());
+    }
+
+    public boolean isPathBanned(GraphPath path) {
+        if (hardPathBanningAgencies != null && !hardPathBanningAgencies.isEmpty()) {
+            for (AgencyAndId id : path.getRoutes()) {
+                if (!hardPathBanningAgencies.contains(id.getAgencyId())) {
+                   return false;
+                }
+            }
+        }
+        String hash = path.getRoutePatternHash();
+        if (bannedPaths.contains(hash)) {
+            return true;
+        }
+        // Ensure we don't get trivially different paths. (Todo - will this kick out useful paths too?)
+        for (String other : bannedPaths) {
+            if (hash.startsWith(other + "#")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean canUseStopForKissAndRide(Stop stop) {
+        if (kissAndRideWhitelist.contains(stop.getId())) {
+            return true;
+        }
+        if (stop.getParentStation() != null) {
+            AgencyAndId id = new AgencyAndId(stop.getId().getAgencyId(), stop.getParentStation());
+            return kissAndRideWhitelist.contains(id);
+        }
+        return false;
+    }
+
+    public void addPlanAlert(Alert alert) {
+        if (!planAlerts.contains(alert))
+            planAlerts.add(alert);
     }
 }

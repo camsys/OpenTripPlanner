@@ -13,8 +13,11 @@
 
 package org.opentripplanner.routing.edgetype;
 
+import org.opentripplanner.routing.core.State;
+import org.opentripplanner.routing.core.StateEditor;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.vertextype.TemporaryVertex;
+import org.opentripplanner.routing.vertextype.TransitVertex;
 
 public class TemporaryFreeEdge extends FreeEdge implements TemporaryEdge {
     final private boolean endEdge;
@@ -51,5 +54,17 @@ public class TemporaryFreeEdge extends FreeEdge implements TemporaryEdge {
     @Override
     public String toString() {
         return "Temporary" + super.toString();
+    }
+
+    @Override
+    public State traverse(State s0) {
+        StateEditor s1 = s0.edit(this);
+        s1.incrementWeight(1);
+        // If we're starting on transit, transfer is permissible.
+        Vertex dest = s0.getOptions().arriveBy ? fromv : tov;
+        if (dest instanceof TransitVertex) {
+            s1.setTransferPermissible();
+        }
+        return s1.makeState();
     }
 }

@@ -15,6 +15,7 @@ package org.opentripplanner.api.model;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -25,12 +26,17 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.opentripplanner.api.model.alertpatch.LocalizedAlert;
+import org.opentripplanner.index.model.FrequencyDetail;
+import org.opentripplanner.index.model.StopTimesByRouteAndHeadsign;
+import org.opentripplanner.index.model.StopTimesByStop;
 import org.opentripplanner.routing.alertpatch.Alert;
 import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.util.model.EncodedPolylineBean;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import static org.opentripplanner.util.DateUtils.formatDateIso;
 
  /**
  * One leg of a trip -- that is, a temporally continuous piece of the journey that takes place on a
@@ -43,12 +49,22 @@ public class Leg {
      * The date and time this leg begins.
      */
     public Calendar startTime = null;
-    
+
+    /**
+     * The date and time this leg begins, in ISO-8601 format.
+     */
+    public String startTimeFmt = null;
+
     /**
      * The date and time this leg ends.
      */
     public Calendar endTime = null;
-    
+
+    /**
+     * The date and time this leg ends, in ISO-8601 format.
+     */
+    public String endTimeFmt = null;
+
     /**
      * For transit leg, the offset from the scheduled departure-time of the boarding stop in this leg.
      * "scheduled time of departure at boarding stop" = startTime - departureDelay
@@ -101,14 +117,30 @@ public class Leg {
     @JsonSerialize
     public String route = "";
 
+    /**
+     * For transit legs, the name of the agency being used.
+     */
     @XmlAttribute
     @JsonSerialize
     public String agencyName;
 
+    /**
+     * For transit legs, the URL of the agency being used.
+     */
     @XmlAttribute
     @JsonSerialize
     public String agencyUrl;
 
+    /**
+     * For transit legs, the branding URL of the agency being used.
+     */
+    @XmlAttribute
+    @JsonSerialize
+    public String agencyBrandingUrl;
+
+    /**
+     * For transit legs, offset from GMT of the timezone of the agency being used, in milliseconds.
+     */
     @XmlAttribute
     @JsonSerialize
     public int agencyTimeZoneOffset;
@@ -172,6 +204,20 @@ public class Leg {
     @JsonSerialize
     public String headsign = null;
 
+     /**
+      * For transit legs, the stopHeadsign
+      */
+     @XmlAttribute
+     @JsonSerialize
+     public String stopHeadsign = null;
+
+     /**
+      * For transit legs, the tripHeadsign of the bus or train being used.
+      */
+     @XmlAttribute
+     @JsonSerialize
+     public String tripHeadsign = null;
+
     /**
      * For transit legs, the ID of the transit agency that operates the service used for this leg.
      * For non-transit legs, null.
@@ -193,8 +239,15 @@ public class Leg {
     @XmlAttribute
     @JsonSerialize
     public String serviceDate = null;
-    
-    /**
+
+     /**
+      * For transit leg, the route's branding URL (if one exists). For non-transit legs, null.
+      */
+     @XmlAttribute
+     @JsonSerialize
+     public String routeBrandingUrl = null;
+
+     /**
      * The Place where the leg originates.
      */
     public Place from = null;
@@ -225,29 +278,67 @@ public class Leg {
     @JsonProperty(value="steps")
     public List<WalkStep> walkSteps;
 
+    /**
+     * A list of alerts relevant to this leg.
+     */
     @XmlElement
     @JsonSerialize
     public List<LocalizedAlert> alerts;
 
+     /**
+      * For transit legs, the short name of the route being used.
+      */
     @XmlAttribute
     @JsonSerialize
     public String routeShortName;
 
+     /**
+      * For transit legs, the long name of the route being used.
+      */
     @XmlAttribute
     @JsonSerialize
     public String routeLongName;
 
+     /**
+      * For transit legs, the boarding restriction given in GTFS, if applicable. Allowable values: mustPhone, coordinateWithDriver
+      */
     @XmlAttribute
     @JsonSerialize
     public String boardRule;
 
+     /**
+      * For transit legs, the alight restriction given in GTFS, if applicable. Allowable values: mustPhone, coordinateWithDriver
+      */
     @XmlAttribute
     @JsonSerialize
     public String alightRule;
 
+     /**
+      * True if this leg is a bicycle leg in which the bicycle has been rented.
+      */
     @XmlAttribute
     @JsonSerialize
     public Boolean rentedBike;
+
+    /** Upcoming arrival/departures at this stop grouped by route and headsign */
+    public Collection<StopTimesByRouteAndHeadsign> upcomingStopTimes;
+
+     /**
+      * Information about whether a trip is peak or off-peak
+      */
+     @XmlAttribute
+     @JsonSerialize
+     public Integer peakOffpeak;
+
+     /**
+       * For transit legs which reflect frequency-based trips, the frequency service parameters for this trip.
+      */
+     @XmlAttribute
+     @JsonSerialize
+     public FrequencyDetail frequencyDetail;
+
+    /** The location of the vehicle serving the transit leg, if available */
+    public VehicleInfo vehicleInfo;
 
     /**
      * Whether this leg is a transit leg or not.
@@ -260,8 +351,8 @@ public class Leg {
         else if (mode.equals(TraverseMode.BICYCLE.toString())) return false;
         else return true;
     }
-    
-    /** 
+
+    /**
      * The leg's duration in seconds
      */
     @XmlElement
@@ -285,10 +376,20 @@ public class Leg {
     public void setTimeZone(TimeZone timeZone) {
         Calendar calendar = Calendar.getInstance(timeZone);
         calendar.setTime(startTime.getTime());
-        startTime = calendar;
+        setStartTime(calendar);
         calendar = Calendar.getInstance(timeZone);
         calendar.setTime(endTime.getTime());
-        endTime = calendar;
+        setEndTime(calendar);
         agencyTimeZoneOffset = timeZone.getOffset(startTime.getTimeInMillis());
+    }
+
+    public void setStartTime(Calendar calendar) {
+        this.startTime = calendar;
+        this.startTimeFmt = formatDateIso(calendar);
+    }
+
+    public void setEndTime(Calendar calendar) {
+        this.endTime = calendar;
+        this.endTimeFmt = formatDateIso(calendar);
     }
 }

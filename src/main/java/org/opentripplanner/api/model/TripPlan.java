@@ -16,10 +16,13 @@ package org.opentripplanner.api.model;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import javax.xml.bind.annotation.XmlElementWrapper;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.opentripplanner.api.model.alertpatch.LocalizedAlert;
+import org.opentripplanner.routing.alertpatch.Alert;
 
 /**
  * A TripPlan is a set of ways to get from point A to point B at time T.
@@ -34,10 +37,7 @@ public class TripPlan {
     
     /** The destination */
     public Place to = null;
-    
-    /** The warning message for the given travel time beyond the GTFS service time range. */
-    public String warnMessage = null;
-    
+
     /** The time and date of the end date of current GTFS. */
     public Long feedEndDate = null;
 
@@ -46,23 +46,29 @@ public class TripPlan {
     @JsonProperty(value="itineraries")
     public List<Itinerary> itinerary = new ArrayList<Itinerary>();
 
+    public List<LocalizedAlert> alerts;
+
     public TripPlan() { }
-    
+
     public TripPlan(Place from, Place to, Date date) {
         this.from = from;
         this.to = to;
         this.date = date;
     }
     
-    public void setWarnMessage(String message) {
-        this.warnMessage = message;
-    }
-    
     public void setFeedEndDate(long date) {
         this.feedEndDate = date;
     }
-    
+
     public void addItinerary(Itinerary itinerary) {
         this.itinerary.add(itinerary);
+    }
+
+    public void addAlert(Alert alert, Locale locale) {
+        if (alerts == null) {
+            alerts = new ArrayList<>();
+        }
+        LocalizedAlert la = new LocalizedAlert(alert, locale);
+        alerts.add(la);
     }
 }

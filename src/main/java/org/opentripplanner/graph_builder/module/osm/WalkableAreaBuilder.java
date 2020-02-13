@@ -126,6 +126,7 @@ public class WalkableAreaBuilder {
             // we also want to fill in the edges of this area anyway, because we can,
             // and to avoid the numerical problems that they tend to cause
             for (Area area : group.areas) {
+
                 if (!ring.toJtsPolygon().contains(area.toJTSMultiPolygon())) {
                     continue;
                 }
@@ -147,7 +148,7 @@ public class WalkableAreaBuilder {
         }
     }
 
-    public void buildWithVisibility(AreaGroup group) {
+    public void buildWithVisibility(AreaGroup group, boolean platformEntriesLinking) {
         Set<OSMNode> startingNodes = new HashSet<OSMNode>();
         Set<Vertex> startingVertices = new HashSet<Vertex>();
         Set<Edge> edges = new HashSet<Edge>();
@@ -168,6 +169,14 @@ public class WalkableAreaBuilder {
             // we also want to fill in the edges of this area anyway, because we can,
             // and to avoid the numerical problems that they tend to cause
             for (Area area : group.areas) {
+
+                // public transform platforms will be handled separately if platformEntriesLinking
+                // parameter is true
+                if(platformEntriesLinking
+                        && "platform".equals(area.parent.getTag("public_transport"))) {
+                    continue;
+                }
+
                 if (!ring.toJtsPolygon().contains(area.toJTSMultiPolygon())) {
                     continue;
                 }
@@ -427,7 +436,7 @@ public class WalkableAreaBuilder {
             I18NString name = __handler.getNameForWay(areaEntity, label);
 
             AreaEdge street = edgeFactory.createAreaEdge(startEndpoint, endEndpoint, line, name,
-                    length, areaPermissions, false, edgeList);
+                    length, areaPermissions, false, edgeList, areaEntity.getId());
             street.setCarSpeed(carSpeed);
 
             if (!areaEntity.hasTag("name") && !areaEntity.hasTag("ref")) {
@@ -446,7 +455,7 @@ public class WalkableAreaBuilder {
             name = __handler.getNameForWay(areaEntity, label);
 
             AreaEdge backStreet = edgeFactory.createAreaEdge(endEndpoint, startEndpoint,
-                    (LineString) line.reverse(), name, length, areaPermissions, true, edgeList);
+                    (LineString) line.reverse(), name, length, areaPermissions, true, edgeList, areaEntity.getId());
             backStreet.setCarSpeed(carSpeed);
 
             if (!areaEntity.hasTag("name") && !areaEntity.hasTag("ref")) {
@@ -454,7 +463,7 @@ public class WalkableAreaBuilder {
             }
 
             if (areaEntity.isTagFalse("wheelchair")) {
-                street.setWheelchairAccessible(false);
+                backStreet.setWheelchairAccessible(false);
             }
 
             backStreet.setStreetClass(cls);
@@ -543,6 +552,8 @@ public class WalkableAreaBuilder {
             StreetTraversalPermission permission = OSMFilter.getPermissionsForEntity(areaEntity,
                     StreetTraversalPermission.PEDESTRIAN_AND_BICYCLE);
             namedArea.setPermission(permission);
+
+            namedArea.setWayId(area.parent.getId());
 
             edgeList.addArea(namedArea);
         }

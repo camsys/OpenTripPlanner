@@ -19,6 +19,9 @@ import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.calendar.CalendarServiceData;
 import org.onebusaway.gtfs.model.calendar.LocalizedServiceId;
 import org.onebusaway.gtfs.services.GtfsRelationalDao;
+import org.opentripplanner.graph_builder.model.GtfsBundle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is actually kind of a hack, and assumes that there is only one copy of CalendarServiceData
@@ -29,6 +32,7 @@ import org.onebusaway.gtfs.services.GtfsRelationalDao;
  */
 public class MultiCalendarServiceImpl extends CalendarServiceImpl {
 
+    private static final Logger LOG = LoggerFactory.getLogger(MultiCalendarServiceImpl.class);
     public MultiCalendarServiceImpl() {
         setData(new CalendarServiceData());
     }

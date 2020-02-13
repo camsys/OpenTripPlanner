@@ -33,10 +33,10 @@ public interface StreetEdgeFactory {
 
     public StreetEdge createEdge(IntersectionVertex startEndpoint, IntersectionVertex endEndpoint,
             LineString geometry, I18NString name, double length, StreetTraversalPermission permissions,
-            boolean back);
+            boolean back, long wayId);
 
     public AreaEdge createAreaEdge(IntersectionVertex startEndpoint,
             IntersectionVertex endEndpoint, LineString geometry, I18NString name, double length,
-            StreetTraversalPermission permissions, boolean back, AreaEdgeList area);
+            StreetTraversalPermission permissions, boolean back, AreaEdgeList area, long wayId);
 
 }

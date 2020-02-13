@@ -15,14 +15,13 @@ package org.opentripplanner.updater.alerts;
 
 import java.util.*;
 
+import com.google.transit.realtime.GtfsRealtimeOneBusAway;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.opentripplanner.routing.alertpatch.Alert;
 import org.opentripplanner.routing.alertpatch.AlertPatch;
 import org.opentripplanner.routing.alertpatch.TimePeriod;
-import org.opentripplanner.routing.services.AlertPatchService;
 import org.opentripplanner.util.I18NString;
 import org.opentripplanner.util.TranslatedString;
-import org.opentripplanner.updater.GtfsRealtimeFuzzyTripMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,21 +37,10 @@ import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
  * @author novalis
  *
  */
-public class AlertsUpdateHandler {
+public class AlertsUpdateHandler extends AbstractUpdateHandler {
     private static final Logger log = LoggerFactory.getLogger(AlertsUpdateHandler.class);
 
-    private String feedId;
-
-    private Set<String> patchIds = new HashSet<String>();
-
-    private AlertPatchService alertPatchService;
-
-    /** How long before the posted start of an event it should be displayed to users */
-    private long earlyStart;
-
-    /** Set only if we should attempt to match the trip_id from other data in TripDescriptor */
-    private GtfsRealtimeFuzzyTripMatcher fuzzyTripMatcher;
-
+    @Override
     public void update(FeedMessage message) {
         alertPatchService.expire(patchIds);
         patchIds.clear();
@@ -83,7 +71,7 @@ public class AlertsUpdateHandler {
                     bestStartTime = realStart;
                 }
                 final long end = activePeriod.hasEnd() ? activePeriod.getEnd() : Long.MAX_VALUE;
-                if (end > lastEndTime) {
+                if (end < Long.MAX_VALUE && end > lastEndTime) {
                     lastEndTime = end;
                 }
                 periods.add(new TimePeriod(start, end));
@@ -108,6 +96,8 @@ public class AlertsUpdateHandler {
             String routeId = null;
             if (informed.hasRouteId()) {
                 routeId = informed.getRouteId();
+            } else if (informed.hasTrip() && informed.getTrip().hasRouteId())  {
+                routeId = informed.getTrip().getRouteId();
             }
 
             int direction;
@@ -132,6 +122,15 @@ public class AlertsUpdateHandler {
                 agencyId = informed.getAgencyId().intern();
             }
 
+            String elevatorId = null;
+            if (informed.hasExtension(GtfsRealtimeOneBusAway.obaEntitySelector)) {
+                GtfsRealtimeOneBusAway.OneBusAwayEntitySelector entitySelector =
+                        informed.getExtension(GtfsRealtimeOneBusAway.obaEntitySelector);
+                if (entitySelector.hasElevatorId()) {
+                    elevatorId = entitySelector.getElevatorId();
+                }
+            }
+
             AlertPatch patch = new AlertPatch();
             patch.setFeedId(feedId);
             if (routeId != null) {
@@ -150,6 +149,9 @@ public class AlertsUpdateHandler {
             if (agencyId != null && routeId == null && tripId == null && stopId == null) {
                 patch.setAgencyId(agencyId);
             }
+            if (elevatorId != null) {
+                patch.setElevatorId(elevatorId);
+            }
             patch.setTimePeriods(periods);
             patch.setAlert(alertText);
 
@@ -164,8 +166,10 @@ public class AlertsUpdateHandler {
         return id + " "
             + (informed.hasAgencyId  () ? informed.getAgencyId  () : " null ") + " "
             + (informed.hasRouteId   () ? informed.getRouteId   () : " null ") + " "
+            + (informed.hasTrip() && informed.getTrip().hasRouteId() ?
+                informed.getTrip().getRouteId() : " null ") + " "
             + (informed.hasTrip() && informed.getTrip().hasDirectionId() ?
-                informed.getTrip().hasDirectionId() : " null ") + " "
+                informed.getTrip().getDirectionId() : " null ") + " "
             + (informed.hasRouteType () ? informed.getRouteType () : " null ") + " "
             + (informed.hasStopId    () ? informed.getStopId    () : " null ") + " "
             + (informed.hasTrip() && informed.getTrip().hasTripId() ?
@@ -187,24 +191,4 @@ public class AlertsUpdateHandler {
         return translations.isEmpty() ? null : TranslatedString.getI18NString(translations);
     }
 
-    public void setFeedId(String feedId) {
-        if(feedId != null)
-            this.feedId = feedId.intern();
-    }
-
-    public void setAlertPatchService(AlertPatchService alertPatchService) {
-        this.alertPatchService = alertPatchService;
-    }
-
-    public long getEarlyStart() {
-        return earlyStart;
-    }
-
-    public void setEarlyStart(long earlyStart) {
-        this.earlyStart = earlyStart;
-    }
-
-    public void setFuzzyTripMatcher(GtfsRealtimeFuzzyTripMatcher fuzzyTripMatcher) {
-        this.fuzzyTripMatcher = fuzzyTripMatcher;
-    }
 }

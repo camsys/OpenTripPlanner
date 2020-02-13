@@ -1,4 +1,3 @@
-
 /* This program is free software: you can redistribute it and/or
  modify it under the terms of the GNU Lesser General Public License
  as published by the Free Software Foundation, either version 3 of
@@ -14,10 +13,13 @@
 
 package org.opentripplanner.util;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -33,19 +35,19 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
-
 import org.eclipse.jetty.util.StringUtil;
-
 
 public class HttpUtils {
     
-    private static final int TIMEOUT_CONNECTION = 5000;
+    private static final long TIMEOUT_CONNECTION = 5000;
     private static final int TIMEOUT_SOCKET = 5000;
+
+    private static final String SCHEME_FILE = "file";
 
     public static InputStream getData(String url) throws IOException {
         return getData(url, null, null);
     }
-    
+
     public static InputStream getData(String url, String requestHeaderName, String requestHeaderValue) throws ClientProtocolException, IOException {
         return getDataWithAuthentication(url, requestHeaderName, requestHeaderValue, null, null);
     }
@@ -53,16 +55,20 @@ public class HttpUtils {
     public static InputStream getData(String url, String requestHeaderName, String requestHeaderValue, String username, String password) throws IOException {
         return getDataWithAuthentication(url, requestHeaderName, requestHeaderValue, username, password);
     }
-    
-    public static InputStream getDataWithAuthentication(String url, String requestHeaderName, String requestHeaderValue, 
+
+    public static InputStream getDataWithAuthentication(String url, String requestHeaderName, String requestHeaderValue,
             String username, String password) throws ClientProtocolException, IOException {
-        HttpGet httpget = new HttpGet(url);
+        URI uri = URI.create(url);
+        if (SCHEME_FILE.equals(uri.getScheme())) {
+            return FileUtils.openInputStream(new File(uri.getPath()));
+        }
+        HttpGet httpget = new HttpGet(uri);
         if (requestHeaderValue != null) {
             httpget.addHeader(requestHeaderName, requestHeaderValue);
         }
 
         HttpClient httpclient = getClient(username, password);
-        
+
         HttpResponse response = httpclient.execute(httpget);
         if(response.getStatusLine().getStatusCode() != 200)
             return null;
@@ -73,7 +79,7 @@ public class HttpUtils {
         }
         return entity.getContent();
     }
-    
+
     public static void testUrl(String url) throws IOException {
         HttpHead head = new HttpHead(url);
         HttpClient httpclient = getClient();
@@ -90,17 +96,17 @@ public class HttpUtils {
         }
     }
     
-    
+
     private static HttpClient getClient() {
         return getClient(null, null);
     }
-    
+
     private static HttpClient getClient(String username, String password) {
         HttpParams httpParams = new BasicHttpParams();
-        HttpConnectionParams.setConnectionTimeout(httpParams, TIMEOUT_CONNECTION);
+        HttpConnectionParams.setConnectionTimeout(httpParams, (int) TIMEOUT_CONNECTION);
         HttpConnectionParams.setSoTimeout(httpParams, TIMEOUT_SOCKET);
         DefaultHttpClient httpclient = new DefaultHttpClient();
-        
+
         if(StringUtil.isNotBlank(username) &&
                 StringUtil.isNotBlank(password))
         {
@@ -108,9 +114,9 @@ public class HttpUtils {
             credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(username, password));
             httpclient.setCredentialsProvider(credentialsProvider);
         }
-        
-        httpclient.setParams(httpParams);    
-                
+
+        httpclient.setParams(httpParams);
+
         return httpclient;
     }
 }

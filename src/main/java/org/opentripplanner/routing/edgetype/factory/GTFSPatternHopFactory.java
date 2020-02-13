@@ -31,13 +31,13 @@ import gnu.trove.list.array.TIntArrayList;
 import org.apache.commons.math3.util.FastMath;
 import org.onebusaway.gtfs.model.Agency;
 import org.onebusaway.gtfs.model.AgencyAndId;
+import org.onebusaway.gtfs.model.FeedInfo;
 import org.onebusaway.gtfs.model.Frequency;
 import org.onebusaway.gtfs.model.Pathway;
 import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.ShapePoint;
 import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.StopTime;
-import org.onebusaway.gtfs.model.Transfer;
 import org.onebusaway.gtfs.model.Trip;
 import org.onebusaway.gtfs.services.GtfsRelationalDao;
 import org.onebusaway.gtfs.services.calendar.CalendarService;
@@ -48,6 +48,7 @@ import org.opentripplanner.common.model.P2;
 import org.opentripplanner.graph_builder.annotation.BogusShapeDistanceTraveled;
 import org.opentripplanner.graph_builder.annotation.BogusShapeGeometry;
 import org.opentripplanner.graph_builder.annotation.BogusShapeGeometryCaught;
+import org.opentripplanner.graph_builder.annotation.HopLargeTime;
 import org.opentripplanner.graph_builder.annotation.HopSpeedFast;
 import org.opentripplanner.graph_builder.annotation.HopSpeedSlow;
 import org.opentripplanner.graph_builder.annotation.HopZeroTime;
@@ -57,13 +58,10 @@ import org.opentripplanner.graph_builder.annotation.NonStationParentStation;
 import org.opentripplanner.graph_builder.annotation.RepeatedStops;
 import org.opentripplanner.graph_builder.annotation.TripDegenerate;
 import org.opentripplanner.graph_builder.annotation.TripUndefinedService;
-import org.opentripplanner.graph_builder.annotation.*;
 import org.opentripplanner.graph_builder.module.GtfsFeedId;
 import org.opentripplanner.gtfs.GtfsContext;
 import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.model.StopPattern;
-import org.opentripplanner.routing.core.StopTransfer;
-import org.opentripplanner.routing.core.TransferTable;
 import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.edgetype.FreeEdge;
 import org.opentripplanner.routing.edgetype.PathwayEdge;
@@ -71,11 +69,8 @@ import org.opentripplanner.routing.edgetype.PatternInterlineDwell;
 import org.opentripplanner.routing.edgetype.PreAlightEdge;
 import org.opentripplanner.routing.edgetype.PreBoardEdge;
 import org.opentripplanner.routing.edgetype.StationStopEdge;
-import org.opentripplanner.routing.edgetype.TimedTransferEdge;
 import org.opentripplanner.routing.edgetype.Timetable;
-import org.opentripplanner.routing.edgetype.TransferEdge;
 import org.opentripplanner.routing.edgetype.TripPattern;
-import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.impl.DefaultFareServiceFactory;
@@ -306,11 +301,41 @@ public class GTFSPatternHopFactory {
 
     private GtfsStopContext context = new GtfsStopContext();
 
+    private long maxHopTime = Long.MAX_VALUE;
+
+    private TransferFactory _transferFactory = new TransferFactory(new StopIndex() {
+        @Override
+        public Vertex getArriveVertexForStop(Stop stop) {
+            return context.stopArriveNodes.get(stop);
+        }
+
+        @Override
+        public Vertex getDepartVertexForStop(Stop stop) {
+            return context.stopDepartNodes.get(stop);
+        }
+
+        @Override
+        public Collection<Stop> getStopsForStation(Stop stop) {
+            return _dao.getStopsForStation(stop);
+        }
+
+        @Override
+        public TransitStationStop getStationForStop(Stop stop) {
+            return context.stationStopNodes.get(stop);
+        }
+    });
+
+    // the location types for transfers.txt
+    public static final int STOP_LOCATION_TYPE = 0;
+    public static final int PARENT_STATION_LOCATION_TYPE = 1;
+
     public int subwayAccessTime = 0;
 
     private double maxStopToShapeSnapDistance = 150;
 
     public int maxInterlineDistance = 200;
+
+    private boolean ignoreGtfsTransfers = false;
 
     public GTFSPatternHopFactory(GtfsContext context) {
         this._feedId = context.getFeedId();
@@ -334,6 +359,7 @@ public class GTFSPatternHopFactory {
         // TODO: Why are we loading stops? The Javadoc above says this method assumes stops are aleady loaded.
         loadStops(graph);
         loadPathways(graph);
+        loadFeedInfo(graph);
         loadAgencies(graph);
         // TODO: Why is there cached "data", and why are we clearing it? Due to a general lack of comments, I have no idea.
         // Perhaps it is to allow name collisions with previously loaded feeds.
@@ -486,7 +512,17 @@ public class GTFSPatternHopFactory {
         interline(tripPatterns.values(), graph);
 
         /* Interpret the transfers explicitly defined in transfers.txt. */
-        loadTransfers(graph);
+        if (!ignoreGtfsTransfers) {
+            loadTransfers(graph);
+        }
+
+        /* Store parent stops in graph, even if not linked. These are needed for clustering*/
+        for(TransitStationStop stop : context.stationStopNodes.values()){
+            if(stop instanceof TransitStation){
+                TransitStation parentStopVertex = (TransitStation) stop;
+                graph.parentStopById.put(parentStopVertex.getStopId(), parentStopVertex.getStop());
+            }
+        }
 
         /* Is this the wrong place to do this? It should be done on all feeds at once, or at deserialization. */
         // it is already done at deserialization, but standalone mode allows using graphs without serializing them.
@@ -605,19 +641,13 @@ public class GTFSPatternHopFactory {
      */
     private LineString[] createGeometry(Graph graph, Trip trip, List<StopTime> stopTimes) {
         AgencyAndId shapeId = trip.getShapeId();
-
+        
         // One less geometry than stoptime as array indexes represetn hops not stops (fencepost problem).
         LineString[] geoms = new LineString[stopTimes.size() - 1];
         
         // Detect presence or absence of shape_dist_traveled on a per-trip basis
         StopTime st0 = stopTimes.get(0);
         boolean hasShapeDist = st0.isShapeDistTraveledSet();
-        
-        //recently RTD GTFS file has been updated by adding distance value into Stop Times file, but distance value is not added into Shapes file accordingly.
-        //This change brings issue to the logic of how to create Grometry in OTP. 
-        //Temporarily fix is to set "hasShapeDist" is false, just pretend the distance value is not added into stop times file like before. 
-        hasShapeDist = false;
-        
         if (hasShapeDist) {
             // this trip has shape_dist in stop_times
             for (int i = 0; i < stopTimes.size() - 1; ++i) {
@@ -807,7 +837,7 @@ public class GTFSPatternHopFactory {
      * @param graph the graph where annotations will be registered
      */
     private void filterStopTimes(List<StopTime> stopTimes, Graph graph) {
-        
+
         if (stopTimes.size() < 2) return;
         StopTime st0 = stopTimes.get(0);
 
@@ -824,6 +854,7 @@ public class GTFSPatternHopFactory {
                 break;
             }
         }
+
         // TODO verify that the first (and last?) stop should always be considered a timepoint.
         if (!hasTimepoints) st0.setTimepoint(1);
 
@@ -858,8 +889,10 @@ public class GTFSPatternHopFactory {
             int dwellTime = st0.getDepartureTime() - st0.getArrivalTime(); 
             if (dwellTime < 0) {
                 LOG.warn(graph.addBuilderAnnotation(new NegativeDwellTime(st0)));
-                if (st0.getArrivalTime() > 23 * SECONDS_IN_HOUR && st0.getDepartureTime() < 1 * SECONDS_IN_HOUR) {
+                if (st0.getArrivalTime() > 23 * SECONDS_IN_HOUR && st0.getDepartureTime() < 1 * SECONDS_IN_HOUR
+                        && st1.getArrivalTime() + 24 * SECONDS_IN_HOUR > st0.getDepartureTime()) {
                     midnightCrossed = true;
+                    st0.setArrivalTime(st0.getArrivalTime() + 24 * SECONDS_IN_HOUR);
                     st0.setDepartureTime(st0.getDepartureTime() + 24 * SECONDS_IN_HOUR);
                 } else {
                     st0.setDepartureTime(st0.getArrivalTime());
@@ -870,11 +903,13 @@ public class GTFSPatternHopFactory {
             if (runningTime < 0) {
                 LOG.warn(graph.addBuilderAnnotation(new NegativeHopTime(new StopTime(st0), new StopTime(st1))));
                 // negative hops are usually caused by incorrect coding of midnight crossings
-                midnightCrossed = true;
-                if (st0.getDepartureTime() > 23 * SECONDS_IN_HOUR && st1.getArrivalTime() < 1 * SECONDS_IN_HOUR) {
+                if (st0.getDepartureTime() > 23 * SECONDS_IN_HOUR && st1.getArrivalTime() < 1 * SECONDS_IN_HOUR
+                        && st1.getArrivalTime() + 24 * SECONDS_IN_HOUR > st0.getDepartureTime()) {
                     st1.setArrivalTime(st1.getArrivalTime() + 24 * SECONDS_IN_HOUR);
+                    st1.setDepartureTime(st1.getDepartureTime() + 24 * SECONDS_IN_HOUR);
+                    midnightCrossed = true;
                 } else {
-                    st1.setArrivalTime(st0.getDepartureTime());
+                    st1.setArrivalTime(st0.getDepartureTime()); // will be cleared out below...
                 }
             }
             double hopDistance = SphericalDistanceLibrary.fastDistance(
@@ -898,15 +933,20 @@ public class GTFSPatternHopFactory {
                 LOG.trace(graph.addBuilderAnnotation(new HopZeroTime((float) hopDistance, 
                           st1.getTrip(), st1.getStopSequence())));
                 // clear stoptimes that are obviously wrong, causing them to later be interpolated
-/* FIXME (lines commented out because they break routability in multi-feed NYC for some reason -AMB) */
-//                st1.clearArrivalTime();
-//                st1.clearDepartureTime();
+                //st1.clearArrivalTime();
+                //st1.clearDepartureTime();
                 st1bogus = true;
             } else if (hopSpeed > 45) {
                 // 45 m/sec ~= 100 miles/hr
                 // elapsed time of 0 will give speed of +inf
                 LOG.trace(graph.addBuilderAnnotation(new HopSpeedFast((float) hopSpeed, 
                         (float) hopDistance, st0.getTrip(), st0.getStopSequence())));
+            } else if (runningTime > maxHopTime) {
+                LOG.info(graph.addBuilderAnnotation(new HopLargeTime(runningTime,
+                        hopDistance, st0.getTrip(), st0.getStopSequence())));
+                st1.clearArrivalTime();
+                st1.clearDepartureTime();
+                st1bogus = true;
             } else if (hopSpeed < 0.1) {
                 // 0.1 m/sec ~= 0.2 miles/hr
                 LOG.trace(graph.addBuilderAnnotation(new HopSpeedSlow((float) hopSpeed, 
@@ -924,25 +964,32 @@ public class GTFSPatternHopFactory {
         }
     }
 
+    private void loadFeedInfo(Graph graph) {
+        for (FeedInfo info : _dao.getAllFeedInfos()) {
+            graph.addFeedInfo(_feedId.getId(), info);
+        }
+    }
+
     private void loadPathways(Graph graph) {
         for (Pathway pathway : _dao.getAllPathways()) {
             Vertex fromVertex = context.stationStopNodes.get(pathway.getFromStop());
             Vertex toVertex = context.stationStopNodes.get(pathway.getToStop());
+            PathwayEdge edge;
             if (pathway.isWheelchairTraversalTimeSet()) {
-                new PathwayEdge(fromVertex, toVertex, pathway.getTraversalTime(), pathway.getWheelchairTraversalTime());
+                edge = new PathwayEdge(fromVertex, toVertex, pathway.getPathwayMode(), pathway.getPathwayCode(), pathway.getTraversalTime(), pathway.getWheelchairTraversalTime());
             } else {
-                new PathwayEdge(fromVertex, toVertex, pathway.getTraversalTime());
+                edge = new PathwayEdge(fromVertex, toVertex, pathway.getPathwayMode(), pathway.getPathwayCode(), pathway.getTraversalTime());
             }
         }
     }
 
     private void loadStops(Graph graph) {
         for (Stop stop : _dao.getAllStops()) {
-            if (context.stops.contains(stop.getId())) {
+            if (context.stops.containsKey(stop.getId())) {
                 LOG.error("Skipping stop {} because we already loaded an identical ID.", stop.getId());
                 continue;
             }
-            context.stops.add(stop.getId());
+            context.stops.put(stop.getId(), stop);
 
             int locationType = stop.getLocationType();
 
@@ -968,6 +1015,16 @@ public class GTFSPatternHopFactory {
                     // Add edges from arrive to stop and stop to depart
                     new PreAlightEdge(arrive, stopVertex);
                     new PreBoardEdge(stopVertex, depart);
+                }
+            }
+        }
+        // Resolve wheelchair_acessibility
+        for (Stop stop : context.stationStopNodes.keySet()) {
+            if (stop.getWheelchairBoarding() == 0 && stop.getParentStation() != null) {
+                AgencyAndId id = new AgencyAndId(stop.getId().getAgencyId(), stop.getParentStation());
+                Stop parent = context.stops.get(id);
+                if (parent != null) {
+                    stop.setWheelchairBoarding(parent.getWheelchairBoarding());
                 }
             }
         }
@@ -1022,7 +1079,7 @@ public class GTFSPatternHopFactory {
                 interpStep = (arrivalTime - prevDepartureTime) / (numInterpStops + 1);
                 if (interpStep < 0) {
                     throw new RuntimeException(
-                            "trip goes backwards for some reason");
+                            "trip " + st.getTrip().getId().getId() + "goes backwards for some reason");
                 }
                 for (j = i; j < i + numInterpStops; ++j) {
                     //System.out.println("interpolating " + j + " between " + prevDepartureTime + " and " + arrivalTime);
@@ -1051,59 +1108,12 @@ public class GTFSPatternHopFactory {
     }
 
     private void loadTransfers(Graph graph) {
-        Collection<Transfer> transfers = _dao.getAllTransfers();
-        TransferTable transferTable = graph.getTransferTable();
-        for (Transfer t : transfers) {
-            Stop fromStop = t.getFromStop();
-            Stop toStop = t.getToStop();
-            Route fromRoute = t.getFromRoute();
-            Route toRoute = t.getToRoute();
-            Trip fromTrip = t.getFromTrip();
-            Trip toTrip = t.getToTrip();
-            Vertex fromVertex = context.stopArriveNodes.get(fromStop);
-            Vertex toVertex = context.stopDepartNodes.get(toStop);
-            switch (t.getTransferType()) {
-            case 1:
-                // timed (synchronized) transfer 
-                // Handle with edges that bypass the street network.
-                // from and to vertex here are stop_arrive and stop_depart vertices
-                
-                // only add edge when it doesn't exist already
-                boolean hasTimedTransferEdge = false;
-                for (Edge outgoingEdge : fromVertex.getOutgoing()) {
-                    if (outgoingEdge instanceof TimedTransferEdge) {
-                        if (outgoingEdge.getToVertex() == toVertex) {
-                            hasTimedTransferEdge = true;
-                            break;
-                        }
-                    }
-                }
-                if (!hasTimedTransferEdge) {
-                    new TimedTransferEdge(fromVertex, toVertex);
-                }
-                // add to transfer table to handle specificity
-                transferTable.addTransferTime(fromStop, toStop, fromRoute, toRoute, fromTrip, toTrip, StopTransfer.TIMED_TRANSFER);
-                break;
-            case 2:
-                // min transfer time
-                transferTable.addTransferTime(fromStop, toStop, fromRoute, toRoute, fromTrip, toTrip, t.getMinTransferTime());
-                break;
-            case 3:
-                // forbidden transfer
-                transferTable.addTransferTime(fromStop, toStop, fromRoute, toRoute, fromTrip, toTrip, StopTransfer.FORBIDDEN_TRANSFER);
-                break;
-            case 0:
-            default: 
-                // preferred transfer
-                transferTable.addTransferTime(fromStop, toStop, fromRoute, toRoute, fromTrip, toTrip, StopTransfer.PREFERRED_TRANSFER);
-                break;
-            }
-        }
+        _transferFactory.loadTransferTable(graph, _dao.getAllTransfers());
     }
 
     
     private LineString getHopGeometryViaShapeDistTraveled(Graph graph, AgencyAndId shapeId, StopTime st0, StopTime st1) {
-        
+
         double startDistance = st0.getShapeDistTraveled();
         double endDistance = st1.getShapeDistTraveled();
 
@@ -1113,7 +1123,7 @@ public class GTFSPatternHopFactory {
             return geometry;
 
         double[] distances = getDistanceForShapeId(shapeId);
-        
+
         if (distances == null) {
             LOG.warn(graph.addBuilderAnnotation(new BogusShapeGeometry(shapeId)));
             return null;
@@ -1242,7 +1252,7 @@ public class GTFSPatternHopFactory {
     private LineString getLineStringForShapeId(AgencyAndId shapeId) {
 
         LineString geometry = _geometriesByShapeId.get(shapeId);
-        
+
         if (geometry != null) 
             return geometry;
 
@@ -1432,33 +1442,7 @@ public class GTFSPatternHopFactory {
      * True for a given GFTS feed. 
      */
     public void createTransfersTxtTransfers() {
-
-        /* Create transfer edges based on transfers.txt. */
-        for (Transfer transfer : _dao.getAllTransfers()) {
-
-            int type = transfer.getTransferType();
-            if (type == 3) // type 3 = transfer not possible
-                continue;
-            if (transfer.getFromStop().equals(transfer.getToStop())) {
-                continue;
-            }
-            TransitStationStop fromv = context.stationStopNodes.get(transfer.getFromStop());
-            TransitStationStop tov = context.stationStopNodes.get(transfer.getToStop());
-
-            double distance = SphericalDistanceLibrary.distance(fromv.getCoordinate(), tov.getCoordinate());
-            int time;
-            if (transfer.getTransferType() == 2) {
-                time = transfer.getMinTransferTime();
-            } else {
-                time = (int) distance; // fixme: handle timed transfers
-            }
-
-            TransferEdge transferEdge = new TransferEdge(fromv, tov, distance, time);
-            CoordinateSequence sequence = new PackedCoordinateSequence.Double(new Coordinate[] {
-                    fromv.getCoordinate(), tov.getCoordinate() }, 2);
-            LineString geometry = _geometryFactory.createLineString(sequence);
-            transferEdge.setGeometry(geometry);
-        }
+        _transferFactory.createTransferEdges(_dao.getAllTransfers());
     }
 
     public void setStopContext(GtfsStopContext context) {
@@ -1475,4 +1459,11 @@ public class GTFSPatternHopFactory {
         this.maxStopToShapeSnapDistance = maxStopToShapeSnapDistance;
     }
 
+    public void setIgnoreGtfsTransfers(boolean ignoreGtfsTransfers) {
+        this.ignoreGtfsTransfers = ignoreGtfsTransfers;
+    }
+
+    public void setMaxHopTime(long maxHopTime) {
+        this.maxHopTime = maxHopTime;
+    }
 }

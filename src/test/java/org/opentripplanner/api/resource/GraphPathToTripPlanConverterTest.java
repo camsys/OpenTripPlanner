@@ -128,9 +128,9 @@ public class GraphPathToTripPlanConverterTest {
     public void testGenerateItinerary() {
         GraphPath[] graphPaths = buildPaths();
 
-        compare(GraphPathToTripPlanConverter.generateItinerary(graphPaths[0], true, locale), Type.FORWARD);
-        compare(GraphPathToTripPlanConverter.generateItinerary(graphPaths[1], true, locale), Type.BACKWARD);
-        compare(GraphPathToTripPlanConverter.generateItinerary(graphPaths[2], true, locale), Type.ONBOARD);
+        compare(GraphPathToTripPlanConverter.generateItinerary(graphPaths[0], true, false, locale), Type.FORWARD);
+        compare(GraphPathToTripPlanConverter.generateItinerary(graphPaths[1], true, false, locale), Type.BACKWARD);
+        compare(GraphPathToTripPlanConverter.generateItinerary(graphPaths[2], true, false, locale), Type.ONBOARD);
     }
 
     /**
@@ -142,7 +142,7 @@ public class GraphPathToTripPlanConverterTest {
         // Reuse testGenerateItinerary()'s graph path, but shorten it
         GraphPath graphPath = new GraphPath(buildPaths()[0].states.get(3), false);
 
-        Itinerary itinerary = GraphPathToTripPlanConverter.generateItinerary(graphPath, false, locale);
+        Itinerary itinerary = GraphPathToTripPlanConverter.generateItinerary(graphPath, false, false, locale);
 
         assertEquals(1, itinerary.legs.size());
         assertEquals("WALK", itinerary.legs.get(0).mode);
@@ -161,7 +161,7 @@ public class GraphPathToTripPlanConverterTest {
 
         GraphPath graphPath = new GraphPath(new State(options), false);
 
-        GraphPathToTripPlanConverter.generateItinerary(graphPath, false, locale);
+        GraphPathToTripPlanConverter.generateItinerary(graphPath, false, false, locale);
     }
 
     /**
@@ -185,7 +185,7 @@ public class GraphPathToTripPlanConverterTest {
 
         GraphPath graphPath = new GraphPath(arrive.traverse(intermediate), false);
 
-        GraphPathToTripPlanConverter.generateItinerary(graphPath, false, locale);
+        GraphPathToTripPlanConverter.generateItinerary(graphPath, false, false, locale);
     }
 
     /**
@@ -947,11 +947,13 @@ public class GraphPathToTripPlanConverterTest {
         assertEquals(60000L, itinerary.endTime.getTimeInMillis());
 
         if (type == Type.FORWARD || type == Type.BACKWARD) {
-            assertEquals(27L, itinerary.walkTime);
+            assertEquals(23L, itinerary.walkTime);
+            assertEquals(4L, itinerary.bikeTime);
             assertEquals(23L, itinerary.transitTime);
             assertEquals(10L, itinerary.waitingTime);
         } else if (type == Type.ONBOARD) {
-            assertEquals(24L, itinerary.walkTime);
+            assertEquals(20L, itinerary.walkTime);
+            assertEquals(4L, itinerary.bikeTime);
             assertEquals(21L, itinerary.transitTime);
             assertEquals(9L, itinerary.waitingTime);
         }

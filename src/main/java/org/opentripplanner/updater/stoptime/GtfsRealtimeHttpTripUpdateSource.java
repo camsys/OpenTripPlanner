@@ -19,6 +19,8 @@ import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import com.google.protobuf.ExtensionRegistry;
+import com.google.transit.realtime.GtfsRealtimeExtensions;
 import org.opentripplanner.updater.JsonConfigurable;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.util.HttpUtils;
@@ -34,6 +36,8 @@ public class GtfsRealtimeHttpTripUpdateSource implements TripUpdateSource, JsonC
     private static final Logger LOG =
             LoggerFactory.getLogger(GtfsRealtimeHttpTripUpdateSource.class);
 
+    private static final ExtensionRegistry _extensionRegistry;
+
     /**
      * True iff the last list with updates represent all updates that are active right now, i.e. all
      * previous updates should be disregarded
@@ -48,6 +52,13 @@ public class GtfsRealtimeHttpTripUpdateSource implements TripUpdateSource, JsonC
     private String url;
     private String username;
     private String password;
+
+    private long timestamp;
+
+    static {
+        _extensionRegistry = ExtensionRegistry.newInstance();
+        GtfsRealtimeExtensions.registerExtensions(_extensionRegistry);
+    }
 
     @Override
     public void configure(Graph graph, JsonNode config) throws Exception {
@@ -70,12 +81,13 @@ public class GtfsRealtimeHttpTripUpdateSource implements TripUpdateSource, JsonC
         List<FeedEntity> feedEntityList = null;
         List<TripUpdate> updates = null;
         fullDataset = true;
+        long start = System.currentTimeMillis();
         try {
             InputStream is = HttpUtils.getData(url, null, null, username, password);
             
             if (is != null) {
                 // Decode message
-                feedMessage = FeedMessage.PARSER.parseFrom(is);
+                feedMessage = FeedMessage.PARSER.parseFrom(is, _extensionRegistry);
                 feedEntityList = feedMessage.getEntityList();
                 
                 // Change fullDataset value if this is an incremental update
@@ -85,15 +97,20 @@ public class GtfsRealtimeHttpTripUpdateSource implements TripUpdateSource, JsonC
                                 .equals(GtfsRealtime.FeedHeader.Incrementality.DIFFERENTIAL)) {
                     fullDataset = false;
                 }
-                
+
+                timestamp = feedMessage.getHeader().getTimestamp();
+
                 // Create List of TripUpdates
-                updates = new ArrayList<TripUpdate>(feedEntityList.size());
+                updates = new ArrayList<>(feedEntityList.size());
                 for (FeedEntity feedEntity : feedEntityList) {
                     if (feedEntity.hasTripUpdate()) updates.add(feedEntity.getTripUpdate());
                 }
             }
         } catch (Exception e) {
             LOG.warn("Failed to parse gtfs-rt feed from " + url + ":", e);
+        } finally {
+            long end = System.currentTimeMillis();
+            LOG.info("Feed " + this.feedId + " downloaded in " + (end-start) + "ms via url=" + url);
         }
         return updates;
     }
@@ -110,5 +127,10 @@ public class GtfsRealtimeHttpTripUpdateSource implements TripUpdateSource, JsonC
     @Override
     public String getFeedId() {
         return this.feedId;
+    }
+
+    @Override
+    public long getTimestamp() {
+        return timestamp;
     }
 }

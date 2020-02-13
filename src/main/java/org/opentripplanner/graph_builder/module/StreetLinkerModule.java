@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import org.opentripplanner.extra_graph.SubgraphForVertex;
 import org.opentripplanner.graph_builder.linking.SimpleStreetSplitter;
 import org.opentripplanner.graph_builder.services.GraphBuilderModule;
 import org.opentripplanner.routing.graph.Graph;
@@ -48,6 +49,9 @@ public class StreetLinkerModule implements GraphBuilderModule {
         if(graph.hasStreets) {
             LOG.info("Linking transit stops, bike rental stations, bike parking areas, and park-and-rides to graph . . .");
             SimpleStreetSplitter linker = new SimpleStreetSplitter(graph);
+            SubgraphForVertex subgraphs = (SubgraphForVertex) extra.get(SubgraphForVertex.class);
+            if (subgraphs != null)
+                linker.setSubgraphs(subgraphs);
             linker.link();
         }
         //Calculates convex hull of a graph which is shown in routerInfo API point

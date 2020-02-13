@@ -29,6 +29,7 @@ import org.opentripplanner.routing.impl.MemoryGraphSource;
 import org.opentripplanner.routing.services.GraphService;
 import org.opentripplanner.scripting.impl.BSFOTPScript;
 import org.opentripplanner.scripting.impl.OTPScript;
+import org.opentripplanner.util.aws.cloudwatch.CloudWatchService;
 import org.opentripplanner.visualizer.GraphVisualizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -156,6 +157,12 @@ public class OTPMain {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        /* Load AWS Configuration File */
+        if(params.awsConfig != null){
+            CloudWatchService cloudWatchService = CloudWatchService.getInstance();
+            cloudWatchService.init(params.awsConfig);
         }
 
         /* Start web server if requested */

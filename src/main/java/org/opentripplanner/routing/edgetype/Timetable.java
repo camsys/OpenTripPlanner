@@ -20,8 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
-import com.beust.jcommander.internal.Lists;
-
+import com.google.common.collect.Lists;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.Trip;
@@ -40,7 +39,8 @@ import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeEvent;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
-
+import com.google.transit.realtime.GtfsRealtimeNYCT;
+import com.google.transit.realtime.GtfsRealtimeNYCT.NyctStopTimeUpdate;
 
 /**
  * Timetables provide most of the TripPattern functionality. Each TripPattern may possess more than
@@ -114,6 +114,8 @@ public class Timetable implements Serializable {
      * @param bestWait -1 means there is not yet any best known time.
      */
     public boolean temporallyViable(ServiceDay sd, long searchTime, int bestWait, boolean boarding) {
+        if (this.pattern.services == null)
+            return true;
         // Check whether any services are running at all on this pattern.
         if ( ! sd.anyServiceRunning(this.pattern.services)) return false;
         // Make the search time relative to the given service day.
@@ -156,27 +158,41 @@ public class Timetable implements Serializable {
         int bestTime = boarding ? Integer.MAX_VALUE : Integer.MIN_VALUE;
         // Hoping JVM JIT will distribute the loop over the if clauses as needed.
         // We could invert this and skip some service days based on schedule overlap as in RRRR.
+
+        // Only compute transfer once, if possible - it's expensive.
+        int exampleAdjustedTime = -1;
+        boolean recomputeTime = transferDependsOnTrip(s0, currentStop, boarding);
+        if (!recomputeTime && tripTimes.size() > 0) {
+            exampleAdjustedTime = adjustTimeForTransfer(s0, currentStop, getTripTimes(0).trip, boarding, serviceDay, time);
+        }
+
         for (TripTimes tt : tripTimes) {
-            if (tt.isCanceled()) continue;
-            if ( ! serviceDay.serviceRunning(tt.serviceCode)) continue; // TODO merge into call on next line
-            if ( ! tt.tripAcceptable(s0, stopIndex)) continue;
-            int adjustedTime = adjustTimeForTransfer(s0, currentStop, tt.trip, boarding, serviceDay, time);
+            int adjustedTime = recomputeTime
+                ? adjustTimeForTransfer(s0, currentStop, tt.trip, boarding, serviceDay, time)
+                : exampleAdjustedTime;
             if (adjustedTime == -1) continue;
+            adjustedTime += tt.getDepartureBuffer(stopIndex);
             if (boarding) {
                 int depTime = tt.getDepartureTime(stopIndex);
                 if (depTime < 0) continue; // negative values were previously used for canceled trips/passed stops/skipped stops, but
                                            // now its not sure if this check should be still in place because there is a boolean field
                                            // for canceled trips
                 if (depTime >= adjustedTime && depTime < bestTime) {
-                    bestTrip = tt;
-                    bestTime = depTime;
+                    if (isTripTimesOk(tt, serviceDay, s0, stopIndex, true)
+                            && isWaitOk(s0, serviceDay, depTime)) {
+                        bestTrip = tt;
+                        bestTime = depTime;
+                    }
                 }
             } else {
                 int arvTime = tt.getArrivalTime(stopIndex);
                 if (arvTime < 0) continue;
                 if (arvTime <= adjustedTime && arvTime > bestTime) {
-                    bestTrip = tt;
-                    bestTime = arvTime;
+                    if (isTripTimesOk(tt, serviceDay, s0, stopIndex, true)
+                            && isWaitOk(s0, serviceDay, arvTime)) {
+                        bestTrip = tt;
+                        bestTime = arvTime;
+                    }
                 }
             }
         }
@@ -185,23 +201,25 @@ public class Timetable implements Serializable {
         FrequencyEntry bestFreq = null;
         for (FrequencyEntry freq : frequencyEntries) {
             TripTimes tt = freq.tripTimes;
-            if (tt.isCanceled()) continue;
-            if ( ! serviceDay.serviceRunning(tt.serviceCode)) continue; // TODO merge into call on next line
-            if ( ! tt.tripAcceptable(s0, stopIndex)) continue;
+            if (!isTripTimesOk(tt, serviceDay, s0, stopIndex, true))
+                continue;
             int adjustedTime = adjustTimeForTransfer(s0, currentStop, tt.trip, boarding, serviceDay, time);
             if (adjustedTime == -1) continue;
+            adjustedTime += tt.getDepartureBuffer(stopIndex);
             LOG.debug("  running freq {}", freq);
             if (boarding) {
                 int depTime = freq.nextDepartureTime(stopIndex, adjustedTime); // min transfer time included in search
                 if (depTime < 0) continue; 
-                if (depTime >= adjustedTime && depTime < bestTime) {
+                if (depTime >= adjustedTime && depTime < bestTime
+                        && isWaitOk(s0, serviceDay, depTime)) {
                     bestFreq = freq;
                     bestTime = depTime;
                 }
             } else {
                 int arvTime = freq.prevArrivalTime(stopIndex, adjustedTime); // min transfer time included in search
                 if (arvTime < 0) continue;
-                if (arvTime <= adjustedTime && arvTime > bestTime) {
+                if (arvTime <= adjustedTime && arvTime > bestTime
+                        && isWaitOk(s0, serviceDay, arvTime)) {
                     bestFreq = freq;
                     bestTime = arvTime;
                 }
@@ -210,9 +228,25 @@ public class Timetable implements Serializable {
         if (bestFreq != null) {
             // A FrequencyEntry beat all the TripTimes.
             // Materialize that FrequencyEntry entry at the given time.
-            bestTrip = bestFreq.tripTimes.timeShift(stopIndex, bestTime, boarding);
+            bestTrip = bestFreq.tripTimes.timeShift(stopIndex, bestTime, boarding, bestFreq);
         }
         return bestTrip;
+    }
+
+    public boolean isTripTimesOk(TripTimes tt, ServiceDay serviceDay, State s0, int stopIndex, boolean checkBannedTrips) {
+        if (tt.isCanceled()) return false;
+        if ( ! serviceDay.serviceRunning(tt.serviceCode)) return false; // TODO merge into call on next line
+        if ( ! tt.tripAcceptable(s0, stopIndex, checkBannedTrips)) return false;
+        return true;
+    }
+
+    private boolean isWaitOk(State s0, ServiceDay sd, int boardTime) {
+        int time = sd.secondsSinceMidnight(s0.getTimeSeconds());
+        int wait = Math.abs(time - boardTime);
+        if (s0.isEverBoarded()) {
+            return wait <= s0.getOptions().maxTransferTime && wait >= s0.getOptions().minTransferTimeHard;
+        }
+        return true;
     }
 
     /**
@@ -228,6 +262,12 @@ public class Timetable implements Serializable {
         }
         TransferTable transferTable = state.getOptions().getRoutingContext().transferTable;
         int transferTime = transferTable.getTransferTime(state.getPreviousStop(), currentStop, state.getPreviousTrip(), trip, boarding);
+        if (state.getOptions().getRoutingContext().graph.transferPermissionStrategy != null) {
+            if (!state.getOptions().getRoutingContext().graph.transferPermissionStrategy.isTransferAllowed(
+                    state, state.getPreviousStop(), currentStop, state.getPreviousTrip(), trip, boarding, transferTime)) {
+                return -1;
+            }
+        }
         // Check whether back edge is TimedTransferEdge
         if (state.getBackEdge() instanceof TimedTransferEdge) {
             // Transfer must be of type TIMED_TRANSFER
@@ -252,6 +292,14 @@ public class Timetable implements Serializable {
             if (minTime < t0) return minTime;
         }
         return t0;
+    }
+
+    private boolean transferDependsOnTrip(State state, Stop currentStop, boolean boarding) {
+        if (!state.isEverBoarded()) {
+            return false;
+        }
+        TransferTable transferTable = state.getOptions().getRoutingContext().transferTable;
+        return transferTable.hasTripSpecificity(state.getPreviousStop(), currentStop, boarding);
     }
 
     /**
@@ -481,6 +529,15 @@ public class Timetable implements Serializable {
                         }
                     }
 
+                    NyctStopTimeUpdate ext = update.getExtension(GtfsRealtimeNYCT.nyctStopTimeUpdate);
+                    if (ext != null) {
+                        if (ext.hasActualTrack()) {
+                            newTimes.setTrack(i, ext.getActualTrack());
+                        } else if (ext.hasScheduledTrack()) {
+                            newTimes.setTrack(i, ext.getScheduledTrack());
+                        }
+                    }
+
                     if (updates.hasNext()) {
                         update = updates.next();
                     } else {
@@ -497,16 +554,16 @@ public class Timetable implements Serializable {
                 }
             }
             if (update != null) {
-                LOG.error("Part of a TripUpdate object could not be applied successfully.");
+                LOG.trace("Part of a TripUpdate object could not be applied successfully to trip {}.", tripId);
                 return null;
             }
         }
         if (!newTimes.timesIncreasing()) {
-            LOG.error("TripTimes are non-increasing after applying GTFS-RT delay propagation.");
+            LOG.trace("TripTimes are non-increasing after applying GTFS-RT delay propagation to trip {}.", tripId);
             return null;
         }
 
-        LOG.debug("A valid TripUpdate object was applied using the Timetable class update method.");
+        LOG.debug("A valid TripUpdate object was applied to trip {} using the Timetable class update method.", tripId);
         return newTimes;
     }
 

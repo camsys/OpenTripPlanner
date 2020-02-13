@@ -63,4 +63,10 @@ public class LocalizedAlert {
     public Date getEffectiveStartDate() {
         return alert.effectiveStartDate;
     }
+
+    @XmlElement
+    @JsonSerialize
+    public Date getEffectiveEndDate() {
+        return alert.effectiveEndDate;
+    }
 }

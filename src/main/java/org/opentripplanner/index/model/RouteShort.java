@@ -11,12 +11,32 @@ import com.beust.jcommander.internal.Lists;
 
 public class RouteShort {
 
+    /** ID of this route */
     public AgencyAndId id;
+
+    /** Name of route, if given in GTFS. Typically, this name is what user interfaces will display.*/
     public String shortName;
+
+    /** Longer name of route, if given in GTFS */
     public String longName;
+
+    /** Mode of route */
     public String mode;
+
+    /** Color for display, if given in GTFS */
     public String color;
+
+    /** Agency this route is associated with in GTFS. */
     public String agencyName;
+
+    /** use this parameter for bannedRoutes, preferredRoutes, etc in the /plan call */
+    public String paramId;
+
+    /** sort order parameter */
+    public int sortOrder;
+
+    /** route type */
+    public int routeType;
 
     public RouteShort (Route route) {
         id = route.getId();
@@ -25,6 +45,10 @@ public class RouteShort {
         mode = GtfsLibrary.getTraverseMode(route).toString();
         color = route.getColor();
         agencyName = route.getAgency().getName();
+        paramId = id.getAgencyId() + "__" + id.getId();
+        if (route.getSortOrder() >= 0)
+            sortOrder = route.getSortOrder();
+        routeType = route.getType();
     }
 
     public static List<RouteShort> list (Collection<Route> in) {

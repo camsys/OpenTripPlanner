@@ -8,6 +8,7 @@ import org.opentripplanner.routing.edgetype.StreetEdge;
 import org.opentripplanner.routing.edgetype.StreetTraversalPermission;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.vertextype.OsmVertex;
+import org.opentripplanner.util.NonLocalizedString;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -20,8 +21,7 @@ public class StreetSpeedSourceTest extends TestCase {
         Graph g = new Graph();
         OsmVertex v1 = new OsmVertex(g, "v1", 0, 0, 5l);
         OsmVertex v2 = new OsmVertex(g, "v2", 0, 0.01, 6l);
-        StreetEdge se = new StreetEdge(v1, v2, null, "test", 1000, StreetTraversalPermission.CAR, false);
-        se.wayId = 10;
+        StreetEdge se = new StreetEdge(v1, v2, null, new NonLocalizedString("test"), 1000, StreetTraversalPermission.CAR, false, 10);
 
         // create a speed sample
         SegmentSpeedSample s = getSpeedSample();
@@ -54,7 +54,7 @@ public class StreetSpeedSourceTest extends TestCase {
         double monday10am =  snap.getSpeed(se, TraverseMode.CAR, odt.toInstant().toEpochMilli());
         assertEquals(33.3, monday10am, 0.1);
 
-        se.wayId = 102;
+        se = new StreetEdge(v1, v2, null, new NonLocalizedString("test"), 1000, StreetTraversalPermission.CAR, false, 102);
         double wrongStreet = snap.getSpeed(se, TraverseMode.CAR, odt.toInstant().toEpochMilli());
         assertTrue(Double.isNaN(wrongStreet));
     }
@@ -67,8 +67,7 @@ public class StreetSpeedSourceTest extends TestCase {
 
         OsmVertex v1 = new OsmVertex(g, "v1", 0, 0, 5l);
         OsmVertex v2 = new OsmVertex(g, "v2", 0, 0.01, 6l);
-        StreetEdge se = new StreetEdge(v1, v2, null, "test", 1000, StreetTraversalPermission.CAR, false);
-        se.wayId = 10;
+        StreetEdge se = new StreetEdge(v1, v2, null, new NonLocalizedString("test"), 1000, StreetTraversalPermission.CAR, false, 10);
 
         Map<Segment, SegmentSpeedSample> ss2 = Maps.newHashMap();
         Segment seg = new Segment(10l, 5l, 6l);
