@@ -651,10 +651,10 @@ public class GraphIndex {
 
 	        }
     	    cluster.children.add(stop);
-    	    stopClusterForStop.put(stop, cluster);    
+    	    stopClusterForStop.put(stop, cluster);
     	}
     }
-    
+
     public Response getGraphQLResponse(String query, Map<String, Object> variables, String operationName) {
         ExecutionResult executionResult = graphQL.execute(query, operationName, null, variables);
         Response.ResponseBuilder res = Response.status(Response.Status.OK);

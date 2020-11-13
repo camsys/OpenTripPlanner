@@ -570,7 +570,7 @@ public class TestPatternHopFactory extends TestCase {
         RoutingRequest options = new RoutingRequest();
         options.optimize = OptimizeType.QUICK;
         options.dateTime = TestUtils.dateInSeconds("America/New_York", 2009, 8, 1, 16, 0, 0);
-        options.setRoutingContext(graph, stop_c, stop_d);  
+        options.setRoutingContext(graph, stop_c, stop_d);
                 
         ShortestPathTree spt = aStar.getShortestPathTree(options);
 

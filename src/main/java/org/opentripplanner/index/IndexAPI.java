@@ -166,7 +166,7 @@ public class IndexAPI {
            return Response.status(Status.NOT_FOUND).entity(MSG_404).build();
        }
    }
-   
+
    /** Return a list of all stops within a circle around the given coordinate. */
    @GET
    @Path("/stops")
@@ -193,7 +193,7 @@ public class IndexAPI {
            if (radius > MAX_STOP_SEARCH_RADIUS){
                radius = MAX_STOP_SEARCH_RADIUS;
            }
-           List<StopShort> stops = Lists.newArrayList(); 
+           List<StopShort> stops = Lists.newArrayList();
            Coordinate coord = new Coordinate(lon, lat);
            for (TransitStop stopVertex : streetIndex.getNearbyTransitStops(
                     new Coordinate(lon, lat), radius)) {
@@ -216,7 +216,7 @@ public class IndexAPI {
            for (TransitStop stopVertex : streetIndex.getTransitStopForEnvelope(envelope)) {
                stops.add(new StopShort(stopVertex.getStop()));
            }
-           return Response.status(Status.OK).entity(stops).build();           
+           return Response.status(Status.OK).entity(stops).build();
        }
    }
 
@@ -301,7 +301,7 @@ public class IndexAPI {
                     return edge instanceof SimpleTransfer;
                 }
             });
-            
+
             Collection<Transfer> out = Collections2.transform(transfers, new Function<Edge, Transfer> () {
                 @Override
                 public Transfer apply(Edge edge) {
@@ -309,13 +309,13 @@ public class IndexAPI {
                     return new Transfer((SimpleTransfer) edge);
                 }
             });
-            
+
             return Response.status(Status.OK).entity(out).build();
         } else {
             return Response.status(Status.NOT_FOUND).entity(MSG_404).build();
         }
     }
-    
+
    /** Return a list of all routes in the graph. */
    // with repeated hasStop parameters, replaces old routesBetweenStops
    @GET
@@ -658,10 +658,10 @@ public class IndexAPI {
     private static class Transfer {
         /** The stop we are connecting to */
         public String toStopId;
-        
+
         /** the on-street distance of the transfer (meters) */
         public double distance;
-        
+
         /** Make a transfer from a simpletransfer edge from the graph. */
         public Transfer(SimpleTransfer e) {
             toStopId = GtfsLibrary.convertIdToString(((TransitStop) e.getToVertex()).getStopId());

@@ -12,7 +12,7 @@ import java.util.TreeSet;
 
 import org.geotools.data.FeatureSource;
 import org.geotools.data.Query;
-import org.geotools.factory.Hints;
+import org.geotools.util.factory.Hints;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
 import org.geotools.geometry.jts.JTS;

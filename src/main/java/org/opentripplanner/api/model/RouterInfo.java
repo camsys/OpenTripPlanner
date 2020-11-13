@@ -8,7 +8,7 @@ import java.util.Optional;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.locationtech.jts.geom.Geometry;
-
+import org.locationtech.jts.geom.Coordinate;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -31,7 +31,7 @@ public class RouterInfo {
 
     @XmlElement
     public String routerId;
-    
+
     @JsonSerialize(using= GeometrySerializer.class)
     @JsonDeserialize(using= GeometryDeserializer.class)
     @XmlJavaTypeAdapter(value=GeometryAdapter.class,type=Geometry.class)

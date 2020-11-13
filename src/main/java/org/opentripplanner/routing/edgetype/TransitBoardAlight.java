@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import org.locationtech.jts.geom.LineString;
 
+
 /**
  * Models boarding or alighting a vehicle - that is to say, traveling from a state off 
  * vehicle to a state on vehicle. When traversed forward on a boarding or backwards on an 
@@ -226,7 +227,7 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
             s1.setBackMode(getMode());
 
             return s1.makeState();
-        } else { 
+        } else {
             /* We are going onto transit and must look for a suitable transit trip on this pattern. */   
             
             /* Disallow ever re-boarding the same trip pattern. */

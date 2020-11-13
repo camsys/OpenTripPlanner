@@ -114,7 +114,7 @@ public class ConcaveHull {
 	/**
 	 * Transform into GeometryCollection.
 	 * 
-	 * @param geom
+	 * @param gc
 	 * 		input geometry
 	 * @return
 	 * 		a geometry collection
