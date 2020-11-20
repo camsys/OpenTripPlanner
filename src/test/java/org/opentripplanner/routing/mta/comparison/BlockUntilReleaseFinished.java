@@ -52,7 +52,7 @@ public class BlockUntilReleaseFinished {
 		MavenVersion targetVersion = MavenVersion.VERSION;
 		DateTime timeStart = new DateTime();
     	
-        System.out.print("Waiting for " + TIMEOUT_S + " seconds or until commit " + targetVersion.commit + 
+        System.out.println("Waiting for " + TIMEOUT_S + " seconds or until commit " + targetVersion.commit + 
         		" was used to build the bundle at test server (" + OTP_URL + ")...");        	
         
         // code wasn't compiled with mvn, so just skip ahead!
@@ -82,8 +82,12 @@ public class BlockUntilReleaseFinished {
             
             HashMap<String, Object> builderVersion = (HashMap<String, Object>) versionResponse.get("builderVersion");
             if(builderVersion == null) {
-                System.out.print("A version was not included in response; continuing since there's nothing to compare!");        	
-                break;
+            	builderVersion = (HashMap<String, Object>) versionResponse.get("serverVersion");
+            	
+                if(builderVersion == null) {
+                	System.out.print("A version was not included in response; continuing since there's nothing to compare!");        	
+                	break;
+                }
             }
             
         	String commitIdDeployed = (String) builderVersion.get("commit");

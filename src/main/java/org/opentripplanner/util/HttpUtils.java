@@ -22,12 +22,10 @@ import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 public class HttpUtils {
     
@@ -72,12 +70,14 @@ public class HttpUtils {
     }
     
     private static HttpClient getClient() {
-        HttpParams httpParams = new BasicHttpParams();
-        HttpConnectionParams.setConnectionTimeout(httpParams, TIMEOUT_CONNECTION);
-        HttpConnectionParams.setSoTimeout(httpParams, TIMEOUT_SOCKET);
-        
-        DefaultHttpClient httpclient = new DefaultHttpClient();
-        httpclient.setParams(httpParams);
-        return httpclient;
+    	RequestConfig.Builder requestBuilder = RequestConfig.custom();
+    	requestBuilder.setConnectTimeout(TIMEOUT_SOCKET);
+    	requestBuilder.setConnectionRequestTimeout(TIMEOUT_CONNECTION);
+
+    	HttpClientBuilder builder = HttpClientBuilder.create();     
+    	builder.setDefaultRequestConfig(requestBuilder.build());
+    	HttpClient httpClient = builder.build();
+    	
+        return httpClient;
     }
 }

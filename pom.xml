@@ -653,12 +653,6 @@
             <artifactId>gt-epsg-hsql</artifactId>
             <version>${geotools.version}</version>
         </dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-math3 -->
-		<dependency>
-		    <groupId>org.apache.commons</groupId>
-		    <artifactId>commons-math3</artifactId>
-		    <version>3.2</version>
-		</dependency>
         <!-- TODO: this should be replaced by Jackson serialization -->
         <dependency>
             <groupId>de.grundid.opendatalab</groupId>

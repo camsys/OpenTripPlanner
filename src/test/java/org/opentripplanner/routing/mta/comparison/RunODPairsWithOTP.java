@@ -19,6 +19,8 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.joda.time.DateTime;
+
 import java.text.SimpleDateFormat;  
 import java.util.*;
 import java.io.*;
@@ -32,6 +34,8 @@ public class RunODPairsWithOTP {
 
     private String OTP_URL = "http://otp-mta-demo.camsys-apps.com/otp/routers/default/plan?apikey=z6odKJINMNQww8M1zWfFoTMCUPcfbKnt";
 
+    private boolean USE_CURRENT_TIME = false;
+    
     public void setOTPURL(String u) {
     	this.OTP_URL = u;
     }
@@ -44,7 +48,11 @@ public class RunODPairsWithOTP {
     	this.OTP_RESULTS_TXT = f;
     }
     
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+    public void setUseCurrentTime(boolean f) {
+    	this.USE_CURRENT_TIME = f;
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
 //	@Test
     public void run() throws IOException, InterruptedException, URISyntaxException {
 
@@ -63,8 +71,22 @@ public class RunODPairsWithOTP {
     		String line = reader.nextLine();
     	
     		boolean accessible = line.split(" ")[1].trim().equals("Y");
+    		
     		long epoch = Long.parseLong(line.split(" ")[2].trim());
 
+    		// this is a misnomer--it's actually more this week, adjusting by week so we try to match the 
+    		// same service period
+    		if(USE_CURRENT_TIME) {
+    			Calendar c = Calendar.getInstance();
+				c.setTime(new Date(epoch));
+    			
+    			while(epoch < DateTime.now().getMillis()) {
+    				c.add(Calendar.DAY_OF_MONTH, 7);    				
+        			epoch = c.getTimeInMillis();
+    			}
+    		}
+
+    		
     		String stop1 = line.split(" ")[3].trim();
     		String stop2 = line.split(" ")[4].trim();
     		
@@ -147,11 +169,11 @@ public class RunODPairsWithOTP {
                 	 
                 	 if(summaryString.length() > 0)
                 		 summaryString += ">";                	 
-                	 summaryString += ((String) leg.get("routeId")).split(":")[1];
+                	 summaryString += ((String) leg.get("route"));
                 	 
                      otpResults.write(
                     		 (itin_i + 1) + " " + ((String)onStop.get("name")).replace("[", "(").replace("]", ")") + " -> " + 
-                    		 ((String) leg.get("routeId")).split(":")[1] + " to " + leg.get("tripHeadsign") + " -> " + 
+                    		 ((String) leg.get("route")) + " to " + leg.get("tripHeadsign") + " -> " + 
                     		 ((String)offStop.get("name")).replace("[", "(").replace("]", ")") + "\n");
                 }
                 
