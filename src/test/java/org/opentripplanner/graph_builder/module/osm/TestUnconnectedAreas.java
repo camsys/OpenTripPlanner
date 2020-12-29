@@ -14,6 +14,7 @@
 package org.opentripplanner.graph_builder.module.osm;
 
 import java.io.File;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,7 +48,7 @@ public class TestUnconnectedAreas extends TestCase {
         OpenStreetMapModule loader = new OpenStreetMapModule();
         loader.setDefaultWayPropertySetSource(new DefaultWayPropertySetSource());
         FileBasedOpenStreetMapProviderImpl provider = new FileBasedOpenStreetMapProviderImpl();
-        File file = new File(getClass().getResource("P+R.osm.gz").getFile());
+        File file = new File(getClass().getResource("P+R.osm.gz").toURI().getPath());
         provider.setPath(file);
         loader.setProvider(provider);
         loader.buildGraph(gg, new HashMap<Class<?>, Object>());
@@ -83,7 +84,7 @@ public class TestUnconnectedAreas extends TestCase {
         OpenStreetMapModule loader = new OpenStreetMapModule();
         loader.setDefaultWayPropertySetSource(new DefaultWayPropertySetSource());
         FileBasedOpenStreetMapProviderImpl provider = new FileBasedOpenStreetMapProviderImpl();
-        File file = new File(getClass().getResource("hackett_pr.osm.gz").getFile());
+        File file = new File(getClass().getResource("hackett_pr.osm.gz").toURI().getPath());
         provider.setPath(file);
         loader.setProvider(provider);
         loader.buildGraph(g, new HashMap<Class<?>, Object>());
@@ -176,14 +177,14 @@ public class TestUnconnectedAreas extends TestCase {
      /**
       * We've written several OSM files that exhibit different situations but should show the same results. Test with this code.
       */
-     public List<String> testGeometricGraphWithClasspathFile(String fn, int prCount, int prlCount) {
-    	 
+     public List<String> testGeometricGraphWithClasspathFile(String fn, int prCount, int prlCount) throws URISyntaxException {
+
      	Graph g = new Graph();
      	
          OpenStreetMapModule loader = new OpenStreetMapModule();
          loader.setDefaultWayPropertySetSource(new DefaultWayPropertySetSource());
          FileBasedOpenStreetMapProviderImpl provider = new FileBasedOpenStreetMapProviderImpl();
-         File file = new File(getClass().getResource(fn).getFile());
+         File file = new File(getClass().getResource(fn).toURI().getPath());
          provider.setPath(file);
          loader.setProvider(provider);
          loader.buildGraph(g, new HashMap<Class<?>, Object>());
