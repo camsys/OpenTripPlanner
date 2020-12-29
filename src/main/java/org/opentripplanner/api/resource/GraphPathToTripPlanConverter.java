@@ -3,11 +3,15 @@ package org.opentripplanner.api.resource;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
+import org.onebusaway.gtfs.model.AgencyAndId;
+import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.opentripplanner.api.model.*;
 import org.opentripplanner.common.geometry.DirectionUtils;
 import org.opentripplanner.common.geometry.GeometryUtils;
 import org.opentripplanner.common.geometry.PackedCoordinateSequence;
 import org.opentripplanner.common.model.P2;
+import org.opentripplanner.index.model.StopTimesInPattern;
+import org.opentripplanner.index.model.TripTimeShort;
 import org.opentripplanner.model.Agency;
 import org.opentripplanner.model.Route;
 import org.opentripplanner.model.Stop;
@@ -23,6 +27,7 @@ import org.opentripplanner.routing.edgetype.flex.TemporaryDirectPatternHop;
 import org.opentripplanner.routing.error.TrivialPathException;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.location.TemporaryStreetLocation;
 import org.opentripplanner.routing.services.FareService;
@@ -333,9 +338,120 @@ public abstract class GraphPathToTripPlanConverter {
         leg.rentedBike = states[0].isBikeRenting() && states[states.length - 1].isBikeRenting();
 
         addModeAndAlerts(graph, leg, states, disableAlertFiltering, requestedLocale);
-        if (leg.isTransitLeg()) addRealTimeData(leg, states);
+        if (leg.isTransitLeg()) {
+            addRealTimeData(leg, states);
+
+            // TODO: Duplicated between MTA and RTD
+            if (request.showNextFromDeparture) {
+                leg.from.nextDeparture = establishNextDeparture(graph, states, new ServiceDate(leg.from.departure), leg);
+            }
+            addNextDepartures(leg, states);
+        }
+
 
         return leg;
+    }
+
+    private static Calendar establishNextDeparture(Graph graph, State[] states, ServiceDate serviceDate, Leg leg) {
+        List<StopTimesInPattern> stopTimes = getStopTimesForStopOrParent(graph, leg.from.stopId, serviceDate);
+        List<StopTimesInPattern> endStopTimes = getStopTimesForStopOrParent(graph, leg.to.stopId, serviceDate);
+        return determineNextDepartureTimeForStop(graph, leg, stopTimes, endStopTimes);
+    }
+
+    private static List<StopTimesInPattern> getStopTimesForStopOrParent(Graph graph, AgencyAndId stopId, ServiceDate serviceDate) {
+        org.onebusaway.gtfs.model.Stop stop = graph.index.stopForId.get(stopId);
+        List<StopTimesInPattern> stopTimes;
+        if (stop.getParentStation() != null) {
+            org.onebusaway.gtfs.model.Stop parent = graph.index.getParentStopForStop(stop);
+            stopTimes = graph.index.getStopTimesForStopParent(parent, serviceDate, false);
+            stopTimes.addAll(graph.index.getStopTimesForStopParent(parent, serviceDate.next(), false));
+        } else {
+            stopTimes = graph.index.getStopTimesForStop(stop, serviceDate, false);
+            stopTimes.addAll(graph.index.getStopTimesForStop(stop, serviceDate.next(), false));
+        }
+        return stopTimes;
+    }
+
+    private static Calendar determineNextDepartureTimeForStop(Graph graph, Leg leg,
+                                                              List<StopTimesInPattern> stopTimes, List<StopTimesInPattern> destStopTimes) {
+
+        List<TripTimeShort> sortedStopTimes = findAndSortStopTimes(graph, leg, stopTimes);
+        List<TripTimeShort> destSortedStopTimes = findAndSortStopTimes(graph, leg, destStopTimes);
+
+        int shortTimeCounter = 1;
+
+        for (TripTimeShort tripTimeShort : sortedStopTimes) {
+            if (tripTimeShort.tripId.equals(leg.tripId)) {
+                TripTimeShort nextTrip;
+
+                if (shortTimeCounter < sortedStopTimes.size() && shortTimeCounter >= 0) {
+                    int nextTripCounter = shortTimeCounter;
+                    while (nextTripCounter < sortedStopTimes.size() && nextTripCounter >= 0) {
+                        nextTrip = sortedStopTimes.get(nextTripCounter);
+
+                        if (hasSameEndStop(nextTrip.tripId, destSortedStopTimes)) {
+                            Calendar nextDeparture = (Calendar) leg.from.departure.clone();
+                            nextDeparture.setTimeInMillis(nextTrip.serviceDay+nextTrip.scheduledDeparture);
+                            nextDeparture.setTimeZone(leg.from.departure.getTimeZone());
+
+                            return nextDeparture;
+                        }
+                        nextTripCounter++;
+                    }
+                }
+            }
+            shortTimeCounter++;
+        }
+
+        return null;
+    }
+
+    private static boolean hasSameEndStop(AgencyAndId tripId, List<TripTimeShort> destSortedStopTimes) {
+        for (TripTimeShort tripTimeShort : destSortedStopTimes) {
+            if (tripTimeShort.tripId.equals(tripId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static List<TripTimeShort> findAndSortStopTimes(Graph graph,
+                                                            Leg leg, List<StopTimesInPattern> stopTimes) {
+        List<TripTimeShort> sortedStopTimes = new ArrayList<TripTimeShort>();
+        List<TripTimeShort> collectedStopTimes= new ArrayList<TripTimeShort>();
+
+        for (StopTimesInPattern stopTimesInPattern : stopTimes) {
+            if(stopTimesInPatternMatches(graph, leg, stopTimesInPattern))
+            {
+                collectedStopTimes.addAll(stopTimesInPattern.times);
+            }
+        }
+
+        sortedStopTimes.addAll(collectedStopTimes);
+
+        Comparator<TripTimeShort> comparator = Comparator.comparing(tripTime -> tripTime.scheduledDeparture);
+//        comparator = comparator.thenComparing(Comparator.comparing(tripTime -> tripTime.serviceDay));
+        Comparator<TripTimeShort> otherComparator = Comparator.comparing(tripTime -> tripTime.serviceDay);
+
+        Collections.sort(sortedStopTimes, comparator);
+        Collections.sort(sortedStopTimes, otherComparator);
+
+        Collections.sort(collectedStopTimes, comparator);
+
+        return sortedStopTimes;
+    }
+
+    private static boolean stopTimesInPatternMatches(Graph graph, Leg leg, StopTimesInPattern stip) {
+        org.onebusaway.gtfs.model.Trip legTrip = graph.index.tripForId.get(leg.tripId);
+
+        if (stip.times.size() == 0)
+            return false;
+
+        TripTimeShort example = stip.times.get(0);
+        org.onebusaway.gtfs.model.Trip newTrip = graph.index.tripForId.get(example.tripId);
+
+        return legTrip.getRoute().getId().equals(newTrip.getRoute().getId())
+                && legTrip.getDirectionId().equals(newTrip.getDirectionId());
     }
 
     private static void addFrequencyFields(State[] states, Leg leg) {
@@ -778,6 +894,50 @@ public abstract class GraphPathToTripPlanConverter {
             leg.arrivalDelay = tripTimes.getArrivalDelay(leg.to.stopIndex);
         }
     }
+
+    /**
+     * Add next departures to a {@link Leg}.
+     *
+     * @param leg The leg to add the departures to
+     * @param states The states that go with the leg
+     */
+    private static void addNextDepartures(Leg leg, State[] states) {
+        // Don't include next departures for frequency-based trips.
+        if (leg.frequencyDetail != null)
+            return;
+        State state = states[0].getBackState();
+        if (state == null) {
+            // potentially OnBoardDepart itinerary
+            return;
+        }
+        RoutingRequest options = state.getOptions();
+        GraphIndex index = options.rctx.graph.index;
+        if (options.nextDepartureWindow <= 0 || index == null)
+            return;
+        long time = leg.startTime.getTimeInMillis()/1000;
+        int stopIndex;
+        TripPattern pattern;
+        if (states[0].backEdge instanceof TransitBoardAlight) {
+            TransitBoardAlight edge = (TransitBoardAlight) (states[0].backEdge);
+            stopIndex = edge.getStopIndex();
+            pattern = edge.getPattern();
+        } else if (states[0].backEdge instanceof PatternInterlineDwell) {
+            stopIndex = 0;
+            pattern = ((OnboardVertex) state.backEdge.getToVertex()).getTripPattern();
+        } else {
+            LOG.error("Unexpected edge {}", states[0].backEdge);
+            return;
+        }
+        org.onebusaway.gtfs.model.Stop stop = pattern.getStop(stopIndex);
+        RouteMatcher matcher = RouteMatcher.emptyMatcher();
+        matcher.addRouteId(pattern.route.getId());
+        List<StopTimesInPattern> stips = index.stopTimesForStop(stop, time + 60, options.nextDepartureWindow, options.numberOfDepartures, true, matcher,
+                pattern.directionId, leg.headsign, null, null);
+        StopTimesByStop stbs = new StopTimesByStop(stop, stips);
+        stbs.limitTimes(time, options.nextDepartureWindow, options.numberOfDepartures);
+        leg.upcomingStopTimes = stbs.getGroups();
+    }
+
 
     /**
      * Converts a list of street edges to a list of turn-by-turn directions.

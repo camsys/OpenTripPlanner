@@ -1167,6 +1167,18 @@ public class RoutingRequest implements Cloneable, Serializable {
                 && Objects.equal(startingTransitTripId, other.startingTransitTripId)
                 && disableAlertFiltering == other.disableAlertFiltering
                 && geoidElevation == other.geoidElevation
+                && nextDepartureWindow == other.nextDepartureWindow
+                && hardPathBanning == other.hardPathBanning
+                && smartKissAndRide == other.smartKissAndRide
+                && kissAndRideWhitelist.equals(other.kissAndRideWhitelist)
+                && kissAndRideOverrides.equals(other.kissAndRideOverrides)
+                && maxWalkDistanceHeuristic == other.maxWalkDistanceHeuristic
+                && hardPathBanningAgencies.equals(other.hardPathBanningAgencies)
+                && numberOfDepartures == other.numberOfDepartures
+                && stopLinking == other.stopLinking
+                && pathIgnoreStrategy.equals(pathIgnoreStrategy)
+                && useTransitServiceExtension == other.useTransitServiceExtension
+                && farEndpointsException == other.farEndpointsException;
                 && flexFlagStopExtraPenalty == other.flexFlagStopExtraPenalty
                 && flexDeviatedRouteExtraPenalty == other.flexDeviatedRouteExtraPenalty
                 && flexCallAndRideReluctance == other.flexCallAndRideReluctance
@@ -1209,6 +1221,21 @@ public class RoutingRequest implements Cloneable, Serializable {
                 + new Boolean(ignoreRealtimeUpdates).hashCode() * 154329
                 + new Boolean(disableRemainingWeightHeuristic).hashCode() * 193939
                 + new Boolean(useTraffic).hashCode() * 10169
+                + Integer.hashCode(nextDepartureWindow) * 1373
+                + Boolean.hashCode(hardPathBanning) * 63061489
+                + Boolean.hashCode(smartKissAndRide) * 10169
+                + kissAndRideWhitelist.hashCode() * 63061489
+                + kissAndRideOverrides.hashCode() * 731980
+                + Double.hashCode(maxWalkDistanceHeuristic) * 731980
+                + hardPathBanningAgencies.hashCode() * 209477
+                + numberOfDepartures * 15485863
+                + Boolean.hashCode(stopLinking) * 18253
+                + new Double(maxTransferTime).hashCode() * 790052909
+                + new Double(minTransferTimeHard).hashCode() * 31
+                + new Double(tripShownRangeTime).hashCode() * 790052909
+                + pathIgnoreStrategy.hashCode() * 1301081
+                + Boolean.hashCode(useTransitServiceExtension) * 1300931
+                + Boolean.hashCode(farEndpointsException) * 538799;
                 + Integer.hashCode(flexFlagStopExtraPenalty) * 179424691
                 + Integer.hashCode(flexDeviatedRouteExtraPenalty) *  7424299
                 + Double.hashCode(flexCallAndRideReluctance) * 86666621

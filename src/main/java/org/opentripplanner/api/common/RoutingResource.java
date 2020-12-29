@@ -385,6 +385,56 @@ public abstract class RoutingResource {
     @QueryParam("disableAlertFiltering")
     private Boolean disableAlertFiltering;
 
+    /** How far to look out, in seconds, to add upcoming trips. Defaults to 1800 seconds (half an hour). */
+    @QueryParam("nextDepartureWindow")
+    private Integer nextDepartureWindow = 1800;
+
+    /** How many upcoming departures to add. Defaults to 3 */
+    @QueryParam("numberOfDepartures")
+    private Integer numberOfDepartures = 3;
+
+    /** Whether to turn on "smart kiss-an-ride" */
+    @QueryParam("smartKissAndRide")
+    private Boolean smartKissAndRide;
+
+    /** Whether to use soft walk limiting or hard walk limiting */
+    @QueryParam("softWalkLimiting")
+    private Boolean softWalkLimiting;
+
+    /** Whether walk limiting is per-leg or overall */
+    @QueryParam("walkLimitingByLeg")
+    private Boolean walkLimitingByLeg;
+
+    /** Which agencies to use hard path banning with */
+    @QueryParam("hardPathBanningAgencies")
+    private String hardPathBanningAgencies;
+
+    /** Penalty for jumping over the maxWalkLimit if softWalkLimiting = true */
+    @QueryParam("softWalkPenalty")
+    private Double softWalkPenalty;
+
+    /** Additional reluctance multiplier when over the maxWalkLimit if softWalkLimiting = true.
+     * options.softWalkOverageRate = walkReluctance * softWalkOverageMultiplier
+     */
+    @QueryParam("softWalkOverageMultiplier")
+    private Double softWalkOverageMultiplier;
+
+    /** Whether to try to link endpoints to stops with the same location */
+    @QueryParam("stopLinking")
+    private Boolean stopLinking;
+
+    /**
+     *
+     */
+    @QueryParam("showNextFromDeparture")
+    protected Boolean showNextFromDeparture;
+
+    /**
+     * If true, API call will return stop times for all the trips in the TripPlan.
+     */
+    @QueryParam("showStopTimes")
+    protected Boolean showStopTimes;
+
     /**
      * If true, the Graph's ellipsoidToGeoidDifference is applied to all elevations returned by this query.
      */
@@ -653,6 +703,36 @@ public abstract class RoutingResource {
 
         if (pathComparator != null)
             request.pathComparator = pathComparator;
+
+        if (showNextFromDeparture != null)
+            request.showNextFromDeparture = showNextFromDeparture;
+
+        if (nextDepartureWindow != null)
+            request.nextDepartureWindow = nextDepartureWindow;
+
+        if (numberOfDepartures != null)
+            request.numberOfDepartures = numberOfDepartures;
+
+        if (smartKissAndRide != null)
+            request.smartKissAndRide = smartKissAndRide;
+
+        if (softWalkLimiting != null)
+            request.softWalkLimiting = softWalkLimiting;
+
+        if (hardPathBanningAgencies != null)
+            request.setHardPathBanningAgencies(hardPathBanningAgencies);
+
+        if (walkLimitingByLeg != null)
+            request.walkLimitingByLeg = walkLimitingByLeg;
+
+        if (softWalkPenalty != null)
+            request.softWalkPenalty = softWalkPenalty;
+
+        if (softWalkOverageMultiplier != null)
+            request.softWalkOverageRate = request.walkReluctance * softWalkOverageMultiplier;
+
+        if (stopLinking != null)
+            request.stopLinking = stopLinking;
 
         //getLocale function returns defaultLocale if locale is null
         request.locale = ResourceBundleSingleton.INSTANCE.getLocale(locale);
