@@ -1,12 +1,14 @@
 package org.opentripplanner.routing.core;
 
 import com.google.common.base.Objects;
+import org.onebusaway.gtfs.model.AgencyAndId;
 import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.model.Route;
 import org.opentripplanner.api.parameter.QualifiedModeSet;
 import org.opentripplanner.common.MavenVersion;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.common.model.NamedPlace;
+import org.opentripplanner.routing.alertpatch.Alert;
 import org.opentripplanner.routing.edgetype.StreetEdge;
 import org.opentripplanner.routing.error.TrivialPathException;
 import org.opentripplanner.routing.graph.Edge;
@@ -23,18 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.TimeZone;
+import java.util.*;
 
 /**
  * A trip planning request. Some parameters may not be honored by the trip planner for some or all itineraries.
@@ -78,6 +69,11 @@ public class RoutingRequest implements Cloneable, Serializable {
      * Defaults to unlimited.
      */
     public double maxWalkDistance = Double.MAX_VALUE;
+
+    /**
+     * Maximum walking distance for heuristic.
+     */
+    public double maxWalkDistanceHeuristic = Double.MAX_VALUE;
 
     /**
      * The maximum distance (in meters) the user is willing to walk for transfer legs.
@@ -304,6 +300,21 @@ public class RoutingRequest implements Cloneable, Serializable {
     public int maxTransfers = 2;
 
     /**
+     * Max transfer time
+     */
+    public int maxTransferTime = Integer.MAX_VALUE;
+
+    /**
+     * Min transfer time as hard limit
+     */
+    public int minTransferTimeHard = Integer.MIN_VALUE;
+
+    /**
+     * Trip shown range. eg. trip starts 3 hours later than the departure time; or trip arrives before 3 hours than arrive by time.
+     */
+    public int tripShownRangeTime = Integer.MAX_VALUE;
+
+    /**
      * Extensions to the trip planner will require additional traversal options beyond the default 
      * set. We provide an extension point for adding arbitrary parameters with an 
      * extension-specific key.
@@ -527,6 +538,8 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     public boolean walkingBike;
 
+    public boolean walkLimitingByLeg = false;
+
     public boolean softWalkLimiting = true;
     public boolean softPreTransitLimiting = true;
 
@@ -544,6 +557,13 @@ public class RoutingRequest implements Cloneable, Serializable {
     public boolean bikeParkAndRide = false;
     public boolean parkAndRide  = false;
     public boolean kissAndRide  = false;
+
+    // smart kiss and ride - if this option is turned on, intelligently use pre-transit and post-transit kiss-and-ride
+    public boolean smartKissAndRide = false;
+    public boolean preTransitKissAndRide = false;
+    public boolean postTransitKissAndRide = false;
+    public Set<AgencyAndId> kissAndRideWhitelist = Collections.emptySet();
+    public Set<String> kissAndRideOverrides = Collections.emptySet();
 
     /* Whether we are in "long-distance mode". This is currently a server-wide setting, but it could be made per-request. */
     // TODO remove
@@ -576,8 +596,30 @@ public class RoutingRequest implements Cloneable, Serializable {
      */
     public int serviceDayLookout = 1;
 
+
+    /** Whether to find impacts of realtime alerts */
+    public boolean findRealtimeConsequences = true;
+
     /** Which path comparator to use */
     public String pathComparator = null;
+
+    /** Which PathIgnoreStrategy to use */
+    public String pathIgnoreStrategy = null;
+
+    /** How far to look out, in seconds, to add upcoming trips. Defaults to half an hour. */
+    public int nextDepartureWindow = 1800;
+
+    /** How many upcoming departures to add. Defaults to 3 */
+    public int numberOfDepartures = 3;
+
+    /** Whether to apply "hard path banning", where after a sequence of routes is used, it can't be used again */
+    public boolean hardPathBanning = false;
+
+    /** What agencies to apply hard path banning to */
+    public HashSet<String> hardPathBanningAgencies = new HashSet<>();
+
+    /** Whether to try to link endpoints to stops with the same location */
+    public boolean stopLinking = false;
 
     /**
      * This parameter is used in GTFS-Flex routing. Preliminary searches before the main search
@@ -603,6 +645,18 @@ public class RoutingRequest implements Cloneable, Serializable {
      * This is used so that TrivialPathException is thrown if origin and destination search would split the same edge
      */
     private StreetEdge splitEdge = null;
+
+    /** Should attempt to determine when the next bus goes through this stop. */
+    public boolean showNextFromDeparture = false;
+
+    /** Keep track of alerts to add to GraphPath */
+    public List<Alert> planAlerts = new ArrayList<>();
+
+    /** Whether to use feature where dates are extended when past transit service */
+    public boolean useTransitServiceExtension = false;
+
+
+    public boolean farEndpointsException = false;
 
     /**
      * Keep track of epoch time the request was created by OTP. This is currently only used by the
@@ -861,6 +915,12 @@ public class RoutingRequest implements Cloneable, Serializable {
         if (!s.isEmpty()) {
             bannedAgencies = new HashSet<>();
             Collections.addAll(bannedAgencies, s.split(","));
+        }
+    }
+
+    public void setHardPathBanningAgencies(String s) {
+        if (s != null && !s.equals("")) {
+            hardPathBanningAgencies = new HashSet<>(Arrays.asList(s.split(",")));
         }
     }
 
@@ -1178,7 +1238,7 @@ public class RoutingRequest implements Cloneable, Serializable {
                 && stopLinking == other.stopLinking
                 && pathIgnoreStrategy.equals(pathIgnoreStrategy)
                 && useTransitServiceExtension == other.useTransitServiceExtension
-                && farEndpointsException == other.farEndpointsException;
+                && farEndpointsException == other.farEndpointsException
                 && flexFlagStopExtraPenalty == other.flexFlagStopExtraPenalty
                 && flexDeviatedRouteExtraPenalty == other.flexDeviatedRouteExtraPenalty
                 && flexCallAndRideReluctance == other.flexCallAndRideReluctance
@@ -1235,7 +1295,7 @@ public class RoutingRequest implements Cloneable, Serializable {
                 + new Double(tripShownRangeTime).hashCode() * 790052909
                 + pathIgnoreStrategy.hashCode() * 1301081
                 + Boolean.hashCode(useTransitServiceExtension) * 1300931
-                + Boolean.hashCode(farEndpointsException) * 538799;
+                + Boolean.hashCode(farEndpointsException) * 538799
                 + Integer.hashCode(flexFlagStopExtraPenalty) * 179424691
                 + Integer.hashCode(flexDeviatedRouteExtraPenalty) *  7424299
                 + Double.hashCode(flexCallAndRideReluctance) * 86666621

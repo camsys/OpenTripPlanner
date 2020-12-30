@@ -47,10 +47,7 @@ import org.opentripplanner.profile.StopNameNormalizer;
 import org.opentripplanner.profile.StopTreeCache;
 import org.opentripplanner.routing.algorithm.AStar;
 import org.opentripplanner.routing.algorithm.TraverseVisitor;
-import org.opentripplanner.routing.core.RoutingRequest;
-import org.opentripplanner.routing.core.ServiceDay;
-import org.opentripplanner.routing.core.State;
-import org.opentripplanner.routing.core.TraverseMode;
+import org.opentripplanner.routing.core.*;
 import org.opentripplanner.routing.edgetype.TablePatternEdge;
 import org.opentripplanner.routing.edgetype.Timetable;
 import org.opentripplanner.routing.edgetype.TimetableSnapshot;
@@ -462,6 +459,123 @@ public class GraphIndex {
                         if(omitNonPickups && pattern.stopPattern.pickups[sidx] == pattern.stopPattern.PICKDROP_NONE) continue;
                         for (TripTimes t : tt.tripTimes) {
                             if (!sd.serviceRunning(t.serviceCode)) continue;
+                            if (t.getDepartureTime(sidx) != -1 &&
+                                    t.getDepartureTime(sidx) >= secondsSinceMidnight) {
+                                pq.insertWithOverflow(new TripTimeShort(t, sidx, stop, sd));
+                            }
+                        }
+
+                        // TODO: This needs to be adapted after #1647 is merged
+                        for (FrequencyEntry freq : tt.frequencyEntries) {
+                            if (!sd.serviceRunning(freq.tripTimes.serviceCode)) continue;
+                            int departureTime = freq.nextDepartureTime(sidx, secondsSinceMidnight);
+                            if (departureTime == -1) continue;
+                            int lastDeparture = freq.endTime + freq.tripTimes.getArrivalTime(sidx) -
+                                    freq.tripTimes.getDepartureTime(0);
+                            int i = 0;
+                            while (departureTime <= lastDeparture && i < numberOfDepartures) {
+                                pq.insertWithOverflow(new TripTimeShort(freq.materialize(sidx, departureTime, true), sidx, stop, sd));
+                                departureTime += freq.headway;
+                                i++;
+                            }
+                        }
+                    }
+                    sidx++;
+                }
+            }
+
+            if (pq.size() != 0) {
+                StopTimesInPattern stopTimes = new StopTimesInPattern(pattern);
+                while (pq.size() != 0) {
+                    stopTimes.times.add(0, pq.pop());
+                }
+                ret.add(stopTimes);
+            }
+        }
+        return ret;
+    }
+
+    /**
+     * Fetch upcoming vehicle departures from a stop.
+     * It goes though all patterns passing the stop for the previous, current and next service date.
+     * It uses a priority queue to keep track of the next departures. The queue is shared between all dates, as services
+     * from the previous service date can visit the stop later than the current service date's services. This happens
+     * eg. with sleeper trains.
+     *
+     * TODO: Add frequency based trips
+     * @param stop Stop object to perform the search for
+     * @param startTime Start time for the search. Seconds from UNIX epoch
+     * @param timeRange Searches forward for timeRange seconds from startTime
+     * @param numberOfDepartures Number of departures to fetch per pattern
+     * @param omitNonPickups If true, do not include vehicles that will not pick up passengers.
+     * @return
+     */
+    public List<StopTimesInPattern> stopTimesForStop(Stop stop, long startTime, int timeRange, int numberOfDepartures, boolean omitNonPickups,
+                                                     RouteMatcher routeMatcher, Integer direction, String headsign, Set<String> bannedAgencies, Set<Integer> bannedRouteTypes) {
+        if (startTime == 0) {
+            startTime = System.currentTimeMillis() / 1000;
+        }
+        List<StopTimesInPattern> ret = new ArrayList<>();
+        TimetableSnapshot snapshot = null;
+        if (graph.timetableSnapshotSource != null) {
+            snapshot = graph.timetableSnapshotSource.getTimetableSnapshot();
+        }
+        Date date = new Date(startTime * 1000);
+        ServiceDate[] serviceDates = {new ServiceDate(date).previous(), new ServiceDate(date), new ServiceDate(date).next()};
+
+        List<TripPattern> tripPatterns = new ArrayList<>(patternsForStop.get(stop));
+        if (snapshot != null) {
+            tripPatterns.addAll(snapshot.getTripPatternsForStop(stop));
+        }
+        for (TripPattern pattern : tripPatterns) {
+
+            if (!routeMatcher.isEmpty() && !routeMatcher.matches(pattern.route)) {
+                continue;
+            }
+
+            if (direction != null && direction != pattern.directionId) {
+                continue;
+            }
+
+            if(bannedRouteTypes != null && bannedRouteTypes.contains(pattern.route.getType())) {
+                continue;
+            }
+
+            if(bannedAgencies != null && bannedAgencies.contains(pattern.route.getAgency().getId())){
+                continue;
+            }
+
+
+            // Use the Lucene PriorityQueue, which has a fixed size
+            PriorityQueue<TripTimeShort> pq = new PriorityQueue<TripTimeShort>(numberOfDepartures) {
+                @Override
+                protected boolean lessThan(TripTimeShort tripTimeShort, TripTimeShort t1) {
+                    // Calculate exact timestamp
+                    return (tripTimeShort.serviceDay + tripTimeShort.realtimeDeparture) >
+                            (t1.serviceDay + t1.realtimeDeparture);
+                }
+            };
+
+            // Loop through all possible days
+            for (ServiceDate serviceDate : serviceDates) {
+                ServiceDay sd = new ServiceDay(graph, serviceDate, calendarService, pattern.route.getAgency().getId());
+                Timetable tt;
+                if (snapshot != null){
+                    tt = snapshot.resolve(pattern, serviceDate);
+                } else {
+                    tt = pattern.scheduledTimetable;
+                }
+
+                if (!tt.temporallyViable(sd, startTime, timeRange, true)) continue;
+
+                int secondsSinceMidnight = sd.secondsSinceMidnight(startTime);
+                int sidx = 0;
+                for (Stop currStop : pattern.stopPattern.stops) {
+                    if (currStop == stop) {
+                        if(omitNonPickups && pattern.stopPattern.pickups[sidx] == pattern.stopPattern.PICKDROP_NONE) continue;
+                        for (TripTimes t : tt.tripTimes) {
+                            if (!sd.serviceRunning(t.serviceCode)) continue;
+                            if (headsign != null && !t.getHeadsign(sidx).equals(headsign)) continue;
                             if (t.getDepartureTime(sidx) != -1 &&
                                     t.getDepartureTime(sidx) >= secondsSinceMidnight) {
                                 pq.insertWithOverflow(new TripTimeShort(t, sidx, stop, sd));

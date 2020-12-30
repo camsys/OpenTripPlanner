@@ -3,6 +3,7 @@ package org.opentripplanner.routing.edgetype;
 import java.util.*;
 import java.util.Map.Entry;
 
+import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.calendar.ServiceDate;
 import org.opentripplanner.routing.trippattern.TripTimes;
 import org.slf4j.Logger;
@@ -332,6 +333,21 @@ public class TimetableSnapshot {
         return modified;
     }
 
+    /**
+     * Get all added TripPatterns for stop.
+     */
+    public Collection<TripPattern> getTripPatternsForStop(Stop stop) {
+        Collection<TripPattern> patterns = lastAddedTripPattern.values();
+        Collection<TripPattern> patternsWithStop = new ArrayList<TripPattern>();
+        for (TripPattern pattern : patterns) {
+            if(patternHasStop(pattern.getStops(), stop)) {
+                patternsWithStop.add(pattern);
+            }
+        }
+
+        return patternsWithStop;
+    }
+
     public boolean isDirty() {
         if (readOnly) return false;
         return dirty;
@@ -340,5 +356,10 @@ public class TimetableSnapshot {
     public String toString() {
         String d = readOnly ? "committed" : String.format("%d dirty", dirtyTimetables.size());
         return String.format("Timetable snapshot: %d timetables (%s)", timetables.size(), d);
+    }
+
+    private boolean patternHasStop(List<Stop> stops, Stop stop)
+    {
+        return stops.contains(stop);
     }
 }

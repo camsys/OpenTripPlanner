@@ -1,17 +1,16 @@
 package org.opentripplanner.api.model;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
+import java.util.*;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
+
+import org.opentripplanner.index.model.StopTimesByRouteAndHeadsign;
 import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.api.model.alertpatch.LocalizedAlert;
+import org.opentripplanner.index.model.FrequencyDetail;
 import org.opentripplanner.routing.alertpatch.Alert;
 import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.util.model.EncodedPolylineBean;
@@ -247,6 +246,38 @@ public class Leg {
     @JsonSerialize
     public Boolean rentedBike;
 
+     /** Upcoming arrival/departures at this stop grouped by route and headsign */
+     public Collection<StopTimesByRouteAndHeadsign> upcomingStopTimes;
+
+     /**
+      * Information about whether a trip is peak or off-peak
+      */
+     @XmlAttribute
+     @JsonSerialize
+     public Integer peakOffpeak;
+
+     /**
+      * For transit legs which reflect frequency-based trips, the frequency service parameters for this trip.
+      */
+     @XmlAttribute
+     @JsonSerialize
+     public FrequencyDetail frequencyDetail;
+
+     /** The location of the vehicle serving the transit leg, if available */
+     public VehicleInfo vehicleInfo;
+
+     /**
+      * Whether this leg is a transit leg or not.
+      * @return Boolean true if the leg is a transit leg
+      */
+     public Boolean isTransitLeg() {
+         if (mode == null) return null;
+         else if (mode.equals(TraverseMode.WALK.toString())) return false;
+         else if (mode.equals(TraverseMode.CAR.toString())) return false;
+         else if (mode.equals(TraverseMode.BICYCLE.toString())) return false;
+         else return true;
+     }
+
      /**
       * True if this is a call-and-ride leg.
       */
@@ -301,18 +332,6 @@ public class Leg {
      @JsonSerialize
      public String flexFlagStopDropOffMessage;
 
-    /**
-     * Whether this leg is a transit leg or not.
-     * @return Boolean true if the leg is a transit leg
-     */
-    public Boolean isTransitLeg() {
-        if (mode == null) return null;
-        else if (mode.equals(TraverseMode.WALK.toString())) return false;
-        else if (mode.equals(TraverseMode.CAR.toString())) return false;
-        else if (mode.equals(TraverseMode.BICYCLE.toString())) return false;
-        else return true;
-    }
-    
     /** 
      * The leg's duration in seconds
      */

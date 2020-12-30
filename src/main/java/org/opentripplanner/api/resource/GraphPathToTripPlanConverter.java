@@ -4,18 +4,16 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
 import org.onebusaway.gtfs.model.AgencyAndId;
-import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.opentripplanner.api.model.*;
 import org.opentripplanner.common.geometry.DirectionUtils;
 import org.opentripplanner.common.geometry.GeometryUtils;
 import org.opentripplanner.common.geometry.PackedCoordinateSequence;
 import org.opentripplanner.common.model.P2;
+import org.opentripplanner.index.model.StopTimesByStop;
 import org.opentripplanner.index.model.StopTimesInPattern;
 import org.opentripplanner.index.model.TripTimeShort;
-import org.opentripplanner.model.Agency;
-import org.opentripplanner.model.Route;
-import org.opentripplanner.model.Stop;
-import org.opentripplanner.model.Trip;
+import org.opentripplanner.model.*;
+import org.opentripplanner.model.calendar.ServiceDate;
 import org.opentripplanner.model.translation.TranslationService;
 import org.opentripplanner.profile.BikeRentalStationInfo;
 import org.opentripplanner.routing.alertpatch.Alert;
@@ -340,11 +338,7 @@ public abstract class GraphPathToTripPlanConverter {
         addModeAndAlerts(graph, leg, states, disableAlertFiltering, requestedLocale);
         if (leg.isTransitLeg()) {
             addRealTimeData(leg, states);
-
-            // TODO: Duplicated between MTA and RTD
-            if (request.showNextFromDeparture) {
-                leg.from.nextDeparture = establishNextDeparture(graph, states, new ServiceDate(leg.from.departure), leg);
-            }
+            leg.from.nextDeparture = establishNextDeparture(graph, states, new ServiceDate(leg.from.departure), leg);
             addNextDepartures(leg, states);
         }
 
@@ -358,13 +352,12 @@ public abstract class GraphPathToTripPlanConverter {
         return determineNextDepartureTimeForStop(graph, leg, stopTimes, endStopTimes);
     }
 
-    private static List<StopTimesInPattern> getStopTimesForStopOrParent(Graph graph, AgencyAndId stopId, ServiceDate serviceDate) {
-        org.onebusaway.gtfs.model.Stop stop = graph.index.stopForId.get(stopId);
+    private static List<StopTimesInPattern> getStopTimesForStopOrParent(Graph graph, FeedScopedId stopId, ServiceDate serviceDate) {
+        Stop stop = graph.index.stopForId.get(stopId);
         List<StopTimesInPattern> stopTimes;
         if (stop.getParentStation() != null) {
-            org.onebusaway.gtfs.model.Stop parent = graph.index.getParentStopForStop(stop);
-            stopTimes = graph.index.getStopTimesForStopParent(parent, serviceDate, false);
-            stopTimes.addAll(graph.index.getStopTimesForStopParent(parent, serviceDate.next(), false));
+            stopTimes = graph.index.getStopTimesForStop(stop, serviceDate, false);
+            stopTimes.addAll(graph.index.getStopTimesForStop(stop, serviceDate.next(), false));
         } else {
             stopTimes = graph.index.getStopTimesForStop(stop, serviceDate, false);
             stopTimes.addAll(graph.index.getStopTimesForStop(stop, serviceDate.next(), false));
@@ -406,7 +399,7 @@ public abstract class GraphPathToTripPlanConverter {
         return null;
     }
 
-    private static boolean hasSameEndStop(AgencyAndId tripId, List<TripTimeShort> destSortedStopTimes) {
+    private static boolean hasSameEndStop(FeedScopedId tripId, List<TripTimeShort> destSortedStopTimes) {
         for (TripTimeShort tripTimeShort : destSortedStopTimes) {
             if (tripTimeShort.tripId.equals(tripId)) {
                 return true;
@@ -442,13 +435,13 @@ public abstract class GraphPathToTripPlanConverter {
     }
 
     private static boolean stopTimesInPatternMatches(Graph graph, Leg leg, StopTimesInPattern stip) {
-        org.onebusaway.gtfs.model.Trip legTrip = graph.index.tripForId.get(leg.tripId);
+        Trip legTrip = graph.index.tripForId.get(leg.tripId);
 
         if (stip.times.size() == 0)
             return false;
 
         TripTimeShort example = stip.times.get(0);
-        org.onebusaway.gtfs.model.Trip newTrip = graph.index.tripForId.get(example.tripId);
+        Trip newTrip = graph.index.tripForId.get(example.tripId);
 
         return legTrip.getRoute().getId().equals(newTrip.getRoute().getId())
                 && legTrip.getDirectionId().equals(newTrip.getDirectionId());
@@ -928,7 +921,7 @@ public abstract class GraphPathToTripPlanConverter {
             LOG.error("Unexpected edge {}", states[0].backEdge);
             return;
         }
-        org.onebusaway.gtfs.model.Stop stop = pattern.getStop(stopIndex);
+        Stop stop = pattern.getStop(stopIndex);
         RouteMatcher matcher = RouteMatcher.emptyMatcher();
         matcher.addRouteId(pattern.route.getId());
         List<StopTimesInPattern> stips = index.stopTimesForStop(stop, time + 60, options.nextDepartureWindow, options.numberOfDepartures, true, matcher,

@@ -3,6 +3,7 @@ package org.opentripplanner.routing.core;
 import java.io.Serializable;
 import java.util.HashSet;
 
+import org.onebusaway.gtfs.model.AgencyAndId;
 import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.model.Route;
 import org.opentripplanner.common.model.T2;
@@ -133,6 +134,10 @@ public class RouteMatcher implements Cloneable, Serializable {
             builder.setLength(builder.length() - 1);
         }
         return builder.toString();
+    }
+
+    public void addRouteId(FeedScopedId id) {
+        agencyAndRouteIds.add(id);
     }
 
     @Override
