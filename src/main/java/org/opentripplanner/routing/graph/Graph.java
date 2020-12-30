@@ -23,13 +23,9 @@ import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.joda.time.DateTime;
 import org.objenesis.strategy.SerializingInstantiatorStrategy;
 import org.opentripplanner.calendar.impl.CalendarServiceImpl;
-import org.opentripplanner.model.Agency;
-import org.opentripplanner.model.FeedScopedId;
-import org.opentripplanner.model.Stop;
-import org.opentripplanner.model.FeedInfo;
+import org.opentripplanner.model.*;
 import org.opentripplanner.model.calendar.CalendarServiceData;
 import org.opentripplanner.model.calendar.ServiceDate;
-import org.opentripplanner.model.CalendarService;
 import org.opentripplanner.analyst.core.GeometryIndex;
 import org.opentripplanner.analyst.request.SampleFactory;
 import org.opentripplanner.common.MavenVersion;
@@ -38,11 +34,13 @@ import org.opentripplanner.common.geometry.GraphUtils;
 import org.opentripplanner.graph_builder.annotation.GraphBuilderAnnotation;
 import org.opentripplanner.graph_builder.annotation.NoFutureDates;
 import org.opentripplanner.kryo.HashBiMapSerializer;
-import org.opentripplanner.model.GraphBundle;
 import org.opentripplanner.model.translation.TranslationService;
 import org.opentripplanner.model.translation.TranslationServiceData;
 import org.opentripplanner.profile.StopClusterMode;
+import org.opentripplanner.routing.accessibility.DefaultStopAccessibilityStrategy;
+import org.opentripplanner.routing.accessibility.StopAccessibilityStrategy;
 import org.opentripplanner.routing.alertpatch.AlertPatch;
+import org.opentripplanner.routing.consequences.ConsequencesStrategyFactory;
 import org.opentripplanner.routing.core.MortonVertexComparatorFactory;
 import org.opentripplanner.routing.core.TransferTable;
 import org.opentripplanner.routing.core.TraverseMode;
@@ -54,6 +52,8 @@ import org.opentripplanner.routing.impl.DefaultStreetVertexIndexFactory;
 import org.opentripplanner.routing.services.StreetVertexIndexFactory;
 import org.opentripplanner.routing.services.StreetVertexIndexService;
 import org.opentripplanner.routing.services.notes.StreetNotesService;
+import org.opentripplanner.routing.transfers.DefaultTransferPermissionStrategy;
+import org.opentripplanner.routing.transfers.TransferPermissionStrategy;
 import org.opentripplanner.routing.trippattern.Deduplicator;
 import org.opentripplanner.routing.vertextype.PatternArriveVertex;
 import org.opentripplanner.routing.vertextype.TransitStop;
@@ -213,6 +213,18 @@ public class Graph implements Serializable {
 
     /** Parent stops **/
     public Map<FeedScopedId, Stop> parentStopById = new HashMap<>();
+
+    /** Landmarks **/
+    public Map<String, Landmark> landmarksByName = new HashMap<>();
+
+    /** Consequences strategy */
+    public ConsequencesStrategyFactory consequencesStrategy;
+
+    /** Apply more complex stop accessibility rules */
+    public transient StopAccessibilityStrategy stopAccessibilityStrategy = new DefaultStopAccessibilityStrategy();
+
+    /** Optionally apply more complex transfer rules */
+    public transient TransferPermissionStrategy transferPermissionStrategy = new DefaultTransferPermissionStrategy();
 
     /** Whether to use flex modes */
     public boolean useFlexService = false;

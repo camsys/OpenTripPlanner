@@ -1,5 +1,7 @@
 package org.opentripplanner.common.model;
 
+import java.util.function.Function;
+
 /**
  * An ordered pair of objects of the same type
  *
@@ -22,6 +24,10 @@ public class P2<E> extends T2<E, E> {
         if (entries.length != 2) {
             throw new IllegalArgumentException("This only takes arrays of 2 arguments");
         }
+    }
+
+    public <F> P2<F> map(Function<E, F> function) {
+        return P2.createPair(function.apply(first), function.apply(second));
     }
 
     public String toString() {

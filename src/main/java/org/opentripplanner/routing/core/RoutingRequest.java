@@ -2,6 +2,7 @@ package org.opentripplanner.routing.core;
 
 import com.google.common.base.Objects;
 import org.onebusaway.gtfs.model.AgencyAndId;
+import org.onebusaway.gtfs.model.Stop;
 import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.model.Route;
 import org.opentripplanner.api.parameter.QualifiedModeSet;
@@ -14,8 +15,11 @@ import org.opentripplanner.routing.error.TrivialPathException;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.Vertex;
+import org.opentripplanner.routing.ignore.DefaultPathIgnoreStrategy;
+import org.opentripplanner.routing.ignore.PathIgnoreStrategy;
 import org.opentripplanner.routing.impl.DurationComparator;
 import org.opentripplanner.routing.impl.PathComparator;
+import org.opentripplanner.routing.impl.RTDPathIgnoreStrategy;
 import org.opentripplanner.routing.request.BannedStopSet;
 import org.opentripplanner.routing.spt.DominanceFunction;
 import org.opentripplanner.routing.spt.GraphPath;
@@ -267,6 +271,12 @@ public class RoutingRequest implements Cloneable, Serializable {
     /** Set of preferred agencies by user. */
     public HashSet<String> preferredAgencies = new HashSet<String>();
 
+    public HashSet<Integer> preferredRouteTypes = new HashSet<>();
+
+    public HashSet<Integer> bannedRouteTypes = new HashSet<>();
+
+    private Set<String> bannedPaths = new HashSet<>();
+
     /**
      * Penalty added for using every route that is not preferred if user set any route as preferred. We return number of seconds that we are willing
      * to wait for preferred route.
@@ -323,6 +333,9 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     /** Penalty for using a non-preferred transfer */
     public int nonpreferredTransferPenalty = 180;
+
+    /** Whether unknown transfers should be treated as forbidden */
+    public boolean allowUnknownTransfers = true;
 
     /**
      * For the bike triangle, how important time is. 
@@ -844,6 +857,26 @@ public class RoutingRequest implements Cloneable, Serializable {
             Collections.addAll(preferredAgencies, s.split(","));
         }
     }
+
+
+    public void setPreferredRouteTypes(String s) {
+        if (s != null && !s.equals("")) {
+            preferredRouteTypes = new HashSet<>();
+            for (String si : s.split(",")) {
+                preferredRouteTypes.add(Integer.parseInt(si));
+            }
+        }
+    }
+
+    public void setBannedRouteTypes(String s) {
+        if (s != null && !s.equals("")) {
+            bannedRouteTypes = new HashSet<>();
+            for (String si : s.split(",")) {
+                bannedRouteTypes.add(Integer.parseInt(si));
+            }
+        }
+    }
+
 
     public void setPreferredRoutes(String s) {
         if (!s.isEmpty()) {
@@ -1583,6 +1616,53 @@ public class RoutingRequest implements Cloneable, Serializable {
             return new DurationComparator();
         }
         return new PathComparator(compareStartTimes);
+    }
+    public PathIgnoreStrategy getPathIgnoreStrategy() {
+         if ("rtd".equals(pathIgnoreStrategy)) {
+            return new RTDPathIgnoreStrategy();
+        }
+        return new DefaultPathIgnoreStrategy();
+    }
+
+    public void banPath(GraphPath path) {
+        bannedPaths.add(path.getRoutePatternHash());
+    }
+
+    public boolean isPathBanned(GraphPath path) {
+        if (hardPathBanningAgencies != null && !hardPathBanningAgencies.isEmpty()) {
+            for (FeedScopedId id : path.getRoutes()) {
+                if (!hardPathBanningAgencies.contains(id.getAgencyId())) {
+                    return false;
+                }
+            }
+        }
+        String hash = path.getRoutePatternHash();
+        if (bannedPaths.contains(hash)) {
+            return true;
+        }
+        // Ensure we don't get trivially different paths. (Todo - will this kick out useful paths too?)
+        for (String other : bannedPaths) {
+            if (hash.startsWith(other + "#")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean canUseStopForKissAndRide(Stop stop) {
+        if (kissAndRideWhitelist.contains(stop.getId())) {
+            return true;
+        }
+        if (stop.getParentStation() != null) {
+            AgencyAndId id = new AgencyAndId(stop.getId().getAgencyId(), stop.getParentStation());
+            return kissAndRideWhitelist.contains(id);
+        }
+        return false;
+    }
+
+    public void addPlanAlert(Alert alert) {
+        if (!planAlerts.contains(alert))
+            planAlerts.add(alert);
     }
 
 }

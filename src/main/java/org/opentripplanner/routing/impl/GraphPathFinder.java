@@ -9,6 +9,7 @@ import org.opentripplanner.routing.algorithm.strategies.EuclideanRemainingWeight
 import org.opentripplanner.routing.algorithm.strategies.InterleavedBidirectionalHeuristic;
 import org.opentripplanner.routing.algorithm.strategies.RemainingWeightHeuristic;
 import org.opentripplanner.routing.algorithm.strategies.TrivialRemainingWeightHeuristic;
+import org.opentripplanner.routing.consequences.ConsequencesStrategy;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.edgetype.LegSwitchingEdge;
@@ -19,6 +20,7 @@ import org.opentripplanner.routing.flex.DeviatedRouteGraphModifier;
 import org.opentripplanner.routing.flex.FlagStopGraphModifier;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
+import org.opentripplanner.routing.ignore.PathIgnoreStrategy;
 import org.opentripplanner.routing.spt.DominanceFunction;
 import org.opentripplanner.routing.spt.GraphPath;
 import org.opentripplanner.standalone.Router;
@@ -42,7 +44,7 @@ import java.util.stream.Collectors;
  * 
  * More information is available on the OTP wiki at:
  * https://github.com/openplans/OpenTripPlanner/wiki/LargeGraphs
- *
+ *ConsequencesStrategy consequencesStrategy
  * One instance of this class should be constructed per search (i.e. per RoutingRequest: it is request-scoped).
  * Its behavior is undefined if it is reused for more than one search.
  *
@@ -123,6 +125,22 @@ public class GraphPathFinder {
 
         // OTP now always uses what used to be called longDistance mode. Non-longDistance mode is no longer supported.
         options.longDistance = true;
+
+        /*
+         * See what may have impacted your route
+         */
+        ConsequencesStrategy consequencesStrategy = null;
+        boolean findRealtimeConsequences = options.rctx.graph.consequencesStrategy != null && options.findRealtimeConsequences && options.modes.isTransit();
+        if (findRealtimeConsequences) {
+            consequencesStrategy = options.rctx.graph.consequencesStrategy.create(options);
+            // consequences strategy can determine there is no value in running (e.g. elevator outage effects for non-wheelchair trip)
+            if (!consequencesStrategy.shouldRun()) {
+                consequencesStrategy.postprocess();
+                findRealtimeConsequences = false;
+            }
+        }
+
+        PathIgnoreStrategy pathIgnoreStrategy = options.getPathIgnoreStrategy();
 
         /* maxWalk has a different meaning than it used to. It's the radius around the origin or destination within
          * which you can walk on the streets. An unlimited value would cause the bidi heuristic to do unbounded street

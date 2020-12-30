@@ -1,14 +1,13 @@
 package org.opentripplanner.routing.spt;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 import org.locationtech.jts.geom.LineString;
+
 import org.opentripplanner.api.resource.CoordinateArrayListSequence;
 import org.opentripplanner.common.geometry.GeometryUtils;
 import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.model.Route;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.routing.core.RoutingContext;
 import org.opentripplanner.routing.core.State;
@@ -51,8 +50,7 @@ public class GraphPath {
      *            - the state for which a path is requested
      * @param optimize
      *            - whether excess waiting time should be removed
-     * @param options
-     *            - the traverse options used to reach this state
+     *
      */
     public GraphPath(State s, boolean optimize) {
         // Only optimize transit trips
@@ -151,6 +149,34 @@ public class GraphPath {
             }
         }
         return ret;
+    }
+
+    /**
+     * @return all routes boarded in this graph path
+     */
+    public List<FeedScopedId> getRoutes() {
+        List<FeedScopedId> ret = new LinkedList<FeedScopedId>();
+        Route lastRoute = null;
+        Iterator<State> iter = back ? states.descendingIterator() : states.iterator();
+        while(iter.hasNext()) {
+            State s = iter.next();
+            if (s.getBackEdge() != null && s.getBackTrip() != null) {
+                Route route = s.getBackTrip().getRoute();
+                if (route != null && route != lastRoute) {
+                    ret.add(route.getId());
+                    lastRoute = route;
+                }
+            }
+        }
+        return ret;
+    }
+
+    public String getRoutePatternHash() {
+        StringJoiner hash = new StringJoiner("#");
+        for (FeedScopedId r : getRoutes()) {
+            hash.add(r.toString());
+        }
+        return hash.toString();
     }
 
     public String toString() {
