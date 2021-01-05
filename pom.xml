@@ -447,9 +447,9 @@
                 <version>3.0.0</version>
             </extension>
             <extension>
-                <groupId>com.github.platform-team</groupId>
-                <artifactId>aws-maven</artifactId>
-                <version>6.0.0</version>
+                <groupId>com.allogy.maven.wagon</groupId>
+                <artifactId>maven-s3-wagon</artifactId>
+                <version>1.2.0</version>
             </extension>
         </extensions>
     </build>
