@@ -32,7 +32,7 @@ When in doubt, new users are advised to try out OTP2 and switch to OTP1 if they 
 | Feature | OTP1 | OTP2 |
 |---------|------|------|
 | OSM street data | yes | yes |
-| GTFS transit data | yes | yes |
+| GTFS transit data | yes | yes ([_frequency.txt_ not jet supported](https://github.com/opentripplanner/OpenTripPlanner/issues/3243)) |
 | Netex transit data | no | yes<br>(Nordic profile) |
 | GTFS-Realtime | yes<br>(streaming, polling, incremental) | yes<br>(streaming, polling, incremental) |
 | SIRI Realtime | no | yes |
@@ -81,7 +81,7 @@ These were all adaptations to the very different IT environment that existed ear
 
 ### Routing request parameters
 
-Less parameters are available on the OTP2 REST API than in OTP1. Often there is no practical loss of functionality, just a different way of expressing things due to the new routing algorithms. A summary of parameters that have been removed and their replacements can be found in the migration guide [OTP2-MigrationGuide].
+Less parameters are available on the OTP2 REST API than in OTP1. Often there is no practical loss of functionality, just a different way of expressing things due to the new routing algorithms. A summary of parameters that have been removed and their replacements can be found in the migration guide [OTP2-MigrationGuide](OTP2-MigrationGuide.md).
 
 
 ## OTP Trip planning and Transit index APIs
@@ -93,7 +93,7 @@ GraphQL replacing the REST API. We will probably support the REST API for a long
 everyone to migrate to the new GraphQL API. Today, OTP2 comes with two Sandbox extension APIs:
 
 - [HSL Legacy GraphQL API](sandbox/LegacyGraphQLApi.md) - HSL's GraphQL API used by the Digitransit project.
-- [Transmodel API](sandbox/TransmodelAPI.md) - Entur´s Transmodel API
+- [Transmodel API](sandbox/TransmodelApi.md) - Entur´s Transmodel API
 
 The plan is to merge the two APIs above, clean it up and make it the new official API. The HSL API
 uses GTFS terminology, while the Entur API is Transmodel(NeTEx) based. Both APIs are similar in 

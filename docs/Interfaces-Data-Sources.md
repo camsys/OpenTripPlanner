@@ -19,8 +19,10 @@ The **OTP Transit Index API** is another [RESTful](https://en.wikipedia.org/wiki
 
 ## Sandbox APIs
 
-Additional experimental APIs are provided by [sandbox extensions](SandboxExtension):
+Additional experimental APIs are provided by [sandbox extensions](SandboxExtension.md):
 
-The **Health API** provides endpoints for checking the health status of the OTP instance. It can be useful when running OTP in a container.
+The [Health API](sandbox/HealthAPI.md) provides endpoints for checking the health status of the OTP instance. It can be useful when running OTP in a container.
 
-The **Transmodel GraphQL API** is the Transmodel API (version 3) used at Entur in production(Sep, 2020).
+The [Transmodel GraphQL API](sandbox/TransmodelApi.md) is the Transmodel API (version 3) used at Entur in production(Sep, 2020).
+
+The [HSL Legacy GraphQL API](sandbox/LegacyGraphQLApi.md) is the HSL's GraphQL API used by the Digitransit project.

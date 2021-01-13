@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -41,8 +40,12 @@ import java.util.function.Predicate;
  *
  * This is called a JOURNEY_PATTERN in the Transmodel vocabulary. However, GTFS calls a Transmodel JOURNEY a "trip",
  * thus TripPattern.
+ * <p>
+ * The {@code id} is a unique identifier for this trip pattern. For GTFS feeds this is generally
+ * generated in the format FeedId:Agency:RouteId:DirectionId:PatternNumber. For NeTEx the
+ * JourneyPattern id is used.
  */
-public class TripPattern extends TransitEntity<FeedScopedId> implements Cloneable, Serializable {
+public class TripPattern extends TransitEntity implements Cloneable, Serializable {
 
     private static final Logger LOG = LoggerFactory.getLogger(TripPattern.class);
 
@@ -55,8 +58,6 @@ public class TripPattern extends TransitEntity<FeedScopedId> implements Cloneabl
     private static final int SHIFT_DROPOFF = 3;
     private static final int NO_PICKUP = 1;
     //private static final int FLAG_BIKES_ALLOWED = 32;
-
-    private FeedScopedId id;
 
     /** The human-readable, unique name for this trip pattern. */
     public String name;
@@ -104,15 +105,34 @@ public class TripPattern extends TransitEntity<FeedScopedId> implements Cloneabl
     private byte[][] hopGeometries = null;
 
     /**
-     * The unique identifier for this trip pattern. For GTFS feeds this is generally
-     * generated in the format FeedId:Agency:RouteId:DirectionId:PatternNumber. For
-     * NeTEx the JourneyPattern id is used.
+     * The original TripPattern this replaces at least for one modified trip.
      */
-    @Override
-    public FeedScopedId getId() { return id; }
+    private TripPattern originalTripPattern = null;
 
-    @Override
-    public void setId(FeedScopedId id) { this.id = id; }
+    /**
+     * Has the TripPattern been created by a real-time update.
+     */
+    private boolean createdByRealtimeUpdater = false;
+
+
+    /** Holds stop-specific information such as wheelchair accessibility and pickup/dropoff roles. */
+    // TODO: is this necessary? Can we just look at the Stop and StopPattern objects directly?
+    int[] perStopFlags;
+
+    /**
+     * A set of serviceIds with at least one trip in this pattern.
+     * Trips in a pattern are no longer necessarily running on the same service ID.
+     */
+    // TODO MOVE codes INTO Timetable or TripTimes
+    BitSet services;
+
+
+    public TripPattern(FeedScopedId id, Route route, StopPattern stopPattern) {
+        super(id);
+        this.route = route;
+        this.stopPattern = stopPattern;
+        setStopsFromStopPattern(stopPattern);
+    }
 
     /**
      * Convinience method to get the route traverse mode, the mode for all trips in this pattern.
@@ -186,8 +206,10 @@ public class TripPattern extends TransitEntity<FeedScopedId> implements Cloneabl
     }
 
     public LineString getGeometry() {
+        if(hopGeometries == null || hopGeometries.length==0) { return null; }
+
         List<LineString> lineStrings = new ArrayList<>();
-        for (int i = 0; i < hopGeometries.length - 1; i++) {
+        for (int i = 0; i < hopGeometries.length; i++) {
             lineStrings.add(getHopGeometry(i));
         }
         return GeometryUtils.concatenateLineStrings(lineStrings);
@@ -195,23 +217,6 @@ public class TripPattern extends TransitEntity<FeedScopedId> implements Cloneabl
 
     public int numHopGeometries() {
         return hopGeometries.length;
-    }
-
-    /** Holds stop-specific information such as wheelchair accessibility and pickup/dropoff roles. */
-    // TODO: is this necessary? Can we just look at the Stop and StopPattern objects directly?
-    int[] perStopFlags;
-
-    /**
-     * A set of serviceIds with at least one trip in this pattern.
-     * Trips in a pattern are no longer necessarily running on the same service ID.
-     */
-    // TODO MOVE codes INTO Timetable or TripTimes
-    BitSet services;
-
-    public TripPattern(Route route, StopPattern stopPattern) {
-        this.route = route;
-        this.stopPattern = stopPattern;
-        setStopsFromStopPattern(stopPattern);
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
@@ -337,6 +342,22 @@ public class TripPattern extends TransitEntity<FeedScopedId> implements Cloneabl
         else {
             scheduledTimetable.tripTimes.removeIf(tt -> removeTrip.test(tt.trip));
         }
+    }
+
+    public TripPattern getOriginalTripPattern() {
+        return originalTripPattern;
+    }
+
+    public void setOriginalTripPattern(TripPattern originalTripPattern) {
+        this.originalTripPattern = originalTripPattern;
+    }
+
+    boolean isCreatedByRealtimeUpdater() {
+        return createdByRealtimeUpdater;
+    }
+
+    public void setCreatedByRealtimeUpdater() {
+        createdByRealtimeUpdater = true;
     }
 
     private static String stopNameAndId (Stop stop) {
@@ -540,25 +561,9 @@ public class TripPattern extends TransitEntity<FeedScopedId> implements Cloneabl
 
     public static boolean idsAreUniqueAndNotNull(Collection<TripPattern> tripPatterns) {
         Set<FeedScopedId> seen = new HashSet<>();
-        return tripPatterns.stream().map(t -> t.id).allMatch(t -> t != null && seen.add(t));
-    }
-
-    /**
-     * Patterns do not have unique IDs in GTFS, so we make some by concatenating agency id, route id, the direction and
-     * an integer.
-     * This only works if the Collection of TripPattern includes every TripPattern for the agency.
-     */
-    public static void generateUniqueIds(Collection<TripPattern> tripPatterns) {
-        Multimap<String, TripPattern> patternsForRoute = ArrayListMultimap.create();
-        for (TripPattern pattern : tripPatterns) {
-            FeedScopedId routeId = pattern.route.getId();
-            String direction = pattern.directionId != -1 ? String.valueOf(pattern.directionId) : "";
-            patternsForRoute.put(routeId.getId() + ":" + direction, pattern);
-            int count = patternsForRoute.get(routeId.getId() + ":" + direction).size();
-            // OBA library uses underscore as separator, we're moving toward colon.
-            String id = String.format("%s:%s:%02d", routeId.getId(), direction, count);
-            pattern.setId(new FeedScopedId(routeId.getFeedId(), id));
-        }
+        return tripPatterns.stream()
+            .map(TransitEntity::getId)
+            .allMatch(t -> t != null && seen.add(t));
     }
 
     public String toString () {
@@ -639,66 +644,5 @@ public class TripPattern extends TransitEntity<FeedScopedId> implements Cloneabl
 
     private static Coordinate coordinate(Stop s) {
         return new Coordinate(s.getLon(), s.getLat());
-    }
-
-    /**
-     * Need an equals() since trips in a pattern are no longer necessarily running on the same
-     * service ID.
-     * <p>
-     * A TransitEntity SHOULD not implement hashCode/equals. We make an EXCEPTION to this for
-     * TripPattern, because the alternative is worse. Since TripPatterns are cloned and changed by
-     * realtime updates and exist in a "global" space in Sets/Maps, the equals and hash code
-     * need to include all elements that can be changed. We could make a wrapper type and implement
-     * hc/eq for that and use that in all Set/Maps, but that would also ve quite messy. The REAL
-     * fix to this problem is to make TripPattern unique within the context it live. This is a
-     * larger task and should be addressed when implementing the issue:
-     * https://github.com/opentripplanner/OpenTripPlanner/issues/3030
-     * <p>
-     * The TripPattern is used as a <em>key</em> in a Set/Map in quite a few places. Use a reg-exp
-     * search for "(Map|Set)<TripPattern") to find the places where it is used.
-     * <p>
-     * Note! Classes that have mutable fields that are part of eq/hc are vulnerable. If added to a
-     * Set/Map the set/map MUST be re-indexed it the object is mutated. When mutating TripPattens
-     * make sure the object is NOT part of an existing Set/Map.
-     * <p>
-     * {@code hopGeometries}  is NOT part of the equals/hashCode methods to avoid costly
-     * computations. Hence; It is not allowed to ONLY change the hopGeometries, but at least one
-     * other field must be changed.
-     */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        if (!super.equals(o)) {
-            return false;
-        }
-        TripPattern that = (TripPattern) o;
-        return directionId == that.directionId &&
-                Objects.equals(id, that.id) &&
-                Objects.equals(name, that.name) &&
-                Objects.equals(route, that.route) &&
-                Objects.equals(stopPattern, that.stopPattern) &&
-                Objects.equals(scheduledTimetable, that.scheduledTimetable) &&
-                Objects.equals(trips, that.trips) &&
-                Objects.equals(services, that.services) &&
-                Arrays.equals(perStopFlags, that.perStopFlags);
-    }
-
-    @Override
-    public int hashCode() {
-        return 31 * Objects.hash(
-            id,
-            name,
-            route,
-            directionId,
-            stopPattern,
-            scheduledTimetable,
-            trips,
-            services
-        ) + Arrays.hashCode(perStopFlags);
     }
 }
