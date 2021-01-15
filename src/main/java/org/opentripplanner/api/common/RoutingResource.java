@@ -500,7 +500,7 @@ public abstract class RoutingResource {
 
     /** How far to look out, in seconds, to add upcoming trips. Defaults to 1800 seconds (half an hour). */
     @QueryParam("nextDepartureWindow")
-    private Integer nextDepartureWindow = 1800;
+    private Integer nextDepartureWindow;
 
     /** How many upcoming departures to add. Defaults to 3 */
     @QueryParam("numberOfDepartures")

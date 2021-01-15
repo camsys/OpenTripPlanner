@@ -125,17 +125,14 @@ public class TransferFactory {
             int type = transfer.getTransferType();
             if (type == 3) // type 3 = transfer not possible
                 continue;
-            if (transfer.getFromStop().equals(transfer.getToStop())) {
-                continue;
-            }
+
             TransitStationStop fromv = _stopIndex.getStationForStop(transfer.getFromStop());
             TransitStationStop tov = _stopIndex.getStationForStop(transfer.getToStop());
 
             Pair<Vertex, Vertex> transferKey = new Pair<>(fromv, tov);
             if (knownTransfers.contains(transferKey)) {
                 continue;
-            }
-            else {
+            } else {
                 knownTransfers.add(transferKey);
             }
 

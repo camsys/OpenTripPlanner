@@ -25,7 +25,6 @@ import org.opentripplanner.routing.edgetype.*;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.trippattern.TripTimes;
-import org.opentripplanner.routing.vertextype.TransitVertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -249,6 +248,10 @@ public class State implements Cloneable {
 
     public int getNumBoardings() {
         return stateData.numBoardings;
+    }
+
+    public int getNumPreferredBoardings() {
+        return stateData.numPreferredBoardings;
     }
 
 
@@ -733,6 +736,7 @@ public class State implements Cloneable {
                     editor.setBikeParked(!orig.isBikeParked());
 
                 editor.setNumBoardings(getNumBoardings() - orig.getNumBoardings());
+                editor.setNumPreferredBoardings(getNumPreferredBoardings() - orig.getNumPreferredBoardings());
 
                 ret = editor.makeState();
 

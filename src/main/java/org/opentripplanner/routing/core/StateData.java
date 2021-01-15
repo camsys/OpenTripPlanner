@@ -47,6 +47,8 @@ public class StateData implements Cloneable {
 
     protected int numBoardings;
 
+    protected int numPreferredBoardings;
+
     protected int preTransitNumBoardings = -1;
 
     protected boolean everBoarded;
@@ -126,6 +128,10 @@ public class StateData implements Cloneable {
 
     public int getNumBoardings(){
         return numBoardings;
+    }
+
+    public int getNumPreferredBoardings(){
+        return numPreferredBoardings;
     }
 
     protected enum CarState { UNUSED, USING, USED }

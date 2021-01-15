@@ -13,19 +13,51 @@
 
 package org.opentripplanner.routing.comparator;
 
-import org.opentripplanner.routing.comparator.PathComparator;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.onebusaway.gtfs.model.AgencyAndId;
+import org.opentripplanner.routing.alertpatch.Alert;
 import org.opentripplanner.routing.core.RoutingRequest;
+import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.spt.GraphPath;
 
 public class MtaPathComparator extends PathComparator {
 
-    private boolean specialOrder;
+    private int maxPreferredBoardings = -1;
+    
+    public static List<GraphPath> filter(List<GraphPath> paths, int maxPreferredBoardings) {
+    	List<GraphPath> newPaths = new ArrayList<GraphPath>();
+    	
+		for(GraphPath p : paths) {
+			State finalState = p.states.getLast();
 
-    public MtaPathComparator(boolean compareStartTimes, boolean specialOrder) {
+			// if we have any preferred boarding trips, show only those, if not, show everything
+	    	if(maxPreferredBoardings > 0) {
+				if(finalState.getNumPreferredBoardings() > 0) {
+			    	p.addPlanAlert(Alert.createSimpleAlerts("Results Filtered", "Results were filtered to show only options using LIRR-approved connections."));
+					newPaths.add(p);					
+				}
+	    	} else 
+				newPaths.add(p);
+		}
+
+		return newPaths;
+    }
+    
+    public MtaPathComparator(boolean compareStartTimes, boolean specialOrder, int maxPreferredBoardings) {
         super(compareStartTimes);
-        this.specialOrder = specialOrder;
+        this.maxPreferredBoardings = maxPreferredBoardings;
     }
 
+    private boolean hasLIRR(GraphPath p) {
+    	for(AgencyAndId a : p.getTrips()) {
+    		if(a.getAgencyId().equals("LI"))
+    			return true;
+    	}    	
+    	return false;
+    }
+    
     // Walking trips should appear last in results
     @Override
     public int compare(GraphPath o1, GraphPath o2) {
@@ -35,12 +67,7 @@ public class MtaPathComparator extends PathComparator {
             return 1;
         if (!o1NoTransit && o2NoTransit)
             return -1;
-        if (specialOrder) {
-            if (o2.getDuration() < o1.getDuration() && o2.getEndTime() < o1.getEndTime() && o2.getTrips().size() <= o1.getTrips().size())
-                return 1;
-            if (o1.getDuration() < o2.getDuration() && o1.getEndTime() < o2.getEndTime() && o1.getTrips().size() <= o2.getTrips().size())
-                return -1;
-        }
+
         return weight(o1) - weight(o2) > 0 ? 1 : -1;
     }
 
@@ -48,14 +75,23 @@ public class MtaPathComparator extends PathComparator {
         RoutingRequest options = path.states.iterator().next().getOptions();
         long startTime = path.getStartTime();
         long endTime = path.getEndTime();
+        long lirrPreferredFlag = 1;
         long waitTime;
-        if (compareStartTimes) {
-            // arriveBy = true (reverse search)
-            waitTime = options.dateTime - endTime;
-        } else {
-            waitTime = startTime - options.dateTime;
+
+        if(hasLIRR(path)) {
+        	int numPreferredBoardingsThisPath = path.states.getLast().getNumPreferredBoardings();
+        	if(numPreferredBoardingsThisPath > 0 && maxPreferredBoardings > 0)
+        		lirrPreferredFlag = -1 * (numPreferredBoardingsThisPath / maxPreferredBoardings); 
         }
-        return (waitTime * options.waitAtBeginningFactor) + path.getWeight();
+        
+        if (compareStartTimes) {
+           // arriveBy = true (reverse search)
+           waitTime = options.dateTime - endTime;
+        } else {
+           waitTime = startTime - options.dateTime;
+        }
+            
+        return (waitTime * options.waitAtBeginningFactor) + (lirrPreferredFlag * path.getWeight());
     }
 
 }

@@ -238,7 +238,7 @@ public class InputStreamGraphSource implements GraphSource {
         JsonNode config = loadConfig(newGraph);  
     	Router newRouter = new Router(routerId, newGraph);
     	newRouter.startup(config);
-    	LOG.info("inputstreamgraphsource router router-config : {} ", newRouter.graph.routerConfig);
+    	LOG.debug("inputstreamgraphsource router router-config : {} ", newRouter.graph.routerConfig);
         return newRouter;
     }
 

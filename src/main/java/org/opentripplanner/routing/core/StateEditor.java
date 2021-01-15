@@ -251,6 +251,11 @@ public class StateEditor {
         setEverBoarded(true);
     }
 
+    public void incrementNumPreferredBoardings() {
+        cloneStateDataAsNeeded();
+        child.stateData.numPreferredBoardings++;
+    }
+
     /* Basic Setters */
 
     public void setTripTimes(TripTimes tripTimes) {
@@ -345,6 +350,11 @@ public class StateEditor {
     public void setNumBoardings(int numBoardings) {
         cloneStateDataAsNeeded();
         child.stateData.numBoardings = numBoardings;
+    }
+
+    public void setNumPreferredBoardings(int numBoardings) {
+        cloneStateDataAsNeeded();
+        child.stateData.numPreferredBoardings = numBoardings;
     }
 
     public void setEverBoarded(boolean everBoarded) {
@@ -508,6 +518,10 @@ public class StateEditor {
 
     public int getNumBoardings() {
         return child.getNumBoardings();
+    }
+
+    public int getNumPreferredBoardings() {
+        return child.getNumPreferredBoardings();
     }
 
     public boolean isEverBoarded() {
