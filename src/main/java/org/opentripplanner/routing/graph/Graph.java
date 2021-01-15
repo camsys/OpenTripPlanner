@@ -15,6 +15,7 @@ import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
+import org.opentripplanner.model.*;
 import org.opentripplanner.model.projectinfo.OtpProjectInfo;
 import org.opentripplanner.common.TurnRestriction;
 import org.opentripplanner.common.geometry.CompactElevationProfile;
@@ -24,27 +25,6 @@ import org.opentripplanner.common.model.T2;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
 import org.opentripplanner.graph_builder.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issues.NoFutureDates;
-import org.opentripplanner.model.Agency;
-import org.opentripplanner.model.FeedInfo;
-import org.opentripplanner.model.FeedScopedId;
-import org.opentripplanner.model.GraphBundle;
-import org.opentripplanner.model.GroupOfStations;
-import org.opentripplanner.model.FlexStopLocation;
-import org.opentripplanner.model.FlexLocationGroup;
-import org.opentripplanner.model.MultiModalStation;
-import org.opentripplanner.model.Notice;
-import org.opentripplanner.model.Operator;
-import org.opentripplanner.model.SimpleTransfer;
-import org.opentripplanner.model.Station;
-import org.opentripplanner.model.Stop;
-import org.opentripplanner.model.StopLocation;
-import org.opentripplanner.model.TimetableSnapshot;
-import org.opentripplanner.model.TimetableSnapshotProvider;
-import org.opentripplanner.model.TransitEntity;
-import org.opentripplanner.model.TransitMode;
-import org.opentripplanner.model.Trip;
-import org.opentripplanner.model.TripPattern;
-import org.opentripplanner.model.WgsCoordinate;
 import org.opentripplanner.model.calendar.CalendarService;
 import org.opentripplanner.model.calendar.CalendarServiceData;
 import org.opentripplanner.model.calendar.ServiceDate;
@@ -909,6 +889,17 @@ public class Graph implements Serializable {
             return Collections.singleton(stop);
         }
 
+
+
+        return null;
+    }
+
+    private Collection<Entrance> getEntranceForId(FeedScopedId id) {
+        Entrance entrance = index.getEntranceforId(id);
+        if (entrance != null) {
+            return Collections.singleton(entrance);
+        }
+
         return null;
     }
 
@@ -921,6 +912,12 @@ public class Graph implements Serializable {
         Collection<Stop> stops = getStopsForId(id);
 
         if (stops == null) {
+            Collection<Entrance> entrance = getEntranceForId(id);
+
+            if ( entrance != null ) {
+                return entrance.stream().map(index.getEntranceVertexForEntrance()::get).collect(Collectors.toSet());
+            }
+
             return null;
         }
 
