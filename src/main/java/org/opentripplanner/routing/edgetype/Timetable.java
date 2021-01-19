@@ -30,9 +30,11 @@ import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.Trip;
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.opentripplanner.common.MavenVersion;
+import org.opentripplanner.routing.core.RoutingContext;
 import org.opentripplanner.routing.core.ServiceDay;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.core.StopTransfer;
+import org.opentripplanner.routing.core.TransferDetail;
 import org.opentripplanner.routing.core.TransferTable;
 import org.opentripplanner.routing.trippattern.FrequencyEntry;
 import org.opentripplanner.routing.trippattern.TripTimes;
@@ -141,6 +143,11 @@ public class Timetable implements Serializable {
      * trip matches both the time and other criteria.
      */
     public TripTimes getNextTrip(State s0, ServiceDay serviceDay, int stopIndex, boolean boarding) {
+    	return getNextPreferredTrip(s0, serviceDay, stopIndex, boarding, null, null, null, null, null);
+    }
+   
+    public TripTimes getNextPreferredTrip(State s0, ServiceDay serviceDay, int stopIndex, boolean boarding, RoutingContext rc, 
+    		Stop fromStop, Stop toStop, Stop originRequiredStop, Trip fromTrip) {
         /* Search at the state's time, but relative to midnight on the given service day. */
         int time = serviceDay.secondsSinceMidnight(s0.getTimeSeconds());
         // NOTE the time is sometimes negative here. That is fine, we search for the first trip of the day.
@@ -171,6 +178,24 @@ public class Timetable implements Serializable {
         }
 
         for (TripTimes tt : tripTimes) {
+        	boolean enforceTripBan = true;
+        	if(rc != null && fromStop != null && toStop != null) {
+	        	TransferTable transferTable = rc.transferTable;
+	            TransferDetail transferDetail = transferTable.getTransferTime(fromStop,
+	                               toStop, fromTrip, tt.trip, boarding);
+	            Stop requiredStop = transferDetail.getRequiredStop();
+
+	            // don't ban trips that are "preferred"--if a required stop is given, make sure it matches before we 
+	            // deactivate banning
+	        	if((transferDetail.getTransferTime() == StopTransfer.PREFERRED_TRANSFER 
+	        			|| transferDetail.getTransferTime() == StopTransfer.TIMED_TRANSFER)
+	        			&& 
+	        			((requiredStop == null || originRequiredStop == null) 
+	        			|| requiredStop.getId().equals(originRequiredStop.getId()))) {
+	        		enforceTripBan = false;
+	        	}
+        	}
+        	
             int adjustedTime = recomputeTime
                 ? adjustTimeForTransfer(s0, currentStop, tt.trip, boarding, serviceDay, time)
                 : exampleAdjustedTime;
@@ -182,7 +207,7 @@ public class Timetable implements Serializable {
                                            // now its not sure if this check should be still in place because there is a boolean field
                                            // for canceled trips
                 if (depTime >= adjustedTime && depTime < bestTime) {
-                    if (isTripTimesOk(tt, serviceDay, s0, stopIndex, true)) {
+                    if (isTripTimesOk(tt, serviceDay, s0, stopIndex, enforceTripBan)) {
                         bestTrip = tt;
                         bestTime = depTime;
                     }
@@ -191,7 +216,7 @@ public class Timetable implements Serializable {
                 int arvTime = tt.getArrivalTime(stopIndex);
                 if (arvTime < 0) continue;
                 if (arvTime <= adjustedTime && arvTime > bestTime) {
-                    if (isTripTimesOk(tt, serviceDay, s0, stopIndex, true)) {
+                    if (isTripTimesOk(tt, serviceDay, s0, stopIndex, enforceTripBan)) {
                         bestTrip = tt;
                         bestTime = arvTime;
                     }

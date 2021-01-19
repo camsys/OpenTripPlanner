@@ -90,7 +90,7 @@ public class TransferTable implements Serializable {
         
         // Get transfer time between the two stops
         TransferDetail transferDetail = getTransferTime(fromStop.getId(), toStop.getId(), fromTrip, toTrip);
-        int transferTime = -999;
+        int transferTime = StopTransfer.UNKNOWN_TRANSFER;
         if(transferDetail != null){
             transferTime = transferDetail.getTransferTime();
         }

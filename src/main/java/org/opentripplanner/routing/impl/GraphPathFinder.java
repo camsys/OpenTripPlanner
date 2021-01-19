@@ -117,9 +117,11 @@ public class GraphPathFinder {
         // Choose an appropriate heuristic for goal direction.
         RemainingWeightHeuristic heuristic;
         RemainingWeightHeuristic reversedSearchHeuristic;
+
         if (options.disableRemainingWeightHeuristic) {
             heuristic = new TrivialRemainingWeightHeuristic();
             reversedSearchHeuristic = new TrivialRemainingWeightHeuristic();
+
         } else if (options.modes.isTransit()) {
             // Only use the BiDi heuristic for transit. It is not very useful for on-street modes.
             // heuristic = new InterleavedBidirectionalHeuristic(options.rctx.graph);
@@ -131,7 +133,6 @@ public class GraphPathFinder {
             reversedSearchHeuristic = new EuclideanRemainingWeightHeuristic();
         }
         options.rctx.remainingWeightHeuristic = heuristic;
-
 
         /* In RoutingRequest, maxTransfers defaults to 2. Over long distances, we may see
          * itineraries with far more transfers. We do not expect transfer limiting to improve
@@ -170,7 +171,6 @@ public class GraphPathFinder {
         while (paths.size() < options.numItineraries) {
             // TODO pull all this timeout logic into a function near org.opentripplanner.util.DateUtils.absoluteTimeout()
 
-
             int timeoutIndex = paths.size();
             if (timeoutIndex >= router.timeouts.length) {
                 timeoutIndex = router.timeouts.length - 1;
@@ -178,6 +178,7 @@ public class GraphPathFinder {
             double timeout = searchBeginTime + (router.timeouts[timeoutIndex] * 1000);
             timeout -= System.currentTimeMillis(); // Convert from absolute to relative time
             timeout /= 1000; // Convert milliseconds to seconds
+
             if (timeout <= 0) {
                 // Catch the case where advancing to the next (lower) timeout value means the search is timed out
                 // before it even begins. Passing a negative relative timeout in the SPT call would mean "no timeout".
@@ -241,32 +242,6 @@ public class GraphPathFinder {
                     }
                 }
 
-                // If this path violates required_stop_id rules ban it
-                /*
-                List<String> previousStops = new ArrayList<String>();
-                Boolean valid = true;
-                for (Edge edge : path.edges) {
-                    if (edge instanceof TransitBoardAlight) {
-
-                        // Save this stop, we will check later to see if this stop satisfies the required stop
-                        String newStop = ((TransitVertex) edge.getFromVertex()).getStopId().getId();
-                        previousStops.add(newStop);
-
-                        // If this edge has a required stop, then check to see if we got on at that stop.
-                        if (((TransitBoardAlight) edge).getRequiredStop() != null) {
-                            String requiredStop = ((TransitBoardAlight) edge).getRequiredStop().getId().getId();
-                            if(!previousStops.contains(requiredStop)) {
-                                valid = false;
-                                continue;
-                            }
-                        }
-                    }
-                }
-                if(!valid) {
-                    continue;
-                }
-                */
-
                 // Keep Track of the shortest duration of all paths found so far.
                 if (bestDuration == -1.0) {
                     bestDuration = path.getDuration();
@@ -300,9 +275,20 @@ public class GraphPathFinder {
             LOG.debug("we have {} paths", paths.size());
         }
         LOG.debug("END SEARCH ({} msec)", System.currentTimeMillis() - searchBeginTime);
-        Collections.sort(paths, options.getPathComparator(options.arriveBy));
 
-
+        
+        int maxPreferredBoardings = -1;
+        for(GraphPath p : paths) {
+        	State finalState = p.states.getLast();
+        	if(finalState != null) {
+        		int numPreferredBoardings = finalState.getNumPreferredBoardings();
+        		if(numPreferredBoardings > maxPreferredBoardings)
+        			maxPreferredBoardings = numPreferredBoardings;
+        	}
+        }
+        
+        paths = options.getFilter(paths, maxPreferredBoardings);
+        Collections.sort(paths, options.getPathComparator(options.arriveBy, maxPreferredBoardings));
 
         if (verbose) {
         	int i = 0;

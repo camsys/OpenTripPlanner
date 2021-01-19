@@ -16,6 +16,8 @@ package org.opentripplanner.routing.edgetype;
 import java.util.BitSet;
 
 import java.util.Locale;
+
+import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.Trip;
 import org.opentripplanner.routing.core.RoutingContext;
@@ -23,10 +25,12 @@ import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.ServiceDay;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.core.StateEditor;
+import org.opentripplanner.routing.core.StopTransfer;
 import org.opentripplanner.routing.core.TransferTable;
 import org.opentripplanner.routing.core.TransferDetail;
 import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.core.TraverseModeSet;
+import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.trippattern.TripTimes;
 import org.opentripplanner.routing.vertextype.PatternStopVertex;
 import org.opentripplanner.routing.vertextype.TransitStopArrive;
@@ -64,6 +68,10 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
     public boolean boarding;
 
     public Stop requiredStop;
+    
+    private boolean preferredTransfer = false; 
+    
+    private AgencyAndId tripId = null;
 
     public Stop getRequiredStop(){
         return requiredStop;
@@ -273,6 +281,27 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
              * 00:30 tommorrow. The 00:30 trip should be taken, but if we stopped the search after
              * finding today's 25:00 trip we would never find tomorrow's 00:30 trip.
              */
+            
+            State prevState = s0.getBackState();
+            Stop originRequiredStop = null;
+            while(prevState != null) {
+            	Edge e = prevState.getBackEdge();
+
+            	if(e instanceof TransitBoardAlight) {
+            		TransitBoardAlight tba = (TransitBoardAlight)e;
+            		if(tba.getStop() != getStop()) {
+            			originRequiredStop = tba.getStop();
+            			break;
+            		}
+            	}
+
+            	if(options.reverseOptimizing)
+            		prevState = prevState.getNextResult(); // forward
+            	else 
+            		prevState = prevState.getBackState(); // back
+            }
+            
+                        
             TripPattern tripPattern = this.getPattern();
             int bestWait = -1;
             TripTimes  bestTripTimes  = null;
@@ -284,7 +313,20 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
                 if ( ! timetable.temporallyViable(sd, s0.getTimeSeconds(), bestWait, boarding))
                     continue;
                 /* Find the next or prev departure depending on final boolean parameter. */
-                TripTimes tripTimes = timetable.getNextTrip(s0, sd, stopIndex, boarding);
+                Stop toStop, fromStop;
+                Trip fromTrip;
+            	if(options.reverseOptimizing) {
+            		toStop = s0.getPreviousStop();
+            		fromStop = getStop();
+            		fromTrip = s0.getPreviousTrip();
+            	} else {
+            		fromStop = s0.getPreviousStop();
+            		toStop = getStop();
+            		fromTrip = s0.getPreviousTrip();
+            	}
+                
+                TripTimes tripTimes = timetable.getNextPreferredTrip(s0, sd, stopIndex, boarding, 
+                		s0.getContext(), fromStop, toStop, originRequiredStop, fromTrip);
                 if (tripTimes != null) {
                     /* Wait is relative to departures on board and arrivals on alight. */
                     int wait = boarding ? 
@@ -305,7 +347,8 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
             
             /* check if route and/or Agency are banned for this plan */
             // FIXME this should be done WHILE searching for a trip.
-            if (options.tripIsBanned(trip)) return null;
+            if (options.tripIsBanned(trip)) 
+            	return null;
 
             /* Check if route is preferred by the user. */
 
@@ -313,18 +356,18 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
 
             /* Compute penalty for non-preferred transfers. */
             int transferPenalty = 0;
+            int transferTime = StopTransfer.UNKNOWN_TRANSFER;
             /* If this is not the first boarding, then we are transferring. */
             if (s0.isEverBoarded()) {
                 TransferTable transferTable = options.getRoutingContext().transferTable;
                 TransferDetail transferDetail = transferTable.getTransferTime(s0.getPreviousStop(),
                                    getStop(), s0.getPreviousTrip(), trip, boarding);
-                int transferTime = transferDetail.getTransferTime();
                 Stop requiredStop = transferDetail.getRequiredStop();
-                this.requiredStop = requiredStop;
-                //int transferTime = transferTable.getRequiredStop(s0.getPreviousStop(),
-                //        getStop(), s0.getPreviousTrip(), trip, boarding);
-                transferPenalty  = transferTable.determineTransferPenalty(transferTime, 
-                                   options.nonpreferredTransferPenalty);
+                
+                if((requiredStop == null || originRequiredStop == null) || requiredStop.getId().equals(originRequiredStop.getId())) {
+                	transferTime = transferDetail.getTransferTime();
+                	transferPenalty = transferTable.determineTransferPenalty(transferTime, options.nonpreferredTransferPenalty);
+                }
             }
 
             /* Found a trip to board. Now make the child state. */
@@ -336,6 +379,11 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
             s1.setTripTimes(bestTripTimes);
             s1.incrementTimeInSeconds(bestWait);
             s1.incrementNumBoardings();
+            if(transferTime == StopTransfer.PREFERRED_TRANSFER || transferTime == StopTransfer.TIMED_TRANSFER) {
+            	preferredTransfer = true;
+                s1.incrementNumPreferredBoardings();
+            }
+            tripId = trip.getId();
             s1.setTripId(trip.getId());
             s1.setPreviousTrip(trip);
             s1.setZone(getPattern().getZone(stopIndex));
@@ -357,6 +405,7 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
             // alight to prevent state domination due to free alights
             if (options.reverseOptimizing) {
                 s1.incrementWeight(wait_cost);
+                s1.incrementWeight(Math.abs(s0.getOptimizedElapsedTimeSeconds()));
             } else {
                 s1.incrementWeight(wait_cost + options.getBoardCost(s0.getNonTransitMode()));
             }
@@ -431,7 +480,7 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
     public String toString() {
         return "TransitBoardAlight(" +
                 (boarding ? "boarding " : "alighting ") +
-                getFromVertex() + " to " + getToVertex() + ")";
+                getFromVertex() + " to " + getToVertex() + ") trip=" + tripId + " preferredTransfer=" + preferredTransfer;
     }
 
 }

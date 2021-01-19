@@ -267,7 +267,7 @@ public class RoutingRequest implements Cloneable, Serializable {
     public double waitReluctance = 1.0;
 
     /** How much less bad is waiting at the beginning of the trip (replaces waitReluctance on the first boarding) */
-    public double waitAtBeginningFactor = 0.4;
+    public double waitAtBeginningFactor = .8;
 
     /** This prevents unnecessary transfers by adding a cost for boarding a vehicle. */
     public int walkBoardCost = 60 * 10;
@@ -362,7 +362,7 @@ public class RoutingRequest implements Cloneable, Serializable {
     public Map<Object, Object> extensions = new HashMap<Object, Object>();
 
     /** Penalty for using a non-preferred transfer */
-    public int nonpreferredTransferPenalty = 180;
+    public int nonpreferredTransferPenalty = 5 * 60 * 60; // how long you'd wait for a preferred trip
 
     /** Whether unknown transfers should be treated as forbidden */
     public boolean allowUnknownTransfers = true;
@@ -406,7 +406,7 @@ public class RoutingRequest implements Cloneable, Serializable {
     /**
      * When true, do a full reversed search to compact the legs of the GraphPath.
      */
-    public boolean compactLegsByReversedSearch = false;
+    public boolean compactLegsByReversedSearch = true;
 
     /**
      * If true, cost turns as they would be in a country where driving occurs on the right; otherwise, cost them as they would be in a country where
@@ -513,7 +513,7 @@ public class RoutingRequest implements Cloneable, Serializable {
     public String pathComparator = null;
 
     /** How far to look out, in seconds, to add upcoming trips. Defaults to half an hour. */
-    public int nextDepartureWindow = 1800;
+    public int nextDepartureWindow = 8 * 60 * 60;
 
     /** How many upcoming departures to add. Defaults to 3 */
     public int numberOfDepartures = 3;
@@ -1482,10 +1482,15 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     }
 
-    public Comparator<GraphPath> getPathComparator(boolean compareStartTimes) {
-        if ("mta".equals(pathComparator)) {
-            return new MtaPathComparator(compareStartTimes, false);
-        } else if ("mta_quick".equals(pathComparator)) {
+    public List<GraphPath> getFilter(List<GraphPath> paths, int maxPreferredBoardings) {
+        return MtaPathComparator.filter(paths, maxPreferredBoardings);
+    }
+    
+    public Comparator<GraphPath> getPathComparator(boolean compareStartTimes, int maxPreferredBoardings) {
+        return new MtaPathComparator(compareStartTimes, false, maxPreferredBoardings);
+
+/*		
+  		if ("mta_quick".equals(pathComparator)) {
             return new MtaPathComparator(compareStartTimes, true);
         } else if ("transfers".equals(pathComparator)) {
             return new TransfersComparator();
@@ -1495,6 +1500,7 @@ public class RoutingRequest implements Cloneable, Serializable {
             return new OptimizeTypeComparator(compareStartTimes);
         }
         return new PathComparator(compareStartTimes);
+*/
     }
 
     public void banPath(GraphPath path) {
@@ -1502,7 +1508,7 @@ public class RoutingRequest implements Cloneable, Serializable {
     }
 
     public boolean isPathBanned(GraphPath path) {
-        if (hardPathBanningAgencies != null && !hardPathBanningAgencies.isEmpty()) {
+       if (hardPathBanningAgencies != null && !hardPathBanningAgencies.isEmpty()) {
             for (AgencyAndId id : path.getRoutes()) {
                 if (!hardPathBanningAgencies.contains(id.getAgencyId())) {
                    return false;
@@ -1519,6 +1525,7 @@ public class RoutingRequest implements Cloneable, Serializable {
                 return true;
             }
         }
+        
         return false;
     }
 
