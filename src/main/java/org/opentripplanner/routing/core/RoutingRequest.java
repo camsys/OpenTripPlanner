@@ -181,7 +181,7 @@ public class RoutingRequest implements Cloneable, Serializable {
      * would be willing to walk to 7th Ave and take the Q to Union Square, then transfer to the 6. 
      * If this takes less than optimize_transfer_penalty seconds, then that's what we'll return.
      */
-    public int transferPenalty = 0;
+    public int transferPenalty = 600;
 
     /** A multiplier for how bad walking is, compared to being in transit for equal lengths of time.
      *  Defaults to 2. Empirically, values between 10 and 20 seem to correspond well to the concept
@@ -267,7 +267,7 @@ public class RoutingRequest implements Cloneable, Serializable {
     public double waitReluctance = 1.0;
 
     /** How much less bad is waiting at the beginning of the trip (replaces waitReluctance on the first boarding) */
-    public double waitAtBeginningFactor = .8;
+    public double waitAtBeginningFactor = 0.4;
 
     /** This prevents unnecessary transfers by adding a cost for boarding a vehicle. */
     public int walkBoardCost = 60 * 10;
@@ -362,7 +362,7 @@ public class RoutingRequest implements Cloneable, Serializable {
     public Map<Object, Object> extensions = new HashMap<Object, Object>();
 
     /** Penalty for using a non-preferred transfer */
-    public int nonpreferredTransferPenalty = 5 * 60 * 60; // how long you'd wait for a preferred trip
+    public int nonpreferredTransferPenalty = 60; 
 
     /** Whether unknown transfers should be treated as forbidden */
     public boolean allowUnknownTransfers = true;
@@ -1487,11 +1487,10 @@ public class RoutingRequest implements Cloneable, Serializable {
     }
     
     public Comparator<GraphPath> getPathComparator(boolean compareStartTimes, int maxPreferredBoardings) {
-        return new MtaPathComparator(compareStartTimes, false, maxPreferredBoardings);
-
-/*		
-  		if ("mta_quick".equals(pathComparator)) {
-            return new MtaPathComparator(compareStartTimes, true);
+//        return new MtaPathComparator(compareStartTimes, false, maxPreferredBoardings);
+		
+  		if ("mta".equals(pathComparator)) {
+            return new MtaPathComparator(compareStartTimes, true, maxPreferredBoardings);
         } else if ("transfers".equals(pathComparator)) {
             return new TransfersComparator();
         } else if ("walking".equals(pathComparator)) {
@@ -1500,7 +1499,7 @@ public class RoutingRequest implements Cloneable, Serializable {
             return new OptimizeTypeComparator(compareStartTimes);
         }
         return new PathComparator(compareStartTimes);
-*/
+
     }
 
     public void banPath(GraphPath path) {
