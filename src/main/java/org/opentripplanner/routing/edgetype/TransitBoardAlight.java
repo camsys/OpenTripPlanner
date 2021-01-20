@@ -405,7 +405,6 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
             // alight to prevent state domination due to free alights
             if (options.reverseOptimizing) {
                 s1.incrementWeight(wait_cost);
-//                s1.incrementWeight(Math.abs(s0.getOptimizedElapsedTimeSeconds()));
             } else {
                 s1.incrementWeight(wait_cost + options.getBoardCost(s0.getNonTransitMode()));
             }
