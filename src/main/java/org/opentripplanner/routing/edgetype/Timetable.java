@@ -14,6 +14,7 @@
 package org.opentripplanner.routing.edgetype;
 
 import java.io.Serializable;
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -143,11 +144,11 @@ public class Timetable implements Serializable {
      * trip matches both the time and other criteria.
      */
     public TripTimes getNextTrip(State s0, ServiceDay serviceDay, int stopIndex, boolean boarding) {
-    	return getNextPreferredTrip(s0, serviceDay, stopIndex, boarding, null, null, null, null, null);
+    	return getNextPreferredTrip(s0, serviceDay, stopIndex, boarding, null, null, null, null, null, null);
     }
    
     public TripTimes getNextPreferredTrip(State s0, ServiceDay serviceDay, int stopIndex, boolean boarding, RoutingContext rc, 
-    		Stop fromStop, Stop toStop, Stop originRequiredStop, Trip fromTrip) {
+    		Stop fromStop, Stop toStop, Stop originRequiredStop, Trip fromTrip, Trip toTrip) {
         /* Search at the state's time, but relative to midnight on the given service day. */
         int time = serviceDay.secondsSinceMidnight(s0.getTimeSeconds());
         // NOTE the time is sometimes negative here. That is fine, we search for the first trip of the day.
@@ -181,10 +182,16 @@ public class Timetable implements Serializable {
         	boolean enforceTripBan = true;
         	if(rc != null && fromStop != null && toStop != null) {
 	        	TransferTable transferTable = rc.transferTable;
+	        	if(toTrip == null)
+	        		toTrip = tt.trip;
+	        	
+	        	if(fromTrip == null)
+	        		fromTrip = tt.trip;
+	        	
 	            TransferDetail transferDetail = transferTable.getTransferTime(fromStop,
-	                               toStop, fromTrip, tt.trip, boarding);
-	            Stop requiredStop = transferDetail.getRequiredStop();
-
+	                               toStop, fromTrip, toTrip, boarding);
+	            Stop requiredStop = transferDetail.getRequiredStop();	            
+	            
 	            // don't ban trips that are "preferred"--if a required stop is given, make sure it matches before we 
 	            // deactivate banning
 	        	if((transferDetail.getTransferTime() == StopTransfer.PREFERRED_TRANSFER 

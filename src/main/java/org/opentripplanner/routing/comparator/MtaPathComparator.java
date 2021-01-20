@@ -68,13 +68,12 @@ public class MtaPathComparator extends PathComparator {
         if (!o1NoTransit && o2NoTransit)
             return -1;
 
-        return weight(o1) - weight(o2) > 0 ? 1 : -1;
+        return (int)(weight(o1) - weight(o2));
     }
 
     private double weight(GraphPath path) {
         RoutingRequest options = path.states.iterator().next().getOptions();
         long startTime = path.getStartTime();
-        long endTime = path.getEndTime();
         long lirrPreferredFlag = 1;
         long waitTime;
 
@@ -84,13 +83,8 @@ public class MtaPathComparator extends PathComparator {
         		lirrPreferredFlag = -1 * (numPreferredBoardingsThisPath / maxPreferredBoardings); 
         }
         
-        if (compareStartTimes) {
-           // arriveBy = true (reverse search)
-           waitTime = options.dateTime - endTime;
-        } else {
-           waitTime = startTime - options.dateTime;
-        }
-            
+        waitTime = startTime - options.dateTime;
+
         return (waitTime * options.waitAtBeginningFactor) + (lirrPreferredFlag * path.getWeight());
     }
 

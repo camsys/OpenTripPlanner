@@ -295,10 +295,7 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
             		}
             	}
 
-            	if(options.reverseOptimizing)
-            		prevState = prevState.getNextResult(); // forward
-            	else 
-            		prevState = prevState.getBackState(); // back
+            	prevState = prevState.getBackState(); 
             }
             
                         
@@ -306,27 +303,31 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
             int bestWait = -1;
             TripTimes  bestTripTimes  = null;
             ServiceDay bestServiceDay = null;
+            
+            Stop toStop, fromStop;
+            Trip fromTrip, toTrip;
             for (ServiceDay sd : rctx.serviceDays) {
                 /* Find the proper timetable (updated or original) if there is a realtime snapshot. */
                 Timetable timetable = tripPattern.getUpdatedTimetable(options, sd);
                 /* Skip this day/timetable if no trip in it could possibly be useful. */
                 if ( ! timetable.temporallyViable(sd, s0.getTimeSeconds(), bestWait, boarding))
                     continue;
-                /* Find the next or prev departure depending on final boolean parameter. */
-                Stop toStop, fromStop;
-                Trip fromTrip;
-            	if(options.reverseOptimizing) {
-            		toStop = s0.getPreviousStop();
+
+               	if(options.reverseOptimizing) {
+            		toStop = s0.isEverBoarded() ? s0.getPreviousStop() : null;
             		fromStop = getStop();
-            		fromTrip = s0.getPreviousTrip();
+            		fromTrip = null;
+            		toTrip = s0.isEverBoarded() ? s0.getPreviousTrip() : null;
             	} else {
-            		fromStop = s0.getPreviousStop();
+            		fromStop = s0.isEverBoarded() ? s0.getPreviousStop() : null;
             		toStop = getStop();
-            		fromTrip = s0.getPreviousTrip();
+            		fromTrip = s0.isEverBoarded() ? s0.getPreviousTrip() : null;
+            		toTrip = null;
             	}
-                
+            	                
+                /* Find the next or prev departure depending on final boolean parameter. */
                 TripTimes tripTimes = timetable.getNextPreferredTrip(s0, sd, stopIndex, boarding, 
-                		s0.getContext(), fromStop, toStop, originRequiredStop, fromTrip);
+                		s0.getContext(), fromStop, toStop, originRequiredStop, fromTrip, toTrip);
                 if (tripTimes != null) {
                     /* Wait is relative to departures on board and arrivals on alight. */
                     int wait = boarding ? 
@@ -344,9 +345,8 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
             }
             if (bestWait < 0) return null; // no appropriate trip was found
             Trip trip = bestTripTimes.trip;
-            
+
             /* check if route and/or Agency are banned for this plan */
-            // FIXME this should be done WHILE searching for a trip.
             if (options.tripIsBanned(trip)) 
             	return null;
 
@@ -360,11 +360,11 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
             /* If this is not the first boarding, then we are transferring. */
             if (s0.isEverBoarded()) {
                 TransferTable transferTable = options.getRoutingContext().transferTable;
-                TransferDetail transferDetail = transferTable.getTransferTime(s0.getPreviousStop(),
-                                   getStop(), s0.getPreviousTrip(), trip, boarding);
+                TransferDetail transferDetail = transferTable.getTransferTime(s0.getPreviousStop(), getStop(), 
+                		s0.getPreviousTrip(), trip, boarding);
                 Stop requiredStop = transferDetail.getRequiredStop();
-                
-                if((requiredStop == null || originRequiredStop == null) || requiredStop.getId().equals(originRequiredStop.getId())) {
+
+                if(requiredStop == null || originRequiredStop == null || requiredStop.getId().equals(originRequiredStop.getId())) {
                 	transferTime = transferDetail.getTransferTime();
                 	transferPenalty = transferTable.determineTransferPenalty(transferTime, options.nonpreferredTransferPenalty);
                 }
