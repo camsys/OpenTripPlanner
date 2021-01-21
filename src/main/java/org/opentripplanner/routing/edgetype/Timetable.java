@@ -180,8 +180,9 @@ public class Timetable implements Serializable {
 
         for (TripTimes tt : tripTimes) {
         	boolean enforceTripBan = true;
-        	if(rc != null && fromStop != null && toStop != null) {
+        	if(rc != null && fromStop != null && toStop != null && originRequiredStop != null) {
 	        	TransferTable transferTable = rc.transferTable;
+
 	        	if(toTrip == null)
 	        		toTrip = tt.trip;
 	        	
@@ -197,8 +198,7 @@ public class Timetable implements Serializable {
 	        	if((transferDetail.getTransferTime() == StopTransfer.PREFERRED_TRANSFER 
 	        			|| transferDetail.getTransferTime() == StopTransfer.TIMED_TRANSFER)
 	        			&& 
-	        			((requiredStop == null || originRequiredStop == null) 
-	        			|| requiredStop.getId().equals(originRequiredStop.getId()))) {
+	        			(requiredStop == null || requiredStop.getId().equals(originRequiredStop.getId()))) {
 	        		enforceTripBan = false;
 	        	}
         	}

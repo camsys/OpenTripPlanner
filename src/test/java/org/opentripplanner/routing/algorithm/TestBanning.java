@@ -16,10 +16,13 @@ package org.opentripplanner.routing.algorithm;
 import junit.framework.TestCase;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Route;
+import org.onebusaway.gtfs.model.Stop;
 import org.opentripplanner.ConstantsForTests;
 import org.opentripplanner.common.model.T2;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.State;
+import org.opentripplanner.routing.core.StopTransfer;
+import org.opentripplanner.routing.core.TransferDetail;
 import org.opentripplanner.routing.edgetype.PatternHop;
 import org.opentripplanner.routing.edgetype.TransitBoardAlight;
 import org.opentripplanner.routing.graph.Graph;
@@ -138,7 +141,8 @@ public class TestBanning extends TestCase {
                         } else {
                             stopSet = BannedStopSet.ALL;
                         }
-                        if (tripId != null)
+                        if (tripId != null && tbae.preferredTransfer != true) // if this is a preferred transfer, don't expect it to be banned. 
+                        													  // See TBA edge line 329, changed for LIRR. 
                             usedTripDefs.add(new T2<AgencyAndId, BannedStopSet>(tripId, stopSet));
                     }
                 }

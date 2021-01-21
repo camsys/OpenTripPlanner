@@ -69,7 +69,7 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
 
     public Stop requiredStop;
     
-    private boolean preferredTransfer = false; 
+    public boolean preferredTransfer = false; 
     
     private AgencyAndId tripId = null;
 
