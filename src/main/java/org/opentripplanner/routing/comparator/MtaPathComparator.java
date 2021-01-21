@@ -35,7 +35,7 @@ public class MtaPathComparator extends PathComparator {
 			// if we have any preferred boarding trips, show only those, if not, show everything
 	    	if(maxPreferredBoardings > 0) {
 				if(finalState.getNumPreferredBoardings() > 0) {
-			    	p.addPlanAlert(Alert.createSimpleAlerts("Results Filtered", "Results were filtered to show only options using LIRR-approved connections."));
+			    	p.addPlanAlert(Alert.createSimpleAlerts("Results Filtered", "Results were filtered to show only options using approved connections."));
 					newPaths.add(p);					
 				}
 	    	} else 
