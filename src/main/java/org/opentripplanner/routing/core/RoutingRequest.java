@@ -116,6 +116,14 @@ public class RoutingRequest implements Cloneable, Serializable {
     /** The epoch date/time that the trip should depart (or arrive, for requests where arriveBy is true) */
     public long dateTime = new Date().getTime() / 1000;
 
+    /** The date/time that the original travel time requested by customer */
+    public long origTravelDateTime = Long.MIN_VALUE;
+
+    /** The run board name in current GTFS file. This name will be used in the warning message if the user given travel date is beyond the current runboard. */
+    public String runboard = null;
+
+    public Long runboardEndDate = null;
+
     /** Whether the trip should depart at dateTime (false, the default), or arrive at dateTime. */
     public boolean arriveBy = false;
 
@@ -902,6 +910,38 @@ public class RoutingRequest implements Cloneable, Serializable {
         for (TraverseMode m : mList) {
             addMode(m);
         }
+    }
+
+    public Date getOrigTravelDateTime() {
+        if (origTravelDateTime == Long.MIN_VALUE) {
+            return null;
+        } else {
+            return new Date(origTravelDateTime*1000);
+        }
+    }
+
+    public void setOrigTravelDateTime(Date origTravelDateTime) {
+        this.origTravelDateTime = origTravelDateTime.getTime() / 1000;
+    }
+
+    public String getRunboard() {
+        return runboard;
+    }
+
+    public void setRunboard(String runboard) {
+        this.runboard = runboard;
+    }
+
+    public Long getRunboardEndDate() {
+        return runboardEndDate;
+    }
+
+    public void setRunboardEndDate(long date) {
+        this.runboardEndDate = date;
+    }
+
+    public boolean hasRunboardEndDate() {
+        return runboardEndDate != null;
     }
 
     public Date getDateTime() {

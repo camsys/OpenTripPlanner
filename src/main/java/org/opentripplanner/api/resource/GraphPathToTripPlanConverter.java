@@ -94,6 +94,15 @@ public abstract class GraphPathToTripPlanConverter {
             plan.addItinerary(itinerary);
         }
 
+        //set warning message in the TripPlan if the given travel time is beyond the GTFS service time range
+        if (request.getOrigTravelDateTime() != null) {
+            if (request.getOrigTravelDateTime().getTime() > request.getDateTime().getTime()) {
+                plan.addAlert(Alert.createSimpleAlerts(
+                        "The travel date is beyond " + (request.getRunboard()== null ? "the current run board."
+                                : (request.getRunboard() + " run board."))), requestedLocale);
+            }
+        }
+
         if (plan != null) {
             for (Itinerary i : plan.itinerary) {
                 /* Communicate the fact that the only way we were able to get a response was by removing a slope limit. */
@@ -183,15 +192,59 @@ public abstract class GraphPathToTripPlanConverter {
         return itinerary;
     }
 
-    private static Calendar makeCalendar(State state) {
-        RoutingContext rctx = state.getContext();
-        TimeZone timeZone = rctx.graph.getTimeZone();
-        return makeCalendar(timeZone, state.getTimeInMillis());
-    }
-
     private static Calendar makeCalendar(TimeZone timeZone, long timeMillis) {
         Calendar calendar = Calendar.getInstance(timeZone);
         calendar.setTimeInMillis(timeMillis);
+        return calendar;
+    }
+
+    private static Calendar makeCalendar(State state) {
+        RoutingRequest request = state.getOptions();
+        return request != null ? makeCalendar(state, request.getOrigTravelDateTime(), request.getDateTime()) :
+                makeCalendar(state, null, null);
+    }
+
+    private static Calendar makeCalendar(State state, Date origRequestDate, Date requestDate) {
+        RoutingContext rctx = state.getContext();
+        TimeZone timeZone = rctx.graph.getTimeZone();
+        Calendar calendar = Calendar.getInstance(timeZone);
+
+        if (origRequestDate != null && requestDate != null) {
+            //if origRequestDate is not null, which means the original request travel data is beyond the current run board.
+            //we need to repalce the travel time with original travel date.
+            //get the day of the week
+            Calendar c = Calendar.getInstance();
+            c.setTimeInMillis(origRequestDate.getTime());
+            int origYear = c.get(Calendar.YEAR);
+            int origDay = c.get(Calendar.DAY_OF_YEAR);
+
+            c.setTimeInMillis(requestDate.getTime());
+            int requestYear = c.get(Calendar.YEAR);
+            int requestDay = c.get(Calendar.DAY_OF_YEAR);
+
+            c.setTimeInMillis(state.getTimeInMillis());
+            int resYear = c.get(Calendar.YEAR);
+            int resDay = c.get(Calendar.DAY_OF_YEAR);
+
+            if ((resDay - requestDay) == 0) { //same day
+                calendar.setTimeInMillis(state.getTimeInMillis());
+                calendar.set(Calendar.YEAR, origYear);
+                calendar.set(Calendar.DAY_OF_YEAR, origDay);
+            } else {//not the same day
+                if ((resYear - requestYear) == 0) { //same year
+                    calendar.setTimeInMillis(state.getTimeInMillis());
+                    calendar.set(Calendar.YEAR, origYear);
+                    calendar.set(Calendar.DAY_OF_YEAR, origDay + (resDay - requestDay));
+                } else { //not the same year
+                    calendar.setTimeInMillis(state.getTimeInMillis());
+                    calendar.set(Calendar.YEAR, origYear);
+                    calendar.set(Calendar.DAY_OF_YEAR, origDay + resDay);
+                }
+            }
+        } else {
+            calendar.setTimeInMillis(state.getTimeInMillis());
+        }
+
         return calendar;
     }
 
