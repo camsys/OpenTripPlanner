@@ -229,10 +229,10 @@ public class Timetable implements Serializable {
                     	if(isPreferred) {
                     		bestPreferredTrip = tt;
                     		bestPreferredTime = depTime;                    		
-                    	} else {
-                    		bestTrip = tt;
-                    		bestTime = depTime;
                     	}
+                    	
+                    	bestTrip = tt;
+                    	bestTime = depTime;
                     }
                 }
             } else {
@@ -243,16 +243,15 @@ public class Timetable implements Serializable {
                     	if(isPreferred) {
                     		bestPreferredTrip = tt;
                     		bestPreferredTime = arvTime;                    		
-                    	} else {
-                    		bestTrip = tt;
-                    		bestTime = arvTime;
-                    	}
+                    	} 
+
+                    	bestTrip = tt;
+                    	bestTime = arvTime;
                     }
                 }
             }
         }
-
-/*        
+        
         // ACK all logic is identical to above.
         // A sign that FrequencyEntries and TripTimes need a common interface.
         FrequencyEntry bestFreq = null;
@@ -284,10 +283,9 @@ public class Timetable implements Serializable {
             // A FrequencyEntry beat all the TripTimes.
             // Materialize that FrequencyEntry entry at the given time.
             bestTrip = bestFreq.tripTimes.timeShift(stopIndex, bestTime, boarding, bestFreq);
-        }
-*/        
+        }       
         
-        if(bestPreferredTrip != null)
+        if(bestPreferredTrip != null && bestPreferredTime <= bestTime + rc.opt.nonpreferredTransferPenalty)
         	return bestPreferredTrip;
         else
         	return bestTrip;

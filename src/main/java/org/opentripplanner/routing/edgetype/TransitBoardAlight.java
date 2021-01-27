@@ -283,14 +283,14 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
              */
             
             State prevState = s0.getBackState();
-            Stop originRequiredStop = null;
+            Stop givenRequiredStop = null;
             while(prevState != null) {
             	Edge e = prevState.getBackEdge();
 
             	if(e instanceof TransitBoardAlight) {
             		TransitBoardAlight tba = (TransitBoardAlight)e;
             		if(tba.getStop() != getStop()) {
-            			originRequiredStop = tba.getStop();
+            			givenRequiredStop = tba.getStop();
             			break;
             		}
             	}
@@ -327,7 +327,7 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
             	                
                 /* Find the next or prev departure depending on final boolean parameter. */
                 TripTimes tripTimes = timetable.getNextPreferredTrip(s0, sd, stopIndex, boarding, 
-                		s0.getContext(), fromStop, toStop, originRequiredStop, fromTrip, toTrip);
+                		s0.getContext(), fromStop, toStop, givenRequiredStop, fromTrip, toTrip);
 
                 if (tripTimes != null) {
                     /* Wait is relative to departures on board and arrivals on alight. */
@@ -365,8 +365,7 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
                 		s0.getPreviousTrip(), trip, boarding);
                 Stop requiredStop = transferDetail.getRequiredStop();
 
-                if(requiredStop == null || (requiredStop == null && originRequiredStop == null) 
-                		|| (requiredStop != null && requiredStop.getId().equals(originRequiredStop.getId()))) {
+                if(requiredStop == null || (requiredStop != null && requiredStop.getId().equals(givenRequiredStop.getId()))) {
                 	transferTime = transferDetail.getTransferTime();
                 	transferPenalty = transferTable.determineTransferPenalty(transferTime, options.nonpreferredTransferPenalty);
                 }
