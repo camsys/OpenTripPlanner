@@ -172,7 +172,6 @@ public class Timetable implements Serializable {
         //    The complexity of keeping sorted indexes up to date does not appear to be worth the
         //    apparently minor speed improvement.
         int bestTime = boarding ? Integer.MAX_VALUE : Integer.MIN_VALUE;
-        int bestPreferredTime = boarding ? Integer.MAX_VALUE : Integer.MIN_VALUE;
 
         // Hoping JVM JIT will distribute the loop over the if clauses as needed.
         // We could invert this and skip some service days based on schedule overlap as in RRRR.
@@ -224,11 +223,10 @@ public class Timetable implements Serializable {
                 if (depTime < 0) continue; // negative values were previously used for canceled trips/passed stops/skipped stops, but
                                            // now its not sure if this check should be still in place because there is a boolean field
                                            // for canceled trips
-                if (depTime >= adjustedTime && (depTime < bestTime || depTime < bestPreferredTime)) {
+                if (depTime >= adjustedTime && depTime < bestTime) {
                     if (isTripTimesOk(tt, serviceDay, s0, stopIndex, true)) {
-                    	if(isPreferred) {
+                    	if(isPreferred && depTime <= bestTime + rc.opt.nonpreferredTransferPenalty) {
                     		bestPreferredTrip = tt;
-                    		bestPreferredTime = depTime;                    		
                     	}
                     	
                     	bestTrip = tt;
@@ -238,11 +236,10 @@ public class Timetable implements Serializable {
             } else {
                 int arvTime = tt.getArrivalTime(stopIndex);
                 if (arvTime < 0) continue;
-                if (arvTime <= adjustedTime && (arvTime > bestTime || arvTime > bestPreferredTime)) {
+                if (arvTime <= adjustedTime && arvTime > bestTime) {
                     if (isTripTimesOk(tt, serviceDay, s0, stopIndex, true)) {
-                    	if(isPreferred) {
+                    	if(isPreferred && arvTime >= bestTime - rc.opt.nonpreferredTransferPenalty) {
                     		bestPreferredTrip = tt;
-                    		bestPreferredTime = arvTime;                    		
                     	} 
 
                     	bestTrip = tt;
@@ -285,7 +282,7 @@ public class Timetable implements Serializable {
             bestTrip = bestFreq.tripTimes.timeShift(stopIndex, bestTime, boarding, bestFreq);
         }       
         
-        if(bestPreferredTrip != null && bestPreferredTime <= bestTime + rc.opt.nonpreferredTransferPenalty)
+        if(bestPreferredTrip != null)
         	return bestPreferredTrip;
         else
         	return bestTrip;
