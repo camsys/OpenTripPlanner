@@ -328,6 +328,7 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
                 /* Find the next or prev departure depending on final boolean parameter. */
                 TripTimes tripTimes = timetable.getNextPreferredTrip(s0, sd, stopIndex, boarding, 
                 		s0.getContext(), fromStop, toStop, originRequiredStop, fromTrip, toTrip);
+
                 if (tripTimes != null) {
                     /* Wait is relative to departures on board and arrivals on alight. */
                     int wait = boarding ? 
@@ -364,11 +365,14 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
                 		s0.getPreviousTrip(), trip, boarding);
                 Stop requiredStop = transferDetail.getRequiredStop();
 
-                if(requiredStop == null || originRequiredStop == null || requiredStop.getId().equals(originRequiredStop.getId())) {
+                if(requiredStop == null || (requiredStop == null && originRequiredStop == null) 
+                		|| (requiredStop != null && requiredStop.getId().equals(originRequiredStop.getId()))) {
                 	transferTime = transferDetail.getTransferTime();
                 	transferPenalty = transferTable.determineTransferPenalty(transferTime, options.nonpreferredTransferPenalty);
                 }
             }
+//System.out.println("Selected trip=" + trip + " penalty=" + transferPenalty);            
+            
 
             /* Found a trip to board. Now make the child state. */
             StateEditor s1 = s0.edit(this);
