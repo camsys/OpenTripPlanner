@@ -155,11 +155,25 @@ public abstract class RoutingResource {
     @QueryParam("mode")
     protected QualifiedModeSet modes;
 
+    /**
+     * Range time in seconds between the trip start time and the departure time user defined or between the trip end time and the arrive by time user defined.
+     */
+    @QueryParam("tripShownRangeTime")
+    protected Integer tripShownRangeTime;
+
     /** The minimum time, in seconds, between successive trips on different vehicles.
      *  This is designed to allow for imperfect schedule adherence.  This is a minimum;
      *  transfers over longer distances might use a longer time. */
     @QueryParam("minTransferTime")
     protected Integer minTransferTime;
+
+    /** Maximum time in seconds between successive trips on different vehicles. */
+    @QueryParam("maxTransferTime")
+    protected Integer maxTransferTime;
+
+    /** Minimum time in seconds between successive trips on different vehicles - hard parameter to match maxTransferTime */
+    @QueryParam("minTransferTimeHard")
+    protected Integer minTransferTimeHard;
 
     /** The maximum number of possible itineraries to return. */
     @QueryParam("numItineraries")
@@ -631,8 +645,17 @@ public abstract class RoutingResource {
         if (minTransferTime != null)
             request.transferSlack = minTransferTime; // TODO rename field in routingrequest
 
+        if (maxTransferTime != null)
+            request.maxTransferTime = maxTransferTime;
+
+        if (minTransferTimeHard != null)
+            request.minTransferTimeHard = minTransferTimeHard;
+
         if (nonpreferredTransferPenalty != null)
             request.nonpreferredTransferPenalty = nonpreferredTransferPenalty;
+
+        if (tripShownRangeTime != null)
+            request.tripShownRangeTime = tripShownRangeTime;
 
         if (request.boardSlack + request.alightSlack > request.transferSlack) {
             throw new RuntimeException("Invalid parameters: " +

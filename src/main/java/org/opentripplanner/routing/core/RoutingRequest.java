@@ -12,8 +12,11 @@ import org.opentripplanner.routing.error.TrivialPathException;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.Vertex;
+import org.opentripplanner.routing.ignore.DefaultPathIgnoreStrategy;
+import org.opentripplanner.routing.ignore.PathIgnoreStrategy;
 import org.opentripplanner.routing.impl.DurationComparator;
 import org.opentripplanner.routing.impl.PathComparator;
+import org.opentripplanner.routing.impl.RTDPathIgnoreStrategy;
 import org.opentripplanner.routing.request.BannedStopSet;
 import org.opentripplanner.routing.spt.DominanceFunction;
 import org.opentripplanner.routing.spt.GraphPath;
@@ -226,6 +229,9 @@ public class RoutingRequest implements Cloneable, Serializable {
      */
     public int carDropoffTime = 120;
 
+    /** Which PathIgnoreStrategy to use */
+    public String pathIgnoreStrategy = null;
+
     /**
      * How much worse is waiting for a transit vehicle than being on a transit vehicle, as a multiplier. The default value treats wait and on-vehicle
      * time as the same.
@@ -310,6 +316,21 @@ public class RoutingRequest implements Cloneable, Serializable {
     public int alightSlack = 0;
 
     public int maxTransfers = 2;
+
+    /**
+     * Max transfer time
+     */
+    public int maxTransferTime = Integer.MAX_VALUE;
+
+    /**
+     * Min transfer time as hard limit
+     */
+    public int minTransferTimeHard = Integer.MIN_VALUE;
+
+    /**
+     * Trip shown range. eg. trip starts 3 hours later than the departure time; or trip arrives before 3 hours than arrive by time.
+     */
+    public int tripShownRangeTime = Integer.MAX_VALUE;
 
     /**
      * Extensions to the trip planner will require additional traversal options beyond the default 
@@ -1178,6 +1199,9 @@ public class RoutingRequest implements Cloneable, Serializable {
                 && bannedTrips.equals(other.bannedTrips)
                 && preferredRoutes.equals(other.preferredRoutes)
                 && unpreferredRoutes.equals(other.unpreferredRoutes)
+                && maxTransferTime == other.maxTransferTime
+                && minTransferTimeHard == other.minTransferTimeHard
+                && tripShownRangeTime == other.tripShownRangeTime
                 && transferSlack == other.transferSlack
                 && boardSlack == other.boardSlack
                 && alightSlack == other.alightSlack
@@ -1217,6 +1241,7 @@ public class RoutingRequest implements Cloneable, Serializable {
                 && flexUseEligibilityServices == other.flexUseEligibilityServices
                 && flexIgnoreDrtAdvanceBookMin == other.flexIgnoreDrtAdvanceBookMin
                 && flexMinPartialHopLength == other.flexMinPartialHopLength
+                && pathIgnoreStrategy.equals(pathIgnoreStrategy)
                 && clockTimeSec == other.clockTimeSec
                 && serviceDayLookout == other.serviceDayLookout;
     }
@@ -1263,6 +1288,10 @@ public class RoutingRequest implements Cloneable, Serializable {
                 + Long.hashCode(clockTimeSec) * 833389
                 + new Boolean(disableRemainingWeightHeuristic).hashCode() * 193939
                 + new Boolean(useTraffic).hashCode() * 10169
+                + new Double(maxTransferTime).hashCode() * 790052909
+                + new Double(minTransferTimeHard).hashCode() * 31
+                + new Double(tripShownRangeTime).hashCode() * 790052909
+                + pathIgnoreStrategy.hashCode() * 1301081
                 + Integer.hashCode(serviceDayLookout) * 31558519;
 
         if (batch) {
@@ -1536,6 +1565,13 @@ public class RoutingRequest implements Cloneable, Serializable {
             return new DurationComparator();
         }
         return new PathComparator(compareStartTimes);
+    }
+
+    public PathIgnoreStrategy getPathIgnoreStrategy() {
+        if ("rtd".equals(pathIgnoreStrategy)) {
+            return new RTDPathIgnoreStrategy();
+        }
+        return new DefaultPathIgnoreStrategy();
     }
 
 }
