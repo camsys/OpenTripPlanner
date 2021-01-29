@@ -390,6 +390,12 @@ public abstract class RoutingResource {
     @QueryParam("flexIgnoreDrtAdvanceBookMin")
     protected Boolean flexIgnoreDrtAdvanceBookMin;
 
+    /**
+     *
+     */
+    @QueryParam("showNextFromDeparture")
+    protected Boolean showNextFromDeparture;
+
     @QueryParam("maxHours")
     private Double maxHours;
 
@@ -710,6 +716,9 @@ public abstract class RoutingResource {
 
         if (geoidElevation != null)
             request.geoidElevation = geoidElevation;
+
+        if (showNextFromDeparture != null)
+            request.showNextFromDeparture = showNextFromDeparture;
 
         if (pathComparator != null)
             request.pathComparator = pathComparator;

@@ -633,6 +633,9 @@ public class RoutingRequest implements Cloneable, Serializable {
      */
     private StreetEdge splitEdge = null;
 
+    /** Should attempt to determine when the enxt bus goes through this stop. */
+    public boolean showNextFromDeparture = false;
+
     /**
      * Keep track of epoch time the request was created by OTP. This is currently only used by the
      * GTFS-Flex implementation.
