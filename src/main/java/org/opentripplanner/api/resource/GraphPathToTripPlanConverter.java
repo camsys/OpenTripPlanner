@@ -631,6 +631,9 @@ public abstract class GraphPathToTripPlanConverter {
                         if (alertPatch.getTrip().equals(leg.tripId)) {
                             leg.addAlert(alertPatch.getAlert(), requestedLocale);
                         }
+                        if (alertPatch.hasVehicleInfo()) {
+                            leg.vehicleInfo = alertPatch.getVehicleInfo();
+                        }
                     } else {
                         // If we are not matching a particular trip add all known alerts for this trip pattern.
                         leg.addAlert(alertPatch.getAlert(), requestedLocale);

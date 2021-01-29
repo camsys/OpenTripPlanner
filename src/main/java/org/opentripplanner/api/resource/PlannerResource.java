@@ -1,10 +1,21 @@
 package org.opentripplanner.api.resource;
 
 import org.glassfish.grizzly.http.server.Request;
+import org.onebusaway.gtfs.model.AgencyAndId;
+
 import org.opentripplanner.api.common.RoutingResource;
+import org.opentripplanner.api.model.Itinerary;
+import org.opentripplanner.api.model.Leg;
 import org.opentripplanner.api.model.TripPlan;
+import org.opentripplanner.api.model.TripTimesResponse;
 import org.opentripplanner.api.model.error.PlannerError;
+import org.opentripplanner.index.model.TripTimeShort;
+import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.model.Trip;
 import org.opentripplanner.routing.core.RoutingRequest;
+import org.opentripplanner.routing.edgetype.Timetable;
+import org.opentripplanner.routing.edgetype.TripPattern;
+import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.routing.impl.GraphPathFinder;
 import org.opentripplanner.routing.spt.GraphPath;
 import org.opentripplanner.standalone.Router;
@@ -20,8 +31,7 @@ import javax.ws.rs.core.UriInfo;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 import static org.opentripplanner.api.resource.ServerInfo.Q;
 
@@ -71,6 +81,10 @@ public class PlannerResource extends RoutingResource {
             /* Convert the internal GraphPaths to a TripPlan object that is included in an OTP web service Response. */
             TripPlan plan = GraphPathToTripPlanConverter.generatePlan(paths, request);
             response.setPlan(plan);
+
+            if (showStopTimes != null && showStopTimes) {
+                response.setTripTimes(getTripTimes(response.getPlan(), router.graph.index));
+            }
 
         } catch (Exception e) {
             Locale locale = request == null ? null : request.locale;
@@ -124,6 +138,29 @@ public class PlannerResource extends RoutingResource {
             router.requestLogger.info(sb.toString());
         }
         return response;
+    }
+
+    private static List<TripTimesResponse> getTripTimes(TripPlan plan, GraphIndex index) {
+
+        List<TripTimesResponse> tripTimes = new ArrayList<TripTimesResponse>();
+
+        Set<FeedScopedId> trips = new HashSet<FeedScopedId>();
+        for (Itinerary it : plan.itinerary)
+            for (Leg leg : it.legs)
+                if (leg.tripId != null)
+                    trips.add(leg.tripId);
+
+        for (FeedScopedId id : trips) {
+            Trip trip = index.tripForId.get(id);
+            if (trip != null) {
+                TripPattern pattern = index.patternForTrip.get(trip);
+                Timetable table = index.currentUpdatedTimetableForTripPattern(pattern);
+                List<TripTimeShort> times = TripTimeShort.fromTripTimes(table, trip);
+                tripTimes.add(new TripTimesResponse(id, times));
+            }
+        }
+
+        return tripTimes;
     }
 
 }

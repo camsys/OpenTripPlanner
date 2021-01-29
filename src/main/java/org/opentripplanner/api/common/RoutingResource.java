@@ -396,6 +396,12 @@ public abstract class RoutingResource {
     @QueryParam("showNextFromDeparture")
     protected Boolean showNextFromDeparture;
 
+    /**
+     * If true, API call will return stop times for all the trips in the TripPlan.
+     */
+    @QueryParam("showStopTimes")
+    protected Boolean showStopTimes;
+
     @QueryParam("maxHours")
     private Double maxHours;
 

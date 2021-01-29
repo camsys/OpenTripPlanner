@@ -9,6 +9,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import org.opentripplanner.api.model.VehicleInfo;
 import org.opentripplanner.model.Agency;
 import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.model.Route;
@@ -50,6 +51,14 @@ public class AlertPatch implements Serializable {
     private FeedScopedId trip;
 
     private FeedScopedId stop;
+
+    /** Whether alert affects routing (only elevator alerts) */
+    private boolean routingConsequence = false;
+
+    private String elevatorId;
+
+    /** Vehicle info, if available */
+    private VehicleInfo vehicleInfo;
 
     /**
      * The headsign of the alert
@@ -296,6 +305,34 @@ public class AlertPatch implements Serializable {
         return trip != null;
     }
 
+    public boolean isRoutingConsequence() {
+        return routingConsequence;
+    }
+
+    public String getElevatorId() {
+        return elevatorId;
+    }
+
+    public void setElevatorId(String elevatorId) {
+        this.elevatorId = elevatorId;
+    }
+
+    public boolean isStopSpecific() {
+        return  route == null && trip == null && agency == null && stop != null;
+    }
+
+    public VehicleInfo getVehicleInfo() {
+        return vehicleInfo;
+    }
+
+    public void setVehicleInfo(VehicleInfo vehicleInfo) {
+        this.vehicleInfo = vehicleInfo;
+    }
+
+    public boolean hasVehicleInfo() {
+        return vehicleInfo != null;
+    }
+
     public boolean equals(Object o) {
         if (!(o instanceof AlertPatch)) {
             return false;
@@ -382,6 +419,15 @@ public class AlertPatch implements Serializable {
             }
         } else {
             if (!feedId.equals(other.feedId)) {
+                return false;
+            }
+        }
+        if (vehicleInfo == null) {
+            if (other.vehicleInfo != null) {
+                return false;
+            }
+        } else {
+            if (!vehicleInfo.equals(other.vehicleInfo)) {
                 return false;
             }
         }
