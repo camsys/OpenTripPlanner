@@ -24,6 +24,7 @@ import org.opentripplanner.routing.edgetype.flex.TemporaryDirectPatternHop;
 import org.opentripplanner.routing.error.TrivialPathException;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.location.TemporaryStreetLocation;
 import org.opentripplanner.routing.services.FareService;
@@ -398,8 +399,6 @@ public abstract class GraphPathToTripPlanConverter {
 
         leg.interlineWithPreviousLeg = states[0].getBackEdge() instanceof PatternInterlineDwell;
 
-        addFrequencyFields(states, leg);
-
         leg.rentedBike = states[0].isBikeRenting() && states[states.length - 1].isBikeRenting();
 
         addModeAndAlerts(graph, leg, states, disableAlertFiltering, requestedLocale);
@@ -410,33 +409,12 @@ public abstract class GraphPathToTripPlanConverter {
             if (request.showNextFromDeparture) {
                 leg.from.nextDeparture = establishNextDeparture(graph, states, new ServiceDate(leg.from.departure), leg);
             }
-//            addNextDepartures(leg, states);
         }
 
         return leg;
     }
 
-    private static void addFrequencyFields(State[] states, Leg leg) {
-        /* TODO adapt to new frequency handling.
-        if (states[0].getBackEdge() instanceof FrequencyBoard) {
-            State preBoardState = states[0].getBackState();
 
-            FrequencyBoard fb = (FrequencyBoard) states[0].getBackEdge();
-            FrequencyBasedTripPattern pt = fb.getPattern();
-            int boardTime;
-            if (preBoardState.getServiceDay() == null) {
-                boardTime = 0; //TODO why is this happening?
-            } else {
-                boardTime = preBoardState.getServiceDay().secondsSinceMidnight(
-                        preBoardState.getTimeSeconds());
-            }
-            int period = pt.getPeriod(fb.getStopIndex(), boardTime); //TODO fix
-
-            leg.isNonExactFrequency = !pt.isExact();
-            leg.headway = period;
-        }
-        */
-    }
 
     /**
      * Add a {@link WalkStep} {@link List} to a {@link Leg} {@link List}.
