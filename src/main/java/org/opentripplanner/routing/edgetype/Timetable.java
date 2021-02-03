@@ -14,7 +14,6 @@
 package org.opentripplanner.routing.edgetype;
 
 import java.io.Serializable;
-import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -59,6 +58,8 @@ public class Timetable implements Serializable {
     private static final Logger LOG = LoggerFactory.getLogger(Timetable.class);
     private static final long serialVersionUID = MavenVersion.VERSION.getUID();
 
+    private static final boolean verbose = false;
+    
     /**
      * A circular reference between TripPatterns and their scheduled (non-updated) timetables.
      */
@@ -149,8 +150,9 @@ public class Timetable implements Serializable {
    
     public TripTimes getNextPreferredTrip(State s0, ServiceDay serviceDay, int stopIndex, boolean boarding, RoutingContext rc, 
     		Stop fromStop, Stop toStop, Stop givenRequiredStop, Trip _fromTrip, Trip _toTrip) {
-    	
-//System.out.println("INPUT: requiredStop=" + originRequiredStop + " From=" + fromStop + " To=" + toStop + " fromTrip=" + _fromTrip + " toTrip=" + _toTrip);  
+
+    	if(verbose)
+    		System.out.println("Start search givenRequiredStop=" + givenRequiredStop + " From=" + fromStop + " To=" + toStop + " fromTrip=" + _fromTrip + " toTrip=" + _toTrip);  
     	
         /* Search at the state's time, but relative to midnight on the given service day. */
         int time = serviceDay.secondsSinceMidnight(s0.getTimeSeconds());
@@ -184,6 +186,9 @@ public class Timetable implements Serializable {
         }
         
         for (TripTimes tt : tripTimes) {
+        	if(verbose)
+        		System.out.println("   Considering=" + tt.trip);     
+
         	boolean isPreferred = false;
 
         	Trip toTrip = _toTrip;
@@ -208,7 +213,14 @@ public class Timetable implements Serializable {
 	        			(requiredStop == null || requiredStop.getId().equals(givenRequiredStop.getId()))) {
 	        		isPreferred = true;
 	        	}
-//System.out.println("Considering Trip=" + tt.trip + " requiredStop=" + requiredStop + " From=" + fromStop + " To=" + toStop + " fromTrip=" + fromTrip + " toTrip=" + toTrip + " tTime=" + transferDetail.getTransferTime());  
+
+	        	if(verbose) {
+	        		String lookingFor = "   Considering=<Trip LI_GO604_20_2768> requiredStop=null From=<Stop LI_118> To=<Stop LI_118> fromTrip=<Trip LI_GO604_20_50> toTrip=<Trip LI_GO604_20_2768> tTime=-2";
+	        		String have="   Considering=" + tt.trip + " requiredStop=" + requiredStop + " From=" + fromStop + " To=" + toStop + " fromTrip=" + fromTrip + " toTrip=" + toTrip + " tTime=" + transferDetail.getTransferTime();
+	        		//if(have.equals(lookingFor))
+	        		//	System.out.println("HERE");	        		
+	        		System.out.println(have);  
+	        	}
         	}
 
             int adjustedTime = recomputeTime
@@ -218,7 +230,9 @@ public class Timetable implements Serializable {
             adjustedTime += tt.getDepartureBuffer(stopIndex);
             if (boarding) {
                 int depTime = tt.getDepartureTime(stopIndex);
-//System.out.println("Our time=" + depTime + " bestTime=" + bestTime);       	
+
+            	if(verbose)
+            		System.out.println("   Our time=" + depTime + " bestTime=" + bestTime);       	
 
                 if (depTime < 0) continue; // negative values were previously used for canceled trips/passed stops/skipped stops, but
                                            // now its not sure if this check should be still in place because there is a boolean field
@@ -281,7 +295,12 @@ public class Timetable implements Serializable {
             // Materialize that FrequencyEntry entry at the given time.
             bestTrip = bestFreq.tripTimes.timeShift(stopIndex, bestTime, boarding, bestFreq);
         }       
-        
+
+    	if(verbose) {
+    		if(bestPreferredTrip != null) System.out.println("End with preferredWinner=" + bestPreferredTrip.trip);
+    		if(bestTrip != null) System.out.println("End with nonPreferred=" + bestTrip.trip);        
+    	}
+    	
         if(bestPreferredTrip != null)
         	return bestPreferredTrip;
         else
@@ -309,12 +328,12 @@ public class Timetable implements Serializable {
         TransferTable transferTable = state.getOptions().getRoutingContext().transferTable;
         int transferTime = transferTable.getTransferTime(state.getPreviousStop(), currentStop, state.getPreviousTrip(), trip, boarding).getTransferTime();
         // Check whether back edge is TimedTransferEdge
-        if (state.getBackEdge() instanceof TimedTransferEdge) {
-            // Transfer must be of type TIMED_TRANSFER
-            if (transferTime != StopTransfer.TIMED_TRANSFER && transferTime != StopTransfer.PREFERRED_TRANSFER) {
-                return -1;
-            }
-        }
+//        if (state.getBackEdge() instanceof TimedTransferEdge) {
+//            // Transfer must be of type TIMED_TRANSFER
+//            if (transferTime != StopTransfer.TIMED_TRANSFER && transferTime != StopTransfer.PREFERRED_TRANSFER) {
+//                return -1;
+//            }
+//        }
         if (transferTime == StopTransfer.UNKNOWN_TRANSFER) {
             return t0; // no special rules, just board
         }
