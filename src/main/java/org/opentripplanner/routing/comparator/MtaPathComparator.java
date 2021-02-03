@@ -29,13 +29,16 @@ public class MtaPathComparator extends PathComparator {
     public static List<GraphPath> filter(List<GraphPath> paths, int maxPreferredBoardings) {
     	List<GraphPath> newPaths = new ArrayList<GraphPath>();
     	
-		for(GraphPath p : paths) {
+    	Alert a = Alert.createSimpleAlerts("Results Filtered", "Results were filtered to show only options using approved connections.");
+    	
+    	for(GraphPath p : paths) {
 			State finalState = p.states.getLast();
 
 			// if we have any preferred boarding trips, show only those, if not, show everything
 	    	if(maxPreferredBoardings > 0) {
 				if(finalState.getNumPreferredBoardings() > 0 || finalState.getNumBoardings() == 1) { // if the train is direct, show regardless of preferred status
-			    	p.addPlanAlert(Alert.createSimpleAlerts("Results Filtered", "Results were filtered to show only options using approved connections."));
+			    	if(!p.getPlanAlerts().contains(a))
+			    		p.addPlanAlert(a);
 					newPaths.add(p);					
 				}
 	    	} else 

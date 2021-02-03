@@ -15,8 +15,11 @@ package org.opentripplanner.routing.impl;
 
 // import com.esotericsoftware.minlog.Log;
 import com.google.common.collect.Lists;
+
+import org.joda.time.DateTime;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Stop;
+import org.onebusaway.gtfs.model.Trip;
 import org.opentripplanner.api.resource.DebugOutput;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.routing.alertpatch.Alert;
@@ -37,6 +40,7 @@ import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.consequences.ConsequencesStrategy;
 import org.opentripplanner.routing.spt.DominanceFunction;
 import org.opentripplanner.routing.spt.GraphPath;
+import org.opentripplanner.routing.trippattern.TripTimes;
 import org.opentripplanner.routing.vertextype.PatternArriveVertex;
 import org.opentripplanner.routing.vertextype.TransitVertex;
 import org.opentripplanner.standalone.Router;
@@ -168,9 +172,10 @@ public class GraphPathFinder {
         LOG.debug("BEGIN SEARCH");
         List<GraphPath> paths = Lists.newArrayList();
         List<Alert> realtimeConsequences = Lists.newArrayList();
+        int maxPreferredBoardings = -1;
         while (paths.size() < options.numItineraries) {
             // TODO pull all this timeout logic into a function near org.opentripplanner.util.DateUtils.absoluteTimeout()
-
+        	
             int timeoutIndex = paths.size();
             if (timeoutIndex >= router.timeouts.length) {
                 timeoutIndex = router.timeouts.length - 1;
@@ -184,7 +189,8 @@ public class GraphPathFinder {
                 // before it even begins. Passing a negative relative timeout in the SPT call would mean "no timeout".
                 options.rctx.aborted = true;
                 break;
-            }
+            }           
+            
             // Don't dig through the SPT object, just ask the A star algorithm for the states that reached the target.
             aStar.getShortestPathTree(options, timeout);
 
@@ -195,7 +201,26 @@ public class GraphPathFinder {
             if (newPaths.isEmpty()) {
                 break;
             }
-
+            
+            /*
+            for(GraphPath path : newPaths) {
+            	System.out.println("######");
+            	for(State s : path.states) {
+            		if(s.backEdge instanceof TransitBoardAlight) {
+            			TransitBoardAlight tba = (TransitBoardAlight)s.backEdge;
+            			int stopIndex = tba.stopIndex;
+            			Trip t = router.graph.index.getTripForId(tba.tripId);
+                        TripTimes tt = s.getTripTimes();
+            			
+            			System.out.println(tba.tripId + " depart=" + new DateTime(s.getServiceDay().getServiceDate().getAsDate().getTime() + tt.getTimestamp() + tt.getDepartureTime(stopIndex)) 
+            					+  " from=" + s.getPreviousTrip() + " train=" + t.getTripHeadsign() + " preferred=" + tba.preferredTransfer + " cumWeight=" + s.weight);        			
+            		
+            			System.out.println("Banned=" + options.bannedTrips);
+            		}
+            	}
+            }
+            */
+            
             // Do a full reversed search to compact the legs
             if(options.compactLegsByReversedSearch){
                 newPaths = compactLegsByReversedSearch(aStar, originalReq, options, newPaths, timeout, reversedSearchHeuristic);
@@ -255,6 +280,15 @@ public class GraphPathFinder {
                     continue;
                 }
 
+                // agency specific business rules 
+            	State finalState = path.states.getLast();
+            	if(finalState != null) {
+            		int numPreferredBoardings = finalState.getNumPreferredBoardings();
+            		if(numPreferredBoardings > maxPreferredBoardings)
+            			maxPreferredBoardings = numPreferredBoardings;
+            	}
+                paths = options.getFilter(paths, maxPreferredBoardings);
+
                 // add consequences
                 path.addPlanAlerts(realtimeConsequences);
 
@@ -275,19 +309,7 @@ public class GraphPathFinder {
             LOG.debug("we have {} paths", paths.size());
         }
         LOG.debug("END SEARCH ({} msec)", System.currentTimeMillis() - searchBeginTime);
-
         
-        int maxPreferredBoardings = -1;
-        for(GraphPath p : paths) {
-        	State finalState = p.states.getLast();
-        	if(finalState != null) {
-        		int numPreferredBoardings = finalState.getNumPreferredBoardings();
-        		if(numPreferredBoardings > maxPreferredBoardings)
-        			maxPreferredBoardings = numPreferredBoardings;
-        	}
-        }
-        
-        paths = options.getFilter(paths, maxPreferredBoardings);
         Collections.sort(paths, options.getPathComparator(options.arriveBy, maxPreferredBoardings));
 
         if (verbose) {
