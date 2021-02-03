@@ -49,7 +49,7 @@ public class Router {
 
     public String id;
     public Graph graph;
-    public double[] timeouts = {20, 16, 8};
+    public double[] timeouts = {360, 360, 360};
 
     /**
      *  Separate logger for incoming requests. This should be handled with a Logback logger rather than something
