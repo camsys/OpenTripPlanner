@@ -199,7 +199,7 @@ public class Timetable implements Serializable {
         	if(fromTrip == null)
         		fromTrip = tt.trip;
         	
-        	if(rc != null && (fromStop != null || toStop != null) && givenRequiredStop != null) {
+        	if(rc != null && toStop != null && givenRequiredStop != null) {
 	        	TransferTable transferTable = rc.transferTable;
 	        	TransferDetail transferDetail = transferTable.getTransferTime(fromStop,
 	                               toStop, fromTrip, toTrip, boarding);
