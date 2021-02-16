@@ -193,6 +193,7 @@
 							</goals>
 							<configuration>
 								<mainClass>org.opentripplanner.standalone.OTPMain</mainClass>
+								<jvmArgs>-Duser.timezone=America/New_York </jvmArgs>
 								<commandlineArgs>--router default --server --verbose  --clientFiles /var/otp/ui --clientPath / --disableNativeClient --clientFallback</commandlineArgs>
 							</configuration>
 						</execution>
@@ -203,6 +204,7 @@
 							</goals>
 							<configuration>
 								<mainClass>org.opentripplanner.standalone.OTPMain</mainClass>
+								<jvmArgs>-Duser.timezone=America/New_York </jvmArgs>
 								<commandlineArgs>--build /var/otp/graphs/default --verbose</commandlineArgs>
 							</configuration>
 						</execution>
@@ -326,7 +328,7 @@
 					<artifactId>maven-failsafe-plugin</artifactId>
 					<configuration>
 						<disableXmlReport>false</disableXmlReport>
-						<argLine>-Xmx16g -XX:+UseConcMarkSweepGC -XX:-UseGCOverheadLimit</argLine>
+						<argLine>-Xmx16g -Xms8g -XX:+UseConcMarkSweepGC</argLine>
 					</configuration>
 					<dependencies>
 						<dependency>
