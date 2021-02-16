@@ -1166,13 +1166,10 @@ public abstract class GraphPathToTripPlanConverter {
     private static List<StopTimesInPattern> getStopTimesForStopOrParent(Graph graph, FeedScopedId stopId, ServiceDate serviceDate) {
         Stop stop = graph.index.stopForId.get(stopId);
         List<StopTimesInPattern> stopTimes;
-        if (stop.getParentStation() != null) {
-            stopTimes = graph.index.getStopTimesForStop(stop, serviceDate, false);
-            stopTimes.addAll(graph.index.getStopTimesForStop(stop, serviceDate.next(), false));
-        } else {
-            stopTimes = graph.index.getStopTimesForStop(stop, serviceDate, false);
-            stopTimes.addAll(graph.index.getStopTimesForStop(stop, serviceDate.next(), false));
-        }
+
+        stopTimes = graph.index.getStopTimesForStop(stop, serviceDate, false);
+        stopTimes.addAll(graph.index.getStopTimesForStop(stop, serviceDate.next(), false));
+
         return stopTimes;
     }
 
