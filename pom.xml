@@ -328,7 +328,7 @@
 					<artifactId>maven-failsafe-plugin</artifactId>
 					<configuration>
 						<disableXmlReport>false</disableXmlReport>
-						<argLine>-Xmx32g -Xms8g -XX:+UseConcMarkSweepGC</argLine>
+						<argLine>-Xmx28g -Xms8g -XX:+UseConcMarkSweepGC</argLine>
 					</configuration>
 					<dependencies>
 						<dependency>
