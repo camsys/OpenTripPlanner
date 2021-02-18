@@ -71,8 +71,10 @@ public class QualitativeMultiDimInstanceComparison {
 		
 	private List<Query> noResultQueries = new ArrayList<Query>();
 
+	private List<Query> testIsWorseQueries = new ArrayList<Query>();
+
 	private void scorePlatform(optimizationDim optimization, metricsDim metric, 
-			List<ItinerarySummary> sortedResults, Comparator<ItinerarySummary> ranker) {
+			List<ItinerarySummary> sortedResults, Comparator<ItinerarySummary> ranker, Query query) {
 
 		sortedResults.sort(ranker);	    				
 		
@@ -125,6 +127,10 @@ public class QualitativeMultiDimInstanceComparison {
 			// if we won and the other platform produced a losing result
 			if(otherPlatformFirstResult != null 
 					&& ranker.compare(otherPlatformFirstResult, winningResult) != 0) {
+
+				if(winningPlatform.equals(platformDim.BASELINE))
+					testIsWorseQueries.add(query);
+
 				switch(metric) {
 				case T:
 					this.resultWinMargin
@@ -151,8 +157,7 @@ public class QualitativeMultiDimInstanceComparison {
 				default:
 					break;					
 				}					
-			}
-			
+			} 			
 			
 		}
 	}
@@ -206,21 +211,21 @@ public class QualitativeMultiDimInstanceComparison {
 				case T:
 					// time, walk, transfers
 					scorePlatform(optimizationDim.values()[o], 
-							metricsDim.values()[m], sortedResults, ItinerarySummary.RANKER_TIME);
+							metricsDim.values()[m], sortedResults, ItinerarySummary.RANKER_TIME, query);
 
 					break;
 				case W:
 					// walk, transit time, transfers
 
 					scorePlatform(optimizationDim.values()[o], 
-							metricsDim.values()[m], sortedResults, ItinerarySummary.RANKER_WALKING);
+							metricsDim.values()[m], sortedResults, ItinerarySummary.RANKER_WALKING, query);
 
 					break;
 				case X:
 					// transfers, time, walk distance
 
 					scorePlatform(optimizationDim.values()[o], 
-							metricsDim.values()[m], sortedResults, ItinerarySummary.RANKER_XFERS);
+							metricsDim.values()[m], sortedResults, ItinerarySummary.RANKER_XFERS, query);
 
 					break;
 
@@ -395,11 +400,19 @@ public class QualitativeMultiDimInstanceComparison {
     	System.out.println("* success margin stats are computed against the opposing platform's top result, if it produces one. Ties are not included.\n"
     			+ "** 'no result' matches are included.\n");
     	
+    	System.out.println("SYSTEM UNDER TEST WAS WORSE (n=" + testIsWorseQueries.size() + "):");
+    	for(Query q : testIsWorseQueries) {
+    		System.out.println("http://otp-mta-dev.camsys-apps.com/plan?" + q.toQueryString());
+    	}
+
+    	System.out.println("");
+    	System.out.println("");
+
     	System.out.println("NO RESULT QUERIES (ACROSS BOTH SYSTEMS):");
     	for(Query q : noResultQueries) {
     		System.out.println(q);
     	}
-    	
+
     	System.out.println("");
     	System.out.println("");
 	}
