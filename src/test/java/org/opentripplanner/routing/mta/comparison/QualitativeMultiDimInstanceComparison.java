@@ -15,16 +15,9 @@ package org.opentripplanner.routing.mta.comparison;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.rank.Max;
 import org.apache.commons.math3.stat.descriptive.rank.Min;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.jupiter.api.DynamicContainer;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.function.Executable;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
 import org.opentripplanner.routing.mta.comparison.test_file_format.ItinerarySummary;
 import org.opentripplanner.routing.mta.comparison.test_file_format.Query;
 import org.opentripplanner.routing.mta.comparison.test_file_format.Result;
@@ -37,9 +30,9 @@ import java.io.*;
 
 public class QualitativeMultiDimInstanceComparison {
 	
-    private String TEST_RESULTS_TXT = null; 
+    private String TEST_RESULTS_TXT = "src/test/resources/mta/comparison/dev.txt"; 
 
-    private String BASELINE_RESULTS_TXT = null;
+    private String BASELINE_RESULTS_TXT = "src/test/resources/mta/comparison/prod.txt";
 
 	public void setBaselineResultsFile(String f) {
 		this.BASELINE_RESULTS_TXT = f;
@@ -49,9 +42,9 @@ public class QualitativeMultiDimInstanceComparison {
 		this.TEST_RESULTS_TXT = f;
 	}
 	
-	private enum optimizationDim { W, X, T };
+	private enum optimizationDim {ALL};
 	
-	private final String[] optimizationDimLabels = new String[] { "WALKING", "TRANSFERS", "TIME" };
+	private final String[] optimizationDimLabels = new String[] { "ALL" };
 	
     private enum metricsDim { W, X, T, hasResults, match };
 
@@ -190,7 +183,7 @@ public class QualitativeMultiDimInstanceComparison {
 
 			Query query = baselineResult.query;
 
-			int o = optimizationDim.valueOf(query.optimizeFlag).ordinal();
+			int o = optimizationDim.ALL.ordinal();
 
 			// add all system's itineraries to an array to sort based on metric and score
 			List<ItinerarySummary> sortedResults = new ArrayList<ItinerarySummary>();
@@ -365,7 +358,8 @@ public class QualitativeMultiDimInstanceComparison {
         				/ (float)totalByOptimization[o])) * 100;
 
         		// for each optimization, require our result to be the winner 80% of the time
-        		if(metricsDimLabels[m].startsWith(optimizationDimLabels[o])) {
+        		if(m == metricsDim.T.ordinal() || m == metricsDim.W.ordinal() || m == metricsDim.X.ordinal()) {
+//        				metricsDimLabels[m].startsWith(optimizationDimLabels[o])) {
             		if(ourPercentage < 80) {
             			overallResult = false;
                 		System.out.println(" [FAIL; have " + String.format("%.0f",  ourPercentage) + "% need 80%+]");
