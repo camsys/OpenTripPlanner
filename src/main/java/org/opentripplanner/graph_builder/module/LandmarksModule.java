@@ -62,7 +62,7 @@ public class LandmarksModule implements GraphBuilderModule {
                 String label = jsonParser.getValueAsString();
                 TransitStationStop v =  (TransitStationStop) graph.getVertex(label);
                 if (v == null)
-                    LOG.error("no vertex found for label {}", label);
+                    LOG.warn("no vertex found for label {}", label);
                 return v;
             }
         });
