@@ -13,8 +13,8 @@
 
 package org.opentripplanner.routing.graph;
 
-import com.conveyal.r5.kryo.TIntArrayListSerializer;
-import com.conveyal.r5.kryo.TIntIntHashMapSerializer;
+import com.conveyal.kryo.TIntArrayListSerializer;
+import com.conveyal.kryo.TIntIntHashMapSerializer;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
@@ -23,9 +23,9 @@ import com.esotericsoftware.kryo.serializers.JavaSerializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.*;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.geom.Geometry;
 import de.javakaffee.kryoserializers.UnmodifiableCollectionsSerializer;
 import gnu.trove.impl.hash.TPrimitiveHash;
 import gnu.trove.list.TDoubleList;
@@ -141,7 +141,7 @@ public class Graph implements Serializable {
     public final transient Deduplicator deduplicator = new Deduplicator();
 
     /**
-     * Map from GTFS ServiceIds to integers close to 0. Allows using BitSets instead of Set<Object>.
+     * Map from GTFS ServiceIds to integers close to 0. Allows using BitSets instead of Set&lt;Object&gt;.
      * An empty Map is created before the Graph is built to allow registering IDs from multiple feeds.   
      */
     public final Map<AgencyAndId, Integer> serviceCodes = Maps.newHashMap();
@@ -265,6 +265,7 @@ public class Graph implements Serializable {
 
     /**
      * Add the given vertex to the graph. Ideally, only vertices should add themselves to the graph, when they are constructed or deserialized.
+     * @param v .
      */
     public void addVertex(Vertex v) {
         Vertex old = vertices.put(v.getLabel(), v);
@@ -281,7 +282,7 @@ public class Graph implements Serializable {
      *
      * Called from streetutils, must be public for now
      *
-     * @param v
+     * @param v vertex to be removed
      */
     public void removeVertex(Vertex v) {
         if (vertices.remove(v.getLabel()) != v) {
@@ -340,8 +341,8 @@ public class Graph implements Serializable {
      * NOTE: you may need to run rebuildVertexAndEdgeIndices() for the indices
      * to be accurate.
      *
-     * @param id
-     * @return
+     * @param id .
+     * @return . .
      */
     public Vertex getVertexById(int id) {
         return this.vertexById.get(id);
@@ -349,7 +350,7 @@ public class Graph implements Serializable {
 
     /**
      * Get all the vertices in the graph.
-     * @return
+     * @return . .
      */
     public Collection<Vertex> getVertices() {
         return this.vertices.values();
@@ -361,8 +362,8 @@ public class Graph implements Serializable {
      * NOTE: you may need to run rebuildVertexAndEdgeIndices() for the indices
      * to be accurate.
      *
-     * @param id
-     * @return
+     * @param id .
+     * @return . .
      */
     public Edge getEdgeById(int id) {
         return edgeById.get(id);
@@ -370,7 +371,7 @@ public class Graph implements Serializable {
 
     /**
      * Return all the edges in the graph.
-     * @return
+     * @return . .
      */
     public Collection<Edge> getEdges() {
         Set<Edge> edges = new HashSet<Edge>();
@@ -382,8 +383,8 @@ public class Graph implements Serializable {
 
     /**
      * Add an {@link AlertPatch} to the {@link AlertPatch} {@link Set} belonging to an {@link Edge}.
-     * @param edge
-     * @param alertPatch
+     * @param edge .
+     * @param alertPatch .
      */
     public void addAlertPatch(Edge edge, AlertPatch alertPatch) {
         if (edge == null || alertPatch == null) return;
@@ -405,8 +406,8 @@ public class Graph implements Serializable {
     /**
      * Remove an {@link AlertPatch} from the {@link AlertPatch} {@link Set} belonging to an
      * {@link Edge}.
-     * @param edge
-     * @param alertPatch
+     * @param edge .
+     * @param alertPatch .
      */
     public void removeAlertPatch(Edge edge, AlertPatch alertPatch) {
         if (edge == null || alertPatch == null) return;
@@ -424,7 +425,7 @@ public class Graph implements Serializable {
 
     /**
      * Get the {@link AlertPatch} {@link Set} that belongs to an {@link Edge} and build a new array.
-     * @param edge
+     * @param edge .
      * @return The {@link AlertPatch} array that belongs to the {@link Edge}
      */
     public AlertPatch[] getAlertPatches(Edge edge) {
@@ -442,8 +443,8 @@ public class Graph implements Serializable {
     /**
      * Add a {@link TurnRestriction} to the {@link TurnRestriction} {@link List} belonging to an
      * {@link Edge}. This method is not thread-safe.
-     * @param edge
-     * @param turnRestriction
+     * @param edge .
+     * @param turnRestriction .
      */
     public void addTurnRestriction(Edge edge, TurnRestriction turnRestriction) {
         if (edge == null || turnRestriction == null) return;
@@ -458,8 +459,8 @@ public class Graph implements Serializable {
     /**
      * Remove a {@link TurnRestriction} from the {@link TurnRestriction} {@link List} belonging to
      * an {@link Edge}. This method is not thread-safe.
-     * @param edge
-     * @param turnRestriction
+     * @param edge .
+     * @param turnRestriction .
      */
     public void removeTurnRestriction(Edge edge, TurnRestriction turnRestriction) {
         if (edge == null || turnRestriction == null) return;
@@ -477,7 +478,7 @@ public class Graph implements Serializable {
      * Get the {@link TurnRestriction} {@link List} that belongs to an {@link Edge} and return an
      * immutable copy. This method is thread-safe when used by itself, but not if addTurnRestriction
      * or removeTurnRestriction is called concurrently.
-     * @param edge
+     * @param edge .
      * @return The {@link TurnRestriction} {@link List} that belongs to the {@link Edge}
      */
     public List<TurnRestriction> getTurnRestrictions(Edge edge) {
@@ -492,7 +493,7 @@ public class Graph implements Serializable {
 
     /**
      * Return only the StreetEdges in the graph.
-     * @return
+     * @return . .
      */
     public Collection<StreetEdge> getStreetEdges() {
         Collection<Edge> allEdges = this.getEdges();
@@ -680,6 +681,9 @@ public class Graph implements Serializable {
      * 
      * If the graphBuilderAnnotations field of this graph is null, the annotation is not actually saved, but the message is still returned. This
      * allows annotation registration to be turned off, saving memory and disk space when the user is not interested in annotations.
+     *
+     * @param gba .
+     * @return . .
      */
     public String addBuilderAnnotation(GraphBuilderAnnotation gba) {
         String ret = gba.getMessage();
@@ -694,7 +698,7 @@ public class Graph implements Serializable {
 
     /**
      * Adds mode of transport to transit modes in graph
-     * @param mode
+     * @param mode .
      */
     public void addTransitMode(TraverseMode mode) {
         transitModes.add(mode);
@@ -717,6 +721,8 @@ public class Graph implements Serializable {
      * allows passing graphs from graphbuilder to server in memory, without a round trip through
      * serialization. 
      * TODO: do we really need a factory for different street vertex indexes?
+     *
+     * @param indexFactory .
      */
     public void index (StreetVertexIndexFactory indexFactory) {
         streetIndex = indexFactory.newIndex(this);
@@ -815,6 +821,8 @@ public class Graph implements Serializable {
      * The latter will set the default for a whole tree of classes. The former matches only the specified class.
      * By default Kryo will serialize all the non-transient fields of an instance. If the class has its own overridden
      * Java serialization methods Kryo will not automatically use those, a JavaSerializer must be registered.
+     *
+     * @return . .
      */
     public static Kryo makeKryo() {
         // For generating a histogram of serialized classes with associated serializers:
@@ -954,6 +962,8 @@ public class Graph implements Serializable {
      * used because we support multiple graphs on one server via the routerId. Ideally we would want to interpret times in the time zone of the
      * geographic location where the origin/destination vertex or board/alight event is located. This may become necessary when we start making graphs
      * with long distance train, boat, or air services.
+     *
+     * @return . .
      */
     public TimeZone getTimeZone() {
         if (timeZone == null) {
@@ -982,7 +992,7 @@ public class Graph implements Serializable {
     
     /**
      * The timezone is cached by the graph. If you've done something to the graph that has the
-     * potential to change the time zone, you should call this to ensure it is reset. 
+     * potential to change the time zone, you should call this to ensure it is reset.
      */
     public void clearTimeZone () {
         this.timeZone = null;

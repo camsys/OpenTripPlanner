@@ -20,7 +20,7 @@ import org.opentripplanner.common.geometry.ZSampleGrid.ZSamplePoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vividsolutions.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Coordinate;
 
 /**
  * Helper class to fill-in a ZSampleGrid from a given loosely-defined set of sampling points.
@@ -43,7 +43,6 @@ public class AccumulativeGridSampler<TZ> {
      * cell corner TZ values.
      * 
      * @author laurent
-     * @param <TZ>
      */
     public interface AccumulativeMetric<TZ> {
         /**
@@ -78,6 +77,7 @@ public class AccumulativeGridSampler<TZ> {
     private boolean closed = false;
 
     /**
+     * @param sampleGrid .
      * @param metric TZ data "behavior" and "metric".
      */
     public AccumulativeGridSampler(ZSampleGrid<TZ> sampleGrid, AccumulativeMetric<TZ> metric) {

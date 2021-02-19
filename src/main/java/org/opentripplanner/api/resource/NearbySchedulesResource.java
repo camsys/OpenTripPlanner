@@ -12,7 +12,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 package org.opentripplanner.api.resource;
 
-import com.vividsolutions.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Coordinate;
 import org.apache.commons.lang.StringUtils;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Stop;
@@ -244,6 +244,7 @@ public class NearbySchedulesResource {
     /**
      * Return upcoming vehicle arrival/departure times at given stops. Matches stops by lat/lon/radius,
      * and/or by list of stops. Arrival/departure times can be filtered by route and direction.
+     * @return . .
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML + Q})

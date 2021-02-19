@@ -76,7 +76,7 @@ import com.google.common.io.Files;
  * For example:
  * 
  * GET http://localhost/otp-rest-servlet/ws/routers
- * will retrieve a list of all registered routerId -> Graph mappings and their geographic bounds.
+ * will retrieve a list of all registered routerId → Graph mappings and their geographic bounds.
  * 
  * GET http://localhost/otp-rest-servlet/ws/routers/london
  * will return status code 200 and a brief description of the 'london' graph including geographic 
@@ -126,8 +126,9 @@ public class Routers {
     }
 
     /** 
-     * Returns the bounds for a specific routerId, or verifies whether it is registered. 
-     * @returns status code 200 if the routerId is registered, otherwise a 404.
+     * Returns the bounds for a specific routerId, or verifies whether it is registered.
+     * @param routerId .
+     * @return status code 200 if the routerId is registered, otherwise a 404.
      */
     @GET @Path("{routerId}")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML + Q, MediaType.TEXT_XML + Q })
@@ -155,6 +156,10 @@ public class Routers {
 
     /** 
      * Reload the graphs for all registered routerIds from disk.
+     * @param path .
+     * @param preEvict .
+     * @param force .
+     * @return . .
      */
     @RolesAllowed({ "ROUTERS" })
     @PUT @Produces({ MediaType.APPLICATION_JSON })
@@ -167,9 +172,11 @@ public class Routers {
 
     /** 
      * Load the graph for the specified routerId from disk.
+     * @param routerId .
      * @param preEvict before reloading each graph, evict the existing graph. This will prevent 
      * memory usage from increasing during the reload, but routing will be unavailable on this 
      * routerId for the duration of the operation.
+     * @return . .
      */
     @RolesAllowed({ "ROUTERS" })
     @PUT @Path("{routerId}") @Produces({ MediaType.TEXT_PLAIN })
@@ -196,6 +203,10 @@ public class Routers {
     /** 
      * Deserialize a graph sent with the HTTP request as POST data, associating it with the given 
      * routerId.
+     * @param routerId .
+     * @param preEvict .
+     * @param is input stream
+     * @return . .
      */
     @RolesAllowed({ "ROUTERS" })
     @POST @Path("{routerId}") @Produces({ MediaType.TEXT_PLAIN })
@@ -223,6 +234,10 @@ public class Routers {
     /**
      * Build a graph from data in the ZIP file posted over the wire, associating it with the given router ID.
      * This method will be selected when the Content-Type is application/zip.
+     * @param routerId .
+     * @param preEvict .
+     * @param input .
+     * @return . .
      */
     @RolesAllowed({ "ROUTERS" })
     @POST @Path("{routerId}") @Consumes({"application/zip"})
@@ -295,6 +310,9 @@ public class Routers {
     /** 
      * Save the graph data, but don't load it in memory. The file location is based on routerId.
      * If the graph already exists, the graph will be overwritten.
+     * @param routerId .
+     * @param is .
+     * @return . .
      */
     @RolesAllowed({ "ROUTERS" })
     @POST @Path("/save") @Produces({ MediaType.TEXT_PLAIN })
@@ -315,7 +333,9 @@ public class Routers {
         }
     }
 
-    /** De-register all registered routerIds, evicting them from memory. */
+    /** De-register all registered routerIds, evicting them from memory.
+     * @return . .
+     * */
     @RolesAllowed({ "ROUTERS" })
     @DELETE @Produces({ MediaType.TEXT_PLAIN })
     public Response deleteAll() {
@@ -325,7 +345,8 @@ public class Routers {
     }
 
     /** 
-     * De-register a specific routerId, evicting the associated graph from memory. 
+     * De-register a specific routerId, evicting the associated graph from memory.
+     * @param routerId .
      * @return status code 200 if the routerId was de-registered, 
      * 404 if the routerId was not registered. 
      */

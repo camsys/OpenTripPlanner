@@ -9,10 +9,10 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Polygon;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.Polygon;
 import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 import org.geojson.LngLatAlt;
@@ -123,7 +123,13 @@ public class PointSet implements Serializable {
      * format and rely on other tools to get the data into the correct format.
      * This includes column headers in the category:subcategory:attribute format
      * and coordinates in WGS84. Comment lines are allowed in these input files, and begin with a #.
+     *
+     * @param filename name of file
+     *
+     * @throws IOException throws when CSV file did not contain a latitude or longitude column
+     * @return PointSet
      */
+
     public static PointSet fromCsv(File filename) throws IOException {
         /* First, scan through the file to count lines and check for errors. */
         CsvReader reader = new CsvReader(filename.getAbsolutePath(), ',', Charset.forName("UTF8"));
@@ -303,7 +309,9 @@ public class PointSet implements Serializable {
     /**
      * Examines a JSON stream to see if it matches the expected OTPA format.
      * TODO improve the level of detail of validation. Many files pass the validation and then crash the load function.
-     * 
+     *
+     * @param is JSON stream
+     *
      * @return the number of features in the collection if it's valid, or -1 if
      *         it doesn't fit the OTPA format.
      */
@@ -462,6 +470,8 @@ public class PointSet implements Serializable {
     /**
      * Adds a graph service to allow for auto creation of SampleSets for a given
      * graph
+     *
+     * @param graphService .
      */
     public void setGraphService(GraphService graphService) {
         this.graphService = graphService;
@@ -470,6 +480,8 @@ public class PointSet implements Serializable {
     /**
      * gets a sample set for a given graph id -- requires graphservice to be set
      * @return sampleset for graph
+     *
+     * @param routerId graph id
      */
     public SampleSet getSampleSet(String routerId) {
         if(this.graphService == null) 
@@ -518,6 +530,7 @@ public class PointSet implements Serializable {
      * they're read
      * 
      * @param feat must be a Point, a Polygon, or a single-element MultiPolygon
+     * @param index .
      */
     public void addFeature(PointFeature feat, int index) {
         if (index >= capacity) {
@@ -583,6 +596,9 @@ public class PointSet implements Serializable {
     /**
      * Gets the Category object for the given ID, creating it if it doesn't
      * exist.
+     *
+     * @param id .
+     * @return property .
      */
     public PropertyMetadata getOrCreatePropertyForId(String id) {
         PropertyMetadata property = propMetadata.get(id);
@@ -604,6 +620,9 @@ public class PointSet implements Serializable {
      * Use the Jackson streaming API to output this as GeoJSON without creating
      * another object. The Indicator is a column store, and is transposed WRT
      * the JSON representation.
+     *
+     * @param out output stream
+     * @param forcePoints .
      */
     public void writeJson(OutputStream out, Boolean forcePoints) {
         try {
@@ -672,6 +691,10 @@ public class PointSet implements Serializable {
     /**
      * Pairs an array of times with the array of features in this pointset,
      * writing out the resulting (ID,time) pairs to a JSON object.
+     *
+     * @param jgen .
+     * @param times .
+     * @throws IOException .
      */
     protected void writeTimes(JsonGenerator jgen, int[] times) throws IOException {
         jgen.writeObjectFieldStart("times");
@@ -695,7 +718,7 @@ public class PointSet implements Serializable {
      * @param jgen
      *            the Jackson streaming JSON generator to which the geometry
      *            will be written
-     * @throws IOException
+     * @throws IOException .
      */
     private void writeFeature(int i, JsonGenerator jgen, Boolean forcePoints) throws IOException {
 
@@ -734,6 +757,10 @@ public class PointSet implements Serializable {
     /**
      * This will be called once per point in an origin/destination pointset, and
      * once per origin in a one- or many-to-many indicator.
+     *
+     * @param i .
+     * @param jgen .
+     * @throws IOException .
      */
     protected void writeStructured(int i, JsonGenerator jgen) throws IOException {
         jgen.writeObjectFieldStart("structured");
@@ -745,6 +772,9 @@ public class PointSet implements Serializable {
 
     /**
      * Get a subset of this point set containing only the specified point IDs.
+     *
+     * @param ids .
+     * @return pointset .
      */
     public PointSet slice(List<String> ids) {
 
@@ -805,6 +835,7 @@ public class PointSet implements Serializable {
 
     /**
      * Get the index of a particular feature ID in this pointset.
+     * @param featureId .
      * @return the index, or -1 if there is no such index.
      */
     public int getIndexForFeature(String featureId) {
@@ -872,7 +903,10 @@ public class PointSet implements Serializable {
         return ret;
     }
 
-    /** Returns a new coordinate object for the feature at the given index in this set, or its centroid. */
+    /** Returns a new coordinate object for the feature at the given index in this set, or its centroid.
+     * @param index .
+     * @return coordinate .
+     */
     public Coordinate getCoordinate(int index) {
         return new Coordinate(lons[index], lats[index]);
     }
@@ -880,6 +914,8 @@ public class PointSet implements Serializable {
     /**
      * Using getter methods here to allow generating coordinates and geometries on demand instead of storing them.
      * This would allow for implicit geometry, as in a regular grid of points.
+     * @param i .
+     * @return lats .
      */
     public double getLat (int i) {
         return lats[i];

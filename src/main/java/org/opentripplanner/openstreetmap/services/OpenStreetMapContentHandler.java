@@ -29,16 +29,19 @@ public interface OpenStreetMapContentHandler {
 
   /**
    * Stores a node.
+   * @param node .
    */
   public void addNode(OSMNode node);
 
   /**
    * Stores a way.
+   * @param way .
    */
   public void addWay(OSMWay way);
 
   /**
    * Stores a relation.
+   * @param relation .
    */
   public void addRelation(OSMRelation relation);
 

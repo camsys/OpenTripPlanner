@@ -1,8 +1,8 @@
 package org.opentripplanner.api.resource;
 
 import com.google.common.collect.Maps;
-import com.vividsolutions.jts.geom.*;
-import com.vividsolutions.jts.linearref.LengthIndexedLine;
+import org.locationtech.jts.geom.*;
+import org.locationtech.jts.linearref.LengthIndexedLine;
 import com.webcohesion.enunciate.metadata.Ignore;
 import org.geotools.geojson.geom.GeometryJSON;
 import org.geotools.referencing.GeodeticCalculator;
@@ -99,9 +99,11 @@ public class SIsochrone extends RoutingResource {
      * and distortions towards an ellipse will appear if it is transformed/projected to the user location.
      * <p>
      * An example request may look like this:
+     * {@code
      * localhost:8080/otp-rest-servlet/ws/iso?layers=traveltime&styles=mask&batch=true&fromPlace=51.040193121307176
      * %2C-114.04471635818481&toPlace
      * =51.09098935%2C-113.95179705&time=2012-06-06T08%3A00%3A00&mode=WALK&maxWalkDistance=10000&walkSpeed=1.38&walkTime=10.7&output=EDGES 
+     * }
      * Though the first parameters (i) layer, (ii) styles and (iii) batch could be discarded.
      * 
      * @param walkmins Maximum number of minutes to walk.
@@ -109,7 +111,7 @@ public class SIsochrone extends RoutingResource {
      *        geometry. SHED returns a ConcaveHull or ConvexHull of the edges/roads. POINTS returns
      *        all graph nodes that are within the time limit. 
      * @return a JSON document containing geometries (either points, lineStrings or a polygon).
-     * @throws Exception
+     * @throws Exception .
      * @author sstein---geo.uzh.ch
      */
     @GET
@@ -740,7 +742,7 @@ public class SIsochrone extends RoutingResource {
      * 
      * @param geometry a LineString or a MultiLineString
      * 
-     * @return
+     * @return . .
      */
     public synchronized double getFirstToLastSegmentAngle(Geometry geometry) {
         LineString line;

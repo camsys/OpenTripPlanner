@@ -503,7 +503,7 @@ public class RoutingRequest implements Cloneable, Serializable {
     /** Option to disable the default filtering of GTFS-RT alerts by time. */
     public boolean disableAlertFiltering = false;
 
-    /** Whether to apply the ellipsoid->geoid offset to all elevations in the response */
+    /** Whether to apply the ellipsoid → geoid offset to all elevations in the response */
     public boolean geoidElevation = false;
 
     /** Whether to find impacts of realtime alerts */

@@ -55,12 +55,20 @@ public class ResultSet implements Serializable{
     public ResultSet() {
     }
 
-    /** Build a new ResultSet by evaluating the given TimeSurface at all the given sample points, not including times. */
+    /** Build a new ResultSet by evaluating the given TimeSurface at all the given sample points, not including times.
+     * @param samples .
+     * @param surface .
+     */
     public ResultSet(SampleSet samples, TimeSurface surface){
         this(samples, surface, false, false);
     }
 
-    /** Build a new ResultSet by evaluating the given TimeSurface at all the given sample points, optionally including times. */
+    /** Build a new ResultSet by evaluating the given TimeSurface at all the given sample points, optionally including times.
+     * @param samples .
+     * @param surface .
+     * @param includeTimes .
+     * @param includeIsochrones .
+     */
     public ResultSet(SampleSet samples, TimeSurface surface, boolean includeTimes, boolean includeIsochrones){
         id = samples.pset.id + "_" + surface.id;
 
@@ -93,12 +101,19 @@ public class ResultSet implements Serializable{
     /**
      * Build a new ResultSet that contains only isochrones, built by accumulating the times at all street vertices
      * into a regular grid without an intermediate pointSet.
+     * @param surface .
      */
     public ResultSet (TimeSurface surface) {
         buildIsochrones(surface);
     }
 
-    /** Build a new ResultSet directly from times at point features, optionally including histograms or interpolating isochrones */
+    /** Build a new ResultSet directly from times at point features, optionally including histograms or interpolating isochrones
+     * @param times .
+     * @param targets .
+     * @param includeTimes .
+     * @param includeHistograms .
+     * @param includeIsochrones .
+     */
     public ResultSet(int[] times, PointSet targets, boolean includeTimes, boolean includeHistograms, boolean includeIsochrones) {
         if (includeTimes)
             this.times = times;
@@ -114,6 +129,9 @@ public class ResultSet implements Serializable{
      * Given an array of travel times to reach each point in the supplied pointset, make a histogram of
      * travel times to reach each separate category of points (i.e. "property") within the pointset.
      * Each new histogram object will be stored as a part of this result set keyed on its property/category.
+     *
+     * @param times .
+     * @param targets .
      */
     protected void buildHistograms(int[] times, PointSet targets) {
         this.histograms = Histogram.buildAll(times, targets);
@@ -122,6 +140,9 @@ public class ResultSet implements Serializable{
     /**
      * Sum the values of specified categories at all time limits within the
      * bounds of the search. If no categories are specified, sum all categories.
+     *
+     * @param categories .
+     * @return sum .
      */
     public long sum (String... categories) {
         return sum((Integer) null, categories);
@@ -130,6 +151,10 @@ public class ResultSet implements Serializable{
     /**
      * Sum the values of the specified categories up to the time limit specified
      * (in seconds). If no categories are specified, sum all categories.
+     *
+     * @param timeLimit .
+     * @param categories .
+     * @return sum .
      */
     public long sum(Integer timeLimit, String... categories) {
 
@@ -160,6 +185,8 @@ public class ResultSet implements Serializable{
     /**
      * Serialize this ResultSet to the given output stream as a JSON document, when the pointset is not available.
      * TODO: explain why and when that would happen
+     *
+     * @param output .
      */
     public void writeJson(OutputStream output) {
         writeJson(output, null);
@@ -169,6 +196,9 @@ public class ResultSet implements Serializable{
      * Serialize this ResultSet to the given output stream as a JSON document.
      * properties: a list of the names of all the pointSet properties for which we have histograms.
      * data: for each property, a histogram of arrival times.
+     *
+     * @param output .
+     * @param ps .
      */
     public void writeJson(OutputStream output, PointSet ps) {
         try {
@@ -216,7 +246,10 @@ public class ResultSet implements Serializable{
         }
     }
 
-    /** Write the isochrones as GeoJSON */
+    /** Write the isochrones as GeoJSON
+     * @param jgen .
+     * @throws IOException .
+     */
     public void writeIsochrones(JsonGenerator jgen) throws IOException {
         if (this.isochrones == null)
             return;

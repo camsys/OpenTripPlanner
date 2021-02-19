@@ -27,7 +27,7 @@ package org.opensphere.geometry.triangulation.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.vividsolutions.jts.geom.LineSegment;
+import org.locationtech.jts.geom.LineSegment;
 
 /**
  * Edge.
@@ -291,7 +291,7 @@ public class Edge {
 
 	/**
 	 * Add a triangle in relationship with the edge.
-	 * 
+	 * @param triangle .
 	 * @return
 	 * 		true if added, false otherwise
 	 */
@@ -301,7 +301,7 @@ public class Edge {
 
 	/**
 	 * Add triangles in relationship with the edge.
-	 * 
+	 * @param triangles .
 	 * @return
 	 * 		true if added, false otherwise
 	 */
@@ -311,7 +311,7 @@ public class Edge {
 
 	/**
 	 * Remove a triangle in relationship with the edge.
-	 * 
+	 * @param triangle .
 	 * @return
 	 * 		true if removed, false otherwise
 	 */
@@ -321,7 +321,7 @@ public class Edge {
 
 	/**
 	 * Remove triangles in relationship with the edge.
-	 * 
+	 * @param triangles .
 	 * @return
 	 * 		true if removed, false otherwise
 	 */
@@ -331,7 +331,7 @@ public class Edge {
 
 	/**
 	 * Add an incident edge in relationship with the edge.
-	 * 
+	 * @param edge .
 	 * @return
 	 * 		true if added, false otherwise
 	 */
@@ -341,7 +341,7 @@ public class Edge {
 
 	/**
 	 * Add incident edges in relationship with the edge.
-	 * 
+	 * @param edges .
 	 * @return
 	 * 		true if added, false otherwise
 	 */
@@ -351,7 +351,7 @@ public class Edge {
 
 	/**
 	 * Remove an incident edge in relationship with the edge.
-	 * 
+	 * @param edge .
 	 * @return
 	 * 		true if removed, false otherwise
 	 */
@@ -361,7 +361,7 @@ public class Edge {
 
 	/**
 	 * Remove incident edges in relationship with the edge.
-	 * 
+	 * @param edges .
 	 * @return
 	 * 		true if removed, false otherwise
 	 */

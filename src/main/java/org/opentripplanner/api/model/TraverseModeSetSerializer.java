@@ -14,7 +14,9 @@ import java.io.IOException;
  * Serialize traverse mode sets as strings.
  */
 public class TraverseModeSetSerializer extends JsonSerializer<TraverseModeSet> {
-    /** Create a module including the serializer and deserializer for local dates */
+    /** Create a module including the serializer and deserializer for local dates
+     * @return . .
+     * */
     public static SimpleModule makeModule () {
         Version moduleVersion = new Version(1, 0, 0, null, null, null);
         SimpleModule module = new SimpleModule("TraverseModeSet", moduleVersion);

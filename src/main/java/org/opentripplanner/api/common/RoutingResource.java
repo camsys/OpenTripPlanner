@@ -191,6 +191,7 @@ public abstract class RoutingResource {
     /** The set of modes that a user is willing to use, with qualifiers stating whether vehicles should be parked, rented, etc.
      * Allowable values (order of modes in set is not significant):
      * <table class="table">
+     *     <caption>.</caption>
      *     <tr><th>mode</th><th>Parameter value</th></tr>
      *     <tr><td>Walk only</td><td>WALK</td></tr>
      *     <tr><td>Drive only</td><td>CAR</td></tr>
@@ -551,6 +552,7 @@ public abstract class RoutingResource {
      * Range/sanity check the query parameter fields and build a Request object from them.
      *
      * @throws ParameterException when there is a problem interpreting a query parameter
+     * @return . .
      */
     protected RoutingRequest buildRequest() throws ParameterException {
         Router router = otpServer.getRouter(routerId);

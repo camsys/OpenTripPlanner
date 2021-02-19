@@ -13,7 +13,7 @@
 
 package org.opentripplanner.geocoder;
 
-import com.vividsolutions.jts.geom.Envelope;
+import org.locationtech.jts.geom.Envelope;
 
 public class GeocoderNullImpl implements Geocoder {
     

@@ -15,8 +15,8 @@ package org.opentripplanner.graph_builder.module.map;
 
 import java.util.Iterator;
 
-import com.vividsolutions.jts.geom.*;
-import com.vividsolutions.jts.linearref.LinearLocation;
+import org.locationtech.jts.geom.*;
+import org.locationtech.jts.linearref.LinearLocation;
 
 /**
  * I copied this class from JTS but made a few changes.
@@ -133,7 +133,7 @@ public class LinearIterator implements Iterable<LinearLocation> {
     /**
      * Checks whether the iterator cursor is pointing to the endpoint of a linestring.
      * 
-     * @return <code>true</true> if the iterator is at an endpoint
+     * @return {@code true} if the iterator is at an endpoint
      */
     public boolean isEndOfLine() {
         if (componentIndex >= numLines)

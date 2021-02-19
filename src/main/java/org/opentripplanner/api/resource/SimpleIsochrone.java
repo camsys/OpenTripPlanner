@@ -70,11 +70,11 @@ import com.beust.jcommander.internal.Maps;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Point;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.MultiPolygon;
+import org.locationtech.jts.geom.Point;
 
 /**
  * This class provides a vector isochrone generator for places without good OSM street connectivity,
@@ -278,7 +278,9 @@ public class SimpleIsochrone extends RoutingResource {
         return featureCollection;
     }
 
-    /** @return Evenly spaced travel time contours (isochrones) as GeoJSON. */
+    /**
+     * @throws Exception .
+     * @return Evenly spaced travel time contours (isochrones) as GeoJSON. */
     @GET @Produces("application/json")
     public Response geoJsonGet() throws Exception { 
         /* QGIS seems to want multi-features rather than multi-geometries. */
@@ -290,7 +292,12 @@ public class SimpleIsochrone extends RoutingResource {
         return Response.ok().entity(writer.toString()).build();
     }
         
-    /** @return Evenly spaced travel time contours (isochrones) as a zipped shapefile. */
+    /**
+     * @param stream .
+     * @throws Exception .
+     * @return Evenly spaced travel time contours (isochrones) as a zipped shapefile.
+     *
+     * */
     @GET @Produces("application/x-zip-compressed")
     public Response zippedShapefileGet(
             @QueryParam("stream") @DefaultValue("true") boolean stream) 
@@ -354,7 +361,9 @@ public class SimpleIsochrone extends RoutingResource {
 
         /** 
          * Put the given key-value pair in the map if the map does not yet contain the key, or if
-         * the value is less than the existing value for the same key. 
+         * the value is less than the existing value for the same key.
+         * @param key .
+         * @param value .
          * @return whether the key-value pair was inserted in the map.
          */
         public boolean putMin(K key, V value) {
@@ -368,7 +377,9 @@ public class SimpleIsochrone extends RoutingResource {
         
         /** 
          * Put the given key-value pair in the map if the map does not yet contain the key, or if
-         * the value is greater than the existing value for the same key. 
+         * the value is greater than the existing value for the same key.
+         * @param key .
+         * @param value .
          * @return whether the key-value pair was inserted in the map.
          */
         public boolean putMax(K key, V value) {

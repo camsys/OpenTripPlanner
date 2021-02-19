@@ -46,6 +46,8 @@ public class AlertPatcher {
     /**
      * Return a list of all patches that apply to a given stop
      *
+     * @param agency .
+     * @param id .
      * @return Returns either an XML or a JSON document, depending on the HTTP Accept header of the
      *         client making the request.
      */
@@ -66,6 +68,8 @@ public class AlertPatcher {
     /**
      * Return a list of all patches that apply to a given route
      *
+     * @param agency .
+     * @param id .
      * @return Returns either an XML or a JSON document, depending on the HTTP Accept header of the
      *         client making the request.
      */

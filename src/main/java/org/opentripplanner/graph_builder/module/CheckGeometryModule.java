@@ -30,8 +30,8 @@ import org.opentripplanner.routing.graph.Vertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
 
 /**
  * Check the geometry of every edge in the graph for any bogus geometry --
@@ -41,12 +41,16 @@ import com.vividsolutions.jts.geom.Geometry;
  */
 public class CheckGeometryModule implements GraphBuilderModule {
 
-    /** An set of ids which identifies what stages this graph builder provides (i.e. streets, elevation, transit) */
+    /** An set of ids which identifies what stages this graph builder provides (i.e. streets, elevation, transit)
+     * @return . .
+     * */
     public List<String> provides() {
         return Collections.emptyList();
     }
 
-    /** A list of ids of stages which must be provided before this stage */
+    /** A list of ids of stages which must be provided before this stage
+     * @return . .
+     * */
     public List<String> getPrerequisites() {
         return Arrays.asList("streets");
     }

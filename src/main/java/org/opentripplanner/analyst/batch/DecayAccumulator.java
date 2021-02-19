@@ -40,7 +40,7 @@ public class DecayAccumulator implements Accumulator {
     /**
      * This is a convenience function to set the cost sensitivity with more real-world values.
      * The value passed in is multiplied by 60 and the reciprocal is taken.
-     * @param halfLifeMinutes
+     * @param halfLifeMinutes .
      */
     public void setHalfLifeMinutes(int halfLifeMinutes) {
         float halfLifeSeconds = halfLifeMinutes * 60;

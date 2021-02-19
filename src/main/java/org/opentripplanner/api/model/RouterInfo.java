@@ -23,8 +23,8 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.Coordinate;
 
 import org.opentripplanner.routing.bike_rental.BikeRentalStationService;
 import org.opentripplanner.routing.core.TraverseMode;
@@ -98,7 +98,7 @@ public class RouterInfo {
      *
      * It is first called when OSM is loaded. Then after transit data is loaded.
      * So that center is set in all combinations of street and transit loading.
-     * @param center
+     * @param center .
      */
     public void addCenter(Optional<Coordinate> center) {
         //Transit data was loaded and center was calculated with calculateTransitCenter

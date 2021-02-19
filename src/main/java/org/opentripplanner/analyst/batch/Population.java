@@ -52,6 +52,9 @@ public interface Population extends Iterable<Individual> {
      * specific class of population. For example, a population loaded from an image file or 
      * generated on a regular grid will be saved as a Geotiff raster. A population of points that 
      * are not known to be aligned on a regular grid in some CRS will be saved as a CSV file.
+     *
+     * @param fileName .
+     * @param results .
      */
     public void writeAppropriateFormat(String fileName, ResultSet results);
 

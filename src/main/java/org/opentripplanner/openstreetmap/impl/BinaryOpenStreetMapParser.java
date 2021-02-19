@@ -219,8 +219,7 @@ public class BinaryOpenStreetMapParser extends BinaryParser {
 
     /**
      * Should relations be parsed
-     * 
-     * @see org.opentripplanner.graph_builder.services/.sm.OpenStreetMapContentHandler#triPhase
+     * @param parseWays .
      */
     public void setParseWays(boolean parseWays) {
         this._parseWays = parseWays;
@@ -228,8 +227,8 @@ public class BinaryOpenStreetMapParser extends BinaryParser {
 
     /**
      * Should relations be parsed
-     * 
-     * @see org.opentripplanner.graph_builder.services/.sm.OpenStreetMapContentHandler#triPhase
+     *
+     * @param parseRelations .
      */
     public void setParseRelations(boolean parseRelations) {
         this._parseRelations = parseRelations;
@@ -237,8 +236,8 @@ public class BinaryOpenStreetMapParser extends BinaryParser {
 
     /**
      * Should nodes be parsed
-     * 
-     * @see org.opentripplanner.graph_builder.services/.sm.OpenStreetMapContentHandler#triPhase
+     *
+     * @param parseNodes .
      */
     public void setParseNodes(boolean parseNodes) {
         _parseNodes = parseNodes;

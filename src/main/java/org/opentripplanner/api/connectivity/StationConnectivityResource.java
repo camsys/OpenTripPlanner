@@ -74,6 +74,7 @@ public class StationConnectivityResource {
     /**
      * Starting with the provided stop, walk the graph of connected pathway edges. Return list of nodes and links
      * encountered and any alerts associated with elevator links.
+     * @return . .
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON })

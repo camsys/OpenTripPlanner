@@ -41,7 +41,8 @@ import org.slf4j.LoggerFactory;
  * </pre>
  * 
  * @see ExampleGraphUpdater
- * @see GraphUpdaterConfigurator.applyConfigurationToGraph
+ * @see org.opentripplanner.updater.GraphUpdaterConfigurator
+ *
  */
 public class ExamplePollingGraphUpdater extends PollingGraphUpdater {
 

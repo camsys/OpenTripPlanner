@@ -99,13 +99,18 @@ public class SurfaceResource extends RoutingResource {
 
     }
 
-    /** List all the available surfaces. */
+    /** List all the available surfaces.
+     * @return . .
+     * */
     @GET
     public Response getTimeSurfaceList () {
         return Response.ok().entity(TimeSurfaceShort.list(otpServer.surfaceCache.cache.asMap().values())).build();
     }
 
-    /** Describe a specific surface. */
+    /** Describe a specific surface.
+     * @param surfaceId .
+     * @return . .
+     * */
     @GET @Path("/{surfaceId}")
     public Response getTimeSurfaceList (@PathParam("surfaceId") Integer surfaceId) {
         TimeSurface surface = otpServer.surfaceCache.get(surfaceId);
@@ -120,7 +125,11 @@ public class SurfaceResource extends RoutingResource {
      * Normally we return historgrams with the number of points reached (in field 'counts') and the number of
      * opportunities reached (i.e. the sum of the magnitudes of all points reached) in each one-minute bin of travel
      * time.
+     * @param surfaceId .
+     * @param targetPointSetId .
+     * @param originPointSetId .
      * @param detail if true, include the travel time to every point in the pointset (which is in fact an ordered list)
+     * @return . .
      */
     @GET @Path("/{surfaceId}/indicator")
     public Response getIndicator (@PathParam("surfaceId") Integer surfaceId,
@@ -148,7 +157,12 @@ public class SurfaceResource extends RoutingResource {
 
     }
 
-    /** Create vector isochrones for a surface. */
+    /** Create vector isochrones for a surface.
+     * @param surfaceId .
+     * @param spacing .
+     * @param nMax .
+     * @return . .
+     * */
     @GET @Path("/{surfaceId}/isochrone")
     public Response getIsochrone (
             @PathParam("surfaceId") Integer surfaceId,
@@ -203,6 +217,11 @@ public class SurfaceResource extends RoutingResource {
      * 
      * @param surfaceId The id of the first surface
      * @param compareToSurfaceId The id of of the surface, which is compared to the first surface
+     * @param x .
+     * @param y .
+     * @param z .
+     * @return . .
+     * @throws Exception .
     */
     @Path("/{surfaceId}/differencetiles/{compareToSurfaceId}/{z}/{x}/{y}.png")
     @GET @Produces("image/png")
@@ -243,7 +262,9 @@ public class SurfaceResource extends RoutingResource {
      * Use Laurent's accumulative grid sampler. Cutoffs in minutes.
      * The grid and Delaunay triangulation are cached, so subsequent requests are very fast.
      *
+     * @param surf .
      * @param spacing the number of minutes between isochrones
+     * @param nMax .
      * @return a list of evenly-spaced isochrones up to the timesurface's cutoff point
      */
     public static List<IsochroneData> getIsochronesAccumulative(TimeSurface surf, int spacing, int nMax) {
@@ -275,6 +296,15 @@ public class SurfaceResource extends RoutingResource {
 
     /**
      * Produce a single grayscale raster of travel time, like travel time tiles but not broken into tiles.
+     * @param surfaceId .
+     * @param width .
+     * @param height .
+     * @param resolution .
+     * @param time .
+     * @param format .
+     * @param crs .
+     * @return . .
+     * @throws Exception .
      */
     @Path("/{surfaceId}/raster")
     @GET @Produces("image/*")

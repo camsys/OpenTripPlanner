@@ -71,7 +71,9 @@ public class BatchProcessor {
     private long lastCheckpointTime = 0;
     private ResultSet aggregateResultSet = null;
     
-    /** Cut off the search instead of building a full path tree. Can greatly improve run times. */
+    /** Cut off the search instead of building a full path tree. Can greatly improve run times.
+     * @param minutes .
+     * */
     public void setSearchCutoffMinutes(int minutes) {
         this.searchCutoffSeconds = minutes * 60;
     }

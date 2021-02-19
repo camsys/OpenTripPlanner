@@ -38,6 +38,9 @@ public class OSMFilter {
      * But not conveyers, proposed highways/roads or those still under construction, and raceways
      * (as well as ways where all access is specifically forbidden to the public).
      * http://wiki.openstreetmap.org/wiki/Tag:highway%3Dproposed
+     *
+     * @param way .
+     * @return . .
      */
     public static boolean isWayRoutable(OSMWithTags way) {
         if (!isOsmEntityRoutable(way))
@@ -66,6 +69,9 @@ public class OSMFilter {
      * even if it doesn't have a highway tag. Platforms are however filtered out if they are marked
      * usage=tourism. This prevents miniature tourist railways like the one in Portland's Zoo from
      * receiving a better score and pulling search endpoints away from real transit stops.
+     *
+     * @param osmEntity .
+     * @return . .
      */
     public static boolean isOsmEntityRoutable(OSMWithTags osmEntity) {
         if (osmEntity.hasTag("highway"))
@@ -135,10 +141,13 @@ public class OSMFilter {
 
     /**
      * Computes permissions for an OSMWay.
-     * 
-     * @param way
-     * @param def
-     * @return
+     *
+     * @param graph .
+     * @param way .
+     * @param def .
+     * @param banDiscouragedWalking .
+     * @param banDiscouragedBiking .
+     * @return .
      */
     public static StreetTraversalPermission getPermissionsForWay(OSMWay way,
             StreetTraversalPermission def, Graph graph, boolean banDiscouragedWalking, boolean banDiscouragedBiking) {
@@ -200,6 +209,9 @@ public class OSMFilter {
     /**
      * Check OSM tags for various one-way and one-way-by-mode tags and return a pair of permissions
      * for travel along and against the way.
+     * @param permissions .
+     * @param way .
+     * @return .
      */
     public static P2<StreetTraversalPermission> getPermissions(
             StreetTraversalPermission permissions, OSMWay way) {

@@ -15,8 +15,8 @@ package org.opentripplanner.common.geometry;
 
 import java.io.Serializable;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.CoordinateSequence;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.CoordinateSequence;
 
 /**
  * Compact elevation profile. To optimize storage, we use the following tricks:
@@ -44,7 +44,7 @@ public final class CompactElevationProfile implements Serializable {
     /**
      * Compact an elevation profile onto a var-len int packed form (Dlugosz coding).
      * 
-     * @param profile The elevation profile to compact
+     * @param elevation The elevation profile to compact
      * @return The compacted format
      */
     public static byte[] compactElevationProfile(CoordinateSequence elevation) {

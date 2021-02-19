@@ -62,7 +62,10 @@ public class SampleSet {
         return ret;
     }
     
-    /** Evaluate an array of times where indices are keyed to vertex indices, with Integer.MAX_VALUE indicating unreachability both in the inputs and the outputs */
+    /** Evaluate an array of times where indices are keyed to vertex indices, with Integer.MAX_VALUE indicating unreachability both in the inputs and the outputs
+     * @param times .
+     * @return array .
+     */
     public int[] eval(int[] times) {
         final float WALK_SPEED = 1.3f;
         int[] ret = new int[pset.capacity];

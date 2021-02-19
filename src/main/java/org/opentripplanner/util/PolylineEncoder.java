@@ -19,10 +19,10 @@ import java.util.List;
 
 import org.opentripplanner.util.model.EncodedPolylineBean;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.MultiLineString;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.MultiLineString;
 
 public class PolylineEncoder {
 
@@ -58,7 +58,7 @@ public class PolylineEncoder {
     }
 
     /**
-     * If level < 0, then {@link EncodedPolylineBean#getLevels()} will be null.
+     * If level less than 0, then {@link EncodedPolylineBean#getLevels()} will be null.
      * 
      * @param points
      * @param level

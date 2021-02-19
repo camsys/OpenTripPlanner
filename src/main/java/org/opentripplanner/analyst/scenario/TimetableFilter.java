@@ -26,7 +26,10 @@ public abstract class TimetableFilter extends Modification {
     /** GTFS route types to match, see constants in com.conveyal.gtfs.model.Route */
     public int[] routeType;
 
-    /** Could any trip on this trip pattern possibly match this filter? */
+    /** Could any trip on this trip pattern possibly match this filter?
+     * @param pattern  .
+     * @return . .
+     * */
     protected boolean couldMatch (TripPattern pattern) {
         if (!pattern.route.getAgency().getId().equals(agencyId))
             return false;
@@ -40,7 +43,10 @@ public abstract class TimetableFilter extends Modification {
         return true;
     }
 
-    /** Does this TripTimes match the match parameters defined here? */
+    /** Does this TripTimes match the match parameters defined here?
+     * @param trip .
+     * @return . .
+     * */
     protected boolean matches(Trip trip) {
         Route route = trip.getRoute();
 

@@ -28,12 +28,12 @@ import org.opentripplanner.analyst.request.SampleFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vividsolutions.jts.algorithm.CGAlgorithms;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LinearRing;
-import com.vividsolutions.jts.geom.Polygon;
+import org.locationtech.jts.algorithm.CGAlgorithms;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LinearRing;
+import org.locationtech.jts.geom.Polygon;
 
 /**
  * Compute isoline based on a zFunc and a set of initial coverage points P0={(x,y)} to seed the
@@ -253,8 +253,9 @@ public class RecursiveGridIsolineBuilder {
      * Create an object to compute isochrones. One may call several time isochronify on the same
      * IsoChronificator object, this will re-use the z = f(x,y) sampling if possible, as they are
      * kept in cache.
-     * 
-     * @param request Parameters for the computation
+     *
+     * @param dX Parameters for the computation
+     * @param dY Parameters for the computation
      * @param center Center point (eg origin)
      * @param fz Function returning the z-value for a xy-coordinate
      * @param p0List Initial set of coverage points to seed the heuristics

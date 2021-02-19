@@ -1,13 +1,13 @@
 package org.opentripplanner.graph_builder.linking;
 
 import com.google.common.collect.Iterables;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.index.SpatialIndex;
-import com.vividsolutions.jts.linearref.LinearLocation;
-import com.vividsolutions.jts.linearref.LocationIndexedLine;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.index.SpatialIndex;
+import org.locationtech.jts.linearref.LinearLocation;
+import org.locationtech.jts.linearref.LocationIndexedLine;
 import gnu.trove.map.TIntDoubleMap;
 import gnu.trove.map.hash.TIntDoubleHashMap;
 import jersey.repackaged.com.google.common.collect.Lists;
@@ -101,7 +101,7 @@ public class SimpleStreetSplitter {
     /**
      * Construct a new SimpleStreetSplitter. Be aware that only one SimpleStreetSplitter should be
      * active on a graph at any given time.
-     * @param graph
+     * @param graph .
      * @param hashGridSpatialIndex If not null this index is used instead of creating new one
      * @param transitStopIndex Index of all transitStops which is generated in {@link org.opentripplanner.routing.impl.StreetVertexIndexServiceImpl}
      * @param destructiveSplitting If true splitting is permanent (Used when linking transit stops etc.) when false Splitting is only for duration of a request. Since they are made from temporary vertices and edges.
@@ -131,7 +131,7 @@ public class SimpleStreetSplitter {
      * active on a graph at any given time.
      *
      * SimpleStreetSplitter generates index on graph and splits destructively (used in transit splitter)
-     * @param graph
+     * @param graph .
      */
     public SimpleStreetSplitter(Graph graph) {
         this(graph, null, null, true);
@@ -152,17 +152,31 @@ public class SimpleStreetSplitter {
         }
     }
 
-    /** Link this vertex into the graph to the closest walkable edge */
+    /** Link this vertex into the graph to the closest walkable edge
+     * @param vertex .
+     * @return . .
+     * */
     public boolean link (Vertex vertex) {
         return link(vertex, TraverseMode.WALK, null);
     }
 
-    /** Link this vertex into the graph */
+    /** Link this vertex into the graph
+     * @param vertex .
+     * @param traverseMode .
+     * @param options .
+     * @return  . .
+     * */
     public boolean link(Vertex vertex, TraverseMode traverseMode, RoutingRequest options) {
         return link(vertex, traverseMode, options, true);
     }
 
-    /** Link this vertex into the graph */
+    /** Link this vertex into the graph
+     * @param vertex .
+     * @param traverseMode .
+     * @param options .
+     * @param stopLinking .
+     * @return . .
+     * */
     public boolean link(Vertex vertex, TraverseMode traverseMode, RoutingRequest options, boolean stopLinking) {
         /* Initialize graph index which is needed by the stop accessibility evaluation. */
         if (graph.index == null) {
@@ -576,10 +590,10 @@ public class SimpleStreetSplitter {
      *
      * Will throw ThrivialPathException if origin and destination Location are on the same edge
      *
-     * @param location
-     * @param options
+     * @param location .
+     * @param options .
      * @param endVertex true if this is destination vertex
-     * @return
+     * @return . .
      */
     public Vertex getClosestVertex(GenericLocation location, RoutingRequest options,
         boolean endVertex) {

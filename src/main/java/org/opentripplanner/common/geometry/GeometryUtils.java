@@ -13,10 +13,10 @@
 
 package org.opentripplanner.common.geometry;
 
-import com.vividsolutions.jts.geom.*;
-import com.vividsolutions.jts.linearref.LengthLocationMap;
-import com.vividsolutions.jts.linearref.LinearLocation;
-import com.vividsolutions.jts.linearref.LocationIndexedLine;
+import org.locationtech.jts.geom.*;
+import org.locationtech.jts.linearref.LengthLocationMap;
+import org.locationtech.jts.linearref.LinearLocation;
+import org.locationtech.jts.linearref.LocationIndexedLine;
 import org.geojson.GeoJsonObject;
 import org.geojson.LngLatAlt;
 import org.geotools.referencing.CRS;
@@ -60,6 +60,9 @@ public class GeometryUtils {
     
     /**
      * Splits the input geometry into two LineStrings at the given point.
+     * @param geometry .
+     * @param nearestPoint .
+     * @return . .
      */
     public static P2<LineString> splitGeometryAtPoint(Geometry geometry, Coordinate nearestPoint) {
         // An index in JTS can actually refer to any point along the line. It is NOT an array index.
@@ -74,6 +77,9 @@ public class GeometryUtils {
     
     /**
      * Splits the input geometry into two LineStrings at a fraction of the distance covered.
+     * @param geometry .
+     * @param fraction .
+     * @return . .
      */
     public static P2<LineString> splitGeometryAtFraction(Geometry geometry, double fraction) {
         LineString empty = new LineString(null, gf);
@@ -102,17 +108,29 @@ public class GeometryUtils {
      * Returns the chunk of the given geometry between the two given coordinates.
      * 
      * Assumes that "second" is after "first" along the input geometry.
+     * @param geometry .
+     * @param first .
+     * @param second .
+     * @return . .
      */
-    public static LineString getInteriorSegment(Geometry geomerty, Coordinate first,
+    public static LineString getInteriorSegment(Geometry geometry, Coordinate first,
             Coordinate second) {
-        P2<LineString> splitGeom = GeometryUtils.splitGeometryAtPoint(geomerty, first);
+        P2<LineString> splitGeom = GeometryUtils.splitGeometryAtPoint(geometry, first);
         splitGeom = GeometryUtils.splitGeometryAtPoint(splitGeom.second, second);
         return splitGeom.first;
     }
 
     /**
-     * Adapted from com.vividsolutions.jts.geom.LineSegment 
+     * Adapted from org.locationtech.jts.geom.LineSegment
      * Combines segmentFraction and projectionFactor methods.
+     * @param x0 .
+     * @param y0 .
+     * @param x1 .
+     * @param y1 .
+     * @param xp .
+     * @param yp .
+     * @param xscale .
+     * @return . .
      */
     public static double segmentFraction(double x0, double y0, double x1, double y1, 
             double xp, double yp, double xscale) {
@@ -134,9 +152,9 @@ public class GeometryUtils {
     /**
      * Convert a org.geojson.Xxxx geometry to a JTS geometry.
      * Only support Point, Polygon, MultiPolygon, LineString and MultiLineString for now.
-     * @param geoJsonGeom
+     * @param geoJsonGeom .
      * @return The equivalent JTS geometry.
-     * @throws UnsupportedGeometryException
+     * @throws UnsupportedGeometryException .
      */
     public static Geometry convertGeoJsonToJtsGeometry(GeoJsonObject geoJsonGeom)
             throws UnsupportedGeometryException {

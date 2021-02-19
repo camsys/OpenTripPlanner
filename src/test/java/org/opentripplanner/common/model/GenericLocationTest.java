@@ -16,7 +16,7 @@ package org.opentripplanner.common.model;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
-import com.vividsolutions.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Coordinate;
 
 public class GenericLocationTest {
 
@@ -71,13 +71,13 @@ public class GenericLocationTest {
         
         assertTrue(loc.hasCoordinate());
         assertFalse(loc.hasHeading());
-        assertEquals(new Double(-1.0), loc.lat);
-        assertEquals(new Double(2.5), loc.lng);
+        assertEquals(Double.valueOf(-1.0), loc.lat);
+        assertEquals(Double.valueOf(2.5), loc.lng);
         assertEquals(new Coordinate(2.5, -1.0), loc.getCoordinate());
 
         loc = new GenericLocation("name", "1.0,-2.5");
-        assertEquals(new Double(1.0), loc.lat);
-        assertEquals(new Double(-2.5), loc.lng);
+        assertEquals(Double.valueOf(1.0), loc.lat);
+        assertEquals(Double.valueOf(-2.5), loc.lng);
         assertEquals(new Coordinate(-2.5, 1.0), loc.getCoordinate());
     }
 
@@ -125,8 +125,8 @@ public class GenericLocationTest {
         
         assertTrue(loc.hasCoordinate());
         assertFalse(loc.hasHeading());
-        assertEquals(new Double(1.0), loc.lat);
-        assertEquals(new Double(2.5), loc.lng);
+        assertEquals(Double.valueOf(1.0), loc.lat);
+        assertEquals(Double.valueOf(2.5), loc.lng);
         assertEquals(new Coordinate(2.5, 1.0), loc.getCoordinate());
     }
  

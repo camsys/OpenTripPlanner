@@ -30,7 +30,7 @@ import org.opentripplanner.util.stats.DiscreteDistribution.NumberQuantifiable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vividsolutions.jts.geom.LineString;
+import org.locationtech.jts.geom.LineString;
 
 /**
  * Print statistics on geometry and edge/vertices data for a graph (number of geometry, average
@@ -41,12 +41,15 @@ public class GraphStatisticsModule implements GraphBuilderModule {
     /**
      * An set of ids which identifies what stages this graph builder provides (i.e. streets,
      * elevation, transit)
+     * @return . .
      */
     public List<String> provides() {
         return Collections.emptyList();
     }
 
-    /** A list of ids of stages which must be provided before this stage */
+    /** A list of ids of stages which must be provided before this stage
+     * @return . .
+     * */
     public List<String> getPrerequisites() {
         return Arrays.asList("streets");
     }

@@ -16,9 +16,9 @@ package org.opentripplanner.api.resource;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.CoordinateSequence;
-import com.vividsolutions.jts.geom.Envelope;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.CoordinateSequence;
+import org.locationtech.jts.geom.Envelope;
 
 /** An instance of CoordinateSequence that can be efficiently extended */
 public class CoordinateArrayListSequence implements CoordinateSequence, Cloneable {
@@ -44,6 +44,20 @@ public class CoordinateArrayListSequence implements CoordinateSequence, Cloneabl
     @SuppressWarnings("unchecked")
     @Override
     public CoordinateArrayListSequence clone() {
+        CoordinateArrayListSequence clone;
+        try {
+            clone = (CoordinateArrayListSequence) super.clone();
+        } catch (CloneNotSupportedException e) {
+            /* never happens since super is Object */
+            throw new RuntimeException(e);
+        }
+        clone.coordinates = (ArrayList<Coordinate>) coordinates.clone();
+        return clone;
+    }
+
+    /* from https://github.com/leonardehrenfried/OpenTripPlanner/commit/2d53fbc92438324d3df9564b0b53cec64ef2c0e8 */
+    @Override
+    public CoordinateSequence copy() {
         CoordinateArrayListSequence clone;
         try {
             clone = (CoordinateArrayListSequence) super.clone();

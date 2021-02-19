@@ -60,6 +60,7 @@ public class WayPropertyPicker {
      * If this value is true, and this picker's specifier applies to a given way, then this picker is never
      * chosen as the most applicable value, and the final safety will be multiplied by this value.
      * More than one mixin may apply.
+     * @return .
      */
     public boolean isSafetyMixin() {
         return safetyMixin;

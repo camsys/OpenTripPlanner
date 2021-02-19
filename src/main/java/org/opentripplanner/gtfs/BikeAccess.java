@@ -25,9 +25,9 @@ import org.onebusaway.gtfs.model.Trip;
  * It proposes "route_bikes_allowed" in routes.txt and "trip_bikes_allowed" in trips.txt with the
  * following semantics:
  * 
- * 2: bikes allowed<br/>
- * 1: no bikes allowed<br/>
- * 0: no information (same as field omitted)<br/>
+ * 2: bikes allowed<br>
+ * 1: no bikes allowed<br>
+ * 0: no information (same as field omitted)<br>
  * 
  * The values in trips.txt override the values in routes.txt.
  * 
@@ -37,9 +37,9 @@ import org.onebusaway.gtfs.model.Trip;
  * Here, the field "bikes_allowed" is used in both routes.txt and trip.txt with the following
  * semantics:
  * 
- * 2: no bikes allowed<br/>
- * 1: bikes allowed<br/>
- * 0: no information (same as field omitted)<br/>
+ * 2: no bikes allowed<br>
+ * 1: bikes allowed<br>
+ * 0: no information (same as field omitted)<br>
  * 
  * Here, the 0,1,2 semantics have been changed to match the convention used in the
  * "wheelchair_accessible" field in trips.txt.

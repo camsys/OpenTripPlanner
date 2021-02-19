@@ -20,7 +20,9 @@ public class QualifiedModeSetSerializer extends JsonSerializer<QualifiedModeSet>
         jsonGenerator.writeString(qualifiedModeSet.toString());
     }
 
-    /** Create a module including the serializer and deserializer for qualified mode sets */
+    /** Create a module including the serializer and deserializer for qualified mode sets
+     * @return . .
+     * */
     public static SimpleModule makeModule () {
         Version moduleVersion = new Version(1, 0, 0, null, null, null);
         SimpleModule module = new SimpleModule("QualifiedModeSet", moduleVersion);

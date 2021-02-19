@@ -32,7 +32,9 @@ public class UpdaterStatusResource {
         router = otpServer.getRouter(routerId);
     }
 
-    /** Return a list of all agencies in the graph. */
+    /** Return a list of all agencies in the graph.
+     * @return . .
+     * */
     @GET
     public Response getUpdaters () {
         GraphUpdaterManager updaterManager = router.graph.updaterManager;
@@ -42,7 +44,10 @@ public class UpdaterStatusResource {
         return Response.status(Response.Status.OK).entity(updaterManager.getUpdaterDescriptions()).build();
     }
 
-    /** Return status for a specific updater. */
+    /** Return status for a specific updater.
+     * @param updaterId .
+     * @return . .
+     * */
     @GET
     @Path("/{updaterId}")
     public Response getUpdaters (@PathParam("updaterId") int updaterId) {

@@ -188,6 +188,9 @@ public class GraphBuilder implements Runnable {
      *
      * TODO parameterize with the router ID and call repeatedly to make multiple builders
      * note of all command line options this is only using  params.inMemory params.preFlight and params.build directory
+     * @param params .
+     * @param dir .
+     * @return . .
      */
     public static GraphBuilder forDirectory(CommandLineParameters params, File dir) {
         LOG.info("Wiring up and configuring graph builder task.");

@@ -131,6 +131,7 @@ public class GtfsBundle {
     
     /**
      * So that we can load multiple gtfs feeds into the same database.
+     * @return . .
      */
     public GtfsFeedId getFeedId() {
         if (feedId == null) {
@@ -161,6 +162,7 @@ public class GtfsBundle {
      * along a transit trip be permitted?
      * A trip doesn't contain bicycle accessibility information if both route_short_name and
      * trip_short_name contain missing/0 values.
+     * @return . .
      */
     public Boolean getDefaultBikesAllowed() {
         return defaultBikesAllowed;
@@ -178,7 +180,7 @@ public class GtfsBundle {
      * for the missing pathways.txt file.  In this case, transfer edges will be created between
      * stops where transfers are defined.
      * 
-     * @return
+     * @return . .
      */
     public boolean doesTransfersTxtDefineStationPaths() {
         return transfersTxtDefinesStationPaths;

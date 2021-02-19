@@ -13,7 +13,7 @@
 
 package org.opentripplanner.geocoder;
 
-import com.vividsolutions.jts.geom.Envelope;
+import org.locationtech.jts.geom.Envelope;
 
 /**
  * Multiplexe two geocoders: a master and a backup.

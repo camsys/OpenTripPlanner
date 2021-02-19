@@ -138,7 +138,11 @@ public class Histogram implements Serializable {
      * <pre> {
      *   sums: [],
      *   counts: []     
-     * } </pre> 
+     * } </pre>
+     *
+     * @param jgen .
+     * @throws JsonGenerationException .
+     * @throws IOException .
      */
     public void writeJson(JsonGenerator jgen) throws JsonGenerationException, IOException {
         // The number of features reached during each minute, ignoring their magnitudes

@@ -38,7 +38,9 @@ public class Response {
     @SuppressWarnings("unused")
     private Response() {};
 
-    /** Construct an new response initialized with all the incoming query parameters. */
+    /** Construct an new response initialized with all the incoming query parameters.
+     * @param info .
+     * */
     public Response(UriInfo info) {
         this.requestParameters = new HashMap<String, String>();
         if (info == null) { 
@@ -55,7 +57,9 @@ public class Response {
     // same order for the elements in the JS or XML serialized response. The traditional order
     // is request params, followed by plan, followed by errors.
 
-    /** The actual trip plan. */
+    /** The actual trip plan.
+     * @return plan .
+     * */
     public TripPlan getPlan() {
         return plan;
     }
@@ -64,7 +68,9 @@ public class Response {
         this.plan = plan;
     }
 
-    /** The error (if any) that this response raised. */
+    /** The error (if any) that this response raised.
+     * @return error .
+     * */
     public PlannerError getError() {
         return error;
     }

@@ -13,9 +13,9 @@
 
 package org.opentripplanner.api.resource;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.LineString;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.LineString;
 import org.apache.commons.lang.StringUtils;
 import org.onebusaway.gtfs.model.*;
 import org.opentripplanner.api.model.*;
@@ -61,6 +61,10 @@ public abstract class GraphPathToTripPlanConverter {
 
     /**
      * Generates a TripPlan from a set of paths
+     *
+     * @param paths .
+     * @param request .
+     * @return . .
      */
     public static TripPlan generatePlan(List<GraphPath> paths, RoutingRequest request) {
 
@@ -153,6 +157,8 @@ public abstract class GraphPathToTripPlanConverter {
      *
      * @param path The graph path to base the itinerary on
      * @param showIntermediateStops Whether to include intermediate stops in the itinerary or not
+     * @param disableAlertFiltering .
+     * @param requestedLocale .
      * @return The generated itinerary
      */
     public static Itinerary generateItinerary(GraphPath path, boolean showIntermediateStops, boolean disableAlertFiltering, Locale requestedLocale) {
@@ -558,6 +564,9 @@ public abstract class GraphPathToTripPlanConverter {
     /**
      * This was originally in TransitUtils.handleBoardAlightType.
      * Edges that always block traversal (forbidden pickups/dropoffs) are simply not ever created.
+     *
+     * @param boardAlightType .
+     * @return . .
      */
     public static String getBoardAlightMessage (int boardAlightType) {
         switch (boardAlightType) {
@@ -1004,10 +1013,13 @@ public abstract class GraphPathToTripPlanConverter {
 
     /**
      * Converts a list of street edges to a list of turn-by-turn directions.
-     * 
+     *
+     * @param graph .
+     * @param states .
      * @param previous a non-transit leg that immediately precedes this one (bike-walking, say), or null
-     * 
-     * @return
+     * @param requestedLocale .
+     *
+     * @return . .
      */
     public static List<WalkStep> generateWalkSteps(Graph graph, State[] states, WalkStep previous, Locale requestedLocale) {
         List<WalkStep> steps = new ArrayList<WalkStep>();

@@ -41,11 +41,6 @@ public class IsoChroneSPTRendererAccSampling implements IsoChroneSPTRenderer {
         this.sampleGridRenderer = sampleGridRenderer;
     }
 
-    /**
-     * @param isoChroneRequest
-     * @param sptRequest
-     * @return
-     */
     @Override
     public List<IsochroneData> getIsochrones(IsoChroneRequest isoChroneRequest,
             RoutingRequest sptRequest) {

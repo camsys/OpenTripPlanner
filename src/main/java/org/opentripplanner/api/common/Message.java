@@ -59,7 +59,9 @@ public enum Message {
         return m_id;
     }
 
-    /** simple checker / getter of the config */
+    /** simple checker / getter of the config
+     * @return . .
+     * */
     public Properties getConfig() {
         if(_c == null)
             _c = new Properties(Message.class);
@@ -86,7 +88,10 @@ public enum Message {
 
     /** 
      * will return the enum who's .property value matches the passed in value ...
-     * NOTE: not sure where this will be used...from legacy code in case it's ever needed... 
+     * NOTE: not sure where this will be used...from legacy code in case it's ever needed...
+     * @param value .
+     * @param l .
+     * @return . .
      */
     public static Message findEnumByProperty(String value, Locale l) {
         Message retVal = null;

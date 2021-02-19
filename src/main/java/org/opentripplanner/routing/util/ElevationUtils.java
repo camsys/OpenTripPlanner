@@ -20,8 +20,8 @@ import org.opentripplanner.common.geometry.PackedCoordinateSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.CoordinateSequence;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.CoordinateSequence;
 
 public class ElevationUtils {
     private static Logger log = LoggerFactory.getLogger(ElevationUtils.class);
@@ -256,7 +256,7 @@ public class ElevationUtils {
 
     /**
      * The cost for walking in hilly/mountain terrain dependent on slope using an empirical function by
-     * WG Rees (Comp & Geosc, 2004), that overhauls the Naismith rule for mountaineering.<br>
+     * WG Rees (Comp &amp; Geosc, 2004), that overhauls the Naismith rule for mountaineering.<br>
      * For a slope of 0 = 0 degree a cost is returned that approximates a speed of 1.333 m/sec = 4.8km/h<br>
      * TODO: Not sure if it makes sense to use maxSlope as input and instead better use
      * a lower estimate / average value. However, the DEM is most likely generalized/smoothed

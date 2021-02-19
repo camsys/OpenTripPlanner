@@ -37,9 +37,10 @@ public class TurnRestriction implements Serializable {
     /**
      * Convenience constructor.
      * 
-     * @param from
-     * @param to
-     * @param type
+     * @param from .
+     * @param to .
+     * @param type .
+     * @param modes .
      */
     public TurnRestriction(Edge from, Edge to, TurnRestrictionType type,
             TraverseModeSet modes) {
@@ -52,8 +53,8 @@ public class TurnRestriction implements Serializable {
     
     /**
      * Return true if the turn restriction is in force at the time described by the long.
-     * @param time
-     * @return
+     * @param time .
+     * @return . .
      */
     public boolean active(long time) {
         if (this.time != null)

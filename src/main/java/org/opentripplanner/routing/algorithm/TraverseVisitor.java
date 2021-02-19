@@ -18,13 +18,20 @@ import org.opentripplanner.routing.graph.Edge;
 
 public interface TraverseVisitor {
 
-    /** Called when A* explores an edge */
+    /** Called when A* explores an edge
+     * @param edge .
+     * @param state .
+     * */
     void visitEdge(Edge edge, State state);
 
-    /** Called when A* dequeues a vertex */
+    /** Called when A* dequeues a vertex
+     * @param state .
+     * */
     void visitVertex(State state);
 
-    /** Called when A* enqueues a vertex */
+    /** Called when A* enqueues a vertex
+     * @param state .
+     * */
     void visitEnqueue(State state);
 
 }

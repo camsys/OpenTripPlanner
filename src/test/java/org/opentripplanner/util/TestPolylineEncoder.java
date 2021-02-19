@@ -18,7 +18,7 @@ import java.util.List;
 
 import org.opentripplanner.util.model.EncodedPolylineBean;
 
-import com.vividsolutions.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Coordinate;
 
 import junit.framework.TestCase;
 

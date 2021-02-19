@@ -77,7 +77,9 @@ public class ClassCustomizer {
         }
     }
 
-    /** Adds a new field of type double to the customized class */
+    /** Adds a new field of type double to the customized class
+     * @param fieldName .
+     * */
     public void addDoubleField(String fieldName) {
         // FIXME: this should support default values but does not
 
@@ -99,7 +101,9 @@ public class ClassCustomizer {
         }
     }
 
-    /** Writes the class file to the classpath and returns a class object */
+    /** Writes the class file to the classpath and returns a class object
+     * @return . .
+     * */
     public Class<?> saveClass() {
         ClassFile classFile = ctClass.getClassFile();
 
@@ -118,7 +122,12 @@ public class ClassCustomizer {
         }
     }
 
-    /** Creates a clone of original but with the class NewClass (which extends original's class) */
+    /** Creates a clone of original but with the class NewClass (which extends original's class)
+     * @param original .
+     * @param newClass .
+     * @param <T> .
+     * @return . .
+     * */
     public static <T> T reclass(T original, Class<? extends T> newClass) {
         Class<?> origClass = original.getClass();
 
@@ -149,8 +158,8 @@ public class ClassCustomizer {
     /**
      * capitalize the first letter of the string
      * 
-     * @param str
-     * @return
+     * @param str .
+     * @return . .
      */
     private String ucfirst(String str) {
         return str.substring(0, 1).toUpperCase() + str.substring(1);
@@ -158,11 +167,10 @@ public class ClassCustomizer {
 
     /**
      * Add a simple getter with signature "double getFoo()" to the class, which simply returns the value of the 
-     * field fieldName 
-     * @param ctClass
-     * @param classFile
-     * @param fieldName
-     * @throws DuplicateMemberException
+     * field fieldName
+     * @param classFile .
+     * @param fieldName .
+     * @throws DuplicateMemberException .
      */
     private void addDoubleGetter(ClassFile classFile, String fieldName)
             throws DuplicateMemberException {

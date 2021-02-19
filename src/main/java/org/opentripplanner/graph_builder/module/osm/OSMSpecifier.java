@@ -57,6 +57,7 @@ public class OSMSpecifier {
      * TODO: simply count the number of full, partial, and wildcard matches instead of using a scoring system.
      *
      * @param match an OSM tagged object to compare to this specifier
+     * @return .
      */
     public P2<Integer> matchScores(OSMWithTags match) {
         int leftScore = 0, rightScore = 0;
@@ -97,6 +98,8 @@ public class OSMSpecifier {
     /**
      * Calculates a score expressing how well an OSM entity's tags match this specifier.
      * This does exactly the same thing as matchScores but without regard for :left and :right.
+     * @param match .
+     * @return .
      */
     public int matchScore(OSMWithTags match) {
         int score = 0;

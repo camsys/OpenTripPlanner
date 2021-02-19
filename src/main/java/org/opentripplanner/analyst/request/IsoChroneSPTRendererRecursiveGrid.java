@@ -32,7 +32,7 @@ import org.opentripplanner.routing.vertextype.StreetVertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vividsolutions.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Coordinate;
 
 /**
  * Compute isochrones out of a shortest path tree request (RecursiveGrid isoline algorithm).
@@ -53,9 +53,9 @@ public class IsoChroneSPTRendererRecursiveGrid implements IsoChroneSPTRenderer {
     }
 
     /**
-     * @param isoChroneRequest
-     * @param sptRequest
-     * @return
+     * @param isoChroneRequest .
+     * @param sptRequest .
+     * @return . .
      */
     @Override
     public List<IsochroneData> getIsochrones(IsoChroneRequest isoChroneRequest,

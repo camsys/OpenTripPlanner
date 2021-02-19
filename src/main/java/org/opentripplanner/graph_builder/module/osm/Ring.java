@@ -23,12 +23,12 @@ import org.opentripplanner.openstreetmap.model.OSMNode;
 import org.opentripplanner.visibility.VLPoint;
 import org.opentripplanner.visibility.VLPolygon;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.LinearRing;
-import com.vividsolutions.jts.geom.Polygon;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.LinearRing;
+import org.locationtech.jts.geom.Polygon;
 
 public class Ring {
 
@@ -50,12 +50,13 @@ public class Ring {
      * have the same erasure, meaning that even though Java has enough information at compile-time
      * to figure out which constructor I am talking about, it intentionally throws this away in the
      * interest of having worse run-time performance. Thanks, Java!
-     * <p/>
+     * <p>
      * Oh, and most people would solve this problem by making a static factory method but that won't
      * work because then all of this class's outer classes would have to be static.
+     * </p>
      * 
-     * @param osmNodes
-     * @param javaSucks
+     * @param osmNodes .
+     * @param javaSucks .
      */
     public Ring(List<OSMNode> osmNodes, boolean javaSucks) {
         ArrayList<VLPoint> vertices = new ArrayList<VLPoint>();

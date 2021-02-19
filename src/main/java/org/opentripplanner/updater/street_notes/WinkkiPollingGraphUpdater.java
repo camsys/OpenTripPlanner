@@ -13,10 +13,10 @@ import java.util.Date;
  * Usage example:
  *
  * <pre>
- *     winkki.type = winkki-polling-updater
- *     winkki.frequencySec = 21600
- *     winkki.url = http://geoserver.hel.fi/geoserver/hkr/ows?Service=wfs&Version=1.1.0&Request=GetCapabilities
- *     winkki.featureType = hkr:winkki_works
+ *     winkki.type = winkki-polling-updater;
+ *     winkki.frequencySec = 21600;
+ *     winkki.url = http://geoserver.hel.fi/geoserver/hkr/ows?Service=wfs&amp;Version=1.1.0&amp;Request=GetCapabilities;
+ *     winkki.featureType = hkr:winkki_works;
  * </pre>
  */
 

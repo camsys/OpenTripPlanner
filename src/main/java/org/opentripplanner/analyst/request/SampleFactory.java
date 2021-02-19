@@ -14,10 +14,10 @@
 package org.opentripplanner.analyst.request;
 
 import com.google.common.collect.Iterables;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.CoordinateSequence;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.LineString;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.CoordinateSequence;
+import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.geom.LineString;
 import gnu.trove.map.TIntDoubleMap;
 import gnu.trove.map.hash.TIntDoubleHashMap;
 import org.opentripplanner.analyst.core.Sample;
@@ -177,7 +177,11 @@ public class SampleFactory implements SampleSource {
      * 
      * Here we want to compare squared distances to all line segments until we find the best one, 
      * then do the precise calculations.
-     * 
+     *
+     * @param edges  .
+     * @param pt .
+     * @param xscale .
+     * @return . .
      */
     public Sample findClosest(List<Edge> edges, Coordinate pt, double xscale) {
         Candidate c = new Candidate();

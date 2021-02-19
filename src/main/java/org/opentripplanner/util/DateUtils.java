@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
  * 
  * 
  * @author Frank Purcell (p u r c e l l f @ t r i m e t . o r g)
- * @date October 20, 2009
+ * October 20, 2009
  */
 public class DateUtils implements DateConstants {
 
@@ -41,7 +41,7 @@ public class DateUtils implements DateConstants {
     private static final int SANITY_CHECK_CUTOFF_YEAR = 1000;
 
     /**
-     * Returns a Date object based on input date & time parameters Defaults to today / now (when
+     * Returns a Date object based on input date &amp; time parameters Defaults to today / now (when
      * date / time are null)
      * 
      * @param date

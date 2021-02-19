@@ -17,6 +17,8 @@ public abstract class WeightingFunction {
     /**
      * Weight the counts (binned by second, so countsPerSecond[i] is destinations reachable in i - i + seconds)
      * and return the output of this weighting function as a _cumulative distribution_.
+     * @param countsPerSecond .
+     * @return . .
      */
     public abstract int[] apply (int[] countsPerSecond);
 

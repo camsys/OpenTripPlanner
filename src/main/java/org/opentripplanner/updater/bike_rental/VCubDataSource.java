@@ -23,8 +23,7 @@ import org.opentripplanner.util.NonLocalizedString;
  * Bike-rental station data source for the "Communauté d'Agglomération de Bordeaux" (CUB) VCub (aka
  * V^3) bike-rental network.
  * 
- * URL: http://data.lacub.fr/wfs?key=<your-API-key>&request=getfeature&service=wfs&version=1.1.0&
- * typename=CI_VCUB_P&srsname=epsg:4326
+ * {@code URL: http://data.lacub.fr/wfs?key=<your-API-key>&request=getfeature&service=wfs&version=1.1.0&typename=CI_VCUB_P&srsname=epsg:4326 }
  * 
  * 
  * @author laurent

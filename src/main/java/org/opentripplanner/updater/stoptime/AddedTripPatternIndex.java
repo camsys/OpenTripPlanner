@@ -30,7 +30,7 @@ import java.util.Set;
 
 /**
  * Index added trip patterns for a TimetableSnapshot by trip ID and service date, and by stop.
- * This superceded a Map<TripIdAndServiceDate, TripPattern> that was in TimetableSnapshot
+ * This superceded a {@code Map<TripIdAndServiceDate, TripPattern> } that was in TimetableSnapshot
  */
 public class AddedTripPatternIndex {
 

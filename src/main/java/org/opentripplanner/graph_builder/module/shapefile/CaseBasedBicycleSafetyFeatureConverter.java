@@ -96,7 +96,7 @@ public class CaseBasedBicycleSafetyFeatureConverter implements SimpleFeatureConv
      * Maps the direction value to a number representing the direction that the bike safety feature
      * goes. The number is 1 for a safety feature that goes with the road geometry, 2 for a safety
      * feature that goes against it, and 3 for a safety feature that goes both ways.
-     * @param directionValues
+     * @param directionValues .
      */
     public void setDirection(Map<String, String> directionValues) {
         for (Map.Entry<String, String> entry : directionValues.entrySet()) {

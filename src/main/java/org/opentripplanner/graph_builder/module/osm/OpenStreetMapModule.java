@@ -14,10 +14,10 @@
 package org.opentripplanner.graph_builder.module.osm;
 
 import com.google.common.collect.Iterables;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.LineString;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.common.TurnRestriction;
 import org.opentripplanner.common.geometry.GeometryUtils;
 import org.opentripplanner.common.geometry.SphericalDistanceLibrary;
@@ -128,6 +128,7 @@ public class OpenStreetMapModule implements GraphBuilderModule {
 
     /**
      * The source for OSM map data
+     * @param provider .
      */
     public void setProvider(OpenStreetMapProvider provider) {
         _providers.add(provider);
@@ -135,6 +136,7 @@ public class OpenStreetMapModule implements GraphBuilderModule {
 
     /**
      * Multiple sources for OSM map data
+     * @param providers .
      */
     public void setProviders(List<OpenStreetMapProvider> providers) {
         _providers.addAll(providers);
@@ -158,6 +160,7 @@ public class OpenStreetMapModule implements GraphBuilderModule {
 
     /**
      * Construct and set providers all at once.
+     * @param providers .
      */
     public OpenStreetMapModule(List<OpenStreetMapProvider> providers) {
         this.setProviders(providers);

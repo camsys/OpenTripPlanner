@@ -1,11 +1,11 @@
 package org.opentripplanner.routing.graph;
 
-import com.conveyal.r5.diff.ObjectDiffer;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.Polygon;
+import com.conveyal.object_differ.ObjectDiffer;
 import org.geotools.util.WeakValueHashMap;
 import org.jets3t.service.io.TempFile;
 import org.junit.Test;
+import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.Polygon;
 import org.opentripplanner.ConstantsForTests;
 import org.opentripplanner.common.geometry.HashGridSpatialIndex;
 import org.opentripplanner.routing.impl.DefaultStreetVertexIndexFactory;
@@ -13,9 +13,12 @@ import org.opentripplanner.routing.trippattern.Deduplicator;
 import org.opentripplanner.routing.vertextype.TransitStation;
 
 import java.io.File;
+import java.lang.ref.SoftReference;
+import java.lang.reflect.Method;
 import java.util.BitSet;
 import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertFalse;
@@ -83,11 +86,20 @@ public class GraphSerializationTest {
         // We can exclude relatively few classes here, because the object trees are of course perfectly identical.
         // We do skip edge lists - otherwise we trigger a depth-first search of the graph causing a stack overflow.
         // We also skip some deeply buried weak-value hash maps, which refuse to tell you what their keys are.
+        // Skip comparing the LOG and log objects
+        // - they seem to cause problems in Java 11 during the comparison that cause the max recursions to be reached
         ObjectDiffer objectDiffer = new ObjectDiffer();
-        objectDiffer.ignoreFields("incoming", "outgoing");
+        objectDiffer.ignoreFields("incoming", "outgoing", "LOG", "log");
         objectDiffer.useEquals(BitSet.class, LineString.class, Polygon.class);
         // ThreadPoolExecutor contains a weak reference to a very deep chain of Finalizer instances.
-        objectDiffer.ignoreClasses(WeakValueHashMap.class, ThreadPoolExecutor.class);
+        // Method instances usually are part of a proxy which are totally un-reflectable in Java 11
+        objectDiffer.ignoreClasses(
+                WeakValueHashMap.class,
+                ThreadPoolExecutor.class,
+                Method.class,
+                JarFile.class,
+                SoftReference.class,
+                Class.class);
         // This setting is critical to perform a deep test of an object against itself.
         objectDiffer.enableComparingIdenticalObjects();
         objectDiffer.compareTwoObjects(originalGraph, originalGraph);

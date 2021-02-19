@@ -17,7 +17,7 @@ import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.vividsolutions.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Coordinate;
 
 /**
  * Class describing a location provided by clients of routing. Used to describe end points (origin, destination) of a routing request as well as any
@@ -67,10 +67,12 @@ public class GenericLocation implements Cloneable, Serializable {
     private static final String _doublePattern = "-{0,1}\\d+(\\.\\d+){0,1}";
 
     // We want to ignore any number of non-digit characters at the beginning of the string, except
-    // that signs are also non-digits. So ignore any number of non-(digit or sign or decimal point). 
-    private static final Pattern _latLonPattern = Pattern.compile("[^[\\d&&[-|+|.]]]*(" + _doublePattern
+    // that signs are also non-digits. So ignore any number of non-(digit or sign or decimal point).
+    // Regex has been rewritten following https://bugs.openjdk.java.net/browse/JDK-8189343
+    // from "[^[\\d&&[-|+|.]]]*(" to "[\\D&&[^-+.]]*("
+    private static final Pattern _latLonPattern = Pattern.compile("[\\D&&[^-+.]]*(" + _doublePattern
             + ")(\\s*,\\s*|\\s+)(" + _doublePattern + ")\\D*");
-    
+
     private static final Pattern _headingPattern = Pattern.compile("\\D*heading=("
             + _doublePattern + ")\\D*");
 
@@ -86,6 +88,8 @@ public class GenericLocation implements Cloneable, Serializable {
     
     /**
      * Constructs a GenericLocation with coordinates only.
+     * @param lat .
+     * @param lng .
      */
     public GenericLocation(double lat, double lng) {
         this.name = "";
@@ -96,6 +100,7 @@ public class GenericLocation implements Cloneable, Serializable {
     
     /**
      * Constructs a GenericLocation with coordinates only.
+     * @param coord .
      */
     public GenericLocation(Coordinate coord) {
         this(coord.y, coord.x);
@@ -103,6 +108,9 @@ public class GenericLocation implements Cloneable, Serializable {
     
     /**
      * Constructs a GenericLocation with coordinates and heading.
+     * @param lat .
+     * @param lng .
+     * @param heading .
      */
     public GenericLocation(double lat, double lng, double heading) {
         this.name = "";
@@ -120,6 +128,9 @@ public class GenericLocation implements Cloneable, Serializable {
      * which will be interpreted during routing context construction as a vertex label within the 
      * graph for the appropriate routerId (by StreetVertexIndexServiceImpl.getVertexForLocation()).
      * TODO: Perhaps the interpretation as a vertex label should be done here for clarity.
+     *
+     * @param name .
+     * @param place .
      */
     public GenericLocation(String name, String place) {
         this.name = name;
@@ -149,7 +160,7 @@ public class GenericLocation implements Cloneable, Serializable {
     /**
      * Same as above, but draws name and place string from a NamedPlace object.
      * 
-     * @param np
+     * @param np .
      */
     public GenericLocation(NamedPlace np) {
         this(np.name, np.place);
@@ -158,8 +169,8 @@ public class GenericLocation implements Cloneable, Serializable {
     /**
      * Creates the GenericLocation by parsing a "name::place" string, where "place" is a latitude,longitude string or a vertex ID.
      * 
-     * @param input
-     * @return
+     * @param input .
+     * @return . .
      */
     public static GenericLocation fromOldStyleString(String input) {
         String name = "";
@@ -174,25 +185,29 @@ public class GenericLocation implements Cloneable, Serializable {
     
     /**
      * Returns true if this.heading is not null.
-     * @return
+     * @return .
      */
     public boolean hasHeading() {
         return heading != null;
     }
     
-    /** Returns true if this.name is set. */
+    /** Returns true if this.name is set.
+     * @return . .
+     */
     public boolean hasName() {
         return name != null && !name.isEmpty();
     }
     
-    /** Returns true if this.place is set. */
+    /** Returns true if this.place is set.
+     * @return . .
+     * */
     public boolean hasPlace() {
         return place != null && !place.isEmpty();
     }
     
     /**
      * Returns true if getCoordinate() will not return null.
-     * @return
+     * @return . .
      */
     public boolean hasCoordinate() {
         return this.lat != null && this.lng != null;
@@ -200,7 +215,7 @@ public class GenericLocation implements Cloneable, Serializable {
     
     /**
      * Returns true if getEdgeId would not return null.
-     * @return
+     * @return . .
      */
     public boolean hasEdgeId() {
         return this.edgeId != null;
@@ -212,7 +227,7 @@ public class GenericLocation implements Cloneable, Serializable {
         
     /**
      * Returns this as a Coordinate object.
-     * @return
+     * @return . .
      */
     public Coordinate getCoordinate() {
         if (this.lat == null || this.lng == null) {
@@ -226,6 +241,8 @@ public class GenericLocation implements Cloneable, Serializable {
      * 
      * TODO(flamholz): clients should stop relying on these being strings and then we can return a string here that fully represents the contents of
      * the object.
+     *
+     * @return . .
      */
     @Override
     public String toString() {
@@ -242,6 +259,8 @@ public class GenericLocation implements Cloneable, Serializable {
     
     /**
      * Returns a descriptive string that has the information that I wish toString() returned.
+     *
+     * @return . .
      */
     public String toDescriptiveString() {
         StringBuilder sb = new StringBuilder();

@@ -41,9 +41,9 @@ public abstract class ConnectivityTemplate <T> {
      * For the given initial graph, starting from tstop, using the date/time in state, traverse the graph
      * following only pathway edges that satisfy canUsePathway. Return if testForEarlyReturn is true, otherwise
      * return once all useable pathways have ben traversed.
-     * @param state
-     * @param tstop
-     * @return object of type <T>
+     * @param state .
+     * @param tstop .
+     * @return object of type &lt;T&gt;
      */
     public T computeConnectivityResult(State state, TransitStop tstop) {
         Set<Vertex> seen = new HashSet<>();
@@ -98,30 +98,30 @@ public abstract class ConnectivityTemplate <T> {
 
     /**
      *
-     * @param tstop
-     * @param vertices
-     * @param accessibles
-     * @param alerts
-     * @param state
-     * @param links
-     * @param earlyReturn
-     * @return object of type <T>
+     * @param tstop .
+     * @param vertices .
+     * @param accessibles .
+     * @param alerts .
+     * @param state .
+     * @param links .
+     * @param earlyReturn .
+     * @return object of type &lt;T&gt;
      */
     abstract protected T buildResult(TransitStop tstop, Set<Vertex> vertices, Set<Vertex> accessibles,
                                      List<Alert> alerts, State state, Set<PathwayEdge> links, boolean earlyReturn);
 
     /**
      *
-     * @param v
+     * @param v .
      * @return true or false
      */
     abstract protected boolean testForEarlyReturn(Vertex v);
 
     /**
      *
-     * @param state
-     * @param pathway
-     * @param alerts
+     * @param state .
+     * @param pathway .
+     * @param alerts .
      * @return return true or false
      */
     abstract protected boolean canUsePathway(State state, PathwayEdge pathway, List<Alert> alerts);

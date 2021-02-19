@@ -39,14 +39,19 @@ public class ScenarioResource {
         scenarioStore = router.scenarioStore;
     }
 
-    /** Return a list of all scenarios defined for this router. */
+    /** Return a list of all scenarios defined for this router.
+     * @return . .
+     * */
     @GET
     public javax.ws.rs.core.Response getScenarioDescriptions () {
         return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.OK)
                 .entity(scenarioStore.getDescriptions()).build();
     }
 
-    /** Return specific scenario defined for this router by ID. */
+    /** Return specific scenario defined for this router by ID.
+     * @param scenarioId .
+     * @return . .
+     * */
     @GET
     @Path("/{scenarioId}")
     public javax.ws.rs.core.Response getScenario (@PathParam("scenarioId") String scenarioId) {

@@ -1,6 +1,6 @@
 package org.opentripplanner.analyst;
 
-import com.vividsolutions.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Coordinate;
 import gnu.trove.iterator.TObjectIntIterator;
 import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
@@ -49,12 +49,17 @@ public class TimeSurface implements Serializable {
     public String description;
     public double walkSpeed = 1.33; // meters/sec TODO could we just store the whole routing request instead of params?
 
-    /** Create a time surface with a sample grid */
+    /** Create a time surface with a sample grid
+     * @param spt .
+     */
     public TimeSurface(ShortestPathTree spt) {
         this(spt, true);
     }
     
-    /** Create a time surface, optionally making a sample grid */
+    /** Create a time surface, optionally making a sample grid
+     * @param spt .
+     * @param makeSampleGrid .
+     */
     public TimeSurface(ShortestPathTree spt, boolean makeSampleGrid) {
 
         params = spt.getOptions().parameters;
@@ -91,7 +96,9 @@ public class TimeSurface implements Serializable {
             makeSampleGrid(spt);
     }
 
-    /** Make a max or min timesurface from propagated times in a ProfileRouter. */
+    /** Make a max or min timesurface from propagated times in a ProfileRouter.
+     * @param profileRouter .
+     */
     public TimeSurface (AnalystProfileRouterPrototype profileRouter) {
         ProfileRequest req = profileRouter.request;
         lon = req.fromLon;
@@ -103,7 +110,9 @@ public class TimeSurface implements Serializable {
         walkSpeed = profileRouter.request.walkSpeed;
     }
 
-    /** Make a max or min timesurface from propagated times in a ProfileRouter. */
+    /** Make a max or min timesurface from propagated times in a ProfileRouter.
+     * @param profileRouter .
+     */
     public TimeSurface (ProfileRouter profileRouter) {
         // TODO merge with the version that takes AnalystProfileRouterPrototype, they are exactly the same.
         // But those two classes are not in the same inheritance hierarchy.
@@ -117,7 +126,9 @@ public class TimeSurface implements Serializable {
         walkSpeed = profileRouter.request.walkSpeed;
     }
     
-    /** Make a max or min timesurface from propagated times in a ProfileRouter. */
+    /** Make a max or min timesurface from propagated times in a ProfileRouter.
+     * @param profileRouter .
+     */
     public TimeSurface (RoundBasedProfileRouter profileRouter) {
         ProfileRequest req = profileRouter.request;
         lon = req.fromLon;

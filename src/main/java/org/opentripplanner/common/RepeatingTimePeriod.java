@@ -18,8 +18,8 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 /**
- * Represents a repeating time period, used for opening hours &c.
- * For instance: Monday - Friday 8AM to 8PM, Satuday 10AM to 5PM, Sunday closed.
+ * Represents a repeating time period, used for opening hours &amp;c.
+ * For instance: Monday - Friday 8AM to 8PM, Saturday 10AM to 5PM, Sunday closed.
  * For now it is week-based so doesn't handle every possible case, but since it is encapsulated 
  * that could conceivably be changed.
  * 
@@ -52,11 +52,11 @@ public class RepeatingTimePeriod implements Serializable {
    
     /**
      * Parse the time specification from an OSM turn restriction
-     * @param day_on
-     * @param day_off
-     * @param hour_on
-     * @param hour_off
-     * @return
+     * @param day_on .
+     * @param day_off .
+     * @param hour_on .
+     * @param hour_off .
+     * @return . .
      */
     public static RepeatingTimePeriod parseFromOsmTurnRestriction (String day_on, String day_off, 
             String hour_on, String hour_off) {
@@ -116,7 +116,8 @@ public class RepeatingTimePeriod implements Serializable {
     
     /**
      * Return seconds before or after noon for the given hour. 
-     * @param hour
+     * @param hour .
+     * @return . .
      */
     private static int parseHour(String hour) {
         String[] parsed = hour.split(":");

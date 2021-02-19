@@ -48,6 +48,9 @@ public class UnifiedGridCoverage extends AbstractCoverage {
      * It would be nice if we could construct this unified coverage with zero sub-coverages and add all sub-coverages
      * in the same way. However, the superclass constructor (AbstractCoverage) needs a coverage to copy properties from.
      * So the first sub-coverage needs to be passed in at construction time.
+     * @param name .
+     * @param coverage .
+     * @param datums .
      */
     protected UnifiedGridCoverage(CharSequence name, Coverage coverage, List<VerticalDatum> datums) {
         super(name, coverage);

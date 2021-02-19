@@ -2,9 +2,9 @@ package org.opentripplanner.graph_builder.module;
 
 import com.beust.jcommander.internal.Lists;
 import com.beust.jcommander.internal.Sets;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LineString;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LineString;
 
 import org.opentripplanner.api.resource.CoordinateArrayListSequence;
 import org.opentripplanner.api.resource.SimpleIsochrone;
@@ -56,6 +56,8 @@ public class NearbyStopFinder {
     /**
      * Construct a NearbyStopFinder for the given graph and search radius, choosing whether to search via the street
      * network or straight line distance based on the presence of OSM street data in the graph.
+     * @param graph .
+     * @param radiusMeters .
      */
     public NearbyStopFinder(Graph graph, double radiusMeters) {
         this (graph, radiusMeters, graph.hasStreets);
@@ -63,6 +65,8 @@ public class NearbyStopFinder {
 
     /**
      * Construct a NearbyStopFinder for the given graph and search radius.
+     * @param graph .
+     * @param radiusMeters .
      * @param useStreets if true, search via the street network instead of using straight-line distance.
      */
     public NearbyStopFinder(Graph graph, double radiusMeters, boolean useStreets) {
@@ -84,6 +88,9 @@ public class NearbyStopFinder {
      * Note that the result will include the origin vertex if it is an instance of TransitStop.
      * This is intentional: we don't want to return the next stop down the line for trip patterns that pass through the
      * origin vertex.
+     *
+     * @param vertex .
+     * @return . .
      */
     public Set<StopAtDistance> findNearbyStopsConsideringPatterns (Vertex vertex) {
 
@@ -126,6 +133,9 @@ public class NearbyStopFinder {
      * Use the correct method depending on whether the graph has street data or not.
      * If the origin vertex is a TransitStop, the result will include it; this characteristic is essential for
      * associating the correct stop with each trip pattern in the vicinity.
+     *
+     * @param vertex .
+     * @return . .
      */
     public List<StopAtDistance> findNearbyStops (Vertex vertex) {
         return useStreets ? findNearbyStopsViaStreets(vertex) : findNearbyStopsEuclidean(vertex);
@@ -135,6 +145,8 @@ public class NearbyStopFinder {
     /**
      * Return all stops within a certain radius of the given vertex, using network distance along streets.
      * If the origin vertex is a TransitStop, the result will include it.
+     * @param originVertex .
+     * @return . .
      */
     public List<StopAtDistance> findNearbyStopsViaStreets (Vertex originVertex) {
 
@@ -166,6 +178,9 @@ public class NearbyStopFinder {
     /**
      * Return all stops within a certain radius of the given vertex, using straight-line distance independent of streets.
      * If the origin vertex is a TransitStop, the result will include it.
+     *
+     * @param originVertex .
+     * @return . .
      */
     public List<StopAtDistance> findNearbyStopsEuclidean (Vertex originVertex) {
         List<StopAtDistance> stopsFound = Lists.newArrayList();
@@ -211,6 +226,9 @@ public class NearbyStopFinder {
     /**
      * Given a State at a TransitStop, bundle the TransitStop together with information about how far away it is
      * and the geometry of the path leading up to the given State.
+     *
+     * @param state .
+     * @return . .
      *
      * TODO this should probably be merged with similar classes in Profile routing.
      */

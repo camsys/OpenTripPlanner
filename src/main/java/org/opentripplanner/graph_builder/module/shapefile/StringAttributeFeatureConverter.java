@@ -44,6 +44,7 @@ public class StringAttributeFeatureConverter extends AttributeFeatureConverter<S
 
     /**
      * The default value to assign to features with null or empty (" ") values.
+     * @param defaultValue .
      */
     public void setDefaultValue(String defaultValue) {
         _defaultValue = defaultValue;

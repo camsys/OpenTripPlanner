@@ -40,7 +40,7 @@ import org.opentripplanner.routing.vertextype.PatternDepartVertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vividsolutions.jts.geom.LineString;
+import org.locationtech.jts.geom.LineString;
 import java.util.Locale;
 
 /**
@@ -58,9 +58,9 @@ import java.util.Locale;
  * C. In Timetables. Like TripTimes, this option also allows for real-time updates to interlining information.
  * D. TripPatterns. This does not allow full real-time updates to block and interlining behavior.
  *
- * Another option is to store the Trip->Trip mapping at the Graph level, and use the source and target vertices of the
+ * Another option is to store the Trip→Trip mapping at the Graph level, and use the source and target vertices of the
  * interline dwell edges to know which pattern should be used for resolving TripTimes. However, this will get in the
- * way of eventually eliminating transit edges. This could be a Guava BiMap<Trip, Trip>.
+ * way of eventually eliminating transit edges. This could be a Guava BiMap&lt;Trip, Trip&gt;.
  *
  * Links to previous and next trips could be stored directly as fields in TripTimes, or in a map.
  * Previous/next TripTimes in fields will not work because real-time updates to any one TripTimes will

@@ -25,7 +25,7 @@ public class UnconnectedStop extends AbstractStopTester {
 
 
     /**
-     * @retrun return true if the stop is not connected to any street
+     * @return return true if the stop is not connected to any street
      */
     @Override
     public boolean fulfillDemands(TransitStop ts, Graph graph) {

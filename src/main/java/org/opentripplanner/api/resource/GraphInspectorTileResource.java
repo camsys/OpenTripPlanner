@@ -56,7 +56,7 @@ import org.opentripplanner.standalone.Router;
  * Tile rendering goes through TileRendererManager which select the appropriate renderer for the
  * given layer.
  * 
- * @see TileRendererManager
+ * @see org.opentripplanner.inspector.TileRendererManager
  * @see TileRenderer
  * 
  * @author laurent
@@ -111,7 +111,7 @@ public class GraphInspectorTileResource extends RoutingResource {
      * Gets all layer names
      * 
      * Used in fronted to create layer chooser
-     * @return 
+     * @return . .
      */
     @GET @Path("layers")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML + Q, MediaType.TEXT_XML + Q })

@@ -23,10 +23,10 @@ import static org.apache.commons.math3.util.FastMath.toRadians;
 
 import org.apache.commons.math3.util.FastMath;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.Point;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.Point;
 
 public abstract class SphericalDistanceLibrary {
 
@@ -90,6 +90,7 @@ public abstract class SphericalDistanceLibrary {
     /**
      * Compute the (approximated) length of a polyline, with known cos(lat).
      * @param lineString The polyline in (longitude, latitude degrees).
+     * @param cosLat .
      * @return The (approximated) length, in meters, of the linestring.
      */
     public static final double fastLength(LineString lineString, double cosLat) {
@@ -98,7 +99,7 @@ public abstract class SphericalDistanceLibrary {
 
     /**
      * Equirectangular project a polyline.
-     * @param lineString
+     * @param lineString .
      * @param cosLat cos(lat) of the projection center point.
      * @return The projected polyline. Coordinates in radians.
      */
@@ -119,6 +120,11 @@ public abstract class SphericalDistanceLibrary {
     /**
      * Compute an (approximated) distance between two points, with a known cos(lat).
      * Be careful, this is approximated and never check for the validity of input cos(lat).
+     * @param lat1 .
+     * @param lon1 .
+     * @param lat2 .
+     * @param lon2 .
+     * @return . .
      */
     public static final double fastDistance(double lat1, double lon1, double lat2, double lon2) {
         return fastDistance(lat1, lon1, lat2, lon2, RADIUS_OF_EARTH_IN_M);
@@ -146,6 +152,13 @@ public abstract class SphericalDistanceLibrary {
      * Approximated, fast and under-estimated equirectangular distance between two points.
      * Works only for small delta lat/lon, fall-back on exact distance if not the case.
      * See: http://www.movable-type.co.uk/scripts/latlong.html
+     *
+     * @param lat1 .
+     * @param lon1 .
+     * @param lat2 .
+     * @param lon2 .
+     * @param radius .
+     * @return . .
      */
     public static final double fastDistance(double lat1, double lon1, double lat2, double lon2,
             double radius) {

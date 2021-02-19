@@ -54,16 +54,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Files;
-import com.vividsolutions.jts.geom.MultiPolygon;
+import org.locationtech.jts.geom.MultiPolygon;
 
 /**
  * Return isochrone geometry as a set of GeoJSON or zipped-shapefile multi-polygons.
  * 
  * Example of request:
  * 
- * <code>
+ * {@code
  * http://localhost:8080/otp-rest-servlet/ws/isochrone?routerId=bordeaux&algorithm=accSampling&fromPlace=47.059,-0.880&date=2013/10/01&time=12:00:00&maxWalkDistance=1000&mode=WALK,TRANSIT&cutoffSec=1800&cutoffSec=3600
- * </code>
+ * }
  * 
  * @author laurent
  */
@@ -150,6 +150,8 @@ public class LIsochrone extends RoutingResource {
     /**
      * Create a geotools feature collection from a list of isochrones in the OTPA internal format.
      * Once in a FeatureCollection, they can for example be exported as GeoJSON.
+     * @param isochrones .
+     * @return . .
      */
     public static SimpleFeatureCollection makeContourFeatures(List<IsochroneData> isochrones) {
         DefaultFeatureCollection featureCollection = new DefaultFeatureCollection(null,
@@ -167,8 +169,8 @@ public class LIsochrone extends RoutingResource {
      * Generic method to compute isochrones. Parse the request, call the adequate builder, and
      * return a list of generic isochrone data.
      * 
-     * @return
-     * @throws Exception
+     * @return . .
+     * @throws Exception .
      */
     public List<IsochroneData> computeIsochrone() throws Exception {
 

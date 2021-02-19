@@ -84,6 +84,8 @@ public class WayPropertySet {
     /**
      * Applies the WayProperties whose OSMPicker best matches this way. In addition, WayProperties that are mixins
      * will have their safety values applied if they match at all.
+     * @param way .
+     * @return .
      */
     public WayProperties getDataForWay(OSMWithTags way) {
         WayProperties leftResult = defaultProperties;
@@ -188,6 +190,9 @@ public class WayPropertySet {
     
     /**
      * Calculate the automobile speed, in meters per second, for this way.
+     * @param way .
+     * @param back .
+     * @return .
      */
     public float getCarSpeedForWay(OSMWithTags way, boolean back) {
         // first, check for maxspeed tags
@@ -373,6 +378,10 @@ public class WayPropertySet {
 	/**
 	 * Note that the safeties here will be adjusted such that the safest street
 	 * has a safety value of 1, with all others scaled proportionately.
+     * @param spec .
+     * @param permission .
+     * @param safety .
+     * @param safetyBack .
 	 */
 	public void setProperties(String spec,
 			StreetTraversalPermission permission, double safety, double safetyBack) {

@@ -27,7 +27,10 @@ public class ResultSetDelta extends ResultSet {
         buildDeltaHistograms(samples1.pset);
     }
     
-    /** build a resultsetdelta from two resultsetswithtimes that have already been precalculated */
+    /** build a resultsetdelta from two resultsetswithtimes that have already been precalculated
+     * @param result1 .
+     * @param result2 .
+     */
     public ResultSetDelta(ResultSet result1, ResultSet result2) {
         if (result1.times.length != result2.times.length)
             throw new IllegalArgumentException("Result sets do not match when constructing delta!");

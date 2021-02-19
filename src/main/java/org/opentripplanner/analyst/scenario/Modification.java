@@ -24,10 +24,14 @@ import java.util.Set;
 })
 public abstract class Modification implements Serializable {
 
-    /** Distinguish between modification types when a list of Modifications are serialized out as JSON. */
+    /** Distinguish between modification types when a list of Modifications are serialized out as JSON.
+     * @return . .
+     */
     public abstract String getType();
 
-    /** Do nothing */
+    /** Do nothing
+     * @param type .
+     */
     public final void setType (String type) {
         /* do nothing */
     }

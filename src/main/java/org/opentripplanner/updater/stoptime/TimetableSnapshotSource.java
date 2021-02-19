@@ -69,7 +69,7 @@ public class TimetableSnapshotSource {
     /**
      * If a timetable snapshot is requested less than this number of milliseconds after the previous
      * snapshot, just return the same one. Throttles the potentially resource-consuming task of
-     * duplicating a TripPattern -> Timetable map and indexing the new Timetables.
+     * duplicating a TripPattern → Timetable map and indexing the new Timetables.
      */
     public int maxSnapshotFrequency = 1000; // msec
 

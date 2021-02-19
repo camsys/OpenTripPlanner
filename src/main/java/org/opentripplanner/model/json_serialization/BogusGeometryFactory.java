@@ -13,7 +13,7 @@
 
 package org.opentripplanner.model.json_serialization;
 
-import com.vividsolutions.jts.geom.Geometry;
+import org.locationtech.jts.geom.Geometry;
 
 /**
  * Enunciate requires that we actually be able to construct objects, but 

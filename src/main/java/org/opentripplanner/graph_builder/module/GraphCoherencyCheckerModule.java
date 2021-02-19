@@ -32,12 +32,16 @@ import org.slf4j.LoggerFactory;
 public class GraphCoherencyCheckerModule implements GraphBuilderModule {
 
 
-    /** An set of ids which identifies what stages this graph builder provides (i.e. streets, elevation, transit) */
+    /** An set of ids which identifies what stages this graph builder provides (i.e. streets, elevation, transit)
+     * @return . .
+     * */
     public List<String> provides() {
         return Collections.emptyList();
     }
 
-    /** A list of ids of stages which must be provided before this stage */
+    /** A list of ids of stages which must be provided before this stage
+     * @return . .
+     * */
     public List<String> getPrerequisites() {
         return Arrays.asList("streets");
     }

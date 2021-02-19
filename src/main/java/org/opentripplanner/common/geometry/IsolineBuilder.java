@@ -13,7 +13,7 @@
 
 package org.opentripplanner.common.geometry;
 
-import com.vividsolutions.jts.geom.Geometry;
+import org.locationtech.jts.geom.Geometry;
 
 /**
  * Generic interface for a class that compute an isoline out of a TZ 2D "field".

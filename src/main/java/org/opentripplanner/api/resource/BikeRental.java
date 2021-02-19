@@ -34,7 +34,7 @@ import org.opentripplanner.routing.bike_rental.BikeRentalStationService;
 import org.opentripplanner.standalone.OTPServer;
 import org.opentripplanner.standalone.Router;
 
-import com.vividsolutions.jts.geom.Envelope;
+import org.locationtech.jts.geom.Envelope;
 import org.opentripplanner.util.ResourceBundleSingleton;
 
 @Ignore
@@ -79,7 +79,11 @@ public class BikeRental {
         return brsl;
     }
 
-    /** Envelopes are in latitude, longitude format */
+    /** Envelopes are in latitude, longitude format
+     * @param lowerLeft .
+     * @param upperRight .
+     * @return . .
+     * */
     public static Envelope getEnvelope(String lowerLeft, String upperRight) {
         String[] lowerLeftParts = lowerLeft.split(",");
         String[] upperRightParts = upperRight.split(",");

@@ -53,7 +53,11 @@ public class TileCache extends CacheLoader<TileRequest, Tile>
         //return new DynamicTile(req, sampleFactory);
     }
 
-    /** delegate to the tile LoadingCache */
+    /** delegate to the tile LoadingCache
+     * @param req .
+     * @throws Exception .
+     * @return . .
+     * */
     public Tile get(TileRequest req) throws Exception {
         return tileCache.get(req);
     }

@@ -10,6 +10,9 @@ import java.util.Collection;
  * A filter that is applied to entire trip patterns at once.
  */
 public abstract class TripPatternFilter extends TimetableFilter {
-    /** Apply this to a trip pattern. Be sure to make a protective copy! */
+    /** Apply this to a trip pattern. Be sure to make a protective copy!
+     * @param original .
+     * @return . .
+     * */
     public abstract Collection<TripPattern> apply (TripPattern original);
 }

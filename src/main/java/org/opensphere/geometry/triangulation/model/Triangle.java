@@ -168,7 +168,7 @@ public class Triangle {
 
 	/**
 	 * Add an edge to the triangle.
-	 * 
+	 * @param edge .
 	 * @return
 	 * 		true if added, false otherwise
 	 */
@@ -178,7 +178,7 @@ public class Triangle {
 
 	/**
 	 * Add edges to the triangle.
-	 * 
+	 * @param edges .
 	 * @return
 	 * 		true if added, false otherwise
 	 */
@@ -188,7 +188,7 @@ public class Triangle {
 
 	/**
 	 * Remove an edge of the triangle.
-	 * 
+	 * @param edge .
 	 * @return
 	 * 		true if removed, false otherwise
 	 */
@@ -198,7 +198,7 @@ public class Triangle {
 
 	/**
 	 * Remove edges of the triangle.
-	 * 
+	 * @param edges .
 	 * @return
 	 * 		true if removed, false otherwise
 	 */
@@ -209,7 +209,7 @@ public class Triangle {
 	
 	/**
 	 * Add a neighbour triangle to the triangle.
-	 * 
+	 * @param triangle .
 	 * @return
 	 * 		true if added, false otherwise
 	 */
@@ -219,7 +219,7 @@ public class Triangle {
 
 	/**
 	 * Add neighbour triangles to the triangle.
-	 * 
+	 * @param triangles .
 	 * @return
 	 * 		true if added, false otherwise
 	 */
@@ -229,7 +229,7 @@ public class Triangle {
 
 	/**
 	 * Remove a neighbour triangle of the triangle.
-	 * 
+	 * @param triangle .
 	 * @return
 	 * 		true if removed, false otherwise
 	 */
@@ -239,7 +239,7 @@ public class Triangle {
 
 	/**
 	 * Remove neighbour triangles of the triangle.
-	 * 
+	 * @param triangles .
 	 * @return
 	 * 		true if removed, false otherwise
 	 */

@@ -26,6 +26,8 @@ public interface WayPropertySetSource {
 	/**
 	 * Return the given WayPropertySetSource or throws IllegalArgumentException
 	 * if an unkown type is specified
+	 * @param type .
+	 * @return . .
 	 */
 	public static WayPropertySetSource fromConfig(String type) {
 		// type is set to "default" by GraphBuilderParameters if not provided in

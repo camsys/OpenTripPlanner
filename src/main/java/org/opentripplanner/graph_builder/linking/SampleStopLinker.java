@@ -3,9 +3,9 @@ package org.opentripplanner.graph_builder.linking;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LineString;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.analyst.core.Sample;
 import org.opentripplanner.analyst.request.SampleFactory;
 import org.opentripplanner.common.geometry.GeometryUtils;
@@ -53,6 +53,8 @@ public class SampleStopLinker {
      * If you're not generating transfers via the street network there is no need to make
      * transfers at this stage. But if you're not generating transfers via the street network,
      * why are you using this module at all?
+     *
+     * @param makeTransfers .
      */
     public void link (boolean makeTransfers) {
         if (makeTransfers)

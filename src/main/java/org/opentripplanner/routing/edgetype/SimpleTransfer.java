@@ -16,7 +16,7 @@ package org.opentripplanner.routing.edgetype;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.vertextype.TransitStop;
 
-import com.vividsolutions.jts.geom.LineString;
+import org.locationtech.jts.geom.LineString;
 
 import java.util.List;
 

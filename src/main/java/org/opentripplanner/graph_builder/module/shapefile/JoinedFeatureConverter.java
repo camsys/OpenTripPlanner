@@ -125,6 +125,7 @@ public class JoinedFeatureConverter<T> implements SimpleFeatureConverter<T> {
 
     /**
      * The name of the attribute in the joined feature source to use as the join key.
+     * @param joinedKey .
      */
     public void setJoinedKey(String joinedKey) {
         this.joinedKey = joinedKey;
@@ -132,6 +133,7 @@ public class JoinedFeatureConverter<T> implements SimpleFeatureConverter<T> {
 
     /**
      * The name of the attribute in the main feature source to use as the join key.
+     * @param mainKey .
      */
     public void setMainKey(String mainKey) {
         this.mainKey = mainKey;

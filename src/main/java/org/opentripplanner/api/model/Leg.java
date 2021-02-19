@@ -340,6 +340,7 @@ public class Leg {
 
     /**
      * The leg's duration in seconds
+     * @return . .
      */
     @JsonSerialize
     public double getDuration() {

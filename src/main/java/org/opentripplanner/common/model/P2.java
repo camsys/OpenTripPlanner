@@ -17,8 +17,6 @@ import java.util.function.Function;
 
 /**
  * An ordered pair of objects of the same type
- *
- * @param <E>
  */
 public class P2<E> extends T2<E, E> {
 

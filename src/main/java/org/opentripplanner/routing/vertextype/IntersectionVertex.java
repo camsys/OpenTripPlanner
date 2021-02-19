@@ -30,7 +30,7 @@ public class IntersectionVertex extends StreetVertex {
     public boolean trafficLight;
 
     /**
-     * Is this a free-flowing intersection, i.e. should it have no delay at all? e.g., freeway ramps, &c.
+     * Is this a free-flowing intersection, i.e. should it have no delay at all? e.g., freeway ramps, &amp;c.
      */
     public boolean freeFlowing;
 

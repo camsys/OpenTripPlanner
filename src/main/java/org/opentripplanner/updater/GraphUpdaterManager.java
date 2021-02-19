@@ -175,7 +175,7 @@ public class GraphUpdaterManager {
      * @param runnable is a graph writer runnable
      * @throws ExecutionException
      * @throws InterruptedException
-     * @see GraphUpdaterManager.execute
+     * @see GraphUpdaterManager#execute
      */
     public void executeBlocking(GraphWriterRunnable runnable) throws InterruptedException,
             ExecutionException {

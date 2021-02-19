@@ -39,8 +39,7 @@ public class ShapefileStreetSchema {
 
     /**
      * Sets the converter which gets IDs from features.
-     * 
-     * @{see setIdAttribute}
+     * @param idConverter .
      */
     public void setIdConverter(SimpleFeatureConverter<String> idConverter) {
         this.idConverter = idConverter;
@@ -49,6 +48,7 @@ public class ShapefileStreetSchema {
     /**
      * The ID attribute is used to uniquely identify street segments. This is useful if a given
      * street segment appears multiple times in a shapefile.
+     * @param attributeName .
      */
     public void setIdAttribute(String attributeName) {
         this.idConverter = new AttributeFeatureConverter<String>(attributeName);
@@ -64,6 +64,7 @@ public class ShapefileStreetSchema {
 
     /**
      * The name converter gets the street name from a feature.
+     * @param nameConverter .
      */
     public void setNameConverter(SimpleFeatureConverter<String> nameConverter) {
         this.nameConverter = nameConverter;
@@ -73,7 +74,7 @@ public class ShapefileStreetSchema {
      * The permission converter gets the {@link StreetTraversalPermission} for a street segment and
      * its reverse.
      * 
-     * @return
+     * @return . .
      */
     public SimpleFeatureConverter<P2<StreetTraversalPermission>> getPermissionConverter() {
         return permissionConverter;
@@ -90,8 +91,8 @@ public class ShapefileStreetSchema {
      * bicycles, the safety factor is the number of miles you would have to bike on an ordinary
      * street to have the same odds of dying as if you biked one mile on this street. For example,
      * if bike lanes reduce risk by a factor of 3, the safety factor would be 0.33...
-     * 
-     * @return
+     *
+     * @param safetyConverter .
      */
     public void setBicycleSafetyConverter(SimpleFeatureConverter<P2<Double>> safetyConverter) {
         this.bicycleSafetyConverter = safetyConverter;
@@ -102,8 +103,8 @@ public class ShapefileStreetSchema {
     }
 
     /**
-     * @see setSlopeOverrideConverter
-     * @return
+     * @see ShapefileStreetSchema#setSlopeOverrideConverter
+     * @return . .
      */
     public SimpleFeatureConverter<Boolean> getSlopeOverrideConverter() {
         return slopeOverrideConverter;
@@ -113,7 +114,7 @@ public class ShapefileStreetSchema {
      * The slope override converter returns true if the slope found from NED is should be ignored
      * (for instance, on bridges and tunnels)
      * 
-     * @param slopeOverrideConverter
+     * @param slopeOverrideConverter .
      */
     public void setSlopeOverrideConverter(SimpleFeatureConverter<Boolean> slopeOverrideConverter) {
         this.slopeOverrideConverter = slopeOverrideConverter;
@@ -130,7 +131,7 @@ public class ShapefileStreetSchema {
     }
 
     /**
-     * @see setFeatureSelector
+     * @see ShapefileStreetSchema#setFeatureSelector
      * @return the current feature selector
      */
     public SimpleFeatureConverter<Boolean> getFeatureSelector() {

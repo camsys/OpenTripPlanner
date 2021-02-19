@@ -14,7 +14,9 @@ public class AgencyAndIdSerializer extends JsonSerializer<AgencyAndId> {
 
     public static final String SEPARATOR = ":";
 
-    /** This creates a Jackson module including both the serializer and deserializer for AgencyAndIds. */
+    /** This creates a Jackson module including both the serializer and deserializer for AgencyAndIds.
+     * @return . .
+     * */
     public static SimpleModule makeModule () {
         Version moduleVersion = new Version(1, 0, 0, null, null, null);
         SimpleModule module = new SimpleModule("OTP", moduleVersion);

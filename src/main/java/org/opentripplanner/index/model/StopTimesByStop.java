@@ -13,7 +13,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 package org.opentripplanner.index.model;
 
-import com.vividsolutions.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Coordinate;
 import org.onebusaway.gtfs.model.Stop;
 import org.opentripplanner.api.model.VehicleInfo;
 import org.opentripplanner.api.model.alertpatch.LocalizedAlert;

@@ -15,7 +15,9 @@ import java.io.IOException;
  * Serialize localDates to YYYY-MM-DD
  */
 public class JodaLocalDateSerializer extends JsonSerializer<LocalDate> {
-    /** Create a module including the serializer and deserializer for local dates */
+    /** Create a module including the serializer and deserializer for local dates
+     * @return . .
+     * */
     public static SimpleModule makeModule () {
         Version moduleVersion = new Version(1, 0, 0, null, null, null);
         SimpleModule module = new SimpleModule("LocalDate", moduleVersion);

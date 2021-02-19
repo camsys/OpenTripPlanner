@@ -40,6 +40,8 @@ public interface CustomNamer {
 
         /**
          * Create a custom namer if needed, return null if not found / by default.
+         * @param config .
+         * @return .
          */
         public static CustomNamer fromConfig(JsonNode config) {
             String type = null;

@@ -16,8 +16,8 @@ package org.opentripplanner.index;
 import com.beust.jcommander.internal.Lists;
 import com.beust.jcommander.internal.Sets;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Envelope;
 import com.webcohesion.enunciate.metadata.Ignore;
 import com.webcohesion.enunciate.metadata.rs.TypeHint;
 
@@ -132,6 +132,7 @@ public class IndexAPI {
 
     /**
      * Return all feed IDs represented in the graph
+     * @return  . .
      */
     @GET
     @Path("/feeds")
@@ -144,6 +145,7 @@ public class IndexAPI {
      * Return FeedInfo for a specific feed
      *
      * @param feedId ID of feed
+     * @return . .
      */
     @GET
     @Path("/feeds/{feedId}")
@@ -161,6 +163,7 @@ public class IndexAPI {
     * Return a list of all agencies in the graph for a particular feed.
     *
     * @param feedId ID of feed in question
+    * @return . .
     */
    @GET
    @Path("/agencies/{feedId}")
@@ -175,6 +178,7 @@ public class IndexAPI {
     *
     * @param agencyId agency to return data for
     * @param feedId feed to return data for
+    * @return . .
     */
    @GET
    @Path("/agencies/{feedId}/{agencyId}")
@@ -193,6 +197,7 @@ public class IndexAPI {
      *
      * @param agencyId agency to return data for
      * @param feedId feed to return data for
+     * @return . .
      */
     @GET
     @Path("/agencies/{feedId}/{agencyId}/routes")
@@ -220,6 +225,7 @@ public class IndexAPI {
     * Return specific transit stop in the graph, by ID.
     *
     * @param stopIdString stop in Agency:Stop ID format
+    * @return . .
     */
    @GET
    @Path("/stops/{stopId}")
@@ -250,6 +256,7 @@ public class IndexAPI {
     * @param debug include extra "debug" info on stop linking data
     * @param mode mode only return clusters with this mode. Valid values are TRAM, SUBWAY, RAIL, BUS, FERRY, CABLE_CAR, GONDOLA, FUNICULAR. (optional)
     * @param agencyId  only return clusters for this agency (optional)
+    * @return . .
     */
    @GET
    @Path("/stops")
@@ -347,6 +354,7 @@ public class IndexAPI {
     * Return all routes incident on a stop.
     *
     * @param stopId stop in Agency:Stop ID format
+    * @return . .
     */
    @GET
    @Path("/stops/{stopId}/routes")
@@ -365,6 +373,7 @@ public class IndexAPI {
     * Return all patterns which serve a particular stop.
     *
     * @param stopIdString stop in Agency:Stop ID format
+    * @return . .
     */
    @GET
    @Path("/stops/{stopId}/patterns")
@@ -386,6 +395,7 @@ public class IndexAPI {
      * @param numberOfDepartures Number of departures to fetch per pattern
      * @param omitNonPickups Omit arrival/departures at which the vehicle does not pick up
      *                       passengers.
+     * @return . .
      */
     @GET
     @Path("/stops/{stopId}/stoptimes")
@@ -407,6 +417,7 @@ public class IndexAPI {
      * @param stopIdString Stop ID in Agency:Stop ID format
      * @param omitNonPickups Omit arrival/departures at which the vehicle does not pick up
      *                       passengers.
+     * @return . .
      */
     @GET
     @Path("/stops/{stopId}/stoptimes/{date}")
@@ -540,6 +551,7 @@ public class IndexAPI {
      * Return the generated transfers a stop in the graph, by stop ID
      *
      * @param stopIdString stop in Agency:Stop ID format.
+     * @return . .
      */
     @GET
     @Path("/stops/{stopId}/transfers")
@@ -569,6 +581,7 @@ public class IndexAPI {
     *
     * @param mode only return routes of these modes. Comma-separated list. Valid values are TRAM, SUBWAY, RAIL, BUS, FERRY, CABLE_CAR, GONDOLA, FUNICULAR. (optional)
     * @param stopIds only return routes which include the stops (optional)
+    * @return . .
     */
    @GET
    @Path("/routes")
@@ -612,6 +625,7 @@ public class IndexAPI {
     * Return specific route in the graph, for the given ID.
     *
     * @param routeIdString route in Agency:Route ID format
+    * @return . .
     */
    @GET
    @Path("/routes/{routeId}")
@@ -630,6 +644,7 @@ public class IndexAPI {
     * Return all stop patterns used by trips on the given route.
     *
     * @param routeIdString route in Agency:Route ID format.
+    * @return . .
     */
    @GET
    @Path("/routes/{routeId}/patterns")
@@ -649,6 +664,7 @@ public class IndexAPI {
     * Return all stops in any pattern on a given route.
     *
     * @param routeIdString route in Agency:Route ID format
+    * @return . .
     */
    @GET
    @Path("/routes/{routeId}/stops")
@@ -672,6 +688,7 @@ public class IndexAPI {
     * Return all trips in any pattern on the given route.
     *
     * @param routeIdString route in Agency:Route ID format
+    * @return . .
     */
    @GET
    @Path("/routes/{routeId}/trips")
@@ -699,6 +716,7 @@ public class IndexAPI {
     * Return trip information by trip ID.
     *
     * @param tripIdString trip in Agency:Trip ID format
+    * @return . .
     */
    @GET
    @Path("/trips/{tripId}")
@@ -717,6 +735,7 @@ public class IndexAPI {
     * Return stops for a trip.
     *
     * @param tripIdString trip in Agency:Trip ID format
+    * @return . .
     */
    @GET
    @Path("/trips/{tripId}/stops")
@@ -737,6 +756,7 @@ public class IndexAPI {
      * Return the semantic hash of a trip
      *
      * @param tripIdString trip in Agency:Trip ID format
+     * @return . .
      */
     @GET
     @Path("/trips/{tripId}/semanticHash")
@@ -758,6 +778,7 @@ public class IndexAPI {
      *
      * @param serviceDay service day to look up scheduled for, in UNIX epoch time
      * @param tripIdString trip in Agency:Trip ID format.
+     * @return . .
      */
     @GET
     @Path("/trips/{tripId}/stoptimes")
@@ -784,6 +805,7 @@ public class IndexAPI {
      * Return geometry for the trip as a packed coordinate sequence
      *
      * @param tripIdString trip in Agency:Trip ID format
+     * @return . .
      */
     @GET
     @Path("/trips/{tripId}/geometry")
@@ -804,6 +826,7 @@ public class IndexAPI {
      *
      * @param serviceDay service day to look up scheduled for, in UNIX epoch time
      * @param tripIdString trip in Agency:Trip ID format
+     * @return . .
      */
     @GET
     @Path("/trips/{tripId}/detail")
@@ -838,6 +861,7 @@ public class IndexAPI {
 
    /**
     * Return all patterns in the graph.
+    * @return . .
     */
    @GET
    @Path("/patterns")
@@ -851,6 +875,7 @@ public class IndexAPI {
     * Return details about a pattern.
     *
     * @param patternIdString pattern in Agency:Pattern ID format
+    * @return . .
     */
    @GET
    @Path("/patterns/{patternId}")
@@ -868,6 +893,7 @@ public class IndexAPI {
     * Return all trips in a pattern.
     *
     * @param patternIdString pattern in Agency:Pattern ID format.
+    * @return . .
     */
    @GET
    @Path("/patterns/{patternId}/trips")
@@ -886,6 +912,7 @@ public class IndexAPI {
     * Return all stops for a pattern.
     *
     * @param patternIdString pattern in Agency:Pattern ID format
+    * @return . .
     */
    @GET
    @Path("/patterns/{patternId}/stops")
@@ -903,6 +930,8 @@ public class IndexAPI {
 
     /**
      * Return semantic hash for a pattern.
+     * @param patternIdString .
+     * @return .
      */
     @GET
     @Path("/patterns/{patternId}/semanticHash")
@@ -922,6 +951,7 @@ public class IndexAPI {
      * Return geometry for the pattern as a packed coordinate sequence
      *
      * @param patternIdString pattern in Agency:Pattern ID format
+     * @return . .
      */
     @GET
     @Path("/patterns/{patternId}/geometry")
@@ -938,7 +968,9 @@ public class IndexAPI {
 
     // TODO include pattern ID for each trip in responses
 
-    /** List basic information about all service IDs. */
+    /** List basic information about all service IDs.
+     * @return . .
+     * */
     @GET
     @Path("/services")
     @Ignore
@@ -947,7 +979,10 @@ public class IndexAPI {
         return Response.status(Status.OK).entity("NONE").build();
     }
 
-    /** List details about a specific service ID including which dates it runs on. Replaces the old /calendar. */
+    /** List details about a specific service ID including which dates it runs on. Replaces the old /calendar.
+     * @param serviceId .
+     * @return . .
+     * */
     @GET
     @Path("/services/{serviceId}")
     @Ignore
@@ -960,6 +995,7 @@ public class IndexAPI {
     *
     * @param mode only return clusters with this mode. Valid values are TRAM, SUBWAY, RAIL, BUS, FERRY, CABLE_CAR, GONDOLA, FUNICULAR. (optional)
     * @param agencyId only return clusters for this agency (optional)
+     * @return . .
     */
 
     @GET
@@ -994,6 +1030,7 @@ public class IndexAPI {
      * Return a cluster of stops by its ID.
      *
      * @param clusterIdString cluster to return stop data for
+     * @return . .
      */
     @GET
     @Path("/clusters/{clusterId}")
@@ -1008,7 +1045,9 @@ public class IndexAPI {
         }
     }
 
-    /** Get all landmark names */
+    /** Get all landmark names
+     * @return . .
+     * */
     @GET
     @Path("/landmarks")
     @TypeHint(String[].class)
@@ -1021,6 +1060,7 @@ public class IndexAPI {
      * Get all stops associated with a given landmark.
      *
      * @param name landmark name
+     * @return . .
      */
     @GET
     @Path("/landmarks/{landmark}")

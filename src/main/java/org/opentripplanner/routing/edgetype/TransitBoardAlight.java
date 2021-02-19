@@ -38,7 +38,7 @@ import org.opentripplanner.routing.vertextype.TransitStopDepart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vividsolutions.jts.geom.LineString;
+import org.locationtech.jts.geom.LineString;
 
 
 /**
@@ -77,7 +77,12 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
         return requiredStop;
     }
 
-    /** Boarding constructor (TransitStopDepart --> PatternStopVertex) */
+    /** Boarding constructor (TransitStopDepart → PatternStopVertex)
+     * @param fromStopVertex .
+     * @param toPatternVertex .
+     * @param stopIndex .
+     * @param mode .
+     * */
     public TransitBoardAlight (TransitStopDepart fromStopVertex, PatternStopVertex toPatternVertex, 
             int stopIndex, TraverseMode mode) {
         super(fromStopVertex, toPatternVertex);
@@ -86,7 +91,12 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
         this.boarding = true;
     }
     
-    /** Alighting constructor (PatternStopVertex --> TransitStopArrive) */
+    /** Alighting constructor (PatternStopVertex → TransitStopArrive)
+     * @param fromPatternStop .
+     * @param toStationVertex .
+     * @param stopIndex .
+     * @param mode .
+     * */
     public TransitBoardAlight (PatternStopVertex fromPatternStop, TransitStopArrive toStationVertex,
             int stopIndex, TraverseMode mode) {
         super(fromPatternStop, toStationVertex);
@@ -146,8 +156,10 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
     /**
      * NOTE: We do not need to check the pickup/drop off type. TransitBoardAlight edges are simply
      * not created for pick/drop type 1 (no pick/drop).
-     * 
+     *
+     * @param s0 .
      * @param arrivalTimeAtStop TODO: clarify what this is.
+     * @return . .
      */
     public State traverse(State s0, long arrivalTimeAtStop) {
         RoutingContext rctx    = s0.getContext();

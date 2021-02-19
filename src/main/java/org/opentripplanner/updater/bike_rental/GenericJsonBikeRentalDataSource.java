@@ -37,7 +37,7 @@ public abstract class GenericJsonBikeRentalDataSource implements BikeRentalDataS
     /**
      * Construct superclass
      *
-     * @param JSON path to get from enclosing elements to nested rental list.
+     * @param jsonPath path to get from enclosing elements to nested rental list.
      *        Separate path levels with '/' For example "d/list"
      *
      */

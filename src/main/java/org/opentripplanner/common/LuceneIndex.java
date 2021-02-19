@@ -51,6 +51,7 @@ public class LuceneIndex {
     private IndexSearcher searcher; // Will be null until index is built.
 
     /**
+     * @param graphIndex .
      * @param basePath the filesystem location under which to save indexes
      * @param background if true, perform the initial indexing in a background thread, if false block to index
      */
@@ -147,7 +148,7 @@ public class LuceneIndex {
 
     /** Fetch results for the geocoder using the OTP graph for stops, clusters and street names
      *
-     * @param queryString
+     * @param queryString .
      * @param autocomplete Whether we should use the query string to do a prefix match
      * @param stops Search for stops, either by name or stop code
      * @param clusters Search for clusters by their name

@@ -124,7 +124,7 @@ public class Itinerary {
 
     /**
      * adds leg to array list
-     * @param leg
+     * @param leg .
      */
     public void addLeg(Leg leg) {
         if(leg != null)

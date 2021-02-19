@@ -38,7 +38,7 @@ import org.opentripplanner.routing.spt.ShortestPathTree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vividsolutions.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Coordinate;
 
 /**
  * Compute a sample grid from a SPT request.
@@ -63,9 +63,9 @@ public class SampleGridRenderer {
     }
 
     /**
-     * @param spgRequest
-     * @param sptRequest
-     * @return
+     * @param spgRequest .
+     * @param sptRequest .
+     * @return . .
      */
     public ZSampleGrid<WTWD> getSampleGrid(SampleGridRequest spgRequest, RoutingRequest sptRequest) {
 
@@ -107,6 +107,14 @@ public class SampleGridRenderer {
 
     /**
      * Sample a SPT using a SPTWalker and an AccumulativeGridSampler.
+     * @param spt .
+     * @param sampleGrid .
+     * @param gridSizeMeters .
+     * @param offRoadDistanceMeters .
+     * @param offRoadWalkSpeedMps .
+     * @param maxWalkDistance .
+     * @param maxTimeSec .
+     * @param cosLat .
      */
     public static void sampleSPT(final ShortestPathTree spt, ZSampleGrid<WTWD> sampleGrid,
             final double gridSizeMeters, final double offRoadDistanceMeters, final double offRoadWalkSpeedMps,
