@@ -5,8 +5,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map.Entry;
+import java.util.Set;
 
+import org.onebusaway.gtfs.model.AgencyAndId;
 import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.model.Route;
 import org.opentripplanner.model.Stop;
@@ -29,6 +32,11 @@ public class TransferTable implements Serializable {
      * Table which contains transfers between two stops
      */
     protected HashMap<P2<FeedScopedId>, StopTransfer> table = new HashMap<P2<FeedScopedId>, StopTransfer>();
+
+    /**
+     * Set of feeds which have transfers defined
+     */
+    private Set<P2<String>> feedsWithTransfers = new HashSet<>();
     
     /**
      * Preferred transfers (or timed transfers, which are preferred as well) are present if true
@@ -164,6 +172,7 @@ public class TransferTable implements Serializable {
             // If not, create one and add to table
             stopTransfer = new StopTransfer();
             table.put(stopIdPair, stopTransfer);
+            feedsWithTransfers.add(stopIdPair.map(FeedScopedId::getId));
         }
         assert(stopTransfer != null);
         
@@ -196,6 +205,16 @@ public class TransferTable implements Serializable {
         }
         
         return transferPenalty;
+    }
+
+    /** Return true if table contains transfers for this feed pair */
+    public boolean hasFeedTransfers(String from, String to) {
+        return feedsWithTransfers.contains(P2.createPair(from, to));
+    }
+
+    /** Return true if table contains transfers for this feed pair in given direction */
+    public boolean hasFeedTransfers(String from, String to, boolean forwardInTime) {
+        return forwardInTime ? hasFeedTransfers(from, to) : hasFeedTransfers(to, from);
     }
     
     /**

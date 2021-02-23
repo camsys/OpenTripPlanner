@@ -21,6 +21,7 @@ public class GtfsRealtimeHttpTripUpdateSource implements TripUpdateSource, JsonC
     private static final Logger LOG =
             LoggerFactory.getLogger(GtfsRealtimeHttpTripUpdateSource.class);
 
+
     /**
      * True iff the last list with updates represent all updates that are active right now, i.e. all
      * previous updates should be disregarded
@@ -33,6 +34,7 @@ public class GtfsRealtimeHttpTripUpdateSource implements TripUpdateSource, JsonC
     private String feedId;
 
     private String url;
+
 
     @Override
     public void configure(Graph graph, JsonNode config) throws Exception {

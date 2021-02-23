@@ -78,5 +78,13 @@ public class TripTimeShort {
         }
         return out;
     }
+
+    public int getRealtimeArrival() {
+        return realtimeArrival;
+    }
+
+    public int getRealtimeDeparture() {
+        return realtimeDeparture;
+    }
     
 }

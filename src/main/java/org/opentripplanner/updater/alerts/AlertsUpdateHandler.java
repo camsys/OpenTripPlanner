@@ -25,7 +25,7 @@ import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
  * @author novalis
  *
  */
-public class AlertsUpdateHandler {
+public class AlertsUpdateHandler extends AbstractUpdateHandler {
     private static final Logger log = LoggerFactory.getLogger(AlertsUpdateHandler.class);
 
     private String feedId;
