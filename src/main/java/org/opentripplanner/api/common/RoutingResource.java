@@ -450,18 +450,6 @@ public abstract class RoutingResource {
     private Boolean stopLinking;
 
     /**
-     *
-     */
-    @QueryParam("showNextFromDeparture")
-    protected Boolean showNextFromDeparture;
-
-    /**
-     * If true, API call will return stop times for all the trips in the TripPlan.
-     */
-    @QueryParam("showStopTimes")
-    protected Boolean showStopTimes;
-
-    /**
      * If true, the Graph's ellipsoidToGeoidDifference is applied to all elevations returned by this query.
      */
     @QueryParam("geoidElevation")
@@ -782,23 +770,8 @@ public abstract class RoutingResource {
         if (showNextFromDeparture != null)
             request.showNextFromDeparture = showNextFromDeparture;
 
-        if (nextDepartureWindow != null)
-            request.nextDepartureWindow = nextDepartureWindow;
-
-        if (numberOfDepartures != null)
-            request.numberOfDepartures = numberOfDepartures;
-
-        if (smartKissAndRide != null)
-            request.smartKissAndRide = smartKissAndRide;
-
         if (softWalkLimiting != null)
             request.softWalkLimiting = softWalkLimiting;
-
-        if (hardPathBanningAgencies != null)
-            request.setHardPathBanningAgencies(hardPathBanningAgencies);
-
-        if (walkLimitingByLeg != null)
-            request.walkLimitingByLeg = walkLimitingByLeg;
 
         if (softWalkPenalty != null)
             request.softWalkPenalty = softWalkPenalty;
@@ -806,8 +779,6 @@ public abstract class RoutingResource {
         if (softWalkOverageMultiplier != null)
             request.softWalkOverageRate = request.walkReluctance * softWalkOverageMultiplier;
 
-        if (stopLinking != null)
-            request.stopLinking = stopLinking;
 
         //getLocale function returns defaultLocale if locale is null
         request.locale = ResourceBundleSingleton.INSTANCE.getLocale(locale);
