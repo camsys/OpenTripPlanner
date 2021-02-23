@@ -27,7 +27,7 @@
   </appender>
 
   <!-- Change this to debug to let more messages through. -->
-  <root level="info" additivity="false">
+  <root level="debug" additivity="false">
     <appender-ref ref="application" />
   </root>
   <logger name="ch.qos.logback" level="warn"/>
