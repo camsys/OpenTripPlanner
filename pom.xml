@@ -244,7 +244,7 @@
 				<version>3.0.0-M1</version>
 				<configuration>
 					<disableXmlReport>false</disableXmlReport>
-					<argLine>-Xmx28g -Xms8g -XX:+UseConcMarkSweepGC</argLine>
+					<argLine>-Xmx28g -Xms8g --illegal-access=permit</argLine>
 				</configuration>
 				<dependencies>
 					<dependency>
