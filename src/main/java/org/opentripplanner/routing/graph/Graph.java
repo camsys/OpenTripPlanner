@@ -59,7 +59,6 @@ import org.opentripplanner.plugin.PluginManager;
 import org.opentripplanner.routing.connectivity.DefaultStopAccessibilityStrategy;
 import org.opentripplanner.routing.connectivity.StopAccessibilityStrategy;
 import org.opentripplanner.routing.alertpatch.AlertPatch;
-import org.opentripplanner.routing.core.MortonVertexComparatorFactory;
 import org.opentripplanner.routing.core.TransferTable;
 import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.edgetype.EdgeWithCleanup;
@@ -156,8 +155,6 @@ public class Graph implements Serializable {
 
     private Map<String, FeedInfo> feedInfoForId = new HashMap<>();
 
-    private VertexComparatorFactory vertexComparatorFactory = new MortonVertexComparatorFactory();
-
     private transient TimeZone timeZone = null;
 
     //Envelope of all OSM and transit vertices. Calculated during build time
@@ -240,7 +237,7 @@ public class Graph implements Serializable {
     public HashMap<String, ArrayList<RouteStopTag>> routeStopTagsByStopId = new HashMap<>();
     
     /** Consequences strategy */
-    public ConsequencesStrategyFactory consequencesStrategy;
+    public transient ConsequencesStrategyFactory consequencesStrategy;
 
     /** Apply more complex stop accessibility rules */
     public transient StopAccessibilityStrategy stopAccessibilityStrategy = new DefaultStopAccessibilityStrategy(this);
@@ -833,6 +830,7 @@ public class Graph implements Serializable {
         kryo.setRegistrationRequired(false);
         kryo.setReferences(true);
         kryo.addDefaultSerializer(TPrimitiveHash.class, ExternalizableSerializer.class);
+
         kryo.register(TIntArrayList.class, new TIntArrayListSerializer());
         kryo.register(TIntIntHashMap.class, new TIntIntHashMapSerializer());
         // Kryo's default instantiation and deserialization of BitSets leaves them empty.
@@ -855,7 +853,7 @@ public class Graph implements Serializable {
         // The default strategy requires every class you serialize, even in your dependencies, to have a zero-arg
         // constructor (which can be private). The setInstantiatorStrategy method completely replaces that default
         // strategy. The nesting below specifies the Java approach as a fallback strategy to the default strategy.
-        kryo.setInstantiatorStrategy(new Kryo.DefaultInstantiatorStrategy(new SerializingInstantiatorStrategy()));
+        kryo.setInstantiatorStrategy(new SerializingInstantiatorStrategy());
         return kryo;
     }
 

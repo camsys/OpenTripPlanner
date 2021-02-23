@@ -145,87 +145,7 @@
 				<targetPath>../..</targetPath>
 			</testResource>
 		</testResources>
-		<pluginManagement>
-			<plugins>
-				<!-- m2eclipse lifecycle mapping configuration. This controls which Maven 
-					build goals should be performed during incremental builds within the Eclipse 
-					IDE. There are sensible defaults for most plugins, but some others require 
-					manual configuration with <action><ignore /> or <action><execute /> filters. 
-					This section only affects incremental builds within Eclipse, not command-line 
-					Maven builds. That's why it's a pluginManagement without an accompanying 
-					plugin. -->
-				<plugin>
-					<groupId>org.eclipse.m2e</groupId>
-					<artifactId>lifecycle-mapping</artifactId>
-					<version>1.0.0</version>
-					<configuration>
-						<lifecycleMappingMetadata>
-							<pluginExecutions>
-								<pluginExecution>
-									<pluginExecutionFilter>
-										<groupId>org.apache.maven.plugins</groupId>
-										<artifactId>maven-dependency-plugin</artifactId>
-										<versionRange>[1.0,)</versionRange>
-										<goals>
-											<goal>copy-dependencies</goal>
-										</goals>
-									</pluginExecutionFilter>
-									<action>
-										<ignore />
-									</action>
-								</pluginExecution>
-								<pluginExecution>
-									<pluginExecutionFilter>
-										<groupId>pl.project13.maven</groupId>
-										<artifactId>git-commit-id-plugin</artifactId>
-										<versionRange>[1.0,)</versionRange>
-										<goals>
-											<goal>revision</goal>
-										</goals>
-									</pluginExecutionFilter>
-									<action>
-										<execute />
-									</action>
-								</pluginExecution>
-							</pluginExecutions>
-						</lifecycleMappingMetadata>
-					</configuration>
-				</plugin>
-				<plugin>
-					<groupId>org.codehaus.mojo</groupId>
-					<artifactId>exec-maven-plugin</artifactId>
-					<version>3.0.0</version>
-					<executions>
-						<execution>
-							<id>server</id>
-							<goals>
-								<goal>java</goal>
-							</goals>
-							<configuration>
-								<mainClass>org.opentripplanner.standalone.OTPMain</mainClass>
-								<jvmArgs>-Duser.timezone=America/New_York </jvmArgs>
-								<commandlineArgs>--router default --server --verbose
-									--clientFiles /var/otp/ui --clientPath / --disableNativeClient
-									--clientFallback</commandlineArgs>
-							</configuration>
-						</execution>
-						<execution>
-							<id>bundle</id>
-							<goals>
-								<goal>java</goal>
-							</goals>
-							<configuration>
-								<mainClass>org.opentripplanner.standalone.OTPMain</mainClass>
-								<jvmArgs>-Duser.timezone=America/New_York </jvmArgs>
-								<commandlineArgs>--build /var/otp/graphs/default --verbose</commandlineArgs>
-							</configuration>
-						</execution>
-
-					</executions>
-				</plugin>
-			</plugins>
-		</pluginManagement>
-
+	
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -272,6 +192,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.22.1</version>
 				<dependencies>
 					<dependency>
 						<groupId>org.junit.jupiter</groupId>
@@ -320,6 +241,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>3.0.0-M1</version>
 				<configuration>
 					<disableXmlReport>false</disableXmlReport>
 					<argLine>-Xmx28g -Xms8g -XX:+UseConcMarkSweepGC</argLine>
@@ -338,56 +260,7 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.22.1</version>
-				<configuration>
-					<!-- we have to fork the JVM during tests so that the argLine is passed 
-						along -->
-					<forkCount>3</forkCount>
-					<!-- enable the restricted reflection under Java 11 so that the ObjectDiffer 
-						works -->
-					<argLine>
-						-Xmx4G
-						-Dfile.encoding=UTF-8
-						--illegal-access=permit
-						--add-opens java.base/java.lang.module=ALL-UNNAMED
-						--add-opens java.base/jdk.internal.reflect=ALL-UNNAMED
-						--add-opens java.base/jdk.internal.misc=ALL-UNNAMED
-						--add-opens java.base/jdk.internal.loader=ALL-UNNAMED
-						--add-opens java.base/jdk.internal.ref=ALL-UNNAMED
-						--add-opens java.base/jdk.internal.util=ALL-UNNAMED
-						--add-opens java.base/jdk.internal.util.jar=ALL-UNNAMED
-						--add-opens java.base/jdk.internal.module=ALL-UNNAMED
-						--add-opens java.base/java.lang=ALL-UNNAMED
-					</argLine>
-					<!-- Jenkins needs XML test reports to determine whether the build is 
-						stable. -->
-					<disableXmlReport>false</disableXmlReport>
-				</configuration>
-			</plugin>
-			<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-failsafe-plugin</artifactId>
-					<configuration>
-						<disableXmlReport>false</disableXmlReport>
-						<argLine>-Xmx28g -Xms8g -XX:+UseConcMarkSweepGC</argLine>
-					</configuration>
-					<dependencies>
-						<dependency>
-							<groupId>org.junit.jupiter</groupId>
-							<artifactId>junit-jupiter-engine</artifactId>
-							<version>5.1.0</version>
-						</dependency>
-					</dependencies>
-					<executions>
-						<execution>
-							<id>integration-test</id>
-							<phase>integration-test</phase>
-						</execution>
-					</executions>
-			</plugin> 
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
@@ -619,7 +492,7 @@
 		<dependency>
 			<groupId>com.esotericsoftware</groupId>
 			<artifactId>kryo</artifactId>
-			<version>4.0.2</version>
+			<version>5.0.3</version>
 		</dependency>
 		<!-- Extra serializers for Kryo -->
 		<dependency>
@@ -680,6 +553,13 @@
 			<groupId>org.geotools</groupId>
 			<artifactId>gt-referencing</artifactId>
 			<version>${geotools.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.protobuf</groupId>
+			<artifactId>protobuf-java</artifactId>
+			<version>3.12.4</version>
+			<type>jar</type>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.geotools</groupId>
@@ -832,11 +712,6 @@
 			<version>5.0.3</version>
 		</dependency>
 		<dependency>
-			<groupId>javax.xml.bind</groupId>
-			<artifactId>jaxb-api</artifactId>
-			<version>2.2.5</version>
-		</dependency>
-		<dependency>
 			<groupId>com.fasterxml.jackson.module</groupId>
 			<artifactId>jackson-module-jaxb-annotations</artifactId>
 			<version>${jackson.version}</version>
@@ -892,7 +767,7 @@
 		<dependency>
 			<groupId>org.onebusaway</groupId>
 			<artifactId>onebusaway-gtfs-realtime-api</artifactId>
-            <version>1.2.16</version>
+            <version>1.2.22</version>
         </dependency>
 		<!-- Processing is used for the debug GUI (though we could probably use 
 			just Java2D) -->
@@ -900,14 +775,6 @@
 			<groupId>org.processing</groupId>
 			<artifactId>core</artifactId>
 			<version>1.0.7</version>
-		</dependency>
-		<!-- Google Protocol Buffers compact binary serialization format -->
-		<dependency>
-			<groupId>com.google.protobuf</groupId>
-			<artifactId>protobuf-java</artifactId>
-			<version>2.6.1</version>
-			<type>jar</type>
-			<scope>compile</scope>
 		</dependency>
 		<!-- Joda Time is a widely used replacement for flaky Java time classes. -->
 		<dependency>

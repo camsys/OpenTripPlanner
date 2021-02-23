@@ -13,10 +13,16 @@
 
 package org.opentripplanner.updater.alerts;
 
+import com.google.protobuf.ExtensionRegistry;
 import com.google.transit.realtime.GtfsRealtime.FeedEntity;
 import com.google.transit.realtime.GtfsRealtime.FeedMessage;
 import com.google.transit.realtime.GtfsRealtime.VehiclePosition;
+import com.google.transit.realtime.GtfsRealtime.VehiclePosition.CarriageDetails;
+import com.google.transit.realtime.GtfsRealtime.VehiclePosition.OccupancyStatus;
+import com.google.transit.realtime.GtfsRealtimeExtensions;
 import com.google.transit.realtime.GtfsRealtimeMTARR;
+import com.google.transit.realtime.GtfsRealtimeServiceStatus;
+
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.opentripplanner.api.model.CarriageInfo;
@@ -105,28 +111,25 @@ public class VehiclePositionsUpdateHandler extends AbstractUpdateHandler {
             if (vehiclePosition.getPosition().hasBearing()) {
                 vehicleInfo.setBearing((double) vehiclePosition.getPosition().getBearing());
             }
-
+            
             // now look for extensions
-            if (vehiclePosition.hasVehicle()) {
-                List<GtfsRealtimeMTARR.CarriageDescriptor> carriages
-                        = vehiclePosition.getVehicle().getExtension(GtfsRealtimeMTARR.carriageDescriptor);
+            	List<CarriageDetails> carriages
+                        = vehiclePosition.getMultiCarriageDetailsList();
+
                 if (carriages != null) {
-                    for (GtfsRealtimeMTARR.CarriageDescriptor carriage : carriages) {
+                    for (CarriageDetails carriage : carriages) {
                         // confirmed! this works, now derive VehicleInfo model from data and marshall/serialize
                         CarriageInfo carriageInfo = new CarriageInfo();
                         carriageInfo.setId(carriage.getId());
                         carriageInfo.setLabel(carriage.getLabel());
                         carriageInfo.setOccupancyStatus(convertOccupancyStatus(carriage.getOccupancyStatus()));
-                        carriageInfo.setBicyclesAllowed(carriage.getBicyclesAllowed());
-                        carriageInfo.setCarriageClass(carriage.getCarriageClass());
                         if (vehicleInfo.getCarriages() == null) {
                             vehicleInfo.setCarriages(new ArrayList<>());
                         }
                         vehicleInfo.getCarriages().add(carriageInfo);
                     }
                 }
-            }
-
+  
             patch.setVehicleInfo(vehicleInfo);
             String patchId = tripId + " " + vehiclePosition.getVehicle().getId();
             patch.setId(patchId);
@@ -135,7 +138,7 @@ public class VehiclePositionsUpdateHandler extends AbstractUpdateHandler {
         }
     }
 
-    private VehicleInfo.OccupancyStatus convertOccupancyStatus(GtfsRealtimeMTARR.CarriageDescriptor.OccupancyStatus occupancyStatus) {
+    private VehicleInfo.OccupancyStatus convertOccupancyStatus(OccupancyStatus occupancyStatus) {
         if (occupancyStatus == null) return null;
         return VehicleInfo.OccupancyStatus.valueOf(occupancyStatus.toString().toUpperCase());
     }
