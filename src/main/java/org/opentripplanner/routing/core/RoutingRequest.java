@@ -1,15 +1,12 @@
 package org.opentripplanner.routing.core;
 
 import com.google.common.base.Objects;
-import org.onebusaway.gtfs.model.AgencyAndId;
-import org.onebusaway.gtfs.model.Stop;
 import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.model.Route;
 import org.opentripplanner.api.parameter.QualifiedModeSet;
 import org.opentripplanner.common.MavenVersion;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.common.model.NamedPlace;
-import org.opentripplanner.routing.alertpatch.Alert;
 import org.opentripplanner.routing.edgetype.StreetEdge;
 import org.opentripplanner.routing.error.TrivialPathException;
 import org.opentripplanner.routing.graph.Edge;
@@ -29,7 +26,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * A trip planning request. Some parameters may not be honored by the trip planner for some or all itineraries.
@@ -75,11 +83,6 @@ public class RoutingRequest implements Cloneable, Serializable {
     public double maxWalkDistance = Double.MAX_VALUE;
 
     /**
-     * Maximum walking distance for heuristic.
-     */
-    public double maxWalkDistanceHeuristic = Double.MAX_VALUE;
-
-    /**
      * The maximum distance (in meters) the user is willing to walk for transfer legs.
      * Defaults to unlimited. Currently set to be the same value as maxWalkDistance.
      */
@@ -115,6 +118,14 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     /** The epoch date/time that the trip should depart (or arrive, for requests where arriveBy is true) */
     public long dateTime = new Date().getTime() / 1000;
+
+    /** The date/time that the original travel time requested by customer */
+    public long origTravelDateTime = Long.MIN_VALUE;
+
+    /** The run board name in current GTFS file. This name will be used in the warning message if the user given travel date is beyond the current runboard. */
+    public String runboard = null;
+
+    public Long runboardEndDate = null;
 
     /** Whether the trip should depart at dateTime (false, the default), or arrive at dateTime. */
     public boolean arriveBy = false;
@@ -218,6 +229,9 @@ public class RoutingRequest implements Cloneable, Serializable {
      */
     public int carDropoffTime = 120;
 
+    /** Which PathIgnoreStrategy to use */
+    public String pathIgnoreStrategy = null;
+
     /**
      * How much worse is waiting for a transit vehicle than being on a transit vehicle, as a multiplier. The default value treats wait and on-vehicle
      * time as the same.
@@ -270,12 +284,6 @@ public class RoutingRequest implements Cloneable, Serializable {
     
     /** Set of preferred agencies by user. */
     public HashSet<String> preferredAgencies = new HashSet<String>();
-
-    public HashSet<Integer> preferredRouteTypes = new HashSet<>();
-
-    public HashSet<Integer> bannedRouteTypes = new HashSet<>();
-
-    private Set<String> bannedPaths = new HashSet<>();
 
     /**
      * Penalty added for using every route that is not preferred if user set any route as preferred. We return number of seconds that we are willing
@@ -333,9 +341,6 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     /** Penalty for using a non-preferred transfer */
     public int nonpreferredTransferPenalty = 180;
-
-    /** Whether unknown transfers should be treated as forbidden */
-    public boolean allowUnknownTransfers = true;
 
     /**
      * For the bike triangle, how important time is. 
@@ -551,8 +556,6 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     public boolean walkingBike;
 
-    public boolean walkLimitingByLeg = false;
-
     public boolean softWalkLimiting = true;
     public boolean softPreTransitLimiting = true;
 
@@ -570,13 +573,6 @@ public class RoutingRequest implements Cloneable, Serializable {
     public boolean bikeParkAndRide = false;
     public boolean parkAndRide  = false;
     public boolean kissAndRide  = false;
-
-    // smart kiss and ride - if this option is turned on, intelligently use pre-transit and post-transit kiss-and-ride
-    public boolean smartKissAndRide = false;
-    public boolean preTransitKissAndRide = false;
-    public boolean postTransitKissAndRide = false;
-    public Set<AgencyAndId> kissAndRideWhitelist = Collections.emptySet();
-    public Set<String> kissAndRideOverrides = Collections.emptySet();
 
     /* Whether we are in "long-distance mode". This is currently a server-wide setting, but it could be made per-request. */
     // TODO remove
@@ -609,30 +605,8 @@ public class RoutingRequest implements Cloneable, Serializable {
      */
     public int serviceDayLookout = 1;
 
-
-    /** Whether to find impacts of realtime alerts */
-    public boolean findRealtimeConsequences = true;
-
     /** Which path comparator to use */
     public String pathComparator = null;
-
-    /** Which PathIgnoreStrategy to use */
-    public String pathIgnoreStrategy = null;
-
-    /** How far to look out, in seconds, to add upcoming trips. Defaults to half an hour. */
-    public int nextDepartureWindow = 1800;
-
-    /** How many upcoming departures to add. Defaults to 3 */
-    public int numberOfDepartures = 3;
-
-    /** Whether to apply "hard path banning", where after a sequence of routes is used, it can't be used again */
-    public boolean hardPathBanning = false;
-
-    /** What agencies to apply hard path banning to */
-    public HashSet<String> hardPathBanningAgencies = new HashSet<>();
-
-    /** Whether to try to link endpoints to stops with the same location */
-    public boolean stopLinking = false;
 
     /**
      * This parameter is used in GTFS-Flex routing. Preliminary searches before the main search
@@ -659,17 +633,8 @@ public class RoutingRequest implements Cloneable, Serializable {
      */
     private StreetEdge splitEdge = null;
 
-    /** Should attempt to determine when the next bus goes through this stop. */
+    /** Should attempt to determine when the enxt bus goes through this stop. */
     public boolean showNextFromDeparture = false;
-
-    /** Keep track of alerts to add to GraphPath */
-    public List<Alert> planAlerts = new ArrayList<>();
-
-    /** Whether to use feature where dates are extended when past transit service */
-    public boolean useTransitServiceExtension = false;
-
-
-    public boolean farEndpointsException = false;
 
     /**
      * Keep track of epoch time the request was created by OTP. This is currently only used by the
@@ -858,26 +823,6 @@ public class RoutingRequest implements Cloneable, Serializable {
         }
     }
 
-
-    public void setPreferredRouteTypes(String s) {
-        if (s != null && !s.equals("")) {
-            preferredRouteTypes = new HashSet<>();
-            for (String si : s.split(",")) {
-                preferredRouteTypes.add(Integer.parseInt(si));
-            }
-        }
-    }
-
-    public void setBannedRouteTypes(String s) {
-        if (s != null && !s.equals("")) {
-            bannedRouteTypes = new HashSet<>();
-            for (String si : s.split(",")) {
-                bannedRouteTypes.add(Integer.parseInt(si));
-            }
-        }
-    }
-
-
     public void setPreferredRoutes(String s) {
         if (!s.isEmpty()) {
             preferredRoutes = RouteMatcher.parse(s);
@@ -951,12 +896,6 @@ public class RoutingRequest implements Cloneable, Serializable {
         }
     }
 
-    public void setHardPathBanningAgencies(String s) {
-        if (s != null && !s.equals("")) {
-            hardPathBanningAgencies = new HashSet<>(Arrays.asList(s.split(",")));
-        }
-    }
-
     public void setWhiteListedAgencies(String s) {
         if (!s.isEmpty()) {
             whiteListedAgencies = new HashSet<>();
@@ -995,6 +934,38 @@ public class RoutingRequest implements Cloneable, Serializable {
         for (TraverseMode m : mList) {
             addMode(m);
         }
+    }
+
+    public Date getOrigTravelDateTime() {
+        if (origTravelDateTime == Long.MIN_VALUE) {
+            return null;
+        } else {
+            return new Date(origTravelDateTime*1000);
+        }
+    }
+
+    public void setOrigTravelDateTime(Date origTravelDateTime) {
+        this.origTravelDateTime = origTravelDateTime.getTime() / 1000;
+    }
+
+    public String getRunboard() {
+        return runboard;
+    }
+
+    public void setRunboard(String runboard) {
+        this.runboard = runboard;
+    }
+
+    public Long getRunboardEndDate() {
+        return runboardEndDate;
+    }
+
+    public void setRunboardEndDate(long date) {
+        this.runboardEndDate = date;
+    }
+
+    public boolean hasRunboardEndDate() {
+        return runboardEndDate != null;
     }
 
     public Date getDateTime() {
@@ -1231,6 +1202,9 @@ public class RoutingRequest implements Cloneable, Serializable {
                 && bannedTrips.equals(other.bannedTrips)
                 && preferredRoutes.equals(other.preferredRoutes)
                 && unpreferredRoutes.equals(other.unpreferredRoutes)
+                && maxTransferTime == other.maxTransferTime
+                && minTransferTimeHard == other.minTransferTimeHard
+                && tripShownRangeTime == other.tripShownRangeTime
                 && transferSlack == other.transferSlack
                 && boardSlack == other.boardSlack
                 && alightSlack == other.alightSlack
@@ -1260,18 +1234,6 @@ public class RoutingRequest implements Cloneable, Serializable {
                 && Objects.equal(startingTransitTripId, other.startingTransitTripId)
                 && disableAlertFiltering == other.disableAlertFiltering
                 && geoidElevation == other.geoidElevation
-                && nextDepartureWindow == other.nextDepartureWindow
-                && hardPathBanning == other.hardPathBanning
-                && smartKissAndRide == other.smartKissAndRide
-                && kissAndRideWhitelist.equals(other.kissAndRideWhitelist)
-                && kissAndRideOverrides.equals(other.kissAndRideOverrides)
-                && maxWalkDistanceHeuristic == other.maxWalkDistanceHeuristic
-                && hardPathBanningAgencies.equals(other.hardPathBanningAgencies)
-                && numberOfDepartures == other.numberOfDepartures
-                && stopLinking == other.stopLinking
-                && pathIgnoreStrategy.equals(pathIgnoreStrategy)
-                && useTransitServiceExtension == other.useTransitServiceExtension
-                && farEndpointsException == other.farEndpointsException
                 && flexFlagStopExtraPenalty == other.flexFlagStopExtraPenalty
                 && flexDeviatedRouteExtraPenalty == other.flexDeviatedRouteExtraPenalty
                 && flexCallAndRideReluctance == other.flexCallAndRideReluctance
@@ -1282,6 +1244,7 @@ public class RoutingRequest implements Cloneable, Serializable {
                 && flexUseEligibilityServices == other.flexUseEligibilityServices
                 && flexIgnoreDrtAdvanceBookMin == other.flexIgnoreDrtAdvanceBookMin
                 && flexMinPartialHopLength == other.flexMinPartialHopLength
+                && pathIgnoreStrategy.equals(pathIgnoreStrategy)
                 && clockTimeSec == other.clockTimeSec
                 && serviceDayLookout == other.serviceDayLookout;
     }
@@ -1314,21 +1277,6 @@ public class RoutingRequest implements Cloneable, Serializable {
                 + new Boolean(ignoreRealtimeUpdates).hashCode() * 154329
                 + new Boolean(disableRemainingWeightHeuristic).hashCode() * 193939
                 + new Boolean(useTraffic).hashCode() * 10169
-                + Integer.hashCode(nextDepartureWindow) * 1373
-                + Boolean.hashCode(hardPathBanning) * 63061489
-                + Boolean.hashCode(smartKissAndRide) * 10169
-                + kissAndRideWhitelist.hashCode() * 63061489
-                + kissAndRideOverrides.hashCode() * 731980
-                + Double.hashCode(maxWalkDistanceHeuristic) * 731980
-                + hardPathBanningAgencies.hashCode() * 209477
-                + numberOfDepartures * 15485863
-                + Boolean.hashCode(stopLinking) * 18253
-                + new Double(maxTransferTime).hashCode() * 790052909
-                + new Double(minTransferTimeHard).hashCode() * 31
-                + new Double(tripShownRangeTime).hashCode() * 790052909
-                + pathIgnoreStrategy.hashCode() * 1301081
-                + Boolean.hashCode(useTransitServiceExtension) * 1300931
-                + Boolean.hashCode(farEndpointsException) * 538799
                 + Integer.hashCode(flexFlagStopExtraPenalty) * 179424691
                 + Integer.hashCode(flexDeviatedRouteExtraPenalty) *  7424299
                 + Double.hashCode(flexCallAndRideReluctance) * 86666621
@@ -1343,6 +1291,10 @@ public class RoutingRequest implements Cloneable, Serializable {
                 + Long.hashCode(clockTimeSec) * 833389
                 + new Boolean(disableRemainingWeightHeuristic).hashCode() * 193939
                 + new Boolean(useTraffic).hashCode() * 10169
+                + new Double(maxTransferTime).hashCode() * 790052909
+                + new Double(minTransferTimeHard).hashCode() * 31
+                + new Double(tripShownRangeTime).hashCode() * 790052909
+                + pathIgnoreStrategy.hashCode() * 1301081
                 + Integer.hashCode(serviceDayLookout) * 31558519;
 
         if (batch) {
@@ -1617,52 +1569,12 @@ public class RoutingRequest implements Cloneable, Serializable {
         }
         return new PathComparator(compareStartTimes);
     }
+
     public PathIgnoreStrategy getPathIgnoreStrategy() {
-         if ("rtd".equals(pathIgnoreStrategy)) {
+        if ("rtd".equals(pathIgnoreStrategy)) {
             return new RTDPathIgnoreStrategy();
         }
         return new DefaultPathIgnoreStrategy();
-    }
-
-    public void banPath(GraphPath path) {
-        bannedPaths.add(path.getRoutePatternHash());
-    }
-
-    public boolean isPathBanned(GraphPath path) {
-        if (hardPathBanningAgencies != null && !hardPathBanningAgencies.isEmpty()) {
-            for (FeedScopedId id : path.getRoutes()) {
-                if (!hardPathBanningAgencies.contains(id.getAgencyId())) {
-                    return false;
-                }
-            }
-        }
-        String hash = path.getRoutePatternHash();
-        if (bannedPaths.contains(hash)) {
-            return true;
-        }
-        // Ensure we don't get trivially different paths. (Todo - will this kick out useful paths too?)
-        for (String other : bannedPaths) {
-            if (hash.startsWith(other + "#")) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public boolean canUseStopForKissAndRide(Stop stop) {
-        if (kissAndRideWhitelist.contains(stop.getId())) {
-            return true;
-        }
-        if (stop.getParentStation() != null) {
-            AgencyAndId id = new AgencyAndId(stop.getId().getAgencyId(), stop.getParentStation());
-            return kissAndRideWhitelist.contains(id);
-        }
-        return false;
-    }
-
-    public void addPlanAlert(Alert alert) {
-        if (!planAlerts.contains(alert))
-            planAlerts.add(alert);
     }
 
 }

@@ -9,7 +9,6 @@ import org.opentripplanner.common.geometry.DirectionUtils;
 import org.opentripplanner.common.geometry.GeometryUtils;
 import org.opentripplanner.common.geometry.PackedCoordinateSequence;
 import org.opentripplanner.common.model.P2;
-import org.opentripplanner.index.model.StopTimesByStop;
 import org.opentripplanner.index.model.StopTimesInPattern;
 import org.opentripplanner.index.model.TripTimeShort;
 import org.opentripplanner.model.*;
@@ -97,6 +96,15 @@ public abstract class GraphPathToTripPlanConverter {
             plan.addItinerary(itinerary);
         }
 
+        //set warning message in the TripPlan if the given travel time is beyond the GTFS service time range
+        if (request.getOrigTravelDateTime() != null) {
+            if (request.getOrigTravelDateTime().getTime() > request.getDateTime().getTime()) {
+                plan.addAlert(Alert.createSimpleAlerts(
+                        "The travel date is beyond " + (request.getRunboard()== null ? "the current run board."
+                                : (request.getRunboard() + " run board."))), requestedLocale);
+            }
+        }
+
         if (plan != null) {
             for (Itinerary i : plan.itinerary) {
                 /* Communicate the fact that the only way we were able to get a response was by removing a slope limit. */
@@ -132,6 +140,20 @@ public abstract class GraphPathToTripPlanConverter {
     }
 
     /**
+     * A method for generating itineraries that preserves existing functionality and allows older
+     * methods to continue working without needing the update. It always assumed the user does not
+     * want the nextFromDeparture.
+     *
+     * @param path The graph path to base the itinerary on
+     * @param showIntermediateStops Whether to include intermediate stops in the itinerary or not
+     * @param requestedLocale
+     * @return
+     */
+    public static Itinerary generateItinerary(GraphPath path, boolean showIntermediateStops, boolean disableAlertFiltering, Locale requestedLocale) {
+        return generateItinerary(path, showIntermediateStops, disableAlertFiltering, requestedLocale, path.states.peekFirst().getOptions());
+    }
+
+    /**
      * Generate an itinerary from a {@link GraphPath}. This method first slices the list of states
      * at the leg boundaries. These smaller state arrays are then used to generate legs. Finally the
      * rest of the itinerary is generated based on the complete state array.
@@ -140,7 +162,7 @@ public abstract class GraphPathToTripPlanConverter {
      * @param showIntermediateStops Whether to include intermediate stops in the itinerary or not
      * @return The generated itinerary
      */
-    public static Itinerary generateItinerary(GraphPath path, boolean showIntermediateStops, boolean disableAlertFiltering, Locale requestedLocale) {
+    public static Itinerary generateItinerary(GraphPath path, boolean showIntermediateStops, boolean disableAlertFiltering, Locale requestedLocale, RoutingRequest request) {
         Itinerary itinerary = new Itinerary();
 
         State[] states = new State[path.states.size()];
@@ -161,7 +183,7 @@ public abstract class GraphPathToTripPlanConverter {
         }
 
         for (State[] legStates : legsStates) {
-            itinerary.addLeg(generateLeg(graph, legStates, showIntermediateStops, disableAlertFiltering, requestedLocale));
+            itinerary.addLeg(generateLeg(graph, legStates, showIntermediateStops, disableAlertFiltering, requestedLocale, request));
         }
 
         addWalkSteps(graph, itinerary.legs, legsStates, requestedLocale);
@@ -186,15 +208,59 @@ public abstract class GraphPathToTripPlanConverter {
         return itinerary;
     }
 
-    private static Calendar makeCalendar(State state) {
-        RoutingContext rctx = state.getContext();
-        TimeZone timeZone = rctx.graph.getTimeZone();
-        return makeCalendar(timeZone, state.getTimeInMillis());
-    }
-
     private static Calendar makeCalendar(TimeZone timeZone, long timeMillis) {
         Calendar calendar = Calendar.getInstance(timeZone);
         calendar.setTimeInMillis(timeMillis);
+        return calendar;
+    }
+
+    private static Calendar makeCalendar(State state) {
+        RoutingRequest request = state.getOptions();
+        return request != null ? makeCalendar(state, request.getOrigTravelDateTime(), request.getDateTime()) :
+                makeCalendar(state, null, null);
+    }
+
+    private static Calendar makeCalendar(State state, Date origRequestDate, Date requestDate) {
+        RoutingContext rctx = state.getContext();
+        TimeZone timeZone = rctx.graph.getTimeZone();
+        Calendar calendar = Calendar.getInstance(timeZone);
+
+        if (origRequestDate != null && requestDate != null) {
+            //if origRequestDate is not null, which means the original request travel data is beyond the current run board.
+            //we need to repalce the travel time with original travel date.
+            //get the day of the week
+            Calendar c = Calendar.getInstance();
+            c.setTimeInMillis(origRequestDate.getTime());
+            int origYear = c.get(Calendar.YEAR);
+            int origDay = c.get(Calendar.DAY_OF_YEAR);
+
+            c.setTimeInMillis(requestDate.getTime());
+            int requestYear = c.get(Calendar.YEAR);
+            int requestDay = c.get(Calendar.DAY_OF_YEAR);
+
+            c.setTimeInMillis(state.getTimeInMillis());
+            int resYear = c.get(Calendar.YEAR);
+            int resDay = c.get(Calendar.DAY_OF_YEAR);
+
+            if ((resDay - requestDay) == 0) { //same day
+                calendar.setTimeInMillis(state.getTimeInMillis());
+                calendar.set(Calendar.YEAR, origYear);
+                calendar.set(Calendar.DAY_OF_YEAR, origDay);
+            } else {//not the same day
+                if ((resYear - requestYear) == 0) { //same year
+                    calendar.setTimeInMillis(state.getTimeInMillis());
+                    calendar.set(Calendar.YEAR, origYear);
+                    calendar.set(Calendar.DAY_OF_YEAR, origDay + (resDay - requestDay));
+                } else { //not the same year
+                    calendar.setTimeInMillis(state.getTimeInMillis());
+                    calendar.set(Calendar.YEAR, origYear);
+                    calendar.set(Calendar.DAY_OF_YEAR, origDay + resDay);
+                }
+            }
+        } else {
+            calendar.setTimeInMillis(state.getTimeInMillis());
+        }
+
         return calendar;
     }
 
@@ -302,7 +368,9 @@ public abstract class GraphPathToTripPlanConverter {
      * @param showIntermediateStops Whether to include intermediate stops in the leg or not
      * @return The generated leg
      */
-    private static Leg generateLeg(Graph graph, State[] states, boolean showIntermediateStops, boolean disableAlertFiltering, Locale requestedLocale) {
+
+    //TODO find usages and add routing request then remove this comment.
+    private static Leg generateLeg(Graph graph, State[] states, boolean showIntermediateStops, boolean disableAlertFiltering, Locale requestedLocale, RoutingRequest request) {
         Leg leg = new Leg();
 
         Edge[] edges = new Edge[states.length - 1];
@@ -331,143 +399,22 @@ public abstract class GraphPathToTripPlanConverter {
 
         leg.interlineWithPreviousLeg = states[0].getBackEdge() instanceof PatternInterlineDwell;
 
-        addFrequencyFields(states, leg);
-
         leg.rentedBike = states[0].isBikeRenting() && states[states.length - 1].isBikeRenting();
 
         addModeAndAlerts(graph, leg, states, disableAlertFiltering, requestedLocale);
+
         if (leg.isTransitLeg()) {
             addRealTimeData(leg, states);
-            leg.from.nextDeparture = establishNextDeparture(graph, states, new ServiceDate(leg.from.departure), leg);
-            addNextDepartures(leg, states);
+            // TODO: Duplicated between MTA and RTD
+            if (request.showNextFromDeparture) {
+                leg.from.nextDeparture = establishNextDeparture(graph, states, new ServiceDate(leg.from.departure), leg);
+            }
         }
-
 
         return leg;
     }
 
-    private static Calendar establishNextDeparture(Graph graph, State[] states, ServiceDate serviceDate, Leg leg) {
-        List<StopTimesInPattern> stopTimes = getStopTimesForStopOrParent(graph, leg.from.stopId, serviceDate);
-        List<StopTimesInPattern> endStopTimes = getStopTimesForStopOrParent(graph, leg.to.stopId, serviceDate);
-        return determineNextDepartureTimeForStop(graph, leg, stopTimes, endStopTimes);
-    }
 
-    private static List<StopTimesInPattern> getStopTimesForStopOrParent(Graph graph, FeedScopedId stopId, ServiceDate serviceDate) {
-        Stop stop = graph.index.stopForId.get(stopId);
-        List<StopTimesInPattern> stopTimes;
-        if (stop.getParentStation() != null) {
-            stopTimes = graph.index.getStopTimesForStop(stop, serviceDate, false);
-            stopTimes.addAll(graph.index.getStopTimesForStop(stop, serviceDate.next(), false));
-        } else {
-            stopTimes = graph.index.getStopTimesForStop(stop, serviceDate, false);
-            stopTimes.addAll(graph.index.getStopTimesForStop(stop, serviceDate.next(), false));
-        }
-        return stopTimes;
-    }
-
-    private static Calendar determineNextDepartureTimeForStop(Graph graph, Leg leg,
-                                                              List<StopTimesInPattern> stopTimes, List<StopTimesInPattern> destStopTimes) {
-
-        List<TripTimeShort> sortedStopTimes = findAndSortStopTimes(graph, leg, stopTimes);
-        List<TripTimeShort> destSortedStopTimes = findAndSortStopTimes(graph, leg, destStopTimes);
-
-        int shortTimeCounter = 1;
-
-        for (TripTimeShort tripTimeShort : sortedStopTimes) {
-            if (tripTimeShort.tripId.equals(leg.tripId)) {
-                TripTimeShort nextTrip;
-
-                if (shortTimeCounter < sortedStopTimes.size() && shortTimeCounter >= 0) {
-                    int nextTripCounter = shortTimeCounter;
-                    while (nextTripCounter < sortedStopTimes.size() && nextTripCounter >= 0) {
-                        nextTrip = sortedStopTimes.get(nextTripCounter);
-
-                        if (hasSameEndStop(nextTrip.tripId, destSortedStopTimes)) {
-                            Calendar nextDeparture = (Calendar) leg.from.departure.clone();
-                            nextDeparture.setTimeInMillis(nextTrip.serviceDay+nextTrip.scheduledDeparture);
-                            nextDeparture.setTimeZone(leg.from.departure.getTimeZone());
-
-                            return nextDeparture;
-                        }
-                        nextTripCounter++;
-                    }
-                }
-            }
-            shortTimeCounter++;
-        }
-
-        return null;
-    }
-
-    private static boolean hasSameEndStop(FeedScopedId tripId, List<TripTimeShort> destSortedStopTimes) {
-        for (TripTimeShort tripTimeShort : destSortedStopTimes) {
-            if (tripTimeShort.tripId.equals(tripId)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static List<TripTimeShort> findAndSortStopTimes(Graph graph,
-                                                            Leg leg, List<StopTimesInPattern> stopTimes) {
-        List<TripTimeShort> sortedStopTimes = new ArrayList<TripTimeShort>();
-        List<TripTimeShort> collectedStopTimes= new ArrayList<TripTimeShort>();
-
-        for (StopTimesInPattern stopTimesInPattern : stopTimes) {
-            if(stopTimesInPatternMatches(graph, leg, stopTimesInPattern))
-            {
-                collectedStopTimes.addAll(stopTimesInPattern.times);
-            }
-        }
-
-        sortedStopTimes.addAll(collectedStopTimes);
-
-        Comparator<TripTimeShort> comparator = Comparator.comparing(tripTime -> tripTime.scheduledDeparture);
-//        comparator = comparator.thenComparing(Comparator.comparing(tripTime -> tripTime.serviceDay));
-        Comparator<TripTimeShort> otherComparator = Comparator.comparing(tripTime -> tripTime.serviceDay);
-
-        Collections.sort(sortedStopTimes, comparator);
-        Collections.sort(sortedStopTimes, otherComparator);
-
-        Collections.sort(collectedStopTimes, comparator);
-
-        return sortedStopTimes;
-    }
-
-    private static boolean stopTimesInPatternMatches(Graph graph, Leg leg, StopTimesInPattern stip) {
-        Trip legTrip = graph.index.tripForId.get(leg.tripId);
-
-        if (stip.times.size() == 0)
-            return false;
-
-        TripTimeShort example = stip.times.get(0);
-        Trip newTrip = graph.index.tripForId.get(example.tripId);
-
-        return legTrip.getRoute().getId().equals(newTrip.getRoute().getId())
-                && legTrip.getDirectionId().equals(newTrip.getDirectionId());
-    }
-
-    private static void addFrequencyFields(State[] states, Leg leg) {
-        /* TODO adapt to new frequency handling.
-        if (states[0].getBackEdge() instanceof FrequencyBoard) {
-            State preBoardState = states[0].getBackState();
-
-            FrequencyBoard fb = (FrequencyBoard) states[0].getBackEdge();
-            FrequencyBasedTripPattern pt = fb.getPattern();
-            int boardTime;
-            if (preBoardState.getServiceDay() == null) {
-                boardTime = 0; //TODO why is this happening?
-            } else {
-                boardTime = preBoardState.getServiceDay().secondsSinceMidnight(
-                        preBoardState.getTimeSeconds());
-            }
-            int period = pt.getPeriod(fb.getStopIndex(), boardTime); //TODO fix
-
-            leg.isNonExactFrequency = !pt.isExact();
-            leg.headway = period;
-        }
-        */
-    }
 
     /**
      * Add a {@link WalkStep} {@link List} to a {@link Leg} {@link List}.
@@ -661,6 +608,9 @@ public abstract class GraphPathToTripPlanConverter {
                         // this leg.
                         if (alertPatch.getTrip().equals(leg.tripId)) {
                             leg.addAlert(alertPatch.getAlert(), requestedLocale);
+                        }
+                        if (alertPatch.hasVehicleInfo()) {
+                            leg.vehicleInfo = alertPatch.getVehicleInfo();
                         }
                     } else {
                         // If we are not matching a particular trip add all known alerts for this trip pattern.
@@ -887,50 +837,6 @@ public abstract class GraphPathToTripPlanConverter {
             leg.arrivalDelay = tripTimes.getArrivalDelay(leg.to.stopIndex);
         }
     }
-
-    /**
-     * Add next departures to a {@link Leg}.
-     *
-     * @param leg The leg to add the departures to
-     * @param states The states that go with the leg
-     */
-    private static void addNextDepartures(Leg leg, State[] states) {
-        // Don't include next departures for frequency-based trips.
-        if (leg.frequencyDetail != null)
-            return;
-        State state = states[0].getBackState();
-        if (state == null) {
-            // potentially OnBoardDepart itinerary
-            return;
-        }
-        RoutingRequest options = state.getOptions();
-        GraphIndex index = options.rctx.graph.index;
-        if (options.nextDepartureWindow <= 0 || index == null)
-            return;
-        long time = leg.startTime.getTimeInMillis()/1000;
-        int stopIndex;
-        TripPattern pattern;
-        if (states[0].backEdge instanceof TransitBoardAlight) {
-            TransitBoardAlight edge = (TransitBoardAlight) (states[0].backEdge);
-            stopIndex = edge.getStopIndex();
-            pattern = edge.getPattern();
-        } else if (states[0].backEdge instanceof PatternInterlineDwell) {
-            stopIndex = 0;
-            pattern = ((OnboardVertex) state.backEdge.getToVertex()).getTripPattern();
-        } else {
-            LOG.error("Unexpected edge {}", states[0].backEdge);
-            return;
-        }
-        Stop stop = pattern.getStop(stopIndex);
-        RouteMatcher matcher = RouteMatcher.emptyMatcher();
-        matcher.addRouteId(pattern.route.getId());
-        List<StopTimesInPattern> stips = index.stopTimesForStop(stop, time + 60, options.nextDepartureWindow, options.numberOfDepartures, true, matcher,
-                pattern.directionId, leg.headsign, null, null);
-        StopTimesByStop stbs = new StopTimesByStop(stop, stips);
-        stbs.limitTimes(time, options.nextDepartureWindow, options.numberOfDepartures);
-        leg.upcomingStopTimes = stbs.getGroups();
-    }
-
 
     /**
      * Converts a list of street edges to a list of turn-by-turn directions.
@@ -1249,6 +1155,104 @@ public abstract class GraphPathToTripPlanConverter {
         }
 
         return steps;
+    }
+
+    private static Calendar establishNextDeparture(Graph graph, State[] states, ServiceDate serviceDate, Leg leg) {
+        List<StopTimesInPattern> stopTimes = getStopTimesForStopOrParent(graph, leg.from.stopId, serviceDate);
+        List<StopTimesInPattern> endStopTimes = getStopTimesForStopOrParent(graph, leg.to.stopId, serviceDate);
+        return determineNextDepartureTimeForStop(graph, leg, stopTimes, endStopTimes);
+    }
+
+    private static List<StopTimesInPattern> getStopTimesForStopOrParent(Graph graph, FeedScopedId stopId, ServiceDate serviceDate) {
+        Stop stop = graph.index.stopForId.get(stopId);
+        List<StopTimesInPattern> stopTimes;
+
+        stopTimes = graph.index.getStopTimesForStop(stop, serviceDate, false);
+        stopTimes.addAll(graph.index.getStopTimesForStop(stop, serviceDate.next(), false));
+
+        return stopTimes;
+    }
+
+    private static Calendar determineNextDepartureTimeForStop(Graph graph, Leg leg,
+                                                              List<StopTimesInPattern> stopTimes, List<StopTimesInPattern> destStopTimes) {
+
+        List<TripTimeShort> sortedStopTimes = findAndSortStopTimes(graph, leg, stopTimes);
+        List<TripTimeShort> destSortedStopTimes = findAndSortStopTimes(graph, leg, destStopTimes);
+
+        int shortTimeCounter = 1;
+
+        for (TripTimeShort tripTimeShort : sortedStopTimes) {
+            if (tripTimeShort.tripId.equals(leg.tripId)) {
+                TripTimeShort nextTrip;
+
+                if (shortTimeCounter < sortedStopTimes.size() && shortTimeCounter >= 0) {
+                    int nextTripCounter = shortTimeCounter;
+                    while (nextTripCounter < sortedStopTimes.size() && nextTripCounter >= 0) {
+                        nextTrip = sortedStopTimes.get(nextTripCounter);
+
+                        if (hasSameEndStop(nextTrip.tripId, destSortedStopTimes)) {
+                            Calendar nextDeparture = (Calendar) leg.from.departure.clone();
+                            nextDeparture.setTimeInMillis(nextTrip.serviceDay+nextTrip.scheduledDeparture);
+                            nextDeparture.setTimeZone(leg.from.departure.getTimeZone());
+
+                            return nextDeparture;
+                        }
+                        nextTripCounter++;
+                    }
+                }
+            }
+            shortTimeCounter++;
+        }
+
+        return null;
+    }
+
+    private static boolean hasSameEndStop(FeedScopedId tripId, List<TripTimeShort> destSortedStopTimes) {
+        for (TripTimeShort tripTimeShort : destSortedStopTimes) {
+            if (tripTimeShort.tripId.equals(tripId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static List<TripTimeShort> findAndSortStopTimes(Graph graph,
+                                                            Leg leg, List<StopTimesInPattern> stopTimes) {
+        List<TripTimeShort> sortedStopTimes = new ArrayList<TripTimeShort>();
+        List<TripTimeShort> collectedStopTimes= new ArrayList<TripTimeShort>();
+
+        for (StopTimesInPattern stopTimesInPattern : stopTimes) {
+            if(stopTimesInPatternMatches(graph, leg, stopTimesInPattern))
+            {
+                collectedStopTimes.addAll(stopTimesInPattern.times);
+            }
+        }
+
+        sortedStopTimes.addAll(collectedStopTimes);
+
+        Comparator<TripTimeShort> comparator = Comparator.comparing(tripTime -> tripTime.scheduledDeparture);
+//        comparator = comparator.thenComparing(Comparator.comparing(tripTime -> tripTime.serviceDay));
+        Comparator<TripTimeShort> otherComparator = Comparator.comparing(tripTime -> tripTime.serviceDay);
+
+        Collections.sort(sortedStopTimes, comparator);
+        Collections.sort(sortedStopTimes, otherComparator);
+
+        Collections.sort(collectedStopTimes, comparator);
+
+        return sortedStopTimes;
+    }
+
+    private static boolean stopTimesInPatternMatches(Graph graph, Leg leg, StopTimesInPattern stip) {
+        Trip legTrip = graph.index.tripForId.get(leg.tripId);
+
+        if (stip.times.size() == 0)
+            return false;
+
+        TripTimeShort example = stip.times.get(0);
+        Trip newTrip = graph.index.tripForId.get(example.tripId);
+
+        return legTrip.getRoute().getId().equals(newTrip.getRoute().getId())
+                && legTrip.getDirectionId().equals(newTrip.getDirectionId());
     }
 
     private static boolean isLink(Edge edge) {

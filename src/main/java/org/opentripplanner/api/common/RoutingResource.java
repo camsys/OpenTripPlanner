@@ -155,11 +155,25 @@ public abstract class RoutingResource {
     @QueryParam("mode")
     protected QualifiedModeSet modes;
 
+    /**
+     * Range time in seconds between the trip start time and the departure time user defined or between the trip end time and the arrive by time user defined.
+     */
+    @QueryParam("tripShownRangeTime")
+    protected Integer tripShownRangeTime;
+
     /** The minimum time, in seconds, between successive trips on different vehicles.
      *  This is designed to allow for imperfect schedule adherence.  This is a minimum;
      *  transfers over longer distances might use a longer time. */
     @QueryParam("minTransferTime")
     protected Integer minTransferTime;
+
+    /** Maximum time in seconds between successive trips on different vehicles. */
+    @QueryParam("maxTransferTime")
+    protected Integer maxTransferTime;
+
+    /** Minimum time in seconds between successive trips on different vehicles - hard parameter to match maxTransferTime */
+    @QueryParam("minTransferTimeHard")
+    protected Integer minTransferTimeHard;
 
     /** The maximum number of possible itineraries to return. */
     @QueryParam("numItineraries")
@@ -376,6 +390,18 @@ public abstract class RoutingResource {
     @QueryParam("flexIgnoreDrtAdvanceBookMin")
     protected Boolean flexIgnoreDrtAdvanceBookMin;
 
+    /**
+     *
+     */
+    @QueryParam("showNextFromDeparture")
+    protected Boolean showNextFromDeparture;
+
+    /**
+     * If true, API call will return stop times for all the trips in the TripPlan.
+     */
+    @QueryParam("showStopTimes")
+    protected Boolean showStopTimes;
+
     @QueryParam("maxHours")
     private Double maxHours;
 
@@ -422,18 +448,6 @@ public abstract class RoutingResource {
     /** Whether to try to link endpoints to stops with the same location */
     @QueryParam("stopLinking")
     private Boolean stopLinking;
-
-    /**
-     *
-     */
-    @QueryParam("showNextFromDeparture")
-    protected Boolean showNextFromDeparture;
-
-    /**
-     * If true, API call will return stop times for all the trips in the TripPlan.
-     */
-    @QueryParam("showStopTimes")
-    protected Boolean showStopTimes;
 
     /**
      * If true, the Graph's ellipsoidToGeoidDifference is applied to all elevations returned by this query.
@@ -497,8 +511,45 @@ public abstract class RoutingResource {
                 }
             } else {
                 request.setDateTime(date, time, tz);
-            }
+                request.setRunboardEndDate(router.graph.getTransitServiceEnds() * 1000);
 
+                //check if date is exceed end time of GTFS.
+                if (request.getDateTime().getTime() > router.graph.getTransitServiceEnds() * 1000) {
+                    LOG.warn("********* request time beyond the range");
+                    //back up original travel time
+                    request.setOrigTravelDateTime(request.getDateTime());
+                    request.setRunboard(router.graph.getFeedInfo("1").getId());
+
+                    //set transit time as the one within the GTFS calendar
+                    LOG.warn("********* user given date: " + request.getDateTime());
+                    //get the day of the week
+                    Calendar c = Calendar.getInstance();
+                    c.setTimeInMillis(router.graph.getTransitServiceEnds() * 1000);
+                    int serviceEndWeek = c.get(Calendar.WEEK_OF_YEAR);
+                    int userGivenYear = c.get(Calendar.YEAR);
+
+                    c.setTimeInMillis(request.getDateTime().getTime());
+                    int userGivendayOfWeek = c.get(Calendar.DAY_OF_WEEK);
+                    int userGivenHour = c.get(Calendar.HOUR_OF_DAY);
+                    int userGivenMin = c.get(Calendar.MINUTE);
+                    int userGivenSec = c.get(Calendar.SECOND);
+                    //int userGivenYear = c.get(Calendar.YEAR);
+                    //int userGivenWeek = c.get(Calendar.WEEK_OF_YEAR);
+
+                    c.clear();
+                    c.set(Calendar.WEEK_OF_YEAR, serviceEndWeek - 1);
+                    c.set(Calendar.YEAR, userGivenYear);
+                    c.set(Calendar.DAY_OF_WEEK, userGivendayOfWeek);
+                    c.set(Calendar.HOUR_OF_DAY, userGivenHour);
+                    c.set(Calendar.MINUTE, userGivenMin);
+                    c.set(Calendar.SECOND, userGivenSec);
+
+                    LOG.warn("********* user given date (new): " + c.getTime());
+
+                    request.setDateTime(c.getTime());
+
+                }
+            }
             request.resetClockTime();
         }
 
@@ -644,8 +695,17 @@ public abstract class RoutingResource {
         if (minTransferTime != null)
             request.transferSlack = minTransferTime; // TODO rename field in routingrequest
 
+        if (maxTransferTime != null)
+            request.maxTransferTime = maxTransferTime;
+
+        if (minTransferTimeHard != null)
+            request.minTransferTimeHard = minTransferTimeHard;
+
         if (nonpreferredTransferPenalty != null)
             request.nonpreferredTransferPenalty = nonpreferredTransferPenalty;
+
+        if (tripShownRangeTime != null)
+            request.tripShownRangeTime = tripShownRangeTime;
 
         if (request.boardSlack + request.alightSlack > request.transferSlack) {
             throw new RuntimeException("Invalid parameters: " +
@@ -701,29 +761,17 @@ public abstract class RoutingResource {
         if (geoidElevation != null)
             request.geoidElevation = geoidElevation;
 
+        if (showNextFromDeparture != null)
+            request.showNextFromDeparture = showNextFromDeparture;
+
         if (pathComparator != null)
             request.pathComparator = pathComparator;
 
         if (showNextFromDeparture != null)
             request.showNextFromDeparture = showNextFromDeparture;
 
-        if (nextDepartureWindow != null)
-            request.nextDepartureWindow = nextDepartureWindow;
-
-        if (numberOfDepartures != null)
-            request.numberOfDepartures = numberOfDepartures;
-
-        if (smartKissAndRide != null)
-            request.smartKissAndRide = smartKissAndRide;
-
         if (softWalkLimiting != null)
             request.softWalkLimiting = softWalkLimiting;
-
-        if (hardPathBanningAgencies != null)
-            request.setHardPathBanningAgencies(hardPathBanningAgencies);
-
-        if (walkLimitingByLeg != null)
-            request.walkLimitingByLeg = walkLimitingByLeg;
 
         if (softWalkPenalty != null)
             request.softWalkPenalty = softWalkPenalty;
@@ -731,8 +779,6 @@ public abstract class RoutingResource {
         if (softWalkOverageMultiplier != null)
             request.softWalkOverageRate = request.walkReluctance * softWalkOverageMultiplier;
 
-        if (stopLinking != null)
-            request.stopLinking = stopLinking;
 
         //getLocale function returns defaultLocale if locale is null
         request.locale = ResourceBundleSingleton.INSTANCE.getLocale(locale);

@@ -52,6 +52,14 @@ public class AlertPatch implements Serializable {
 
     private FeedScopedId stop;
 
+    /** Whether alert affects routing (only elevator alerts) */
+    private boolean routingConsequence = false;
+
+    private String elevatorId;
+
+    /** Vehicle info, if available */
+    private VehicleInfo vehicleInfo;
+
     /**
      * The headsign of the alert
      */
@@ -67,21 +75,9 @@ public class AlertPatch implements Serializable {
      */
     private int directionId = -1;
 
-    /** Whether alert affects routing (only elevator alerts) */
-    private boolean routingConsequence = false;
-
-    private String elevatorId;
-
-    /** Vehicle info, if available */
-    private VehicleInfo vehicleInfo;
-
     @XmlElement
     public Alert getAlert() {
         return alert;
-    }
-
-    public boolean hasAlert() {
-        return alert != null;
     }
 
     public boolean displayDuring(State state) {
@@ -313,6 +309,14 @@ public class AlertPatch implements Serializable {
         return routingConsequence;
     }
 
+    public String getElevatorId() {
+        return elevatorId;
+    }
+
+    public void setElevatorId(String elevatorId) {
+        this.elevatorId = elevatorId;
+    }
+
     public boolean isStopSpecific() {
         return  route == null && trip == null && agency == null && stop != null;
     }
@@ -438,7 +442,6 @@ public class AlertPatch implements Serializable {
                 (stop == null ? 0 : stop.hashCode()) +
                 (route == null ? 0 : route.hashCode()) +
                 (alert == null ? 0 : alert.hashCode()) +
-                (feedId == null ? 0 : feedId.hashCode()) +
-                (vehicleInfo == null ? 0 : vehicleInfo.hashCode()));
+                (feedId == null ? 0 : feedId.hashCode()));
     }
 }

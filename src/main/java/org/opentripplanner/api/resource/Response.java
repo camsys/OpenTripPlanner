@@ -9,6 +9,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.opentripplanner.api.model.TripPlan;
+import org.opentripplanner.api.model.TripTimesResponse;
 import org.opentripplanner.api.model.error.PlannerError;
 
 /** Represents a trip planner response, will be serialized into XML or JSON by Jersey */
@@ -20,6 +21,8 @@ public class Response {
     public HashMap<String, String> requestParameters;
     private TripPlan plan;
     private PlannerError error = null;
+
+    private List<TripTimesResponse> tripTimes;
 
     /** Debugging and profiling information */
     public DebugOutput debugOutput = null;
@@ -54,6 +57,14 @@ public class Response {
 
     public void setPlan(TripPlan plan) {
         this.plan = plan;
+    }
+
+    public List<TripTimesResponse> getTripTimes() {
+        return tripTimes;
+    }
+
+    public void setTripTimes(List<TripTimesResponse> tripTimes) {
+        this.tripTimes = tripTimes;
     }
 
     /** The error (if any) that this response raised. */
