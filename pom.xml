@@ -244,7 +244,7 @@
 				<version>3.0.0-M1</version>
 				<configuration>
 					<disableXmlReport>false</disableXmlReport>
-					<argLine>-Xmx16g -Xms4g -Dfile.encoding=UTF-8 --illegal-access=permit</argLine>
+					<argLine>-Xmx28g -Xms4g -Dfile.encoding=UTF-8 --illegal-access=permit</argLine>
 				</configuration>
 				<dependencies>
 					<dependency>
