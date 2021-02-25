@@ -1078,43 +1078,6 @@ public class IndexAPI {
         return Response.status(Status.OK).entity(response).build();
     }
 
-    @POST
-    @Path("/graphql")
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response getGraphQL (HashMap<String, Object> queryParameters) {
-        String query = (String) queryParameters.get("query");
-        Object queryVariables = queryParameters.getOrDefault("variables", null);
-        String operationName = (String) queryParameters.getOrDefault("operationName", null);
-        Map<String, Object> variables;
-        if (queryVariables instanceof Map) {
-            variables = (Map) queryVariables;
-        } else if (queryVariables instanceof String && !((String) queryVariables).isEmpty()) {
-            try {
-                variables = deserializer.readValue((String) queryVariables, Map.class);
-            } catch (IOException e) {
-                LOG.error("Variables must be a valid json object");
-                return Response.status(Status.BAD_REQUEST).entity(MSG_400).build();
-            }
-        } else {
-            variables = new HashMap<>();
-        }
-        return index.getGraphQLResponse(query, variables, operationName);
-    }
-
-    @POST
-    @Path("/graphql")
-    @Consumes("application/graphql")
-    public Response getGraphQL (String query) {
-        return index.getGraphQLResponse(query, new HashMap<>(), null);
-    }
-
-//    @GET
-//    @Path("/graphql")
-//    public Response getGraphQL (@QueryParam("query") String query,
-//                                @QueryParam("variables") HashMap<String, Object> variables) {
-//        return index.getGraphQLResponse(query, variables == null ? new HashMap<>() : variables);
-//    }
-
     private VehicleInfo getVehicleInfoForTrip(AgencyAndId tripId, TripPattern pattern) {
         AlertPatch[] alertPatches = index.graph.getAlertPatches(pattern.boardEdges[0]);
         for (AlertPatch patch : alertPatches) {
