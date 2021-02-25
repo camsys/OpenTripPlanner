@@ -53,9 +53,7 @@ public class RouteShort {
         if (route.getSortOrder() >= 0)
             sortOrder = route.getSortOrder();
         routeType = route.getType();
-        if (GtfsLibrary.getTraverseMode(route) == TraverseMode.BUS) {
-            regionalFareCardAccepted = route.getRegionalFareCardAccepted() != 0;
-        }
+        regionalFareCardAccepted = route.getRegionalFareCardAccepted() != 0;
     }
 
     public static List<RouteShort> list (Collection<Route> in) {

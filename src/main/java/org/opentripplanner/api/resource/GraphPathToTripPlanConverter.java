@@ -828,9 +828,7 @@ public abstract class GraphPathToTripPlanConverter {
                 leg.frequencyDetail = new FrequencyDetail(tripTimes.getFrequencyEntry());
             }
 
-            if (GtfsLibrary.getTraverseMode(route) == TraverseMode.BUS) {
-                leg.regionalFareCardAccepted = (route.getRegionalFareCardAccepted() != 0);
-            }
+            leg.regionalFareCardAccepted = route.getRegionalFareCardAccepted() != 0;
         }
     }
 
