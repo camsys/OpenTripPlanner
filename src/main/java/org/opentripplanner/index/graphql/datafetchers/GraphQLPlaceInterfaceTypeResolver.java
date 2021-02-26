@@ -4,14 +4,18 @@ import graphql.TypeResolutionEnvironment;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.TypeResolver;
-import org.opentripplanner.routing.bike_park.BikePark;
-import org.opentripplanner.routing.bike_rental.BikeRentalStation;
+
+import org.onebusaway.gtfs.model.Stop;
 
 public class GraphQLPlaceInterfaceTypeResolver implements TypeResolver {
 
-  @Override
-  public GraphQLObjectType getType(TypeResolutionEnvironment environment) {
+	@Override
+	public GraphQLObjectType getType(TypeResolutionEnvironment environment) {
+		Object o = environment.getObject();
+		GraphQLSchema schema = environment.getSchema();
 
-    return null;
-  }
+		if (o instanceof Stop) return schema.getObjectType("Stop");
+
+		return null;
+	}
 }

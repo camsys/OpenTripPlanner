@@ -19,7 +19,6 @@ public class GraphQLDataFetchers {
     public DataFetcher<Object> agency();
     public DataFetcher<Object> route();
     public DataFetcher<Object> stop();
-    public DataFetcher<Iterable<Object>> patterns();
     public DataFetcher<String> alertHeaderText();
     public DataFetcher<String> alertHeaderTextTranslations();
     public DataFetcher<String> alertDescriptionText();
@@ -51,7 +50,6 @@ public class GraphQLDataFetchers {
     public DataFetcher<String> url();
     public DataFetcher<String> color();
     public DataFetcher<String> textColor();
-    public DataFetcher<Iterable<Object>> patterns();
     public DataFetcher<Iterable<Object>> stops();
     public DataFetcher<Iterable<Object>> alerts();
   }
@@ -80,7 +78,6 @@ public class GraphQLDataFetchers {
     public DataFetcher<String> platformCode();
     public DataFetcher<Iterable<Object>> stops();
     public DataFetcher<Iterable<Object>> routes();
-    public DataFetcher<Iterable<Object>> patterns();
     public DataFetcher<Iterable<Object>> alerts();
   }
   

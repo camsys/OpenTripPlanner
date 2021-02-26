@@ -2,6 +2,10 @@ schema {
     query: QueryType
 }
 
+"""Long type"""
+scalar Long
+
+
 """
 A feed provides routing data (stops, routes, timetables, etc.) from one or more public transport agencies.
 """
@@ -12,9 +16,6 @@ type Feed {
     """List of agencies which provide data to this feed"""
     agencies: [Agency]
 }
-
-"""Long type"""
-scalar Long
 
 """Alert of a current or upcoming disruption in public transportation"""
 type Alert implements Node {
@@ -182,7 +183,6 @@ enum AlertSeverityLevelType {
 }
 
 
-
 """
 Route represents a public transportation service, usually from point A to point
 B and *back*, shown to customers under a single name, e.g. bus 550. Routes
@@ -310,9 +310,6 @@ type Stop implements Node & PlaceInterface {
     """Routes which pass through this stop"""
     routes: [Route!]
 
-    """Patterns which pass through this stop"""
-    patterns: [Pattern]
-
     """List of alerts which have an effect on this stop"""
     alerts: [Alert]
 }
@@ -388,52 +385,6 @@ type Agency implements Node {
     alerts: [Alert]
 }
 
-
-"""
-Pattern is sequence of stops used by trips on a specific direction and variant
-of a route. Most routes have only two patterns: one for outbound trips and one
-for inbound trips
-"""
-type Pattern implements Node {
-    """
-    Global object ID provided by Relay. This value can be used to refetch this object using **node** query.
-    """
-    id: ID!
-
-    """The route this pattern runs on"""
-    route: Route!
-
-    """
-    Direction of the pattern. Possible values: 0, 1 or -1.
-    -1 indicates that the direction is irrelevant, i.e. the route has patterns only in one direction.
-    """
-    directionId: Int
-
-    """
-    Name of the pattern. Pattern name can be just the name of the route or it can
-    include details of destination and origin stops.
-    """
-    name: String
-
-    """ID of the pattern"""
-    code: String!
-
-    """Vehicle headsign used by trips of this pattern"""
-    headsign: String
-
-    """List of stops served by this pattern"""
-    stops: [Stop!]
-
-    """
-    Hash code of the pattern. This value is stable and not dependent on the
-    pattern id, i.e. this value can be used to check whether two patterns are the
-    same, even if their ids have changed.
-    """
-    semanticHash: String
-
-    """List of alerts which have an effect on trips of the pattern"""
-    alerts: [Alert]
-}
 
 """An object with an ID"""
 interface Node {

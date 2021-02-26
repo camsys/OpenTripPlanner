@@ -51,12 +51,6 @@ public class GraphQLAlertImpl implements GraphQLDataFetchers.GraphQLAlert {
 	}
 
 	@Override
-	public DataFetcher<Iterable<Object>> patterns() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public DataFetcher<String> alertHeaderText() {
 		// TODO Auto-generated method stub
 		return null;

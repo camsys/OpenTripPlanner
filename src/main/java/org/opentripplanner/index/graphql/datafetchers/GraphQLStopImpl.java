@@ -7,6 +7,7 @@ import graphql.schema.DataFetchingEnvironment;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.onebusaway.gtfs.model.Stop;
 
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
@@ -19,7 +20,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	@Override
 	public DataFetcher<ResolvedGlobalId> id() {
 	    return environment -> {
-	    	org.onebusaway.gtfs.model.Stop e = environment.getSource();
+	    	Stop e = environment.getSource();
 	    	return new Relay.ResolvedGlobalId("Stop", AgencyAndId.convertToString(e.getId()));
 	    };
 	}
@@ -27,7 +28,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	@Override
 	public DataFetcher<String> gtfsId() {
 	    return environment -> {
-	    	org.onebusaway.gtfs.model.Stop e = environment.getSource();
+	    	Stop e = environment.getSource();
 	    	return AgencyAndId.convertToString(e.getId());
 	    };
 	}
@@ -35,7 +36,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	@Override
 	public DataFetcher<String> name() {
 	    return environment -> {
-	    	org.onebusaway.gtfs.model.Stop e = environment.getSource();
+	    	Stop e = environment.getSource();
 	    	return e.getName();
 	    };
 	}
@@ -43,7 +44,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	@Override
 	public DataFetcher<Double> lat() {
 	    return environment -> {
-	    	org.onebusaway.gtfs.model.Stop e = environment.getSource();
+	    	Stop e = environment.getSource();
 	    	return e.getLat();
 	    };	
 	 }
@@ -51,7 +52,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	@Override
 	public DataFetcher<Double> lon() {
 	    return environment -> {
-	    	org.onebusaway.gtfs.model.Stop e = environment.getSource();
+	    	Stop e = environment.getSource();
 	    	return e.getLon();
 	    };
 	}
@@ -59,7 +60,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	@Override
 	public DataFetcher<String> code() {
 	    return environment -> {
-	    	org.onebusaway.gtfs.model.Stop e = environment.getSource();
+	    	Stop e = environment.getSource();
 	    	return e.getCode();
 	    };
 	}
@@ -67,7 +68,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	@Override
 	public DataFetcher<String> desc() {
 	    return environment -> {
-	    	org.onebusaway.gtfs.model.Stop e = environment.getSource();
+	    	Stop e = environment.getSource();
 	    	return e.getDesc();
 	    };
 	}
@@ -75,7 +76,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	@Override
 	public DataFetcher<String> zoneId() {
 	    return environment -> {
-	    	org.onebusaway.gtfs.model.Stop e = environment.getSource();
+	    	Stop e = environment.getSource();
 	    	return e.getZoneId();
 	    };
 	}
@@ -83,7 +84,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	@Override
 	public DataFetcher<String> url() {
 	    return environment -> {
-	    	org.onebusaway.gtfs.model.Stop e = environment.getSource();
+	    	Stop e = environment.getSource();
 	    	return e.getUrl();
 	    };
 	}
@@ -91,7 +92,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	@Override
 	public DataFetcher<Object> locationType() {
 	    return environment -> {
-	    	org.onebusaway.gtfs.model.Stop e = environment.getSource();
+	    	Stop e = environment.getSource();
 	    	return e.getLocationType();
 	    };
 	}
@@ -99,7 +100,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	@Override
 	public DataFetcher<Object> parentStation() {
 	    return environment -> {
-	    	org.onebusaway.gtfs.model.Stop e = environment.getSource();
+	    	Stop e = environment.getSource();
 	    	return e.getParentStation();
 	    };
 	}
@@ -107,7 +108,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	@Override
 	public DataFetcher<Object> wheelchairBoarding() {
 	    return environment -> {
-	    	org.onebusaway.gtfs.model.Stop e = environment.getSource();
+	    	Stop e = environment.getSource();
 	    	return e.getWheelchairBoarding();
 	    };
 	}
@@ -115,7 +116,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	@Override
 	public DataFetcher<String> direction() {
 	    return environment -> {
-	    	org.onebusaway.gtfs.model.Stop e = environment.getSource();
+	    	Stop e = environment.getSource();
 	    	return e.getDirection();
 	    };
 	}
@@ -123,7 +124,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	@Override
 	public DataFetcher<String> timezone() {
 	    return environment -> {
-	    	org.onebusaway.gtfs.model.Stop e = environment.getSource();
+	    	Stop e = environment.getSource();
 	    	return e.getTimezone();
 	    };
 	}
@@ -131,7 +132,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	@Override
 	public DataFetcher<Integer> vehicleType() {
 	    return environment -> {
-	    	org.onebusaway.gtfs.model.Stop e = environment.getSource();
+	    	Stop e = environment.getSource();
 	    	return e.getVehicleType();
 	    };
 	}
@@ -139,7 +140,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	@Override
 	public DataFetcher<String> platformCode() {
 	    return environment -> {
-	    	org.onebusaway.gtfs.model.Stop e = environment.getSource();
+	    	Stop e = environment.getSource();
 	    	return e.getPlatformCode();
 	    };
 	}
@@ -147,7 +148,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	@Override
 	public DataFetcher<Iterable<Object>> stops() {
 	    return environment -> {
-	    	org.onebusaway.gtfs.model.Stop e = environment.getSource();
+	    	Stop e = environment.getSource();
 	    	AgencyAndId stationId = e.getId();
 	    	
 	    	return getGraphIndex(environment).stopsForParentStation
@@ -158,26 +159,15 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	@Override
 	public DataFetcher<Iterable<Object>> routes() {
 	    return environment -> {
-	    	org.onebusaway.gtfs.model.Stop e = environment.getSource();
-	    	AgencyAndId stationId = e.getId();
+	    	Stop e = environment.getSource();
 	    	
 	    	return getGraphIndex(environment).routesForStop(e).stream().collect(Collectors.toList());
 	    };
 	}
 
 	@Override
-	public DataFetcher<Iterable<Object>> patterns() {
-	    return environment -> {
-	    	org.onebusaway.gtfs.model.Stop e = environment.getSource();
-	    	AgencyAndId stationId = e.getId();
-	    	
-	    	return getGraphIndex(environment).patternsForStop.get(e).stream().collect(Collectors.toList());
-	    };
-	}
-
-	@Override
 	public DataFetcher<Iterable<Object>> alerts() {
-		return environment -> List.of();
+		return environment -> List.of("__NOT IMPLEMENTED__");
 	}
 
 	private Router getRouter(DataFetchingEnvironment environment) {

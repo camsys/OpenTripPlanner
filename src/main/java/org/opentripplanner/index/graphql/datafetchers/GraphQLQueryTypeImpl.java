@@ -37,42 +37,60 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 
 	@Override
 	public DataFetcher<Iterable<Object>> feeds() {
-		return environment->List.of();
+	    return environment -> getGraphIndex(environment)
+	    		.feedInfoForId.keySet().stream().collect(Collectors.toList());
 	}
 
 	@Override
 	public DataFetcher<Iterable<Object>> agencies() {
-		return environment->List.of();
+	    return environment -> getGraphIndex(environment).getAllAgencies().stream().collect(Collectors.toList());
 	}
 
 	@Override
 	public DataFetcher<Object> agency() {
-		return environment -> null;
+	    return environment -> getGraphIndex(environment)
+	            .getAgencyWithoutFeedId(
+	                new GraphQLTypes.GraphQLQueryTypeStopArgs(environment.getArguments()).getGraphQLId());
 	}
 
 	@Override
 	public DataFetcher<Iterable<Object>> stops() {
-		return environment->List.of();
+	    return environment -> getGraphIndex(environment)
+	            .stopForId.values().stream().collect(Collectors.toList());
 	}
 
 	@Override
 	public DataFetcher<Object> station() {
-		return environment -> null;
+	    return environment -> null;
 	}
 
 	@Override
 	public DataFetcher<Iterable<Object>> stations() {
 		return environment->List.of();
 	}
+/*
+	@Override
+	public DataFetcher<Object> complex() {
+	    return environment -> null;
+	}
 
 	@Override
+	public DataFetcher<Iterable<Object>> complexes() {
+		return environment->List.of();
+	}
+*/
+	
+	@Override
 	public DataFetcher<Iterable<Object>> routes() {
-		return environment -> null;
+	    return environment -> getGraphIndex(environment)
+	            .routeForId.values().stream().collect(Collectors.toList());
 	}
 
 	@Override
 	public DataFetcher<Object> route() {
-		return environment -> null;
+	    return environment -> getGraphIndex(environment)
+	            .routeForId.get(AgencyAndId.convertFromString(
+	                new GraphQLTypes.GraphQLQueryTypeStopArgs(environment.getArguments()).getGraphQLId()));
 	}
 	
 	private Router getRouter(DataFetchingEnvironment environment) {

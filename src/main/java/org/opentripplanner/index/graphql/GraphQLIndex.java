@@ -19,7 +19,6 @@ import org.opentripplanner.index.graphql.datafetchers.GraphQLAgencyImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLAlertImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLFeedImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLNodeTypeResolver;
-import org.opentripplanner.index.graphql.datafetchers.GraphQLPatternImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLPlaceInterfaceTypeResolver;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLQueryTypeImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLRouteImpl;
@@ -60,12 +59,11 @@ class GraphQLIndex {
           .type("Node", type -> type.typeResolver(new GraphQLNodeTypeResolver()))
           .type("PlaceInterface", type -> type.typeResolver(new GraphQLPlaceInterfaceTypeResolver()))
           .type(IntrospectionTypeWiring.build(GraphQLStopImpl.class))
-//          .type(IntrospectionTypeWiring.build(GraphQLAgencyImpl.class))
-//          .type(IntrospectionTypeWiring.build(GraphQLAlertImpl.class))
-//          .type(IntrospectionTypeWiring.build(GraphQLFeedImpl.class))
-//          .type(IntrospectionTypeWiring.build(GraphQLPatternImpl.class))
+          .type(IntrospectionTypeWiring.build(GraphQLAgencyImpl.class))
+          .type(IntrospectionTypeWiring.build(GraphQLAlertImpl.class))
+          .type(IntrospectionTypeWiring.build(GraphQLFeedImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLQueryTypeImpl.class))
-//          .type(IntrospectionTypeWiring.build(GraphQLRouteImpl.class))
+          .type(IntrospectionTypeWiring.build(GraphQLRouteImpl.class))
           .build();
       SchemaGenerator schemaGenerator = new SchemaGenerator();
       return schemaGenerator.makeExecutableSchema(typeRegistry, runtimeWiring);
@@ -104,7 +102,7 @@ class GraphQLIndex {
     HashMap<String, Object> content = new HashMap<>();
     ExecutionResult executionResult;
     try {
-      executionResult = graphQL.execute(executionInput);
+      executionResult = graphQL.executeAsync(executionInput).get(timeoutMs, TimeUnit.MILLISECONDS);
       if (!executionResult.getErrors().isEmpty()) {
         content.put("errors", mapErrors(executionResult.getErrors()));
       }

@@ -1,88 +1,122 @@
 package org.opentripplanner.index.graphql.datafetchers;
 
-import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
+import java.util.List;
+import java.util.stream.Collectors;
 
+import org.onebusaway.gtfs.model.AgencyAndId;
+import org.onebusaway.gtfs.model.Route;
+import org.opentripplanner.index.graphql.GraphQLRequestContext;
+import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
+import org.opentripplanner.routing.graph.GraphIndex;
+import org.opentripplanner.standalone.Router;
+
+import graphql.relay.Relay;
 import graphql.relay.Relay.ResolvedGlobalId;
 import graphql.schema.DataFetcher;
+import graphql.schema.DataFetchingEnvironment;
 
 public class GraphQLRouteImpl implements GraphQLDataFetchers.GraphQLRoute {
 
 	@Override
 	public DataFetcher<ResolvedGlobalId> id() {
-		// TODO Auto-generated method stub
-		return null;
+	    return environment -> {
+	    	Route e = environment.getSource();
+	    	return new Relay.ResolvedGlobalId("Route", AgencyAndId.convertToString(e.getId()));
+	    };
 	}
 
 	@Override
 	public DataFetcher<String> gtfsId() {
-		// TODO Auto-generated method stub
-		return null;
+	    return environment -> {
+	    	Route e = environment.getSource();
+	    	return AgencyAndId.convertToString(e.getId());
+	    };
 	}
 
 	@Override
 	public DataFetcher<Object> agency() {
-		// TODO Auto-generated method stub
-		return null;
+	    return environment -> {
+	    	Route e = environment.getSource();
+	    	return e.getAgency();
+	    };
 	}
 
 	@Override
 	public DataFetcher<String> shortName() {
-		// TODO Auto-generated method stub
-		return null;
+	    return environment -> {
+	    	Route e = environment.getSource();
+	    	return e.getShortName();
+	    };
 	}
 
 	@Override
 	public DataFetcher<String> longName() {
-		// TODO Auto-generated method stub
-		return null;
+	    return environment -> {
+	    	Route e = environment.getSource();
+	    	return e.getLongName();
+	    };
 	}
 
 	@Override
 	public DataFetcher<Integer> type() {
-		// TODO Auto-generated method stub
-		return null;
+	    return environment -> {
+	    	Route e = environment.getSource();
+	    	return e.getType();
+	    };
 	}
 
 	@Override
 	public DataFetcher<String> desc() {
-		// TODO Auto-generated method stub
-		return null;
+	    return environment -> {
+	    	Route e = environment.getSource();
+	    	return e.getDesc();
+	    };
 	}
 
 	@Override
 	public DataFetcher<String> url() {
-		// TODO Auto-generated method stub
-		return null;
+	    return environment -> {
+	    	Route e = environment.getSource();
+	    	return e.getUrl();
+	    };
 	}
 
 	@Override
 	public DataFetcher<String> color() {
-		// TODO Auto-generated method stub
-		return null;
+	    return environment -> {
+	    	Route e = environment.getSource();
+	    	return e.getColor();
+	    };
 	}
 
 	@Override
 	public DataFetcher<String> textColor() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public DataFetcher<Iterable<Object>> patterns() {
-		// TODO Auto-generated method stub
-		return null;
+	    return environment -> {
+	    	Route e = environment.getSource();
+	    	return e.getTextColor();
+	    };
 	}
 
 	@Override
 	public DataFetcher<Iterable<Object>> stops() {
-		// TODO Auto-generated method stub
-		return null;
+	    return environment -> {
+	    	Route e = environment.getSource();
+	    	return getGraphIndex(environment).patternsForRoute.get(e).stream()
+	    			.map(s-> {return s.getStops();}).collect(Collectors.toList());
+	    };
 	}
 
 	@Override
 	public DataFetcher<Iterable<Object>> alerts() {
-		// TODO Auto-generated method stub
-		return null;
+		return environment -> List.of("__NOT IMPLEMENTED__");
+	}
+
+	private Router getRouter(DataFetchingEnvironment environment) {
+		return environment.<GraphQLRequestContext>getContext().getRouter();
+	}
+
+	private GraphIndex getGraphIndex(DataFetchingEnvironment environment) {
+		return environment.<GraphQLRequestContext>getContext().getIndex();
 	}
 
 }
