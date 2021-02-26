@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "generate": "graphql-codegen --config graphql-codegen.yml"
+  }
+}

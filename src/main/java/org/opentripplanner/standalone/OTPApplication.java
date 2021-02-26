@@ -15,6 +15,7 @@ import org.opentripplanner.api.model.JSONObjectMapperProvider;
 import org.opentripplanner.api.resource.*;
 import org.opentripplanner.index.GeocoderResource;
 import org.opentripplanner.index.IndexAPI;
+import org.opentripplanner.index.graphql.GraphQLAPI;
 import org.opentripplanner.pattern_graph.PatternGraphAPI;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
@@ -95,6 +96,7 @@ public class OTPApplication extends Application {
             SurfaceResource.class,
             PointSetResource.class,
             GraphInspectorTileResource.class,
+            GraphQLAPI.class,
             ScriptResource.class,
             UpdaterStatusResource.class,
             ScenarioResource.class,

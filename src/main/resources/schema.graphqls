@@ -1,0 +1,525 @@
+schema {
+    query: QueryType
+}
+
+"""
+A feed provides routing data (stops, routes, timetables, etc.) from one or more public transport agencies.
+"""
+type Feed {
+    """ID of the feed"""
+    feedId: String!
+
+    """List of agencies which provide data to this feed"""
+    agencies: [Agency]
+}
+
+"""Long type"""
+scalar Long
+
+"""Alert of a current or upcoming disruption in public transportation"""
+type Alert implements Node {
+    """
+    Global object ID provided by Relay. This value can be used to refetch this object using **node** query.
+    """
+    id: ID!
+
+    """hashcode from the original GTFS-RT alert"""
+    alertHash: Int
+
+    """The feed in which this alert was published"""
+    feed: String
+
+    """
+    Agency affected by the disruption. Note that this value is present only if the
+    disruption has an effect on all operations of the agency (e.g. in case of a strike).
+    """
+    agency: Agency
+
+    """Route affected by the disruption"""
+    route: Route
+
+    """Stop affected by the disruption"""
+    stop: Stop
+
+    """Patterns affected by the disruption"""
+    patterns: [Pattern]
+
+    """Header of the alert, if available"""
+    alertHeaderText: String
+
+    """Header of the alert in all different available languages"""
+    alertHeaderTextTranslations: String!
+
+    """Long description of the alert"""
+    alertDescriptionText: String!
+
+    """Long descriptions of the alert in all different available languages"""
+    alertDescriptionTextTranslations: String!
+
+    """Url with more information"""
+    alertUrl: String
+
+    """Url with more information in all different available languages"""
+    alertUrlTranslations: String!
+
+    """Alert effect"""
+    alertEffect: AlertEffectType
+
+    """Alert cause"""
+    alertCause: AlertCauseType
+
+    """Alert severity level"""
+    alertSeverityLevel: AlertSeverityLevelType
+
+    """
+    Time when this alert comes into effect. Format: Unix timestamp in seconds
+    """
+    effectiveStartDate: Long
+
+    """
+    Time when this alert is not in effect anymore. Format: Unix timestamp in seconds
+    """
+    effectiveEndDate: Long
+}
+
+
+"""Cause of a alert"""
+enum AlertCauseType {
+    """UNKNOWN_CAUSE"""
+    UNKNOWN_CAUSE
+
+    """OTHER_CAUSE"""
+    OTHER_CAUSE
+
+    """TECHNICAL_PROBLEM"""
+    TECHNICAL_PROBLEM
+
+    """STRIKE"""
+    STRIKE
+
+    """DEMONSTRATION"""
+    DEMONSTRATION
+
+    """ACCIDENT"""
+    ACCIDENT
+
+    """HOLIDAY"""
+    HOLIDAY
+
+    """WEATHER"""
+    WEATHER
+
+    """MAINTENANCE"""
+    MAINTENANCE
+
+    """CONSTRUCTION"""
+    CONSTRUCTION
+
+    """POLICE_ACTIVITY"""
+    POLICE_ACTIVITY
+
+    """MEDICAL_EMERGENCY"""
+    MEDICAL_EMERGENCY
+}
+
+"""Effect of a alert"""
+enum AlertEffectType {
+    """NO_SERVICE"""
+    NO_SERVICE
+
+    """REDUCED_SERVICE"""
+    REDUCED_SERVICE
+
+    """SIGNIFICANT_DELAYS"""
+    SIGNIFICANT_DELAYS
+
+    """DETOUR"""
+    DETOUR
+
+    """ADDITIONAL_SERVICE"""
+    ADDITIONAL_SERVICE
+
+    """MODIFIED_SERVICE"""
+    MODIFIED_SERVICE
+
+    """OTHER_EFFECT"""
+    OTHER_EFFECT
+
+    """UNKNOWN_EFFECT"""
+    UNKNOWN_EFFECT
+
+    """STOP_MOVED"""
+    STOP_MOVED
+
+    """NO_EFFECT"""
+    NO_EFFECT
+}
+
+"""Severity level of a alert"""
+enum AlertSeverityLevelType {
+    """Severity of alert is unknown"""
+    UNKNOWN_SEVERITY
+
+    """
+    Info alerts are used for informational messages that should not have a
+    significant effect on user's journey, for example: A single entrance to a
+    metro station is temporarily closed.
+    """
+    INFO
+
+    """
+    Warning alerts are used when a single stop or route has a disruption that can
+    affect user's journey, for example: All trams on a specific route are running
+    with irregular schedules.
+    """
+    WARNING
+
+    """
+    Severe alerts are used when a significant part of public transport services is
+    affected, for example: All train services are cancelled due to technical problems.
+    """
+    SEVERE
+}
+
+
+
+"""
+Route represents a public transportation service, usually from point A to point
+B and *back*, shown to customers under a single name, e.g. bus 550. Routes
+contain patterns (see field `patterns`), which describe different variants of
+the route, e.g. outbound pattern from point A to point B and inbound pattern
+from point B to point A.
+"""
+type Route implements Node {
+    """
+    Global object ID provided by Relay. This value can be used to refetch this object using **node** query.
+    """
+    id: ID!
+
+    """ID of the route in format `FeedId:RouteId`"""
+    gtfsId: String!
+
+    """Agency operating the route"""
+    agency: Agency
+
+    """Short name of the route, usually a line number, e.g. 550"""
+    shortName: String
+
+    """Long name of the route, e.g. Helsinki-Leppävaara"""
+    longName: String
+
+    """
+    The raw GTFS route type as a integer. For the list of possible values, see:
+    https://developers.google.com/transit/gtfs/reference/#routestxt and
+    https://developers.google.com/transit/gtfs/reference/extended-route-types
+    """
+    type: Int
+    desc: String
+    url: String
+
+    """
+    The color (in hexadecimal format) the agency operating this route would prefer
+    to use on UI elements (e.g. polylines on a map) related to this route. This
+    value is not available for most routes.
+    """
+    color: String
+
+    """
+    The color (in hexadecimal format) the agency operating this route would prefer
+    to use when displaying text related to this route. This value is not available
+    for most routes.
+    """
+    textColor: String
+
+    """List of patterns which operate on this route"""
+    patterns: [Pattern]
+
+    """List of stops on this route"""
+    stops: [Stop]
+
+    """List of alerts which have an effect on the route"""
+    alerts: [Alert]
+}
+
+"""
+Stop can represent either a single public transport stop, where passengers can
+board and/or disembark vehicles, or a station, which contains multiple stops.
+See field `locationType`.
+"""
+type Stop implements Node & PlaceInterface {
+    """
+    Global object ID provided by Relay. This value can be used to refetch this object using **node** query.
+    """
+    id: ID!
+
+    """ÌD of the stop in format `FeedId:StopId`"""
+    gtfsId: String!
+
+    """Name of the stop, e.g. Pasilan asema"""
+    name: String!
+
+    """Latitude of the stop (WGS 84)"""
+    lat: Float
+
+    """Longitude of the stop (WGS 84)"""
+    lon: Float
+
+    """Stop code which is visible at the stop"""
+    code: String
+
+    """Description of the stop, usually a street name"""
+    desc: String
+
+    """ID of the zone where this stop is located"""
+    zoneId: String
+    url: String
+
+    """Identifies whether this stop represents a stop or station."""
+    locationType: LocationType
+
+    """
+    The station which this stop is part of (or null if this stop is not part of a station)
+    """
+    parentStation: Stop
+
+    """
+    Whether wheelchair boarding is possible for at least some of vehicles on this stop
+    """
+    wheelchairBoarding: WheelchairBoarding
+    direction: String
+    timezone: String
+
+    """
+    The raw GTFS route type used by routes which pass through this stop. For the
+    list of possible values, see:
+    https://developers.google.com/transit/gtfs/reference/#routestxt and
+    https://developers.google.com/transit/gtfs/reference/extended-route-types
+    """
+    vehicleType: Int
+
+    """
+    Identifier of the platform, usually a number. This value is only present for stops that are part of a station
+    """
+    platformCode: String
+
+    """
+    Returns all stops that are children of this station (Only applicable for stations)
+    """
+    stops: [Stop]
+
+    """Routes which pass through this stop"""
+    routes: [Route!]
+
+    """Patterns which pass through this stop"""
+    patterns: [Pattern]
+
+    """List of alerts which have an effect on this stop"""
+    alerts: [Alert]
+}
+
+enum WheelchairBoarding {
+    """There is no accessibility information for the stop."""
+    NO_INFORMATION
+
+    """
+    At least some vehicles at this stop can be boarded by a rider in a wheelchair.
+    """
+    POSSIBLE
+
+    """Wheelchair boarding is not possible at this stop."""
+    NOT_POSSIBLE
+}
+
+"""Identifies whether this stop represents a stop or station."""
+enum LocationType {
+    """A location where passengers board or disembark from a transit vehicle."""
+    STOP
+
+    """A physical structure or area that contains one or more stop."""
+    STATION
+    ENTRANCE
+}
+
+"""Interface for places, e.g. stops, stations, parking areas.."""
+interface PlaceInterface {
+    id: ID!
+
+    """Latitude of the place (WGS 84)"""
+    lat: Float
+
+    """Longitude of the place (WGS 84)"""
+    lon: Float
+}
+
+
+"""A public transport agency"""
+type Agency implements Node {
+    """
+    Global object ID provided by Relay. This value can be used to refetch this object using **node** query.
+    """
+    id: ID!
+
+    """Agency feed and id"""
+    gtfsId: String!
+
+    """Name of the agency"""
+    name: String!
+
+    """URL to the home page of the agency"""
+    url: String!
+
+    """ID of the time zone which this agency operates on"""
+    timezone: String!
+
+    lang: String
+
+    """Phone number which customers can use to contact this agency"""
+    phone: String
+
+    """URL to a web page which has information of fares used by this agency"""
+    fareUrl: String
+
+    """List of routes operated by this agency"""
+    routes: [Route]
+
+    """
+    List of alerts which have an effect on all operations of the agency (e.g. a strike)
+    """
+    alerts: [Alert]
+}
+
+
+"""
+Pattern is sequence of stops used by trips on a specific direction and variant
+of a route. Most routes have only two patterns: one for outbound trips and one
+for inbound trips
+"""
+type Pattern implements Node {
+    """
+    Global object ID provided by Relay. This value can be used to refetch this object using **node** query.
+    """
+    id: ID!
+
+    """The route this pattern runs on"""
+    route: Route!
+
+    """
+    Direction of the pattern. Possible values: 0, 1 or -1.
+    -1 indicates that the direction is irrelevant, i.e. the route has patterns only in one direction.
+    """
+    directionId: Int
+
+    """
+    Name of the pattern. Pattern name can be just the name of the route or it can
+    include details of destination and origin stops.
+    """
+    name: String
+
+    """ID of the pattern"""
+    code: String!
+
+    """Vehicle headsign used by trips of this pattern"""
+    headsign: String
+
+    """List of stops served by this pattern"""
+    stops: [Stop!]
+
+    """
+    Hash code of the pattern. This value is stable and not dependent on the
+    pattern id, i.e. this value can be used to check whether two patterns are the
+    same, even if their ids have changed.
+    """
+    semanticHash: String
+
+    """List of alerts which have an effect on trips of the pattern"""
+    alerts: [Alert]
+}
+
+"""An object with an ID"""
+interface Node {
+    """The ID of an object"""
+    id: ID!
+}
+
+type QueryType {
+    """Fetches an object given its ID"""
+    node(
+        """The ID of an object"""
+        id: ID!
+    ): Node
+
+    """Get all feeds"""
+    feeds: [Feed]
+
+    """Get all agencies"""
+    agencies: [Agency]
+
+    """
+    Get a single agency based on agency ID, i.e. value of field `gtfsId` (ID format is `FeedId:StopId`)
+    """
+    agency(id: String!): Agency
+
+
+    """Get all stops"""
+    stops(
+        """Return stops with these ids"""
+        ids: [String]
+
+        """Query stops by this name"""
+        name: String
+    ): [Stop]
+    
+    """
+    Get a single stop based on its ID, i.e. value of field `gtfsId` (ID format is `FeedId:StopId`)
+    """
+    stop(id: String!): Stop
+
+    """
+    Get a single station based on its ID, i.e. value of field `gtfsId` (format is `FeedId:StopId`)
+    """
+    station(id: String!): Stop
+
+    """Get all stations"""
+    stations(
+        """Only return stations that match one of the ids in this list"""
+        ids: [String]
+
+        """Query stations by name"""
+        name: String
+    ): [Stop]
+    
+    
+    """Get all active alerts"""
+    alerts(
+        """Only return alerts in these feeds"""
+        feeds: [String!]
+
+        """Only return alerts with these severity levels"""
+        severityLevel: [AlertSeverityLevelType!]
+
+        """Only return alerts with these effects"""
+        effect: [AlertEffectType!]
+
+        """Only return alerts with these causes"""
+        cause: [AlertCauseType!]
+    ): [Alert]
+    
+    
+    """Get all routes"""
+    routes(
+        """Only return routes with these ids"""
+        ids: [String]
+
+        """Only return routes with these feedIds"""
+        feeds: [String]
+
+        """Query routes by this name"""
+        name: String
+
+    ): [Route]
+
+    """
+    Get a single route based on its ID, i.e. value of field `gtfsId` (format is `FeedId:RouteId`)
+    """
+    route(id: String!): Route
+ }
