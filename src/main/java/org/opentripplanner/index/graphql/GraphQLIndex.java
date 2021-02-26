@@ -60,7 +60,7 @@ class GraphQLIndex {
           .type("PlaceInterface", type -> type.typeResolver(new GraphQLPlaceInterfaceTypeResolver()))
           .type(IntrospectionTypeWiring.build(GraphQLStopImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLAgencyImpl.class))
-          .type(IntrospectionTypeWiring.build(GraphQLAlertImpl.class))
+//          .type(IntrospectionTypeWiring.build(GraphQLAlertImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLFeedImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLQueryTypeImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLRouteImpl.class))

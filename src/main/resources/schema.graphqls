@@ -42,9 +42,6 @@ type Alert implements Node {
     """Stop affected by the disruption"""
     stop: Stop
 
-    """Patterns affected by the disruption"""
-    patterns: [Pattern]
-
     """Header of the alert, if available"""
     alertHeaderText: String
 
@@ -230,9 +227,6 @@ type Route implements Node {
     for most routes.
     """
     textColor: String
-
-    """List of patterns which operate on this route"""
-    patterns: [Pattern]
 
     """List of stops on this route"""
     stops: [Stop]
