@@ -30,10 +30,6 @@ public class GraphQLFeedImpl implements GraphQLDataFetchers.GraphQLFeed {
 	    };
 	}
 
-	private Router getRouter(DataFetchingEnvironment environment) {
-		return environment.<GraphQLRequestContext>getContext().getRouter();
-	}
-
 	private GraphIndex getGraphIndex(DataFetchingEnvironment environment) {
 		return environment.<GraphQLRequestContext>getContext().getIndex();
 	}

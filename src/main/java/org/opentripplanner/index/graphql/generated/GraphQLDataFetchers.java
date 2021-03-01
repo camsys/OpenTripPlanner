@@ -62,6 +62,11 @@ public class GraphQLDataFetchers {
   public interface GraphQLStop {
     public DataFetcher<graphql.relay.Relay.ResolvedGlobalId> id();
     public DataFetcher<String> gtfsId();
+    public DataFetcher<String> mtaComplexId();
+    public DataFetcher<String> mtaStationId();
+    public DataFetcher<Iterable<Object>> mtaEquipment();
+    public DataFetcher<Object> mtaAdaAccessible();
+    public DataFetcher<String> mtaAdaAccessibleNotes();
     public DataFetcher<String> name();
     public DataFetcher<Double> lat();
     public DataFetcher<Double> lon();
@@ -88,6 +93,14 @@ public class GraphQLDataFetchers {
     default public DataFetcher<Double> lon() { return null; }
   }
   
+  /** Station equipment such as an escalator or elevator */
+  public interface GraphQLEquipment {
+    public DataFetcher<graphql.relay.Relay.ResolvedGlobalId> id();
+    public DataFetcher<String> mtaEquipmentId();
+    public DataFetcher<Boolean> isCurrentlyAccessible();
+    public DataFetcher<Iterable<Object>> alerts();
+  }
+  
   /** A public transport agency */
   public interface GraphQLAgency {
     public DataFetcher<graphql.relay.Relay.ResolvedGlobalId> id();
@@ -100,23 +113,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<String> fareUrl();
     public DataFetcher<Iterable<Object>> routes();
     public DataFetcher<Iterable<Object>> alerts();
-  }
-  
-  /**
-   * Pattern is sequence of stops used by trips on a specific direction and variant
-   * of a route. Most routes have only two patterns: one for outbound trips and one
-   * for inbound trips
-   */
-  public interface GraphQLPattern {
-    public DataFetcher<graphql.relay.Relay.ResolvedGlobalId> id();
-    public DataFetcher<Object> route();
-    public DataFetcher<Integer> directionId();
-    public DataFetcher<String> name();
-    public DataFetcher<String> code();
-    public DataFetcher<String> headsign();
-    public DataFetcher<Iterable<Object>> stops();
-    public DataFetcher<String> semanticHash();
-    public DataFetcher<Iterable<Object>> alerts();
+    public DataFetcher<Iterable<Object>> mtaEquipment();
   }
   
   /** An object with an ID */
@@ -124,18 +121,23 @@ public class GraphQLDataFetchers {
     default public DataFetcher<graphql.relay.Relay.ResolvedGlobalId> id() { return null; }
   }
   
+  public interface GraphQLPairwiseAccessibleResult {
+    public DataFetcher<Object> to();
+    public DataFetcher<Iterable<String>> dependsOnEquipment();
+    public DataFetcher<Boolean> isCurrentlyAccessible();
+    public DataFetcher<Iterable<Object>> alerts();
+  }
+  
   public interface GraphQLQueryType {
     public DataFetcher<Object> node();
     public DataFetcher<Iterable<Object>> feeds();
     public DataFetcher<Iterable<Object>> agencies();
     public DataFetcher<Object> agency();
-    public DataFetcher<Iterable<Object>> stops();
-    public DataFetcher<Object> stop();
-    public DataFetcher<Object> station();
-    public DataFetcher<Iterable<Object>> stations();
+    public DataFetcher<Iterable<Object>> stop();
     public DataFetcher<Iterable<Object>> alerts();
     public DataFetcher<Iterable<Object>> routes();
     public DataFetcher<Object> route();
+    public DataFetcher<Iterable<Object>> stopAccessibility();
   }
   
 }

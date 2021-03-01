@@ -17,8 +17,10 @@ import org.apache.commons.io.Charsets;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLStopImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLAgencyImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLAlertImpl;
+import org.opentripplanner.index.graphql.datafetchers.GraphQLEquipmentImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLFeedImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLNodeTypeResolver;
+import org.opentripplanner.index.graphql.datafetchers.GraphQLPairwiseAccessibleResultImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLPlaceInterfaceTypeResolver;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLQueryTypeImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLRouteImpl;
@@ -60,7 +62,10 @@ class GraphQLIndex {
           .type("PlaceInterface", type -> type.typeResolver(new GraphQLPlaceInterfaceTypeResolver()))
           .type(IntrospectionTypeWiring.build(GraphQLStopImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLAgencyImpl.class))
-//          .type(IntrospectionTypeWiring.build(GraphQLAlertImpl.class))
+          .type(IntrospectionTypeWiring.build(GraphQLPairwiseAccessibleResultImpl.class))
+          .type(IntrospectionTypeWiring.build(GraphQLEquipmentImpl.class))
+          .type(IntrospectionTypeWiring.build(GraphQLAgencyImpl.class))
+          .type(IntrospectionTypeWiring.build(GraphQLAlertImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLFeedImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLQueryTypeImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLRouteImpl.class))

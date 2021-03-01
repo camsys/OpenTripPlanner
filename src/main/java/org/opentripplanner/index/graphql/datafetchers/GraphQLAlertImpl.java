@@ -4,115 +4,146 @@ import graphql.relay.Relay;
 import graphql.relay.Relay.ResolvedGlobalId;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
-import org.opentripplanner.util.TranslatedString;
 
-import java.util.Collections;
-import java.util.Date;
-import java.util.Map;
+import java.util.List;
+import java.util.Locale;
 
+import org.onebusaway.gtfs.model.Agency;
+import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
+import org.opentripplanner.routing.alertpatch.AlertPatch;
+import org.opentripplanner.routing.graph.GraphIndex;
+import org.opentripplanner.standalone.Router;
 
 public class GraphQLAlertImpl implements GraphQLDataFetchers.GraphQLAlert {
 
 	@Override
 	public DataFetcher<ResolvedGlobalId> id() {
-		// TODO Auto-generated method stub
-		return null;
+	    return environment -> {
+	    	AlertPatch e = environment.getSource();
+	    	return new Relay.ResolvedGlobalId("AlertPatch", e.getId());
+	    };
 	}
 
 	@Override
 	public DataFetcher<Integer> alertHash() {
-		// TODO Auto-generated method stub
-		return null;
+		 return environment -> {
+			AlertPatch e = environment.getSource();
+		    return e.hashCode();
+		 };
 	}
 
 	@Override
 	public DataFetcher<String> feed() {
-		// TODO Auto-generated method stub
-		return null;
+		 return environment -> {
+			AlertPatch e = environment.getSource();
+		    return e.getFeedId();
+		 };
 	}
 
 	@Override
 	public DataFetcher<Object> agency() {
-		// TODO Auto-generated method stub
-		return null;
+		 return environment -> {
+			AlertPatch e = environment.getSource();
+		    return e.getAgency();
+		 };
 	}
 
 	@Override
 	public DataFetcher<Object> route() {
-		// TODO Auto-generated method stub
-		return null;
+		 return environment -> {
+			AlertPatch e = environment.getSource();
+		    return getGraphIndex(environment).routeForId.get(e.getRoute());
+		 };
 	}
 
 	@Override
 	public DataFetcher<Object> stop() {
-		// TODO Auto-generated method stub
-		return null;
+		 return environment -> {
+			AlertPatch e = environment.getSource();
+		    return getGraphIndex(environment).stopForId.get(e.getRoute());
+		 };
 	}
 
 	@Override
 	public DataFetcher<String> alertHeaderText() {
-		// TODO Auto-generated method stub
-		return null;
+		 return environment -> {
+			AlertPatch e = environment.getSource();
+		    return e.getAlert().alertHeaderText.toString(Locale.ENGLISH);
+		 };
 	}
 
 	@Override
 	public DataFetcher<String> alertHeaderTextTranslations() {
-		// TODO Auto-generated method stub
-		return null;
+		return environment -> "";
 	}
 
 	@Override
 	public DataFetcher<String> alertDescriptionText() {
-		// TODO Auto-generated method stub
-		return null;
+		 return environment -> {
+			AlertPatch e = environment.getSource();
+		    return e.getAlert().alertDescriptionText.toString(Locale.ENGLISH);
+		 };
 	}
 
 	@Override
 	public DataFetcher<String> alertDescriptionTextTranslations() {
-		// TODO Auto-generated method stub
-		return null;
+		return environment -> "";
 	}
 
 	@Override
 	public DataFetcher<String> alertUrl() {
-		// TODO Auto-generated method stub
-		return null;
+		 return environment -> {
+			AlertPatch e = environment.getSource();
+		    return e.getAlert().alertUrl.toString();
+		 };
 	}
 
 	@Override
 	public DataFetcher<String> alertUrlTranslations() {
-		// TODO Auto-generated method stub
-		return null;
+		return environment -> "";
 	}
 
 	@Override
 	public DataFetcher<Object> alertEffect() {
-		// TODO Auto-generated method stub
-		return null;
+		 return environment -> {
+			AlertPatch e = environment.getSource();
+		    return e.isRoutingConsequence() == true ? "AFFECTS_ROUTING" : "UNKNOWN";
+		 };
 	}
 
 	@Override
 	public DataFetcher<Object> alertCause() {
-		// TODO Auto-generated method stub
-		return null;
+		 return environment -> "UNKNOWN";
 	}
 
 	@Override
 	public DataFetcher<Object> alertSeverityLevel() {
-		// TODO Auto-generated method stub
-		return null;
+		 return environment -> "UNKNOWN";
 	}
 
 	@Override
 	public DataFetcher<Object> effectiveStartDate() {
-		// TODO Auto-generated method stub
-		return null;
+		 return environment -> {
+			AlertPatch e = environment.getSource();
+		    return e.getAlert().effectiveStartDate;
+		 };
 	}
 
 	@Override
 	public DataFetcher<Object> effectiveEndDate() {
-		// TODO Auto-generated method stub
-		return null;
+		 return environment -> {
+			AlertPatch e = environment.getSource();
+		    return e.getAlert().effectiveEndDate;
+		 };
 	}
+	
+	private Router getRouter(DataFetchingEnvironment environment) {
+		return environment.<GraphQLRequestContext>getContext().getRouter();
+	}
+
+	private GraphIndex getGraphIndex(DataFetchingEnvironment environment) {
+		return environment.<GraphQLRequestContext>getContext().getIndex();
+	}
+
 }

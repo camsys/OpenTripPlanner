@@ -1,6 +1,5 @@
 package org.opentripplanner.index.graphql.datafetchers;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 import org.onebusaway.gtfs.model.AgencyAndId;
@@ -108,7 +107,13 @@ public class GraphQLRouteImpl implements GraphQLDataFetchers.GraphQLRoute {
 
 	@Override
 	public DataFetcher<Iterable<Object>> alerts() {
-		return environment -> List.of("__NOT IMPLEMENTED__");
+		return environment -> {
+	    	Route e = environment.getSource();
+
+			return getRouter(environment).graph.getAlertPatches()
+					.filter(s -> s.getRoute().equals(e.getId()))
+					.collect(Collectors.toList());
+		};
 	}
 
 	private Router getRouter(DataFetchingEnvironment environment) {

@@ -51,7 +51,6 @@ import org.opentripplanner.common.geometry.GraphUtils;
 import org.opentripplanner.graph_builder.annotation.GraphBuilderAnnotation;
 import org.opentripplanner.graph_builder.annotation.NoFutureDates;
 import org.opentripplanner.graph_builder.model.GraphVersion;
-import org.opentripplanner.graph_builder.module.RouteStopsAccessibilityTaggerModule.RouteStopTag;
 import org.opentripplanner.kryo.HashBiMapSerializer;
 import org.opentripplanner.model.GraphBundle;
 import org.opentripplanner.model.Landmark;
@@ -87,7 +86,10 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.prefs.Preferences;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A graph is really just one or more indexes into a set of vertexes. It used to keep edgelists for each vertex, but those are in the vertex now.
@@ -104,7 +106,7 @@ public class Graph implements Serializable {
     public String routerId;
 
     private final Map<Edge, Set<AlertPatch>> alertPatches = new HashMap<Edge, Set<AlertPatch>>(0);
-
+    
     private final Map<Edge, List<TurnRestriction>> turnRestrictions = Maps.newHashMap();
 
     public final StreetNotesService streetNotesService = new StreetNotesService();
@@ -236,9 +238,6 @@ public class Graph implements Serializable {
     /** Landmarks **/
     public Map<String, Landmark> landmarksByName = new HashMap<>();
 
-    // used in IndexAPI, created by RouteStopAccessibilityTaggerModule
-    public HashMap<String, ArrayList<RouteStopTag>> routeStopTagsByStopId = new HashMap<>();
-    
     /** Consequences strategy */
     public ConsequencesStrategyFactory consequencesStrategy;
 
@@ -439,7 +438,12 @@ public class Graph implements Serializable {
         }
         return new AlertPatch[0];
     }
-
+    
+    public Stream<AlertPatch> getAlertPatches() {
+    	return this.alertPatches.values().stream()
+    			.flatMap(e -> e.stream());
+    }
+    
     /**
      * Add a {@link TurnRestriction} to the {@link TurnRestriction} {@link List} belonging to an
      * {@link Edge}. This method is not thread-safe.

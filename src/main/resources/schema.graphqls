@@ -235,6 +235,37 @@ type Route implements Node {
     alerts: [Alert]
 }
 
+
+enum WheelchairBoarding {
+    """There is no accessibility information for the stop."""
+    NO_INFORMATION
+
+    """
+    At least some vehicles at this stop can be boarded by a rider in a wheelchair.
+    """
+    POSSIBLE
+
+    """Wheelchair boarding is not possible at this stop."""
+    NOT_POSSIBLE
+}
+
+enum NYMtaADAFlag {
+	UNKNOWN
+	NOT_ACCESSIBLE
+	ACCESSIBLE
+	PARTLY_ACCESSIBLE
+}	
+
+"""Identifies whether this stop represents a stop or station."""
+enum LocationType {
+    """A location where passengers board or disembark from a transit vehicle."""
+    STOP
+
+    """A physical structure or area that contains one or more stop."""
+    STATION
+    ENTRANCE
+}
+
 """
 Stop can represent either a single public transport stop, where passengers can
 board and/or disembark vehicles, or a station, which contains multiple stops.
@@ -248,6 +279,21 @@ type Stop implements Node & PlaceInterface {
 
     """ÌD of the stop in format `FeedId:StopId`"""
     gtfsId: String!
+
+    """NY MTA Complex ID"""
+    mtaComplexId: String
+
+    """NY MTA Station ID"""
+    mtaStationId: String
+
+    """NY MTA Equipment here"""
+    mtaEquipment: [Equipment]
+
+    """NY MTA's ADA Accessibility Status"""
+    mtaAdaAccessible: NYMtaADAFlag
+
+    """NY MTA's ADA Accessibility Description"""
+    mtaAdaAccessibleNotes: String
 
     """Name of the stop, e.g. Pasilan asema"""
     name: String!
@@ -272,7 +318,7 @@ type Stop implements Node & PlaceInterface {
     locationType: LocationType
 
     """
-    The station which this stop is part of (or null if this stop is not part of a station)
+    The GTFS station which this stop is part of (or null if this stop is not part of a station). 
     """
     parentStation: Stop
 
@@ -280,7 +326,9 @@ type Stop implements Node & PlaceInterface {
     Whether wheelchair boarding is possible for at least some of vehicles on this stop
     """
     wheelchairBoarding: WheelchairBoarding
+
     direction: String
+
     timezone: String
 
     """
@@ -308,28 +356,6 @@ type Stop implements Node & PlaceInterface {
     alerts: [Alert]
 }
 
-enum WheelchairBoarding {
-    """There is no accessibility information for the stop."""
-    NO_INFORMATION
-
-    """
-    At least some vehicles at this stop can be boarded by a rider in a wheelchair.
-    """
-    POSSIBLE
-
-    """Wheelchair boarding is not possible at this stop."""
-    NOT_POSSIBLE
-}
-
-"""Identifies whether this stop represents a stop or station."""
-enum LocationType {
-    """A location where passengers board or disembark from a transit vehicle."""
-    STOP
-
-    """A physical structure or area that contains one or more stop."""
-    STATION
-    ENTRANCE
-}
 
 """Interface for places, e.g. stops, stations, parking areas.."""
 interface PlaceInterface {
@@ -342,6 +368,24 @@ interface PlaceInterface {
     lon: Float
 }
 
+
+"""Station equipment such as an escalator or elevator"""
+type Equipment implements Node {
+    """
+    Global object ID provided by Relay. This value can be used to refetch this object using **node** query.
+    """
+    id: ID!
+
+    """Equipment id"""
+    mtaEquipmentId: String!
+
+    isCurrentlyAccessible: Boolean
+
+    """
+    List of alerts which have an effect on all operations of the agency (e.g. a strike)
+    """
+    alerts: [Alert]
+}
 
 """A public transport agency"""
 type Agency implements Node {
@@ -377,6 +421,10 @@ type Agency implements Node {
     List of alerts which have an effect on all operations of the agency (e.g. a strike)
     """
     alerts: [Alert]
+    
+    """NY MTA Equipment"""
+    mtaEquipment: [Equipment]
+
 }
 
 
@@ -386,15 +434,33 @@ interface Node {
     id: ID!
 }
 
+type PairwiseAccessibleResult {
+	
+	to: Stop
+		
+	dependsOnEquipment: [String]
+
+	isCurrentlyAccessible: Boolean
+
+    """
+    List of alerts which have an effect on all operations of the agency (e.g. a strike)
+    """
+    alerts: [Alert]
+
+}
+    
 type QueryType {
+
     """Fetches an object given its ID"""
     node(
         """The ID of an object"""
         id: ID!
     ): Node
 
+
     """Get all feeds"""
     feeds: [Feed]
+
 
     """Get all agencies"""
     agencies: [Agency]
@@ -404,49 +470,33 @@ type QueryType {
     """
     agency(id: String!): Agency
 
-
-    """Get all stops"""
-    stops(
-        """Return stops with these ids"""
-        ids: [String]
-
-        """Query stops by this name"""
-        name: String
-    ): [Stop]
     
     """
     Get a single stop based on its ID, i.e. value of field `gtfsId` (ID format is `FeedId:StopId`)
     """
-    stop(id: String!): Stop
+    stop(
+        """
+        GTFS Stop ID
+        """
+        gtfsId: String
 
-    """
-    Get a single station based on its ID, i.e. value of field `gtfsId` (format is `FeedId:StopId`)
-    """
-    station(id: String!): Stop
+        """
+        MTA Complex ID
+        """
+        mtaComplexId: String
 
-    """Get all stations"""
-    stations(
-        """Only return stations that match one of the ids in this list"""
-        ids: [String]
-
-        """Query stations by name"""
-        name: String
-    ): [Stop]
+        """
+        MTA Station ID
+        """
+        mtaStationId: String
     
+    ): [Stop]
+
     
     """Get all active alerts"""
     alerts(
         """Only return alerts in these feeds"""
         feeds: [String!]
-
-        """Only return alerts with these severity levels"""
-        severityLevel: [AlertSeverityLevelType!]
-
-        """Only return alerts with these effects"""
-        effect: [AlertEffectType!]
-
-        """Only return alerts with these causes"""
-        cause: [AlertCauseType!]
     ): [Alert]
     
     
@@ -454,9 +504,6 @@ type QueryType {
     routes(
         """Only return routes with these ids"""
         ids: [String]
-
-        """Only return routes with these feedIds"""
-        feeds: [String]
 
         """Query routes by this name"""
         name: String
@@ -467,4 +514,38 @@ type QueryType {
     Get a single route based on its ID, i.e. value of field `gtfsId` (format is `FeedId:RouteId`)
     """
     route(id: String!): Route
+
+
+	""" 
+	Shows all accessible stop pairs for the given stop/station/complex
+	"""
+	stopAccessibility(
+
+        """
+        Date of departure or arrival in format YYYY-MM-DD. Default value: current date
+        """
+        date: String
+
+        """
+        Whether to use current real-time accessibility information
+        """
+        includeRealtime: Boolean
+        
+        """
+        GTFS Stop ID
+        """
+        gtfsId: String
+
+        """
+        MTA Complex ID
+        """
+        mtaComplexId: String
+
+        """
+        MTA Station ID
+        """
+        mtaStationId: String
+        
+	): [PairwiseAccessibleResult]
+            
  }

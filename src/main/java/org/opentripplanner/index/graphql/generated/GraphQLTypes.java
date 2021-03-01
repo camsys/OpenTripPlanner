@@ -50,11 +50,18 @@ public class GraphQLTypes {
   }
   
   
-  
   public enum GraphQLWheelchairBoarding {
     NO_INFORMATION,
     POSSIBLE,
     NOT_POSSIBLE
+    
+  }
+  
+  public enum GraphQLNyMtaAdaFlag {
+    UNKNOWN,
+    NOT_ACCESSIBLE,
+    ACCESSIBLE,
+    PARTLY_ACCESSIBLE
     
   }
   
@@ -68,10 +75,12 @@ public class GraphQLTypes {
   
   
   
+  
+  
   public static class GraphQLQueryTypeNodeArgs {
     private graphql.relay.Relay.ResolvedGlobalId id;
   
-    public GraphQLQueryTypeNodeArgs(Map<String, Object> args) {}
+    public GraphQLQueryTypeNodeArgs() {}
   
     public graphql.relay.Relay.ResolvedGlobalId getGraphQLId() { return this.id; }
     public void setGraphQLId(graphql.relay.Relay.ResolvedGlobalId id) { this.id = id; }
@@ -79,101 +88,70 @@ public class GraphQLTypes {
   public static class GraphQLQueryTypeAgencyArgs {
     private String id;
   
-    public GraphQLQueryTypeAgencyArgs(Map<String, Object> args) {}
+    public GraphQLQueryTypeAgencyArgs() {}
   
     public String getGraphQLId() { return this.id; }
     public void setGraphQLId(String id) { this.id = id; }
-  }
-  public static class GraphQLQueryTypeStopsArgs {
-    private Iterable<String> ids;
-    private String name;
-  
-    public GraphQLQueryTypeStopsArgs(Map<String, Object> args) {}
-  
-    public Iterable<String> getGraphQLIds() { return this.ids; }
-    public String getGraphQLName() { return this.name; }
-    public void setGraphQLIds(Iterable<String> ids) { this.ids = ids; }
-    public void setGraphQLName(String name) { this.name = name; }
   }
   public static class GraphQLQueryTypeStopArgs {
-    private String id;
+    private String gtfsId;
+    private String mtaComplexId;
+    private String mtaStationId;
   
-    public GraphQLQueryTypeStopArgs(Map<String, Object> args) {
-        if (args != null) {
-            this.id = (String)args.get("id");
-        }
-    }
+    public GraphQLQueryTypeStopArgs() {}
   
-    public String getGraphQLId() { return this.id; }
-    public void setGraphQLId(String id) { this.id = id; }
-  }
-  public static class GraphQLQueryTypeStationArgs {
-    private String id;
-  
-    public GraphQLQueryTypeStationArgs(Map<String, Object> args) {}
-  
-    public String getGraphQLId() { return this.id; }
-    public void setGraphQLId(String id) { this.id = id; }
-  }
-  public static class GraphQLQueryTypeStationsArgs {
-    private Iterable<String> ids;
-    private String name;
-  
-    public GraphQLQueryTypeStationsArgs(Map<String, Object> args) {}
-  
-    public Iterable<String> getGraphQLIds() { return this.ids; }
-    public String getGraphQLName() { return this.name; }
-    public void setGraphQLIds(Iterable<String> ids) { this.ids = ids; }
-    public void setGraphQLName(String name) { this.name = name; }
+    public String getGraphQLGtfsId() { return this.gtfsId; }
+    public String getGraphQLMtaComplexId() { return this.mtaComplexId; }
+    public String getGraphQLMtaStationId() { return this.mtaStationId; }
+    public void setGraphQLGtfsId(String gtfsId) { this.gtfsId = gtfsId; }
+    public void setGraphQLMtaComplexId(String mtaComplexId) { this.mtaComplexId = mtaComplexId; }
+    public void setGraphQLMtaStationId(String mtaStationId) { this.mtaStationId = mtaStationId; }
   }
   public static class GraphQLQueryTypeAlertsArgs {
     private Iterable<String> feeds;
-    private Iterable<GraphQLAlertSeverityLevelType> severityLevel;
-    private Iterable<GraphQLAlertEffectType> effect;
-    private Iterable<GraphQLAlertCauseType> cause;
   
-    public GraphQLQueryTypeAlertsArgs(Map<String, Object> args) {
-    }
+    public GraphQLQueryTypeAlertsArgs() {}
   
     public Iterable<String> getGraphQLFeeds() { return this.feeds; }
-    public Iterable<GraphQLAlertSeverityLevelType> getGraphQLSeverityLevel() { return this.severityLevel; }
-    public Iterable<GraphQLAlertEffectType> getGraphQLEffect() { return this.effect; }
-    public Iterable<GraphQLAlertCauseType> getGraphQLCause() { return this.cause; }
     public void setGraphQLFeeds(Iterable<String> feeds) { this.feeds = feeds; }
-    public void setGraphQLSeverityLevel(Iterable<GraphQLAlertSeverityLevelType> severityLevel) { this.severityLevel = severityLevel; }
-    public void setGraphQLEffect(Iterable<GraphQLAlertEffectType> effect) { this.effect = effect; }
-    public void setGraphQLCause(Iterable<GraphQLAlertCauseType> cause) { this.cause = cause; }
   }
   public static class GraphQLQueryTypeRoutesArgs {
     private Iterable<String> ids;
-    private Iterable<String> feeds;
     private String name;
   
-    public GraphQLQueryTypeRoutesArgs(Map<String, Object> args) {
-        if (args != null) {
-            this.ids = (Iterable<String>)args.get("ids");
-            this.feeds = (Iterable<String>)args.get("feeds");
-            this.name = (String)args.get("name");
-        }
-    }
+    public GraphQLQueryTypeRoutesArgs() {}
   
     public Iterable<String> getGraphQLIds() { return this.ids; }
-    public Iterable<String> getGraphQLFeeds() { return this.feeds; }
     public String getGraphQLName() { return this.name; }
     public void setGraphQLIds(Iterable<String> ids) { this.ids = ids; }
-    public void setGraphQLFeeds(Iterable<String> feeds) { this.feeds = feeds; }
     public void setGraphQLName(String name) { this.name = name; }
   }
   public static class GraphQLQueryTypeRouteArgs {
     private String id;
   
-    public GraphQLQueryTypeRouteArgs(Map<String, Object> args) {
-        if (args != null) {
-            this.id = (String)args.get("id");
-        }
-    }
+    public GraphQLQueryTypeRouteArgs() {}
   
     public String getGraphQLId() { return this.id; }
     public void setGraphQLId(String id) { this.id = id; }
+  }
+  public static class GraphQLQueryTypeStopAccessibilityArgs {
+    private String date;
+    private Boolean includeRealtime;
+    private String gtfsId;
+    private String mtaComplexId;
+    private String mtaStationId;
+  
+    public GraphQLQueryTypeStopAccessibilityArgs() {}
+  
+    public String getGraphQLDate() { return this.date; }
+    public Boolean getGraphQLIncludeRealtime() { return this.includeRealtime; }
+    public String getGraphQLGtfsId() { return this.gtfsId; }
+    public String getGraphQLMtaComplexId() { return this.mtaComplexId; }
+    public String getGraphQLMtaStationId() { return this.mtaStationId; }
+    public void setGraphQLDate(String date) { this.date = date; }
+    public void setGraphQLIncludeRealtime(Boolean includeRealtime) { this.includeRealtime = includeRealtime; }
+    public void setGraphQLGtfsId(String gtfsId) { this.gtfsId = gtfsId; }
+    public void setGraphQLMtaComplexId(String mtaComplexId) { this.mtaComplexId = mtaComplexId; }
+    public void setGraphQLMtaStationId(String mtaStationId) { this.mtaStationId = mtaStationId; }
   }
 }

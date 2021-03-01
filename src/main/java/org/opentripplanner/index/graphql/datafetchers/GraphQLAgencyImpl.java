@@ -4,11 +4,23 @@ import graphql.relay.Relay;
 import graphql.relay.Relay.ResolvedGlobalId;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.onebusaway.gtfs.model.Agency;
+import org.onebusaway.gtfs.model.AgencyAndId;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
+import org.opentripplanner.index.model.EquipmentShort;
+import org.opentripplanner.routing.alertpatch.Alert;
+import org.opentripplanner.routing.alertpatch.AlertPatch;
+import org.opentripplanner.routing.edgetype.PathwayEdge;
 import org.opentripplanner.routing.graph.GraphIndex;
+import org.opentripplanner.routing.graph.Vertex;
+import org.opentripplanner.routing.vertextype.TransitStationStop;
 import org.opentripplanner.standalone.Router;
 
 public class GraphQLAgencyImpl implements GraphQLDataFetchers.GraphQLAgency {
@@ -79,9 +91,65 @@ public class GraphQLAgencyImpl implements GraphQLDataFetchers.GraphQLAgency {
 
 	@Override
 	public DataFetcher<Iterable<Object>> routes() {
-		return environment -> List.of("__NOT IMPLEMENTED__");
+	    return environment -> {
+	    	Agency e = environment.getSource();
+
+	    	return getGraphIndex(environment).routeForId.values().stream()
+	    		.filter(o -> o.getId().getAgencyId().equals(e.getId()))
+	    		.collect(Collectors.toList());
+	    };
 	}
 
+	@Override
+	public DataFetcher<Iterable<Object>> mtaEquipment() {
+		return environment -> {
+	    	Agency e = environment.getSource();
+	    	
+	    	Set<EquipmentShort> result = new HashSet<EquipmentShort>();
+
+	    	for(Vertex v : getRouter(environment).graph.getVertices()) {
+	    		if(!(v instanceof TransitStationStop))
+	    			continue;
+	    		
+	    		TransitStationStop tss = (TransitStationStop)v;
+	    		
+	    		if(!tss.getStopId().getAgencyId().equals(e.getId()))
+	    			continue;
+	    		
+	        	Set<PathwayEdge> equipmentHere = 
+	        			getGraphIndex(environment).equipmentEdgesForStationId.get(AgencyAndId.convertToString(tss.getStopId()));
+
+	        	if(equipmentHere == null || equipmentHere.isEmpty())
+	        		continue;
+	        	
+	    	    for(PathwayEdge equipmentEdge : equipmentHere) {
+	    	    	String equipmentId = equipmentEdge.getElevatorId();
+
+	    	    	EquipmentShort resultItem = new EquipmentShort();
+	    	    	resultItem.isCurrentlyAccessible = true;
+	    	    	resultItem.equipmentId = equipmentId;
+	    	    	
+	    	    	Set<Alert> alerts = new HashSet<Alert>();
+	        	   	for (AlertPatch alert : getRouter(environment).graph.getAlertPatches(equipmentEdge)) {
+	        	   		if(alert.getStop().equals(tss.getStopId())
+	        	   				&& alert.getElevatorId().equals(equipmentId)) {
+	        	   			alerts.add(alert.getAlert());
+
+	        	   			if(alert.isRoutingConsequence())
+	        	    	    	resultItem.isCurrentlyAccessible = false;
+	        	   		}
+	        	   	}
+	        	   	
+	        	    resultItem.alerts = alerts;    	 
+	    	    	
+	    	    	result.add(resultItem);
+	    	    } 
+	    	}        	
+
+	    	return result.stream().collect(Collectors.toList());
+	    };
+	}
+	
 	@Override
 	public DataFetcher<Iterable<Object>> alerts() {
 		return environment -> List.of("__NOT IMPLEMENTED__");
@@ -94,4 +162,5 @@ public class GraphQLAgencyImpl implements GraphQLDataFetchers.GraphQLAgency {
 	private GraphIndex getGraphIndex(DataFetchingEnvironment environment) {
 		return environment.<GraphQLRequestContext>getContext().getIndex();
 	}
+
 }

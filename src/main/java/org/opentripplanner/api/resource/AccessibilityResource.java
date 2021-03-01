@@ -14,7 +14,6 @@ package org.opentripplanner.api.resource;
 
 import org.joda.time.DateTime;
 import org.onebusaway.gtfs.model.AgencyAndId;
-import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.opentripplanner.api.common.ParameterException;
@@ -47,7 +46,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -68,17 +66,18 @@ public class AccessibilityResource {
     private static final Logger LOG = LoggerFactory.getLogger(AccessibilityResource.class);
 
     private static final String MSG_404 = "FOUR ZERO FOUR";
+    
     private static final String MSG_400 = "FOUR HUNDRED";
 
     /** The date that the trip should depart (or arrive, for requests where arriveBy is true). For example: <code>09/01/2017</code> */
     @QueryParam("date")
-    protected String date;
+    public String date;
     
     /**
      * If true, realtime updates are ignored during this search. Defaults to false.
      */
     @QueryParam("ignoreRealtimeUpdates")
-    protected Boolean ignoreRealtimeUpdates;
+    public Boolean ignoreRealtimeUpdates;
     
     private GraphIndex index;
     
@@ -89,6 +88,12 @@ public class AccessibilityResource {
         this.index = router.graph.index;
         this.graph = router.graph;
     }
+
+    public AccessibilityResource (Router router, GraphIndex index) {
+        this.index = router.graph.index;
+        this.graph = router.graph;
+    }
+
     
     /**
      * @param stopIdString stop in Agency:Stop ID format.
@@ -97,7 +102,16 @@ public class AccessibilityResource {
     @GET
     @Path("/stop/{stopId}")
     public Response stopAccessibility (@PathParam("stopId") String stopIdString) {
+    	ArrayList<PairwiseAccessibilityShort> result = getStopAccessibility(stopIdString);
     	
+    	if(result != null) 
+    		return Response.status(Status.OK).entity(result).build();
+    	else
+    		return Response.status(Status.NOT_FOUND).entity(MSG_404).build();
+    }
+    
+    
+    public ArrayList<PairwiseAccessibilityShort> getStopAccessibility(String stopIdString) {
     	class SkipNonPathwayEdgeStrategy implements SkipEdgeStrategy {
 
 			@Override
@@ -122,7 +136,7 @@ public class AccessibilityResource {
         Set<Vertex> connectionsTo = index.connectionsFromMap.get(stopIdString);
 
         if(connectionsTo != null && !connectionsTo.isEmpty()) {
-        	Stop fromGTFSStop = index.stopForId.get(GtfsLibrary.convertIdFromString(stopIdString));
+        	Stop fromGTFSStop = index.stopForId.get(AgencyAndId.convertFromString(stopIdString));
 
         	TransitStationStop fromStop = 
        				(TransitStationStop)index.stopVertexForStop.get(fromGTFSStop);
@@ -201,9 +215,9 @@ public class AccessibilityResource {
            		result.add(resultItem);
            	}
         	
-            return Response.status(Status.OK).entity(result).build();
+           	return result;
         } else {
-            return Response.status(Status.NOT_FOUND).entity(MSG_404).build();
+        	return null;
         }
     	
     }

@@ -103,6 +103,10 @@ public class GraphIndex {
     public final Map<String, HashSet<PathwayEdge>> equipmentEdgesForStationId = new HashMap<String, HashSet<PathwayEdge>>();
 	public final Map<String, HashSet<Vertex>> connectionsFromMap = new HashMap<String, HashSet<Vertex>>();    	
 
+	public final RemoteCSVBackedHashMap mtaSubwayStationsByStationId = new RemoteCSVBackedHashMap("http://web.mta.info/developers/data/nyct/subway/Stations.csv", "Station ID");
+	public final RemoteCSVBackedHashMap mtaSubwayStationsByComplexId = new RemoteCSVBackedHashMap("http://web.mta.info/developers/data/nyct/subway/Stations.csv", "Complex ID");
+	public final RemoteCSVBackedHashMap mtaSubwayStationsByGtfsId = new RemoteCSVBackedHashMap("http://web.mta.info/developers/data/nyct/subway/Stations.csv", "GTFS Stop ID");
+	
     /* Should eventually be replaced with new serviceId indexes. */
     private final CalendarService calendarService;
     private final Map<AgencyAndId,Integer> serviceCodes;
@@ -232,7 +236,8 @@ public class GraphIndex {
         		ts.setWheelchairEntrance(hasAtLeastOneAccessiblePath);
         	}
         	
-        	connectionsFromMap.put(v.getLabel(), connectionsFromHere);
+        	// change from the two AgencyAndId formats used in this codebase (sigh...)
+        	connectionsFromMap.put(v.getLabel().replace(":", "_"), connectionsFromHere);
         }
         
         LOG.info("done");
@@ -268,7 +273,7 @@ public class GraphIndex {
         if(s.getLocationType() == Stop.LOCATION_TYPE_ENTRANCE_EXIT)
         	return accessibleToHere;
 
-		HashSet<PathwayEdge> equipmentHere = equipmentEdgesForStationId.get(v.getLabel());
+		HashSet<PathwayEdge> equipmentHere = equipmentEdgesForStationId.get(v.getLabel().replace(":", "_"));
 		if(equipmentHere == null) 
 			equipmentHere = new HashSet<PathwayEdge>();
 		
@@ -305,7 +310,7 @@ public class GraphIndex {
     	}
 
     	// update equipment index
-    	equipmentEdgesForStationId.put(v.getLabel(), equipmentHere);
+    	equipmentEdgesForStationId.put(v.getLabel().replace(":", "_"), equipmentHere);
     	
     	return hasAtLeastOneAccessiblePath;
     }

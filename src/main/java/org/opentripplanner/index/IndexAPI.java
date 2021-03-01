@@ -30,9 +30,7 @@ import org.onebusaway.gtfs.model.Trip;
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.opentripplanner.api.model.VehicleInfo;
 import org.opentripplanner.common.geometry.SphericalDistanceLibrary;
-import org.opentripplanner.graph_builder.module.RouteStopsAccessibilityTaggerModule.RouteStopTag;
 import org.opentripplanner.gtfs.GtfsLibrary;
-import org.opentripplanner.index.model.AccessibilityShort;
 import org.opentripplanner.index.model.EquipmentShort;
 import org.opentripplanner.index.model.PatternDetail;
 import org.opentripplanner.index.model.PatternShort;
@@ -68,10 +66,8 @@ import org.opentripplanner.util.model.EncodedPolylineBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -82,7 +78,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -91,7 +86,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -494,7 +488,7 @@ public class IndexAPI {
     			continue;
 
         	Set<PathwayEdge> equipmentHere = 
-        			index.equipmentEdgesForStationId.get(GtfsLibrary.convertIdToString(tss.getStopId()));
+        			index.equipmentEdgesForStationId.get(AgencyAndId.convertToString(tss.getStopId()));
 
         	if(equipmentHere == null || equipmentHere.isEmpty())
         		continue;
@@ -524,26 +518,6 @@ public class IndexAPI {
     	}        	
          
     	return Response.status(Status.OK).entity(result).build();
-    }
-    
-    /**
-     * @param stopIdString stop in Agency:Stop ID format.
-     */
-    @GET
-    @Path("/stops/{stopId}/accessibility")
-    public Response getAccessibility(@PathParam("stopId") String stopIdString) {
-
-        Stop stop = index.stopForId.get(GtfsLibrary.convertIdFromString(stopIdString));
-        ArrayList<RouteStopTag> tags = graph.routeStopTagsByStopId.get(stopIdString);
-        if(stop != null && tags == null) 
-        	tags = graph.routeStopTagsByStopId.get(stop.getId().getAgencyId() + GtfsLibrary.ID_SEPARATOR + stop.getParentStation());
-        
-        if (stop != null && tags != null && !tags.isEmpty()) {
-            return Response.status(Status.OK).entity(new AccessibilityShort(stop, tags, graph)).build();
-        } else {
-            return Response.status(Status.NOT_FOUND).entity(MSG_404).build();
-        }
-        
     }
     
     

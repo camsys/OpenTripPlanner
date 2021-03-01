@@ -5,13 +5,22 @@ import graphql.relay.Relay.ResolvedGlobalId;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
+
 import org.onebusaway.gtfs.model.Stop;
 
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
+import org.opentripplanner.index.graphql.generated.GraphQLTypes.GraphQLLocationType;
+import org.opentripplanner.index.graphql.generated.GraphQLTypes.GraphQLNyMtaAdaFlag;
+import org.opentripplanner.index.graphql.generated.GraphQLTypes.GraphQLWheelchairBoarding;
+import org.opentripplanner.index.model.EquipmentShort;
+import org.opentripplanner.routing.alertpatch.Alert;
+import org.opentripplanner.routing.alertpatch.AlertPatch;
+import org.opentripplanner.routing.edgetype.PathwayEdge;
 import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.standalone.Router;
 
@@ -93,7 +102,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	public DataFetcher<Object> locationType() {
 	    return environment -> {
 	    	Stop e = environment.getSource();
-	    	return e.getLocationType();
+	    	return GraphQLLocationType.values()[e.getLocationType()];
 	    };
 	}
 
@@ -109,7 +118,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	public DataFetcher<Object> wheelchairBoarding() {
 	    return environment -> {
 	    	Stop e = environment.getSource();
-	    	return e.getWheelchairBoarding();
+	    	return GraphQLWheelchairBoarding.values()[e.getWheelchairBoarding()];
 	    };
 	}
 
@@ -151,8 +160,13 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	    	Stop e = environment.getSource();
 	    	AgencyAndId stationId = e.getId();
 	    	
-	    	return getGraphIndex(environment).stopsForParentStation
-	    			.get(stationId).stream().collect(Collectors.toList());
+	    	if(e.getLocationType() == Stop.LOCATION_TYPE_STATION)
+	    		return getGraphIndex(environment).stopsForParentStation
+	    			.get(stationId).stream()
+	    			.distinct()
+	    			.collect(Collectors.toList());
+	    	else
+	    		return null;
 	    };
 	}
 
@@ -161,15 +175,110 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	    return environment -> {
 	    	Stop e = environment.getSource();
 	    	
-	    	return getGraphIndex(environment).routesForStop(e).stream().collect(Collectors.toList());
+	    	if(e.getLocationType() == Stop.LOCATION_TYPE_STATION || e.getLocationType() == Stop.LOCATION_TYPE_STOP)
+	    		return getGraphIndex(environment).routesForStop(e).stream()
+	    			.distinct()
+	    			.collect(Collectors.toList());
+	    	else
+	    		return null;
 	    };
 	}
 
 	@Override
 	public DataFetcher<Iterable<Object>> alerts() {
-		return environment -> List.of("__NOT IMPLEMENTED__");
+		return environment -> {
+	    	Stop e = environment.getSource();
+
+			return getRouter(environment).graph.getAlertPatches()
+					.filter(s -> s.getStop().equals(e.getId()))
+					.collect(Collectors.toList());
+		};
+	}
+	
+	@Override
+	public DataFetcher<String> mtaComplexId() {
+		return environment -> {
+	    	Stop e = environment.getSource();
+	    	String gtfsId = e.getParentStation() != null ? e.getParentStation() : e.getId().getId();
+	    	
+	    	return getGraphIndex(environment).mtaSubwayStationsByGtfsId
+	    			.get(gtfsId).get("Complex ID");
+	    };	
 	}
 
+	@Override
+	public DataFetcher<String> mtaStationId() {
+		return environment -> {
+	    	Stop e = environment.getSource();
+	    	String gtfsId = e.getParentStation() != null ? e.getParentStation() : e.getId().getId();
+	    	
+	    	return getGraphIndex(environment).mtaSubwayStationsByGtfsId
+	    			.get(gtfsId).get("Station ID");
+	    };	
+	}
+
+	@Override
+	public DataFetcher<Iterable<Object>> mtaEquipment() {
+		return environment -> {
+	    	Stop e = environment.getSource();
+	    	String gtfsId = e.getParentStation() != null ? e.getParentStation() : e.getId().getId();
+
+	    	Set<PathwayEdge> equipmentHere = getGraphIndex(environment).equipmentEdgesForStationId.get(gtfsId);
+
+	    	if (equipmentHere != null) {
+	    		Set<EquipmentShort> result = new HashSet<EquipmentShort>();
+    		
+	    		for(PathwayEdge equipmentEdge : equipmentHere) {
+	    			String equipmentId = equipmentEdge.getElevatorId();
+
+	    			EquipmentShort resultItem = new EquipmentShort();
+	    			resultItem.isCurrentlyAccessible = true;
+	    			resultItem.equipmentId = equipmentId;
+    	    	
+	    	    	Set<Alert> alerts = new HashSet<Alert>();
+	        	   	for (AlertPatch alert : getRouter(environment).graph.getAlertPatches(equipmentEdge)) {
+	        	   		if(alert.getStop().equals(new AgencyAndId("MTASBWY", gtfsId)) 
+	        	   				&& alert.getElevatorId().equals(equipmentId)) {
+	        	   			alerts.add(alert.getAlert());
+	
+	        	   			if(alert.isRoutingConsequence())
+	        	    	    	resultItem.isCurrentlyAccessible = false;
+	        	   		}
+	        	   	}
+	        	    resultItem.alerts = alerts;    	 
+	    	    	result.add(resultItem);
+	    		} 
+	    		
+	    		return (Iterable<Object>)result.iterator();
+	    	}
+	    	
+	    	return null;
+		};
+	}
+
+	@Override
+	public DataFetcher<Object> mtaAdaAccessible() {
+		return environment -> {
+	    	Stop e = environment.getSource();
+	    	String gtfsId = e.getParentStation() != null ? e.getParentStation() : e.getId().getId();
+	    	
+	    	return GraphQLNyMtaAdaFlag.values()[Integer.parseInt(getGraphIndex(environment).mtaSubwayStationsByGtfsId
+	    			.get(gtfsId).get("ADA"))];
+	    };	
+	}
+
+	@Override
+	public DataFetcher<String> mtaAdaAccessibleNotes() {
+		return environment -> {
+	    	Stop e = environment.getSource();
+	    	String gtfsId = e.getParentStation() != null ? e.getParentStation() : e.getId().getId();
+	    	
+	    	return getGraphIndex(environment).mtaSubwayStationsByGtfsId
+	    			.get(gtfsId).get("ADA Notes");
+	    };	
+	}
+	
+	
 	private Router getRouter(DataFetchingEnvironment environment) {
 		return environment.<GraphQLRequestContext>getContext().getRouter();
 	}
@@ -177,4 +286,6 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	private GraphIndex getGraphIndex(DataFetchingEnvironment environment) {
 		return environment.<GraphQLRequestContext>getContext().getIndex();
 	}
+
+
 }

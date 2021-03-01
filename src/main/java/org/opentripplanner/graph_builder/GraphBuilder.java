@@ -14,8 +14,6 @@
 package org.opentripplanner.graph_builder;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import org.opentripplanner.graph_builder.model.GtfsBundle;
 import org.opentripplanner.graph_builder.module.CrossFeedTransferGenerator;
@@ -24,7 +22,6 @@ import org.opentripplanner.graph_builder.module.EmbedConfig;
 import org.opentripplanner.graph_builder.module.GtfsModule;
 import org.opentripplanner.graph_builder.module.LandmarksModule;
 import org.opentripplanner.graph_builder.module.PruneFloatingIslands;
-import org.opentripplanner.graph_builder.module.RouteStopsAccessibilityTaggerModule;
 import org.opentripplanner.graph_builder.module.StreetLinkerModule;
 import org.opentripplanner.graph_builder.module.TransitToTaggedStopsModule;
 import org.opentripplanner.graph_builder.module.VersionModule;
@@ -59,7 +56,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -386,9 +382,6 @@ public class GraphBuilder implements Runnable {
         }
         if (landmarks != null) {
             graphBuilder.addModule(new LandmarksModule(landmarks));
-        }
-    	if(!csvFiles.isEmpty()) {
-        	graphBuilder.addModule(new RouteStopsAccessibilityTaggerModule(csvFiles));
         }
         if (versionFile != null) {
             LOG.info("found versionFile=" + versionFile);
