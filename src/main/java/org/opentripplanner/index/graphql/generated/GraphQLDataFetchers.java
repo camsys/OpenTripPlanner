@@ -129,7 +129,6 @@ public class GraphQLDataFetchers {
   }
   
   public interface GraphQLQueryType {
-    public DataFetcher<Object> node();
     public DataFetcher<Iterable<Object>> feeds();
     public DataFetcher<Iterable<Object>> agencies();
     public DataFetcher<Object> agency();

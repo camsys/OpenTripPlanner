@@ -1,10 +1,12 @@
 package org.opentripplanner.index.graphql.datafetchers;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import org.hsqldb.lib.HashMap;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.opentripplanner.api.model.PairwiseAccessibilityShort;
 import org.opentripplanner.api.resource.AccessibilityResource;
@@ -18,11 +20,6 @@ import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 
 public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryType {
-
-	@Override
-	public DataFetcher<Object> node() {
-		return environment -> null;
-	}
 
 	@Override
 	public DataFetcher<Iterable<Object>> alerts() {
@@ -47,7 +44,7 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 	@Override
 	public DataFetcher<Iterable<Object>> feeds() {
 	    return environment -> getGraphIndex(environment)
-	    		.feedInfoForId.keySet().stream()
+	    		.feedInfoForId.values().stream()
 	    		.collect(Collectors.toList());
 	}
 
@@ -70,26 +67,32 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 					new GraphQLQueryTypeStopArgsInput(environment.getArguments());
 			
 			if(input.getGraphQLMtaStationId() != null) {
-				String gtfsId = getGraphIndex(environment).mtaSubwayStationsByStationId.get(input.getGraphQLMtaStationId()).get("GTFS Stop ID");
-									
+				Map<String, String> rec = getGraphIndex(environment).mtaSubwayStationsByStationId.get(input.getGraphQLMtaStationId());
+						
+				if(rec == null)
+					throw new Exception("Station ID was not found.");
+				
 				return getGraphIndex(environment)
 						.stopForId.values().stream()
-						.filter(c -> c.getId().getId().startsWith(gtfsId))
+						.filter(c -> c.getId().getId().startsWith(rec.get("GTFS Stop ID")))
 						.collect(Collectors.toList());				
 			
 			} else if(input.getGraphQLMtaComplexId() != null) {
-				String gtfsId = getGraphIndex(environment).mtaSubwayStationsByComplexId.get(input.getGraphQLMtaComplexId()).get("GTFS Stop ID");
-				
+				Map<String, String> rec = getGraphIndex(environment).mtaSubwayStationsByComplexId.get(input.getGraphQLMtaComplexId());
+
+				if(rec == null)
+					throw new Exception("Complex ID was not found.");
+
 				return getGraphIndex(environment)
 						.stopForId.values().stream()
-						.filter(c -> c.getId().getId().startsWith(gtfsId))
+						.filter(c -> c.getId().getId().startsWith(rec.get("GTFS Stop ID")))
 						.collect(Collectors.toList());				
 				
 			} else {			
-				String gtfsId = input.getGraphQLGtfsId();
+				AgencyAndId gtfsAgencyAndId = AgencyAndId.convertFromString(input.getGraphQLGtfsId());
 
 			    return getGraphIndex(environment).stopForId.values().stream()
-						.filter(c -> c.getId().getId().startsWith(gtfsId))
+						.filter(c -> c.getId().getId().startsWith(gtfsAgencyAndId.getId()))
 						.collect(Collectors.toList());			
 			}	
 		};

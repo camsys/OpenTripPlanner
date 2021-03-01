@@ -9,7 +9,9 @@ import java.util.Locale;
 
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
+import org.opentripplanner.index.graphql.generated.GraphQLTypes.GraphQLAlertCauseType;
 import org.opentripplanner.index.graphql.generated.GraphQLTypes.GraphQLAlertEffectType;
+import org.opentripplanner.index.graphql.generated.GraphQLTypes.GraphQLAlertSeverityLevelType;
 import org.opentripplanner.routing.alertpatch.AlertPatch;
 import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.standalone.Router;
@@ -68,7 +70,7 @@ public class GraphQLAlertImpl implements GraphQLDataFetchers.GraphQLAlert {
 	public DataFetcher<String> alertHeaderText() {
 		 return environment -> {
 			AlertPatch e = environment.getSource();
-		    return e.getAlert().alertHeaderText.toString(Locale.ENGLISH);
+		    return e.getAlert().alertHeaderText != null ? e.getAlert().alertHeaderText.toString(Locale.ENGLISH) : null;
 		 };
 	}
 
@@ -81,7 +83,7 @@ public class GraphQLAlertImpl implements GraphQLDataFetchers.GraphQLAlert {
 	public DataFetcher<String> alertDescriptionText() {
 		 return environment -> {
 			AlertPatch e = environment.getSource();
-		    return e.getAlert().alertDescriptionText.toString(Locale.ENGLISH);
+		    return e.getAlert().alertDescriptionText != null ? e.getAlert().alertDescriptionText.toString(Locale.ENGLISH) : null;
 		 };
 	}
 
@@ -94,7 +96,7 @@ public class GraphQLAlertImpl implements GraphQLDataFetchers.GraphQLAlert {
 	public DataFetcher<String> alertUrl() {
 		 return environment -> {
 			AlertPatch e = environment.getSource();
-		    return e.getAlert().alertUrl.toString();
+		    return e.getAlert().alertUrl != null ? e.getAlert().alertUrl.toString() : null;
 		 };
 	}
 
@@ -113,12 +115,12 @@ public class GraphQLAlertImpl implements GraphQLDataFetchers.GraphQLAlert {
 
 	@Override
 	public DataFetcher<Object> alertCause() {
-		 return environment -> "UNKNOWN";
+		 return environment -> GraphQLAlertCauseType.UNKNOWN_CAUSE;
 	}
 
 	@Override
 	public DataFetcher<Object> alertSeverityLevel() {
-		 return environment -> "UNKNOWN";
+		 return environment -> GraphQLAlertSeverityLevelType.UNKNOWN_SEVERITY;
 	}
 
 	@Override

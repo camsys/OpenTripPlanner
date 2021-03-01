@@ -6,7 +6,7 @@ import org.opentripplanner.index.graphql.generated.GraphQLTypes.*;
 
 @SuppressWarnings("unchecked")
 public class GraphQLQueryTypeInputs {
-	
+/*	
 	public static class GraphQLQueryTypeNodeArgsInput extends GraphQLQueryTypeNodeArgs {
 	    public GraphQLQueryTypeNodeArgsInput(Map<String, Object> args) {
 	        if (args != null) {
@@ -14,7 +14,7 @@ public class GraphQLQueryTypeInputs {
 	        }
 	    }
 	}
-
+*/
 	public static class GraphQLQueryTypeAgencyArgsInput extends GraphQLQueryTypeAgencyArgs {
 	    public GraphQLQueryTypeAgencyArgsInput(Map<String, Object> args) {
 	        if (args != null) {

@@ -77,14 +77,6 @@ public class GraphQLTypes {
   
   
   
-  public static class GraphQLQueryTypeNodeArgs {
-    private graphql.relay.Relay.ResolvedGlobalId id;
-  
-    public GraphQLQueryTypeNodeArgs() {}
-  
-    public graphql.relay.Relay.ResolvedGlobalId getGraphQLId() { return this.id; }
-    public void setGraphQLId(graphql.relay.Relay.ResolvedGlobalId id) { this.id = id; }
-  }
   public static class GraphQLQueryTypeAgencyArgs {
     private String id;
   

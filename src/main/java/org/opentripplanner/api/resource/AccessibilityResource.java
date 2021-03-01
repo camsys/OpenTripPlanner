@@ -97,11 +97,12 @@ public class AccessibilityResource {
     
     /**
      * @param stopIdString stop in Agency:Stop ID format.
+     * @throws Exception 
      * @throws ParameterException 
      */
     @GET
     @Path("/stop/{stopId}")
-    public Response stopAccessibility (@PathParam("stopId") String stopIdString) {
+    public Response stopAccessibility (@PathParam("stopId") String stopIdString) throws Exception {
     	ArrayList<PairwiseAccessibilityShort> result = getStopAccessibility(stopIdString);
     	
     	if(result != null) 
@@ -111,7 +112,7 @@ public class AccessibilityResource {
     }
     
     
-    public ArrayList<PairwiseAccessibilityShort> getStopAccessibility(String stopIdString) {
+    public ArrayList<PairwiseAccessibilityShort> getStopAccessibility(String stopIdString) throws Exception {
     	class SkipNonPathwayEdgeStrategy implements SkipEdgeStrategy {
 
 			@Override
@@ -217,7 +218,7 @@ public class AccessibilityResource {
         	
            	return result;
         } else {
-        	return null;
+        	throw new Exception("From location must be a GTFS Stop.");
         }
     	
     }

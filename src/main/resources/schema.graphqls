@@ -451,12 +451,6 @@ type PairwiseAccessibleResult {
     
 type QueryType {
 
-    """Fetches an object given its ID"""
-    node(
-        """The ID of an object"""
-        id: ID!
-    ): Node
-
 
     """Get all feeds"""
     feeds: [Feed]
