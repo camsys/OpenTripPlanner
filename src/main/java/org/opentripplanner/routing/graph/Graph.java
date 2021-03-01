@@ -441,7 +441,8 @@ public class Graph implements Serializable {
     
     public Stream<AlertPatch> getAlertPatches() {
     	return this.alertPatches.values().stream()
-    			.flatMap(e -> e.stream());
+    			.flatMap(e -> e.stream())
+    			.distinct();
     }
     
     /**

@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import org.onebusaway.gtfs.model.Agency;
 import org.onebusaway.gtfs.model.AgencyAndId;
+import org.onebusaway.gtfs.model.Route;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
 import org.opentripplanner.index.model.EquipmentShort;
@@ -96,6 +97,7 @@ public class GraphQLAgencyImpl implements GraphQLDataFetchers.GraphQLAgency {
 
 	    	return getGraphIndex(environment).routeForId.values().stream()
 	    		.filter(o -> o.getId().getAgencyId().equals(e.getId()))
+	    		.distinct()
 	    		.collect(Collectors.toList());
 	    };
 	}
@@ -152,7 +154,15 @@ public class GraphQLAgencyImpl implements GraphQLDataFetchers.GraphQLAgency {
 	
 	@Override
 	public DataFetcher<Iterable<Object>> alerts() {
-		return environment -> List.of("__NOT IMPLEMENTED__");
+		return environment -> {
+	    	Agency e = environment.getSource();
+
+			return getRouter(environment).graph.getAlertPatches()
+					.filter(s -> s.getAgency() != null ? 
+							s.getAgency().equals(e.getId()) : 
+								s.getFeedId() != null ? s.getFeedId().equals(e.getId()) : false)
+					.collect(Collectors.toList());
+		};
 	}
 
 	private Router getRouter(DataFetchingEnvironment environment) {

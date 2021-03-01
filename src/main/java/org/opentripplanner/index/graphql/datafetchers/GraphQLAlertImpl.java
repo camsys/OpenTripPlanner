@@ -5,12 +5,11 @@ import graphql.relay.Relay.ResolvedGlobalId;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 
-import java.util.List;
 import java.util.Locale;
 
-import org.onebusaway.gtfs.model.Agency;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
+import org.opentripplanner.index.graphql.generated.GraphQLTypes.GraphQLAlertEffectType;
 import org.opentripplanner.routing.alertpatch.AlertPatch;
 import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.standalone.Router;
@@ -108,7 +107,7 @@ public class GraphQLAlertImpl implements GraphQLDataFetchers.GraphQLAlert {
 	public DataFetcher<Object> alertEffect() {
 		 return environment -> {
 			AlertPatch e = environment.getSource();
-		    return e.isRoutingConsequence() == true ? "AFFECTS_ROUTING" : "UNKNOWN";
+		    return e.isRoutingConsequence() == true ? GraphQLAlertEffectType.MODIFIED_SERVICE : GraphQLAlertEffectType.UNKNOWN_EFFECT;
 		 };
 	}
 
@@ -126,7 +125,7 @@ public class GraphQLAlertImpl implements GraphQLDataFetchers.GraphQLAlert {
 	public DataFetcher<Object> effectiveStartDate() {
 		 return environment -> {
 			AlertPatch e = environment.getSource();
-		    return e.getAlert().effectiveStartDate;
+		    return e.getAlert().effectiveStartDate != null ? e.getAlert().effectiveStartDate.getTime() : null;
 		 };
 	}
 
@@ -134,7 +133,7 @@ public class GraphQLAlertImpl implements GraphQLDataFetchers.GraphQLAlert {
 	public DataFetcher<Object> effectiveEndDate() {
 		 return environment -> {
 			AlertPatch e = environment.getSource();
-		    return e.getAlert().effectiveEndDate;
+		    return e.getAlert().effectiveEndDate != null ? e.getAlert().effectiveEndDate.getTime() : null;
 		 };
 	}
 	

@@ -1,11 +1,13 @@
 package org.opentripplanner.index.graphql.datafetchers;
 
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Route;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
+import org.opentripplanner.routing.alertpatch.AlertPatch;
 import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.standalone.Router;
 
@@ -97,12 +99,14 @@ public class GraphQLRouteImpl implements GraphQLDataFetchers.GraphQLRoute {
 	}
 
 	@Override
-	public DataFetcher<Iterable<Object>> stops() {
+	public DataFetcher<Iterable<Object>> stops() {	    
 	    return environment -> {
 	    	Route e = environment.getSource();
-	    	return getGraphIndex(environment).patternsForRoute.get(e).stream()
-	    			.map(s-> {return s.getStops();}).collect(Collectors.toList());
-	    };
+	    	return getGraphIndex(environment).patternsForRoute.get(e)
+	    			.stream()
+	    			.flatMap(s -> s.getStops().stream())
+	    			.collect(Collectors.toList());
+	    	};
 	}
 
 	@Override
@@ -111,7 +115,7 @@ public class GraphQLRouteImpl implements GraphQLDataFetchers.GraphQLRoute {
 	    	Route e = environment.getSource();
 
 			return getRouter(environment).graph.getAlertPatches()
-					.filter(s -> s.getRoute().equals(e.getId()))
+					.filter(s -> s.getRoute() != null ? s.getRoute().equals(e.getId()) : false)
 					.collect(Collectors.toList());
 		};
 	}
