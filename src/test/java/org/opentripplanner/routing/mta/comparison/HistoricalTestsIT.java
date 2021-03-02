@@ -176,6 +176,7 @@ public class HistoricalTestsIT extends RoutingResource {
 			
     		long epoch = result.query.time;
 
+/*    		
     		// shift dates by +1 week to try to match the 
     		// same service period
     		Calendar c = Calendar.getInstance();
@@ -185,7 +186,7 @@ public class HistoricalTestsIT extends RoutingResource {
     			c.add(Calendar.DAY_OF_MONTH, 7);    				
         		epoch = c.getTimeInMillis();
     		}			
-			
+*/			
     		DateTimeFormatter dateF = DateTimeFormat.forPattern("MM-dd-YYYY");
     		DateTimeFormatter timeF = DateTimeFormat.forPattern("hh:mm aa");
     		this.date = new DateTime(epoch).toString(dateF);
