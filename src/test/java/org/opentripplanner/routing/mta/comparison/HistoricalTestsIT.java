@@ -127,16 +127,12 @@ public class HistoricalTestsIT extends RoutingResource {
 		LOG.info("Success.");
 	}
 	
-	private void loadGraph(File graphDir) {
+	private void loadGraph(File graphDir) throws Exception {
 		File graphFile = new File(graphDir + "/Graph.obj");
 		if(graphFile.exists()) {
 			LOG.info("Graph file is present, trying to load it...");
 
-			try {
-				graph = Graph.load(graphFile);
-			} catch (Exception e) {
-				LOG.info("Failed (exception thrown was {})", e.getMessage());
-			}
+			graph = Graph.load(graphFile);
 			
 			LOG.info("Initializing router...");
     		router = new Router(graphDir.getParent(), graph);
@@ -256,21 +252,20 @@ public class HistoricalTestsIT extends RoutingResource {
     	if(!testDir.isDirectory())
     		return;
     		
-		File idealFile = new File(testDir + "/ideal.txt");
-		File idealResultsFile = new File(testDir + "/ideal_results.txt");
-		if(idealFile.exists())
-			runThroughGraph(idealFile, idealResultsFile);
-		
-		File baselineFile = new File(testDir + "/baseline.txt");
-		File baselineResultsFile = new File(testDir + "/baseline_results.txt");
-		if(baselineFile.exists())
-			runThroughGraph(baselineFile, baselineResultsFile);
-
-		File baselineAccessibleFile = new File(testDir + "/baseline-accessible.txt");
-		File baselineAccessibleResultsFile = new File(testDir + "/baseline-accessible_results.txt");
-		if(baselineAccessibleFile.exists())
-			runThroughGraph(baselineAccessibleFile, baselineAccessibleResultsFile);
-
+			File idealFile = new File(testDir + "/ideal.txt");
+			File idealResultsFile = new File(testDir + "/ideal_results.txt");
+			if(idealFile.exists())
+				runThroughGraph(idealFile, idealResultsFile);
+			
+			File baselineFile = new File(testDir + "/baseline.txt");
+			File baselineResultsFile = new File(testDir + "/baseline_results.txt");
+			if(baselineFile.exists())
+				runThroughGraph(baselineFile, baselineResultsFile);
+	
+			File baselineAccessibleFile = new File(testDir + "/baseline-accessible.txt");
+			File baselineAccessibleResultsFile = new File(testDir + "/baseline-accessible_results.txt");
+			if(baselineAccessibleFile.exists())
+				runThroughGraph(baselineAccessibleFile, baselineAccessibleResultsFile);
     }
     
 	@TestFactory
@@ -333,6 +328,9 @@ public class HistoricalTestsIT extends RoutingResource {
 				generatedTests.addAll(t3.getTests());
 			}
 
+			// free up graph memory
+			if(router != null)
+				router.shutdown();
 		}
 
 		return generatedTests;

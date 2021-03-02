@@ -440,8 +440,8 @@ public class Graph implements Serializable {
     }
     
     public Stream<AlertPatch> getAlertPatches() {
-    	return this.alertPatches.values().stream()
-    			.flatMap(e -> e.stream())
+    	return this.alertPatches.values().parallelStream()
+    			.flatMap(e -> e.parallelStream())
     			.filter(e -> e instanceof AlertPatch) // something's putting Alerts in the pool here, tsk tsk 
     			.distinct();
     }
