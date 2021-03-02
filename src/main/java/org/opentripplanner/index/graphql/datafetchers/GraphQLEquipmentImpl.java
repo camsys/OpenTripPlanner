@@ -1,7 +1,5 @@
 package org.opentripplanner.index.graphql.datafetchers;
 
-import graphql.relay.Relay;
-import graphql.relay.Relay.ResolvedGlobalId;
 import graphql.schema.DataFetcher;
 import java.util.stream.Collectors;
 
@@ -9,14 +7,6 @@ import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
 import org.opentripplanner.index.model.EquipmentShort;
 
 public class GraphQLEquipmentImpl implements GraphQLDataFetchers.GraphQLEquipment {
-
-	@Override
-	public DataFetcher<ResolvedGlobalId> id() {
-	    return environment -> {
-	    	EquipmentShort e = environment.getSource();
-	    	return new Relay.ResolvedGlobalId("Equipment", e.equipmentId);
-	    };
-	}
 
 	@Override
 	public DataFetcher<String> mtaEquipmentId() {

@@ -1,7 +1,5 @@
 package org.opentripplanner.index.graphql.datafetchers;
 
-import graphql.relay.Relay;
-import graphql.relay.Relay.ResolvedGlobalId;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 
@@ -16,14 +14,6 @@ import org.opentripplanner.routing.alertpatch.AlertPatch;
 import org.opentripplanner.routing.graph.GraphIndex;
 
 public class GraphQLAlertImpl implements GraphQLDataFetchers.GraphQLAlert {
-
-	@Override
-	public DataFetcher<ResolvedGlobalId> id() {
-	    return environment -> {
-	    	AlertPatch e = environment.getSource();
-	    	return new Relay.ResolvedGlobalId("AlertPatch", e.getId());
-	    };
-	}
 
 	@Override
 	public DataFetcher<Integer> alertHash() {

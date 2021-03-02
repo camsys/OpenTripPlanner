@@ -110,23 +110,23 @@ public class GraphQLTypes {
     public void setGraphQLFeeds(Iterable<String> feeds) { this.feeds = feeds; }
   }
   public static class GraphQLQueryTypeRoutesArgs {
-    private Iterable<String> ids;
+    private Iterable<String> gtfsIds;
     private String name;
   
     public GraphQLQueryTypeRoutesArgs() {}
   
-    public Iterable<String> getGraphQLIds() { return this.ids; }
+    public Iterable<String> getGraphQLGtfsIds() { return this.gtfsIds; }
     public String getGraphQLName() { return this.name; }
-    public void setGraphQLIds(Iterable<String> ids) { this.ids = ids; }
+    public void setGraphQLGtfsIds(Iterable<String> gtfsIds) { this.gtfsIds = gtfsIds; }
     public void setGraphQLName(String name) { this.name = name; }
   }
   public static class GraphQLQueryTypeRouteArgs {
-    private String id;
+    private String gtfsId;
   
     public GraphQLQueryTypeRouteArgs() {}
   
-    public String getGraphQLId() { return this.id; }
-    public void setGraphQLId(String id) { this.id = id; }
+    public String getGraphQLGtfsId() { return this.gtfsId; }
+    public void setGraphQLGtfsId(String gtfsId) { this.gtfsId = gtfsId; }
   }
   public static class GraphQLQueryTypeStopAccessibilityArgs {
     private String date;

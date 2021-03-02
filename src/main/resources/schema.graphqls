@@ -20,12 +20,7 @@ type Feed {
 
 
 """Alert of a current or upcoming disruption in public transportation"""
-type Alert implements Node {
-
-    """
-    Global object ID provided by Relay. This value can be used to refetch this object using **node** query.
-    """
-    id: ID!
+type Alert {
 
     """hashcode from the original GTFS-RT alert"""
     alertHash: Int
@@ -190,12 +185,8 @@ contain patterns (see field `patterns`), which describe different variants of
 the route, e.g. outbound pattern from point A to point B and inbound pattern
 from point B to point A.
 """
-type Route implements Node {
-    """
-    Global object ID provided by Relay. This value can be used to refetch this object using **node** query.
-    """
-    id: ID!
-
+type Route {
+ 
     """ID of the route in format `FeedId_RouteId`"""
     gtfsId: String!
 
@@ -286,11 +277,7 @@ Stop can represent either a single public transport stop, where passengers can
 board and/or disembark vehicles, or a station, which contains multiple stops.
 See field `locationType`.
 """
-type Stop implements Node & PlaceInterface {
-    """
-    Global object ID provided by Relay. This value can be used to refetch this object using **node** query.
-    """
-    id: ID!
+type Stop {
 
     """ÌD of the station/stop in format `FeedId_StopId`"""
     gtfsId: String!
@@ -372,24 +359,8 @@ type Stop implements Node & PlaceInterface {
 }
 
 
-"""Interface for places, e.g. stops, stations, parking areas.."""
-interface PlaceInterface {
-    id: ID!
-
-    """Latitude of the place (WGS 84)"""
-    lat: Float
-
-    """Longitude of the place (WGS 84)"""
-    lon: Float
-}
-
-
 """Station equipment such as an escalator or elevator."""
-type Equipment implements Node {
-    """
-    Global object ID provided by Relay. This value can be used to refetch this object using **node** query.
-    """
-    id: ID!
+type Equipment {
 
     """NY MTA Equipment ID"""
     mtaEquipmentId: String!
@@ -404,11 +375,7 @@ type Equipment implements Node {
 }
 
 """A public transport agency"""
-type Agency implements Node {
-    """
-    Global object ID provided by Relay. This value can be used to refetch this object using **node** query.
-    """
-    id: ID!
+type Agency {
 
     """Agency feed and id"""
     gtfsId: String!
@@ -443,13 +410,6 @@ type Agency implements Node {
 
 }
 
-
-"""An object with an ID"""
-interface Node {
-    """The ID of an object"""
-    id: ID!
-}
-
 type PairwiseAccessibleResult {
 	
 	from: Stop
@@ -468,7 +428,6 @@ type PairwiseAccessibleResult {
 }
     
 type QueryType {
-
 
     """Get all feeds"""
     feeds: [Feed]
@@ -518,7 +477,7 @@ type QueryType {
     routes(
 
         """Only return routes with these ids"""
-        ids: [String]
+        gtfsIds: [String]
 
         """Query routes by this name"""
         name: String
@@ -529,7 +488,7 @@ type QueryType {
     """
     Get a single route based on its ID, i.e. value of field `gtfsId` (format is `FeedId_RouteId`)
     """
-    route(id: String!): Route
+    route(gtfsId: String!): Route
 
 
 	""" 

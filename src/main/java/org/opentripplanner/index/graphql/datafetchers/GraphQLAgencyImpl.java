@@ -1,7 +1,5 @@
 package org.opentripplanner.index.graphql.datafetchers;
 
-import graphql.relay.Relay;
-import graphql.relay.Relay.ResolvedGlobalId;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 
@@ -23,14 +21,6 @@ import org.opentripplanner.routing.vertextype.TransitStationStop;
 import org.opentripplanner.standalone.Router;
 
 public class GraphQLAgencyImpl implements GraphQLDataFetchers.GraphQLAgency {
-
-	@Override
-	public DataFetcher<ResolvedGlobalId> id() {
-	    return environment -> {
-	    	Agency e = environment.getSource();
-	    	return new Relay.ResolvedGlobalId("Agency", e.getId());
-	    };
-	}
 
 	@Override
 	public DataFetcher<String> gtfsId() {

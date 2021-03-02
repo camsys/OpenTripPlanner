@@ -112,8 +112,8 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 			GraphQLQueryTypeRoutesArgsInput input = 
 					new GraphQLQueryTypeRoutesArgsInput(environment.getArguments());
 	    		    	
-			if(input.getGraphQLIds() != null) {
-				Stream<String> inputStream = StreamSupport.stream(input.getGraphQLIds().spliterator(), false);
+			if(input.getGraphQLGtfsIds() != null) {
+				Stream<String> inputStream = StreamSupport.stream(input.getGraphQLGtfsIds().spliterator(), false);
 				
 				return getGraphIndex(environment)
 						.routeForId.values().stream()
@@ -139,7 +139,7 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 	    return environment -> {
 			return getGraphIndex(environment)
 					.routeForId.get(AgencyAndId.convertFromString(
-							new GraphQLQueryTypeRouteArgsInput(environment.getArguments()).getGraphQLId()));
+							new GraphQLQueryTypeRouteArgsInput(environment.getArguments()).getGraphQLGtfsId()));
 	    };
 	}
 	

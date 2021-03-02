@@ -6,15 +6,7 @@ import org.opentripplanner.index.graphql.generated.GraphQLTypes.*;
 
 @SuppressWarnings("unchecked")
 public class GraphQLQueryTypeInputs {
-/*	
-	public static class GraphQLQueryTypeNodeArgsInput extends GraphQLQueryTypeNodeArgs {
-	    public GraphQLQueryTypeNodeArgsInput(Map<String, Object> args) {
-	        if (args != null) {
-	        	this.setGraphQLId((graphql.relay.Relay.ResolvedGlobalId)args.get("id"));
-	        }
-	    }
-	}
-*/
+
 	public static class GraphQLQueryTypeAgencyArgsInput extends GraphQLQueryTypeAgencyArgs {
 	    public GraphQLQueryTypeAgencyArgsInput(Map<String, Object> args) {
 	        if (args != null) {
@@ -44,7 +36,7 @@ public class GraphQLQueryTypeInputs {
 	public static class GraphQLQueryTypeRoutesArgsInput extends GraphQLQueryTypeRoutesArgs {
 		public GraphQLQueryTypeRoutesArgsInput(Map<String, Object> args) {
 	        if (args != null) {
-	        	this.setGraphQLIds((Iterable<String>)args.get("ids"));
+	        	this.setGraphQLGtfsIds((Iterable<String>)args.get("gtfsIds"));
 	        	this.setGraphQLName((String)args.get("name"));
 	        }
 	    }
@@ -53,7 +45,7 @@ public class GraphQLQueryTypeInputs {
 	public static class GraphQLQueryTypeRouteArgsInput extends GraphQLQueryTypeRouteArgs {
 	    public GraphQLQueryTypeRouteArgsInput(Map<String, Object> args) {
 	        if (args != null) {
-	        	this.setGraphQLId((String)args.get("id"));
+	        	this.setGraphQLGtfsId((String)args.get("gtfsId"));
 	        }
 	    }
 	}	

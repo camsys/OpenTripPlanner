@@ -9,20 +9,10 @@ import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
 import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.standalone.Router;
 
-import graphql.relay.Relay;
-import graphql.relay.Relay.ResolvedGlobalId;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 
 public class GraphQLRouteImpl implements GraphQLDataFetchers.GraphQLRoute {
-
-	@Override
-	public DataFetcher<ResolvedGlobalId> id() {
-	    return environment -> {
-	    	Route e = environment.getSource();
-	    	return new Relay.ResolvedGlobalId("Route", AgencyAndId.convertToString(e.getId()));
-	    };
-	}
 
 	@Override
 	public DataFetcher<String> gtfsId() {
