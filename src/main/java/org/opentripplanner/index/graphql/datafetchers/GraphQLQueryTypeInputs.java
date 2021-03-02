@@ -23,8 +23,8 @@ public class GraphQLQueryTypeInputs {
 	    }
 	}
 
-	public static class GraphQLQueryTypeStopArgsInput extends GraphQLQueryTypeStopArgs {
-	    public GraphQLQueryTypeStopArgsInput(Map<String, Object> args) {
+	public static class GraphQLQueryTypeStopsArgsInput extends GraphQLQueryTypeStopsArgs {
+	    public GraphQLQueryTypeStopsArgsInput(Map<String, Object> args) {
 	        if (args != null) {
 	        	this.setGraphQLGtfsId((String)args.get("gtfsId"));
 	        	this.setGraphQLMtaComplexId((String)args.get("mtaComplexId"));

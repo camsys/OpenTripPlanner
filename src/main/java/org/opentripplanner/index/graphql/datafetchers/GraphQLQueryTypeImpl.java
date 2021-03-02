@@ -61,10 +61,10 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 	}
 
 	@Override
-	public DataFetcher<Iterable<Object>> stop() {
+	public DataFetcher<Iterable<Object>> stops() {
 		return environment -> {
-			GraphQLQueryTypeStopArgsInput input = 
-					new GraphQLQueryTypeStopArgsInput(environment.getArguments());
+			GraphQLQueryTypeStopsArgsInput input = 
+					new GraphQLQueryTypeStopsArgsInput(environment.getArguments());
 			
 			if(input.getGraphQLMtaStationId() != null) {
 				ArrayList<HashMap<String, String>> records = getGraphIndex(environment).mtaSubwayStationsByStationId.get(input.getGraphQLMtaStationId());						

@@ -484,9 +484,9 @@ type QueryType {
 
     
     """
-    Get a single stop based on its GTFS ID (format: `FeedId_StopId`), station or complex ID.
+    Get a stop based on its GTFS ID (format: `FeedId_StopId`), station or complex ID.
     """
-    stop(
+    stops(
         """
         GTFS Stop ID (format: `FeedId_StopId`)
         """

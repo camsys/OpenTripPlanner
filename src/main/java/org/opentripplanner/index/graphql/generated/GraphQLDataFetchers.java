@@ -133,7 +133,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<Iterable<Object>> feeds();
     public DataFetcher<Iterable<Object>> agencies();
     public DataFetcher<Object> agency();
-    public DataFetcher<Iterable<Object>> stop();
+    public DataFetcher<Iterable<Object>> stops();
     public DataFetcher<Iterable<Object>> alerts();
     public DataFetcher<Iterable<Object>> routes();
     public DataFetcher<Object> route();

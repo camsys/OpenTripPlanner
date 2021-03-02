@@ -87,12 +87,12 @@ public class GraphQLTypes {
     public String getGraphQLId() { return this.id; }
     public void setGraphQLId(String id) { this.id = id; }
   }
-  public static class GraphQLQueryTypeStopArgs {
+  public static class GraphQLQueryTypeStopsArgs {
     private String gtfsId;
     private String mtaComplexId;
     private String mtaStationId;
   
-    public GraphQLQueryTypeStopArgs() {}
+    public GraphQLQueryTypeStopsArgs() {}
   
     public String getGraphQLGtfsId() { return this.gtfsId; }
     public String getGraphQLMtaComplexId() { return this.mtaComplexId; }
