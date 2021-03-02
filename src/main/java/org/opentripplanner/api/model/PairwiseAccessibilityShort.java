@@ -14,14 +14,16 @@ package org.opentripplanner.api.model;
 
 import java.util.Set;
 
+import org.onebusaway.gtfs.model.Stop;
 import org.opentripplanner.index.model.RouteShort;
-import org.opentripplanner.index.model.StopShort;
 import org.opentripplanner.routing.alertpatch.Alert;
 
 /** Accessibility matrix for a set of stops/entrances connected by pathways (a PathwayCluster) */
 public class PairwiseAccessibilityShort {
-	
-	public StopShort to;
+
+	public Stop from;
+
+	public Stop to;
 	
 	public Set<String> dependsOnEquipment;
 

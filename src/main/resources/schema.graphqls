@@ -436,6 +436,8 @@ interface Node {
 
 type PairwiseAccessibleResult {
 	
+	from: Stop
+
 	to: Stop
 		
 	dependsOnEquipment: [String]
@@ -503,6 +505,7 @@ type QueryType {
         name: String
 
     ): [Route]
+
 
     """
     Get a single route based on its ID, i.e. value of field `gtfsId` (format is `FeedId:RouteId`)

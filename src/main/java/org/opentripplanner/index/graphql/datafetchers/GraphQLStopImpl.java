@@ -202,7 +202,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	    	String gtfsId = e.getParentStation() != null ? e.getParentStation() : e.getId().getId();
 	    	
 	    	return getGraphIndex(environment).mtaSubwayStationsByGtfsId
-	    			.get(gtfsId).get("Complex ID");
+	    			.get(gtfsId).get(0).get("Complex ID");
 	    };	
 	}
 
@@ -213,7 +213,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	    	String gtfsId = e.getParentStation() != null ? e.getParentStation() : e.getId().getId();
 	    	
 	    	return getGraphIndex(environment).mtaSubwayStationsByGtfsId
-	    			.get(gtfsId).get("Station ID");
+	    			.get(gtfsId).get(0).get("Station ID");
 	    };	
 	}
 
@@ -263,7 +263,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	    	String gtfsId = e.getParentStation() != null ? e.getParentStation() : e.getId().getId();
 	    	
 	    	return GraphQLNyMtaAdaFlag.values()[Integer.parseInt(getGraphIndex(environment).mtaSubwayStationsByGtfsId
-	    			.get(gtfsId).get("ADA"))];
+	    			.get(gtfsId).get(0).get("ADA"))];
 	    };	
 	}
 
@@ -274,7 +274,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	    	String gtfsId = e.getParentStation() != null ? e.getParentStation() : e.getId().getId();
 	    	
 	    	return getGraphIndex(environment).mtaSubwayStationsByGtfsId
-	    			.get(gtfsId).get("ADA Notes");
+	    			.get(gtfsId).get(0).get("ADA Notes");
 	    };	
 	}
 	

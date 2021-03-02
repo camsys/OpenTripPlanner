@@ -16,7 +16,7 @@ public class GraphQLPairwiseAccessibleResultImpl implements GraphQLDataFetchers.
 	public DataFetcher<Object> to() {
 		return environment -> {
 			PairwiseAccessibilityShort e = environment.getSource();
-	    	return getGraphIndex(environment).stopForId.get(e.to.id);
+	    	return getGraphIndex(environment).stopForId.get(e.to.getId());
 	    };
 	}
 

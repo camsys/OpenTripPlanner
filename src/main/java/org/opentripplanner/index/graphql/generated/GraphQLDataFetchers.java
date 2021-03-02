@@ -122,6 +122,7 @@ public class GraphQLDataFetchers {
   }
   
   public interface GraphQLPairwiseAccessibleResult {
+    public DataFetcher<Object> from();
     public DataFetcher<Object> to();
     public DataFetcher<Iterable<String>> dependsOnEquipment();
     public DataFetcher<Boolean> isCurrentlyAccessible();

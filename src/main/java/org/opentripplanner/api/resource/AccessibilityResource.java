@@ -111,10 +111,138 @@ public class AccessibilityResource {
     		return Response.status(Status.NOT_FOUND).entity(MSG_404).build();
     }
     
-    
-    public ArrayList<PairwiseAccessibilityShort> getStopAccessibility(String stopIdString) throws Exception {
-    	class SkipNonPathwayEdgeStrategy implements SkipEdgeStrategy {
 
+    public ArrayList<PairwiseAccessibilityShort> getStopAccessibility(String fromStopIdString) throws Exception {
+    	ArrayList<PairwiseAccessibilityShort> result = new ArrayList<PairwiseAccessibilityShort>();
+       	
+    	Stop fromGTFSStop = index.stopForId.get(AgencyAndId.convertFromString(fromStopIdString));
+
+    	TransitStationStop fromStop = 
+   				(TransitStationStop)index.stopVertexForStop.get(fromGTFSStop);
+
+        Set<Vertex> connectionsTo = index.connectionsFromMap.get(fromStopIdString);
+
+        for(Vertex connectionTo : connectionsTo) {
+       		TransitStationStop toStop = (TransitStationStop)connectionTo;
+
+    		if(toStop.getStopId().equals(fromStop.getStopId()))
+   				continue;
+    		
+        	result.addAll(getStopAccessibility(fromStop.getStop(), toStop.getStop()));
+       	}
+           	
+        return result;
+    }
+    
+    public ArrayList<PairwiseAccessibilityShort> getPairwiseAccessibility(List<AgencyAndId> ids) throws Exception {
+       	ArrayList<PairwiseAccessibilityShort> result = new ArrayList<PairwiseAccessibilityShort>();
+    	
+       	HashSet<String> finishedQueries = new HashSet<String>();
+    	for(AgencyAndId from : ids) {
+        	for(AgencyAndId to : ids) {
+        		if(finishedQueries.contains(from + "" + to) || finishedQueries.contains(to + "" + from))
+        			continue;
+        		
+        		Stop fromStop = 
+           				index.stopForId.get(from);
+
+        		Stop toStop = 
+           				index.stopForId.get(to);
+
+            	result.addAll(getStopAccessibility(fromStop, toStop));
+            	
+            	finishedQueries.add(fromStop.getId() + "" + toStop.getId());
+        	}
+    	}
+
+    	return result;
+    }
+    
+    public ArrayList<PairwiseAccessibilityShort> getStopAccessibility(Stop fromStop, Stop toStop) throws Exception {
+	   	ArrayList<PairwiseAccessibilityShort> result = new ArrayList<PairwiseAccessibilityShort>();
+		
+        ServiceDate sd = new ServiceDate();
+        if(this.date != null) 
+        	sd = new ServiceDate(new DateTime(date).toDate());
+        
+        if(ignoreRealtimeUpdates == null)
+        	ignoreRealtimeUpdates = false;
+       
+        TransitStationStop fromStopV = 
+       			(TransitStationStop)index.stopVertexForStop.get(fromStop);
+
+        TransitStationStop toStopV = 
+   				(TransitStationStop)index.stopVertexForStop.get(toStop);
+
+	    RoutingRequest request = new RoutingRequest();
+		GenericDijkstra algo = new GenericDijkstra(request);
+		algo.setSkipEdgeStrategy(new SkipNonPathwayEdgeStrategy());
+	    request.setMode(TraverseMode.WALK);
+	    request.numberOfDepartures = 1;
+	    request.wheelchairAccessible = true;
+	    request.dominanceFunction = new DominanceFunction.MinimumWeight(); // FORCING the dominance function to weight only
+	
+	   	request.setRoutingContext(graph, fromStopV, toStopV);
+
+        ConsequencesStrategy consequencesStrategy = request.rctx.graph.consequencesStrategy.create(request);
+
+    	State s0 = State.stateAllowingTransfer(fromStopV, request);
+        ShortestPathTree spt = algo.getShortestPathTree(s0);
+
+        PairwiseAccessibilityShort resultItem = new PairwiseAccessibilityShort();
+        resultItem.from = fromStop;
+        resultItem.to = toStop;
+        resultItem.isCurrentlyAccessible = false;
+
+        if(toStop.getLocationType() == Stop.LOCATION_TYPE_STATION || toStop.getLocationType() == Stop.LOCATION_TYPE_STOP) {
+        	resultItem.service = new HashSet<RouteShort>();
+        	for(StopTimesInPattern st : index.getStopTimesForStop(toStop, sd, true, ignoreRealtimeUpdates)) {
+        		resultItem.service.add(st.route);
+        	}
+        }
+        
+        List<GraphPath> paths = spt.getPaths();
+        if(!paths.isEmpty()) {
+            resultItem.dependsOnEquipment = new HashSet<String>();
+            resultItem.isCurrentlyAccessible = true;
+
+            resultItem.alerts = new HashSet<Alert>();
+            if(!ignoreRealtimeUpdates) {
+            	resultItem.alerts.addAll(consequencesStrategy.getConsequences(paths));
+            }
+                                
+            for(GraphPath path : paths) {
+            	for(Edge edge : path.edges) {
+            		PathwayEdge pe = (PathwayEdge)edge;
+            	                    		
+            		if(!pe.isWheelchairAccessible()) 
+                        resultItem.isCurrentlyAccessible = false;
+
+            		if(pe.getElevatorId() != null) {
+            			resultItem.dependsOnEquipment.add(pe.getElevatorId());
+
+                        if(!ignoreRealtimeUpdates) {
+                	        for (AlertPatch alert : graph.getAlertPatches(pe)) {
+                	            if (alert.displayDuring(path.states.getLast()) 
+                	            		&& alert.getElevatorId() != null && pe.getPathwayMode() == Mode.ELEVATOR) {
+                	            	resultItem.alerts.add(alert.getAlert());
+                	            	
+                	            	if(alert.isRoutingConsequence())
+                	            		resultItem.isCurrentlyAccessible = false;
+                	            }
+                	        }
+                        }
+            		}
+            	}
+            } // foreach paths
+        }
+           		
+        result.add(resultItem);
+        	
+        return result;
+     }
+    
+  	 class SkipNonPathwayEdgeStrategy implements SkipEdgeStrategy {
 			@Override
 			public boolean shouldSkipEdge(Vertex origin, Vertex target, State current, Edge edge, ShortestPathTree spt,
 					RoutingRequest traverseOptions) {
@@ -126,101 +254,5 @@ public class AccessibilityResource {
 			}
     		
     	}
-    	
-        ServiceDate sd = new ServiceDate();
-        if(this.date != null) 
-        	sd = new ServiceDate(new DateTime(date).toDate());
-        
-        if(ignoreRealtimeUpdates == null)
-        	ignoreRealtimeUpdates = false;
-       
-        Set<Vertex> connectionsTo = index.connectionsFromMap.get(stopIdString);
-
-        if(connectionsTo != null && !connectionsTo.isEmpty()) {
-        	Stop fromGTFSStop = index.stopForId.get(AgencyAndId.convertFromString(stopIdString));
-
-        	TransitStationStop fromStop = 
-       				(TransitStationStop)index.stopVertexForStop.get(fromGTFSStop);
-
-            RoutingRequest request = new RoutingRequest();
-        	GenericDijkstra algo = new GenericDijkstra(request);
-       		algo.setSkipEdgeStrategy(new SkipNonPathwayEdgeStrategy());
-            request.setMode(TraverseMode.WALK);
-            request.numberOfDepartures = 1;
-            request.wheelchairAccessible = true;
-            request.dominanceFunction = new DominanceFunction.MinimumWeight(); // FORCING the dominance function to weight only
-
-           	ArrayList<PairwiseAccessibilityShort> result = new ArrayList<PairwiseAccessibilityShort>();
-           	for(Vertex connectionTo : connectionsTo) {
-           		TransitStationStop toStop = (TransitStationStop)connectionTo;
-            	Stop toGTFSStop = index.stopForId.get(GtfsLibrary.convertIdFromString(connectionTo.getLabel()));
-
-           		if(toStop.getStopId().equals(fromStop.getStopId()))
-           				continue;
- 
-           		request.setRoutingContext(graph, fromStop, toStop);
-
-                ConsequencesStrategy consequencesStrategy = request.rctx.graph.consequencesStrategy.create(request);
-
-            	State s0 = State.stateAllowingTransfer(fromStop, request);
-                ShortestPathTree spt = algo.getShortestPathTree(s0);
-
-                PairwiseAccessibilityShort resultItem = new PairwiseAccessibilityShort();
-                resultItem.to = new StopShort(toGTFSStop);
-                resultItem.isCurrentlyAccessible = false;
-
-                if(toGTFSStop.getLocationType() == Stop.LOCATION_TYPE_STATION || toGTFSStop.getLocationType() == Stop.LOCATION_TYPE_STOP) {
-                	resultItem.service = new HashSet<RouteShort>();
-                	for(StopTimesInPattern st : index.getStopTimesForStop(toGTFSStop, sd, true, ignoreRealtimeUpdates)) {
-                		resultItem.service.add(st.route);
-                	}
-                }
-                
-                List<GraphPath> paths = spt.getPaths();
-                if(!paths.isEmpty()) {
-                    resultItem.dependsOnEquipment = new HashSet<String>();
-                    resultItem.isCurrentlyAccessible = true;
-
-                    resultItem.alerts = new HashSet<Alert>();
-                    if(!ignoreRealtimeUpdates) {
-                    	resultItem.alerts.addAll(consequencesStrategy.getConsequences(paths));
-                    }
-                                        
-                    for(GraphPath path : paths) {
-                    	for(Edge edge : path.edges) {
-                    		PathwayEdge pe = (PathwayEdge)edge;
-                    	                    		
-                    		if(!pe.isWheelchairAccessible()) 
-                                resultItem.isCurrentlyAccessible = false;
-
-                    		if(pe.getElevatorId() != null) {
-                    			resultItem.dependsOnEquipment.add(pe.getElevatorId());
-
-                                if(!ignoreRealtimeUpdates) {
-	                    	        for (AlertPatch alert : graph.getAlertPatches(pe)) {
-	                    	            if (alert.displayDuring(path.states.getLast()) 
-	                    	            		&& alert.getElevatorId() != null && pe.getPathwayMode() == Mode.ELEVATOR) {
-	                    	            	resultItem.alerts.add(alert.getAlert());
-	                    	            	
-	                    	            	if(alert.isRoutingConsequence())
-	                    	            		resultItem.isCurrentlyAccessible = false;
-	                    	            }
-	                    	        }
-                                }
-                    		}
-                    	}
-
-                    }
-                }
-           		
-           		result.add(resultItem);
-           	}
-        	
-           	return result;
-        } else {
-        	throw new Exception("From location must be a GTFS Stop.");
-        }
-    	
-    }
 
 }
