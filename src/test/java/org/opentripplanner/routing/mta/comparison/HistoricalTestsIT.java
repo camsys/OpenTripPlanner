@@ -281,14 +281,22 @@ public class HistoricalTestsIT extends RoutingResource {
     		System.out.println("                TEST DIR: " + testDir.getName());
     		System.out.println("***************************************************************");
 
-    		loadGraph(new File(testDir + "/graph"));
-    		if(graph == null) {
-    			buildGraph(new File(testDir + "/graph"));
+    		try {
     			loadGraph(new File(testDir + "/graph"));
-			}
+    		} catch(Exception e) {
+    			System.out.println("Graph failed to load with exception " + e.getMessage() + ". Rebuilding...");
 
+    			new File(testDir + "/graph/Graph.obj").delete();
+    			graph = null;
+    		} finally {
+    			if(graph == null) {
+    				buildGraph(new File(testDir + "/graph"));
+    				loadGraph(new File(testDir + "/graph"));
+    			}
+    		}
+    		
     		if(graph == null) {
-    			throw new Exception("Graph could not be loaded.");
+    			throw new Exception("Graph could not be loaded or rebuilt.");
     		}
     		
     		runQueries(testDir);
