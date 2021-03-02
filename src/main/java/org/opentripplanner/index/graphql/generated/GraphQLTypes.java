@@ -50,6 +50,7 @@ public class GraphQLTypes {
   }
   
   
+  /** Accessibility information from GTFS. */
   public enum GraphQLWheelchairBoarding {
     NO_INFORMATION,
     POSSIBLE,
@@ -57,6 +58,7 @@ public class GraphQLTypes {
     
   }
   
+  /** Enhanced accessibility information set by NY MTA's Accessibility Group. */
   public enum GraphQLNyMtaAdaFlag {
     UNKNOWN,
     NOT_ACCESSIBLE,

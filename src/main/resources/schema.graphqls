@@ -182,7 +182,7 @@ enum AlertSeverityLevelType {
 
 """
 Route represents a public transportation service, usually from point A to point
-B and *back*, shown to customers under a single name, e.g. bus 550. Routes
+B and *back*, shown to customers under a single name, e.g. bus M60. Routes
 contain patterns (see field `patterns`), which describe different variants of
 the route, e.g. outbound pattern from point A to point B and inbound pattern
 from point B to point A.
@@ -211,7 +211,9 @@ type Route implements Node {
     https://developers.google.com/transit/gtfs/reference/extended-route-types
     """
     type: Int
+
     desc: String
+
     url: String
 
     """
@@ -235,7 +237,7 @@ type Route implements Node {
     alerts: [Alert]
 }
 
-
+"""Accessibility information from GTFS."""
 enum WheelchairBoarding {
     """There is no accessibility information for the stop."""
     NO_INFORMATION
@@ -249,10 +251,18 @@ enum WheelchairBoarding {
     NOT_POSSIBLE
 }
 
+"""Enhanced accessibility information set by NY MTA's Accessibility Group."""
 enum NYMtaADAFlag {
+    """There is no accessibility information for the stop."""
 	UNKNOWN
+	
+	"""Wheelchair boarding is not possible at this stop."""
 	NOT_ACCESSIBLE
+
+	"""Wheelchair boarding is possible at all platforms at this stop."""
 	ACCESSIBLE
+
+	"""Wheelchair boarding is possible at some platforms at this stop; see notes"""
 	PARTLY_ACCESSIBLE
 }	
 
@@ -261,8 +271,10 @@ enum LocationType {
     """A location where passengers board or disembark from a transit vehicle."""
     STOP
 
-    """A physical structure or area that contains one or more stop."""
+    """A physical structure or area that contains one or more stops."""
     STATION
+
+    """A station entrance"""    
     ENTRANCE
 }
 
@@ -277,25 +289,25 @@ type Stop implements Node & PlaceInterface {
     """
     id: ID!
 
-    """ÌD of the stop in format `FeedId:StopId`"""
+    """ÌD of the station/stop in format `FeedId:StopId`"""
     gtfsId: String!
 
-    """NY MTA Complex ID"""
+    """NY MTA Complex ID (a complex is one or more stations)"""
     mtaComplexId: String
 
-    """NY MTA Station ID"""
+    """NY MTA Station ID (a station is one or more GTFS stations, which are in turn made up of one or more platforms (stops in GTFS))"""
     mtaStationId: String
 
-    """NY MTA Equipment here"""
+    """NY MTA Equipment at this location"""
     mtaEquipment: [Equipment]
 
-    """NY MTA's ADA Accessibility Status"""
+    """NY MTA's ADA Accessibility Status Flag"""
     mtaAdaAccessible: NYMtaADAFlag
 
     """NY MTA's ADA Accessibility Description"""
     mtaAdaAccessibleNotes: String
 
-    """Name of the stop, e.g. Pasilan asema"""
+    """Name of the stop, e.g. 14th St - Union Square"""
     name: String!
 
     """Latitude of the stop (WGS 84)"""
@@ -369,20 +381,21 @@ interface PlaceInterface {
 }
 
 
-"""Station equipment such as an escalator or elevator"""
+"""Station equipment such as an escalator or elevator."""
 type Equipment implements Node {
     """
     Global object ID provided by Relay. This value can be used to refetch this object using **node** query.
     """
     id: ID!
 
-    """Equipment id"""
+    """NY MTA Equipment ID"""
     mtaEquipmentId: String!
 
+    """Whether this equipment is currently in service and accessible"""
     isCurrentlyAccessible: Boolean
 
     """
-    List of alerts which have an effect on all operations of the agency (e.g. a strike)
+    List of alerts which have an effect on all operations of the agency
     """
     alerts: [Alert]
 }
@@ -418,7 +431,7 @@ type Agency implements Node {
     routes: [Route]
 
     """
-    List of alerts which have an effect on all operations of the agency (e.g. a strike)
+    List of alerts which have an effect on all operations of the agency
     """
     alerts: [Alert]
     
@@ -445,7 +458,7 @@ type PairwiseAccessibleResult {
 	isCurrentlyAccessible: Boolean
 
     """
-    List of alerts which have an effect on all operations of the agency (e.g. a strike)
+    List of alerts which have an effect on all operations of the agency
     """
     alerts: [Alert]
 
@@ -468,11 +481,11 @@ type QueryType {
 
     
     """
-    Get a single stop based on its ID, i.e. value of field `gtfsId` (ID format is `FeedId:StopId`)
+    Get a single stop based on its GTFS ID (format: `FeedId_StopId`), station or complex ID.
     """
     stop(
         """
-        GTFS Stop ID
+        GTFS Stop ID (format: `FeedId_StopId`)
         """
         gtfsId: String
 
@@ -491,13 +504,16 @@ type QueryType {
     
     """Get all active alerts"""
     alerts(
+
         """Only return alerts in these feeds"""
         feeds: [String!]
+
     ): [Alert]
     
     
     """Get all routes"""
     routes(
+
         """Only return routes with these ids"""
         ids: [String]
 
@@ -508,7 +524,7 @@ type QueryType {
 
 
     """
-    Get a single route based on its ID, i.e. value of field `gtfsId` (format is `FeedId:RouteId`)
+    Get a single route based on its ID, i.e. value of field `gtfsId` (format is `FeedId_RouteId`)
     """
     route(id: String!): Route
 
@@ -528,8 +544,8 @@ type QueryType {
         """
         includeRealtime: Boolean
         
-        """
-        GTFS Stop ID
+         """
+        GTFS Stop ID (format: `FeedId_StopId`)
         """
         gtfsId: String
 

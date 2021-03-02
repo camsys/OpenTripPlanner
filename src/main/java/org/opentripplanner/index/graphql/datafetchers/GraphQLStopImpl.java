@@ -217,6 +217,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	    };	
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public DataFetcher<Iterable<Object>> mtaEquipment() {
 		return environment -> {

@@ -3,7 +3,6 @@ package org.opentripplanner.index.graphql.datafetchers;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -14,7 +13,6 @@ import org.opentripplanner.api.resource.AccessibilityResource;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLQueryTypeInputs.*;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
-import org.opentripplanner.index.model.StopShort;
 import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.standalone.Router;
 
@@ -196,7 +194,6 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 		};
 	}
 
-	
 	private Router getRouter(DataFetchingEnvironment environment) {
 		return environment.<GraphQLRequestContext>getContext().getRouter();
 	}

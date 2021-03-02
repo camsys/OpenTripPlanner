@@ -6,7 +6,6 @@ import org.onebusaway.gtfs.model.FeedInfo;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
 import org.opentripplanner.routing.graph.GraphIndex;
-import org.opentripplanner.standalone.Router;
 
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;

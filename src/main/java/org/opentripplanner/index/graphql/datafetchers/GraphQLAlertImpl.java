@@ -14,7 +14,6 @@ import org.opentripplanner.index.graphql.generated.GraphQLTypes.GraphQLAlertEffe
 import org.opentripplanner.index.graphql.generated.GraphQLTypes.GraphQLAlertSeverityLevelType;
 import org.opentripplanner.routing.alertpatch.AlertPatch;
 import org.opentripplanner.routing.graph.GraphIndex;
-import org.opentripplanner.standalone.Router;
 
 public class GraphQLAlertImpl implements GraphQLDataFetchers.GraphQLAlert {
 
@@ -137,10 +136,6 @@ public class GraphQLAlertImpl implements GraphQLDataFetchers.GraphQLAlert {
 			AlertPatch e = environment.getSource();
 		    return e.getAlert().effectiveEndDate != null ? e.getAlert().effectiveEndDate.getTime() : null;
 		 };
-	}
-	
-	private Router getRouter(DataFetchingEnvironment environment) {
-		return environment.<GraphQLRequestContext>getContext().getRouter();
 	}
 
 	private GraphIndex getGraphIndex(DataFetchingEnvironment environment) {
