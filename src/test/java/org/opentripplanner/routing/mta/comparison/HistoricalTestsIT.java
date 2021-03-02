@@ -28,7 +28,9 @@ import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.impl.GraphPathFinder;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -172,10 +174,22 @@ public class HistoricalTestsIT extends RoutingResource {
 			this.toPlace = result.query.destination;
 			this.wheelchair = result.query.accessible;
 			
+    		long epoch = result.query.time;
+
+    		// shift dates by +1 week to try to match the 
+    		// same service period
+    		Calendar c = Calendar.getInstance();
+			c.setTime(new Date(epoch));
+    			
+    		while(epoch < DateTime.now().getMillis()) {
+    			c.add(Calendar.DAY_OF_MONTH, 7);    				
+        		epoch = c.getTimeInMillis();
+    		}			
+			
     		DateTimeFormatter dateF = DateTimeFormat.forPattern("MM-dd-YYYY");
     		DateTimeFormatter timeF = DateTimeFormat.forPattern("hh:mm aa");
-    		this.date = new DateTime(result.query.time).toString(dateF);
-    		this.time = new DateTime(result.query.time).toString(timeF);
+    		this.date = new DateTime(epoch).toString(dateF);
+    		this.time = new DateTime(epoch).toString(timeF);
 			
 			this.modes = new QualifiedModeSet("TRANSIT,WALK");
 			this.maxWalkDistance = 500.0;
