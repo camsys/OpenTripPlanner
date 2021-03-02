@@ -10,6 +10,7 @@ scalar Long
 A feed provides routing data (stops, routes, timetables, etc.) from one or more public transport agencies.
 """
 type Feed {
+
     """ID of the feed"""
     feedId: String!
 
@@ -17,8 +18,10 @@ type Feed {
     agencies: [Agency]
 }
 
+
 """Alert of a current or upcoming disruption in public transportation"""
 type Alert implements Node {
+
     """
     Global object ID provided by Relay. This value can be used to refetch this object using **node** query.
     """
@@ -32,7 +35,7 @@ type Alert implements Node {
 
     """
     Agency affected by the disruption. Note that this value is present only if the
-    disruption has an effect on all operations of the agency (e.g. in case of a strike).
+    disruption has an effect on all operations of the agency.
     """
     agency: Agency
 
@@ -193,16 +196,16 @@ type Route implements Node {
     """
     id: ID!
 
-    """ID of the route in format `FeedId:RouteId`"""
+    """ID of the route in format `FeedId_RouteId`"""
     gtfsId: String!
 
     """Agency operating the route"""
     agency: Agency
 
-    """Short name of the route, usually a line number, e.g. 550"""
+    """Short name of the route, usually a line number, e.g. M60"""
     shortName: String
 
-    """Long name of the route, e.g. Helsinki-Leppävaara"""
+    """Long name of the route, e.g. 7th Avenue Express"""
     longName: String
 
     """
@@ -289,7 +292,7 @@ type Stop implements Node & PlaceInterface {
     """
     id: ID!
 
-    """ÌD of the station/stop in format `FeedId:StopId`"""
+    """ÌD of the station/stop in format `FeedId_StopId`"""
     gtfsId: String!
 
     """NY MTA Complex ID (a complex is one or more stations)"""
@@ -475,7 +478,7 @@ type QueryType {
     agencies: [Agency]
 
     """
-    Get a single agency based on agency ID, i.e. value of field `gtfsId` (ID format is `FeedId:StopId`)
+    Get a single agency based on agency ID, i.e. value of field `gtfsId` (ID format is `FeedId_StopId`)
     """
     agency(id: String!): Agency
 
