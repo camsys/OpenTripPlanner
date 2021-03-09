@@ -35,13 +35,16 @@ public class RoutingRequestToFilterChainMapper {
       builder.addGroupBySimilarity(request.groupBySimilarityKeepNumOfItineraries, minLimit);
     }
 
+    //TODO find out why this doesn't get used elsewhere
     builder
         .withMaxNumberOfItineraries(Math.min(request.numItineraries, MAX_NUMBER_OF_ITINERARIES))
         .withTransitGeneralizedCostLimit(request.transitGeneralizedCostLimit)
         .withRemoveTransitWithHigherCostThanBestOnStreetOnly(true)
         .withLatestDepartureTimeLimit(filterOnLatestDepartureTime)
         .withMaxLimitReachedSubscriber(maxLimitReachedSubscriber)
-        .withDebugEnabled(request.debugItineraryFilter);
+        .withDebugEnabled(true);
+
+    //TODO report that the variable doesn't get recognized unless set here
 
     return builder.build();
   }
