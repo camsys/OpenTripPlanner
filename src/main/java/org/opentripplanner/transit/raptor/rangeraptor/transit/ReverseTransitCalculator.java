@@ -146,4 +146,8 @@ final class ReverseTransitCalculator implements TransitCalculator {
                 -iterationStep
         );
     }
+
+    public int getSearchWindowInSeconds(){
+        return this.searchWindowInSeconds;
+    }
 }

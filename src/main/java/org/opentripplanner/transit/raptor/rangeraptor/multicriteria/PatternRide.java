@@ -109,6 +109,7 @@ final class PatternRide<T extends RaptorTripSchedule> {
      */
     public static <T extends RaptorTripSchedule>
     ParetoComparator<PatternRide<T>> paretoComparatorRelativeCost() {
-        return (l, r) -> l.tripId != r.tripId || l.relativeCost < r.relativeCost;
+        //TODO TRANKLINK CHANGE for Search Window relaxed cost modifier.
+        return (l, r) -> l.tripId != r.tripId || l.relativeCost < (r.relativeCost * 2);
     }
 }

@@ -130,4 +130,8 @@ final class ForwardTransitCalculator implements TransitCalculator {
                 iterationStep
         );
     }
+
+    public int getSearchWindowInSeconds(){
+        return this.searchWindowInSeconds;
+    }
 }

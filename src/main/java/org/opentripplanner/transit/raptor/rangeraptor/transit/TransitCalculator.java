@@ -166,4 +166,6 @@ public interface TransitCalculator {
                         60
                 );
     }
+
+    public int getSearchWindowInSeconds();
 }

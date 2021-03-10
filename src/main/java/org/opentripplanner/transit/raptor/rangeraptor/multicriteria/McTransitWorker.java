@@ -1,5 +1,6 @@
 package org.opentripplanner.transit.raptor.rangeraptor.multicriteria;
 
+import org.opentripplanner.routing.algorithm.raptor.transit.request.TripScheduleWithOffset;
 import org.opentripplanner.transit.raptor.api.transit.CostCalculator;
 import org.opentripplanner.transit.raptor.api.transit.RaptorTransfer;
 import org.opentripplanner.transit.raptor.api.transit.RaptorTripPattern;
@@ -7,6 +8,7 @@ import org.opentripplanner.transit.raptor.api.transit.RaptorTripSchedule;
 import org.opentripplanner.transit.raptor.rangeraptor.RoutingStrategy;
 import org.opentripplanner.transit.raptor.rangeraptor.SlackProvider;
 import org.opentripplanner.transit.raptor.rangeraptor.multicriteria.arrivals.AbstractStopArrival;
+import org.opentripplanner.transit.raptor.rangeraptor.multicriteria.arrivals.TransitStopArrival;
 import org.opentripplanner.transit.raptor.rangeraptor.transit.TransitCalculator;
 import org.opentripplanner.transit.raptor.rangeraptor.transit.TripScheduleSearch;
 import org.opentripplanner.transit.raptor.util.paretoset.ParetoSet;
@@ -81,43 +83,78 @@ public final class McTransitWorker<T extends RaptorTripSchedule> implements Rout
             boolean found = tripSearch.search(earliestBoardTime, stopPos);
 
             if (found) {
-                final T trip = tripSearch.getCandidateTrip();
-                final int boardTime = trip.departure(stopPos);
+                process_trip_search(stopPos, stopIndex, prevArrival);
+            }
 
-                // It the previous leg can
-                if(prevArrival.arrivedByAccessLeg()) {
-                    prevArrival = prevArrival.timeShiftNewArrivalTime(boardTime - slackProvider.boardSlack());
+            //TODO see if we can add a latest board time as well Translink transfers max tranfer time
+            int latestBoardingTime = earliestBoardTime+ (calculator.getSearchWindowInSeconds() * 5);
+
+            //Let's incremebt the boarding time by 1 minute to see if there other options can be found
+            int nextBoardingTime = earliestBoardTime + (60);
+
+            int testBoradingTimeCounts = 0;
+
+            //We will continue doing this until the boarding time is greater than the searchWindow allotted time
+            while (nextBoardingTime < latestBoardingTime) {
+
+                found = tripSearch.search(nextBoardingTime, stopPos);
+
+                if (found) {
+                    if ( prevArrival.getClass().getName().equals("org.opentripplanner.transit.raptor.rangeraptor.multicriteria.arrivals.TransitStopArrival")) {
+                        testBoradingTimeCounts++;
+                    }
+                    process_trip_search(stopPos, stopIndex, prevArrival);
                 }
 
-                // TODO OTP2 - Some access legs can be time-shifted towards the board time and
-                //           - we need to account for this here, not in the calculator as done
-                //           - now. If we don´t do that the alight slack of the first transit
-                //           - is not added to the cost, giving the first transit leg a lower cost
-                //           - than other transit legs.
-                //           - See
-                final int boardWaitTime = boardTime - prevArrival.arrivalTime();
-
-                final int relativeBoardCost = calculateOnTripRelativeCost(
-                    prevArrival,
-                    boardTime,
-                    boardWaitTime,
-                    trip
-                );
-
-                patternRides.add(
-                    new PatternRide<>(
-                        prevArrival,
-                        stopIndex,
-                        stopPos,
-                        boardTime,
-                        boardWaitTime,
-                        relativeBoardCost,
-                        trip,
-                        tripSearch.getCandidateTripIndex()
-                    )
-                );
+                nextBoardingTime = nextBoardingTime + (60);
             }
+
+            if ( patternRides.size() > 2 ) {
+                int test = testBoradingTimeCounts;
+            }
+
+
         }
+    }
+
+    private void process_trip_search(int stopPos, int stopIndex, AbstractStopArrival<T> prevArrival) {
+        final T trip = tripSearch.getCandidateTrip();
+        final int boardTime = trip.departure(stopPos);
+
+        // It the previous leg can
+        if(prevArrival.arrivedByAccessLeg()) {
+            prevArrival = prevArrival.timeShiftNewArrivalTime(boardTime - slackProvider.boardSlack());
+        }
+
+        // TODO OTP2 - Some access legs can be time-shifted towards the board time and
+        //           - we need to account for this here, not in the calculator as done
+        //           - now. If we don´t do that the alight slack of the first transit
+        //           - is not added to the cost, giving the first transit leg a lower cost
+        //           - than other transit legs.
+        //           - See
+        final int boardWaitTime = boardTime - prevArrival.arrivalTime();
+
+        final int relativeBoardCost = calculateOnTripRelativeCost(
+                prevArrival,
+            boardTime,
+            boardWaitTime,
+            trip
+        );
+
+        int tripIndex = tripSearch.getCandidateTripIndex();
+
+        patternRides.add(
+            new PatternRide<>(
+                    prevArrival,
+                    stopIndex,
+                    stopPos,
+                boardTime,
+                boardWaitTime,
+                relativeBoardCost,
+                trip,
+                tripIndex
+            )
+        );
     }
 
     /**

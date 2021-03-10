@@ -44,8 +44,7 @@ public class RoutingRequestToFilterChainMapper {
         .withMaxLimitReachedSubscriber(maxLimitReachedSubscriber)
         .withDebugEnabled(true);
 
-    //TODO report that the variable doesn't get recognized unless set here
-
+    //TODO report that the variable doesn't get recognized unless set here debugItineraryFilter
     return builder.build();
   }
 }
