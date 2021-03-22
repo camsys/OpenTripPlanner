@@ -1,5 +1,8 @@
 package org.opentripplanner.routing.algorithm;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -249,7 +252,7 @@ public class AStar {
             if(!iterate()){
                 continue;
             }
-            
+
             /*
              * Should we terminate the search?
              */
@@ -263,7 +266,9 @@ public class AStar {
                     runState.rctx.origin, runState.rctx.target, runState.u, runState.spt, runState.options)) {
                     break;
                 }
-            }  else if (!runState.options.batch && runState.u_vertex == runState.rctx.target && runState.u.isFinal()) {
+            }  else if ( (!runState.options.batch && runState.u_vertex == runState.rctx.target && runState.u.isFinal())
+                    ||  (!runState.options.batch && vertexClose(runState.u_vertex, runState.rctx.target, 3) && runState.u.isFinal())
+            ) {
                 if (runState.options.onlyTransitTrips && !runState.u.isEverBoarded()) {
                     continue;
                 }
@@ -358,5 +363,39 @@ public class AStar {
             }
         }
         return ret;
+    }
+
+    private boolean vertexClose(Vertex currentVertex, Vertex target, int places) {
+        BigDecimal currentLat = BigDecimal.valueOf(currentVertex.getLat());
+        BigDecimal currentLon = BigDecimal.valueOf(currentVertex.getLon());
+        BigDecimal targetLat = BigDecimal.valueOf(target.getLat());
+        BigDecimal targetLon = BigDecimal.valueOf(target.getLon());
+
+
+        BigDecimal currentLatCeiling = currentLat.setScale(places, RoundingMode.CEILING);
+        BigDecimal currentLonCeiling = currentLon.setScale(places, RoundingMode.CEILING);
+        BigDecimal currentLatFloor = currentLat.setScale(places, RoundingMode.FLOOR);
+        BigDecimal currentLonFloor = currentLon.setScale(places, RoundingMode.FLOOR);
+
+        BigDecimal targetLatCeiling = targetLat.setScale(places, RoundingMode.CEILING);
+        BigDecimal targetLonCeiling = targetLon.setScale(places, RoundingMode.CEILING);
+        BigDecimal targetLatFloor = targetLat.setScale(places, RoundingMode.FLOOR);
+        BigDecimal targetLonFloor = targetLon.setScale(places, RoundingMode.FLOOR);
+
+        boolean latClose = (currentLatCeiling.compareTo(targetLatCeiling) == 0 || currentLatCeiling.compareTo(targetLatFloor) == 0
+                || currentLatFloor.compareTo(targetLatCeiling) == 0 || currentLatFloor.compareTo(targetLatFloor ) ==0 );
+
+        boolean lonClose = (currentLonCeiling.compareTo(targetLonCeiling) == 0 || currentLonCeiling.compareTo(targetLonFloor) == 0
+                || currentLonFloor.compareTo(targetLonCeiling) == 0 || currentLonFloor.compareTo(targetLonFloor ) ==0 );
+
+        //TODO remove this
+        if (latClose) {
+            int i =0;
+        }
+        if (lonClose) {
+            int i =0;
+        }
+
+        return latClose && lonClose;
     }
 }
