@@ -795,6 +795,10 @@ public class GraphIndex {
         LOG.info("Clustering stops by geographic proximity and name...");
         // Each stop without a cluster will greedily claim other stops without clusters.
         for (Stop s0 : stopForId.values()) {
+        	if(s0.getName() == null) {
+        		LOG.warn("Stop " + s0.getId() + " has an empty name, and so cannot be clustered by name; skipping.");
+        		continue;
+        	}
             if (stopClusterForStop.containsKey(s0) 
             		|| s0.getLat() == StopTime.MISSING_VALUE || s0.getLon() == StopTime.MISSING_VALUE) continue; // skip stops that have already been claimed by a cluster
             String s0normalizedName = StopNameNormalizer.normalize(s0.getName());
