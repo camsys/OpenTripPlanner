@@ -49,6 +49,16 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 	}
 
 	@Override
+	public DataFetcher<Object> feedByFeedId() {
+		return environment -> {
+			GraphQLQueryTypeFeedByFeedIdArgsInput input = 
+					new GraphQLQueryTypeFeedByFeedIdArgsInput(environment.getArguments());
+			
+		    return getGraphIndex(environment).feedInfoForId.get(input.getGraphQLFeedId());
+		};
+	}
+	
+	@Override
 	public DataFetcher<Object> agency() {
 	    return environment -> getGraphIndex(environment)
 	            .getAgencyWithoutFeedId(new GraphQLQueryTypeAgencyArgsInput(environment.getArguments()).getGraphQLId());
@@ -201,8 +211,5 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 	private GraphIndex getGraphIndex(DataFetchingEnvironment environment) {
 		return environment.<GraphQLRequestContext>getContext().getIndex();
 	}
-
-
-
 
 }

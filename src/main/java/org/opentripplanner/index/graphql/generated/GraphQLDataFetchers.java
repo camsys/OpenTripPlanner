@@ -7,7 +7,9 @@ public class GraphQLDataFetchers {
   /** A feed provides routing data (stops, routes, timetables, etc.) from one or more public transport agencies. */
   public interface GraphQLFeed {
     public DataFetcher<String> feedId();
+    public DataFetcher<String> feedVersion();
     public DataFetcher<Iterable<Object>> agencies();
+    public DataFetcher<Iterable<Object>> routes();
   }
   
   /** Alert of a current or upcoming disruption in public transportation */
@@ -48,6 +50,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<String> color();
     public DataFetcher<String> textColor();
     public DataFetcher<Iterable<Object>> stops();
+    public DataFetcher<Iterable<Object>> trips();
     public DataFetcher<Iterable<Object>> alerts();
   }
   
@@ -82,6 +85,26 @@ public class GraphQLDataFetchers {
     public DataFetcher<Iterable<Object>> alerts();
   }
   
+  /** Trip is a specific occurance of a pattern, usually identified by route, direction on the route and exact departure time. */
+  public interface GraphQLTrip {
+    public DataFetcher<String> gtfsId();
+    public DataFetcher<String> serviceId();
+    public DataFetcher<String> tripShortName();
+    public DataFetcher<String> tripHeadsign();
+    public DataFetcher<String> routeShortName();
+    public DataFetcher<String> directionId();
+    public DataFetcher<String> blockId();
+    public DataFetcher<String> shapeId();
+    public DataFetcher<Iterable<Object>> stoptimes();
+  }
+  
+  /** Stoptime represents the time when a specific trip arrives to or departs from a specific stop. */
+  public interface GraphQLStoptime {
+    public DataFetcher<Object> stop();
+    public DataFetcher<Integer> scheduledArrival();
+    public DataFetcher<Integer> scheduledDeparture();
+  }
+  
   /** Station equipment such as an escalator or elevator. */
   public interface GraphQLEquipment {
     public DataFetcher<String> mtaEquipmentId();
@@ -113,6 +136,7 @@ public class GraphQLDataFetchers {
   
   public interface GraphQLQueryType {
     public DataFetcher<Iterable<Object>> feeds();
+    public DataFetcher<Object> feedByFeedId();
     public DataFetcher<Iterable<Object>> agencies();
     public DataFetcher<Object> agency();
     public DataFetcher<Iterable<Object>> stops();

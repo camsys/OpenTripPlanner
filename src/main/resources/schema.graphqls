@@ -14,8 +14,14 @@ type Feed {
     """ID of the feed"""
     feedId: String!
 
+    """Version of the feed"""
+    feedVersion: String!
+
     """List of agencies which provide data to this feed"""
     agencies: [Agency]
+
+    """List of routes included in this feed"""
+    routes: [Route]
 }
 
 
@@ -227,6 +233,9 @@ type Route {
     """List of stops on this route"""
     stops: [Stop]
 
+    """List of trips on this route"""
+    trips: [Trip]
+
     """List of alerts which have an effect on the route"""
     alerts: [Alert]
 }
@@ -358,6 +367,63 @@ type Stop {
     alerts: [Alert]
 }
 
+"""
+Trip is a specific occurance of a pattern, usually identified by route, direction on the route and exact departure time.
+"""
+type Trip {
+
+    """ID of the trip in format `FeedId_TripId`"""
+    gtfsId: String!
+
+    serviceId: String
+
+    tripShortName: String
+
+    """Headsign of the vehicle when running on this trip"""
+    tripHeadsign: String
+
+    """
+    Short name of the route this trip is running. See field `shortName` of Route.
+    """
+    routeShortName: String
+
+    """
+    Direction code of the trip, i.e. is this the outbound or inbound trip of a
+    pattern. Possible values: 0, 1 or `null` if the direction is irrelevant, i.e.
+    the pattern has trips only in one direction.
+    """
+    directionId: String
+
+    blockId: String
+
+    shapeId: String
+
+    """List of times when this trip arrives to or departs from a stop"""
+    stoptimes: [Stoptime]
+
+}
+
+
+"""
+Stoptime represents the time when a specific trip arrives to or departs from a specific stop.
+"""
+type Stoptime {
+
+    """The stop where this arrival/departure happens"""
+    stop: Stop
+
+    """
+    Scheduled arrival time. Format: seconds since midnight of the departure date
+    """
+    scheduledArrival: Int
+
+    """
+    Scheduled departure time. Format: seconds since midnight of the departure date
+    """
+    scheduledDeparture: Int
+
+}
+
 
 """Station equipment such as an escalator or elevator."""
 type Equipment {
@@ -432,6 +498,10 @@ type QueryType {
     """Get all feeds"""
     feeds: [Feed]
 
+    """Get feed by ID"""
+    feedByFeedId(
+       feedId: String
+    ): Feed
 
     """Get all agencies"""
     agencies: [Agency]
