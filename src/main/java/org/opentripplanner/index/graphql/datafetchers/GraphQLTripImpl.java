@@ -8,6 +8,8 @@ import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.Trip;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
+import org.opentripplanner.index.graphql.generated.GraphQLTypes.GraphQLBikesAllowed;
+import org.opentripplanner.index.graphql.generated.GraphQLTypes.GraphQLWheelchairBoarding;
 import org.opentripplanner.index.model.TripTimeShort;
 import org.opentripplanner.routing.graph.GraphIndex;
 
@@ -91,8 +93,34 @@ public class GraphQLTripImpl implements GraphQLDataFetchers.GraphQLTrip {
 	    };
 	}
 	
+
+	@Override
+	public DataFetcher<Object> route() {
+	    return environment -> {
+	    	Trip t = environment.getSource();
+	    	return t.getRoute();
+	    };
+	}
+
+	@Override
+	public DataFetcher<String> wheelchairAccessible() {
+	    return environment -> {
+	    	Trip t = environment.getSource();
+	    	return GraphQLWheelchairBoarding.values()[t.getWheelchairAccessible()].name();
+	    };
+	}
+
+	@Override
+	public DataFetcher<String> bikesAllowed() {
+	    return environment -> {
+	    	Trip t = environment.getSource();
+	    	return GraphQLBikesAllowed.values()[t.getBikesAllowed()].name();
+	    };
+	}
+	
 	private GraphIndex getGraphIndex(DataFetchingEnvironment environment) {
 		return environment.<GraphQLRequestContext>getContext().getIndex();
 	}
+
 
 }

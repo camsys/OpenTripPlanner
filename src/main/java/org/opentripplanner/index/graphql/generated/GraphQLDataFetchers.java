@@ -4,12 +4,18 @@ package org.opentripplanner.index.graphql.generated;
 import graphql.schema.DataFetcher;
 
 public class GraphQLDataFetchers {
-  /** A feed provides routing data (stops, routes, timetables, etc.) from one or more public transport agencies. */
-  public interface GraphQLFeed {
-    public DataFetcher<String> feedId();
-    public DataFetcher<String> feedVersion();
-    public DataFetcher<Iterable<Object>> agencies();
+  /** A public transport agency */
+  public interface GraphQLAgency {
+    public DataFetcher<String> gtfsId();
+    public DataFetcher<String> name();
+    public DataFetcher<String> url();
+    public DataFetcher<String> timezone();
+    public DataFetcher<String> lang();
+    public DataFetcher<String> phone();
+    public DataFetcher<String> fareUrl();
     public DataFetcher<Iterable<Object>> routes();
+    public DataFetcher<Iterable<Object>> alerts();
+    public DataFetcher<Iterable<Object>> mtaEquipment();
   }
   
   /** Alert of a current or upcoming disruption in public transportation */
@@ -25,11 +31,47 @@ public class GraphQLDataFetchers {
     public DataFetcher<String> alertDescriptionTextTranslations();
     public DataFetcher<String> alertUrl();
     public DataFetcher<String> alertUrlTranslations();
-    public DataFetcher<Object> alertEffect();
-    public DataFetcher<Object> alertCause();
-    public DataFetcher<Object> alertSeverityLevel();
+    public DataFetcher<String> alertEffect();
+    public DataFetcher<String> alertCause();
+    public DataFetcher<String> alertSeverityLevel();
     public DataFetcher<Object> effectiveStartDate();
     public DataFetcher<Object> effectiveEndDate();
+  }
+  
+  /** Station equipment such as an escalator or elevator. */
+  public interface GraphQLEquipment {
+    public DataFetcher<String> mtaEquipmentId();
+    public DataFetcher<Boolean> isCurrentlyAccessible();
+    public DataFetcher<Iterable<Object>> alerts();
+  }
+  
+  /** A feed provides routing data (stops, routes, timetables, etc.) from one or more public transport agencies. */
+  public interface GraphQLFeed {
+    public DataFetcher<String> feedId();
+    public DataFetcher<String> feedVersion();
+    public DataFetcher<Iterable<Object>> agencies();
+    public DataFetcher<Iterable<Object>> routes();
+    public DataFetcher<Iterable<Object>> trips();
+  }
+  
+  public interface GraphQLPairwiseAccessibleResult {
+    public DataFetcher<Object> from();
+    public DataFetcher<Object> to();
+    public DataFetcher<Iterable<String>> dependsOnEquipment();
+    public DataFetcher<Boolean> isCurrentlyAccessible();
+    public DataFetcher<Iterable<Object>> alerts();
+  }
+  
+  public interface GraphQLQueryType {
+    public DataFetcher<Iterable<Object>> feeds();
+    public DataFetcher<Object> feedByFeedId();
+    public DataFetcher<Iterable<Object>> agencies();
+    public DataFetcher<Object> agency();
+    public DataFetcher<Iterable<Object>> stops();
+    public DataFetcher<Iterable<Object>> alerts();
+    public DataFetcher<Iterable<Object>> routes();
+    public DataFetcher<Object> route();
+    public DataFetcher<Iterable<Object>> stopAccessibility();
   }
   
   /**
@@ -64,7 +106,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<String> mtaComplexId();
     public DataFetcher<String> mtaStationId();
     public DataFetcher<Iterable<Object>> mtaEquipment();
-    public DataFetcher<Object> mtaAdaAccessible();
+    public DataFetcher<String> mtaAdaAccessible();
     public DataFetcher<String> mtaAdaAccessibleNotes();
     public DataFetcher<String> name();
     public DataFetcher<Double> lat();
@@ -73,9 +115,9 @@ public class GraphQLDataFetchers {
     public DataFetcher<String> desc();
     public DataFetcher<String> zoneId();
     public DataFetcher<String> url();
-    public DataFetcher<Object> locationType();
+    public DataFetcher<String> locationType();
     public DataFetcher<Object> parentStation();
-    public DataFetcher<Object> wheelchairBoarding();
+    public DataFetcher<String> wheelchairBoarding();
     public DataFetcher<String> direction();
     public DataFetcher<String> timezone();
     public DataFetcher<Integer> vehicleType();
@@ -85,19 +127,6 @@ public class GraphQLDataFetchers {
     public DataFetcher<Iterable<Object>> alerts();
   }
   
-  /** Trip is a specific occurance of a pattern, usually identified by route, direction on the route and exact departure time. */
-  public interface GraphQLTrip {
-    public DataFetcher<String> gtfsId();
-    public DataFetcher<String> serviceId();
-    public DataFetcher<String> tripShortName();
-    public DataFetcher<String> tripHeadsign();
-    public DataFetcher<String> routeShortName();
-    public DataFetcher<String> directionId();
-    public DataFetcher<String> blockId();
-    public DataFetcher<String> shapeId();
-    public DataFetcher<Iterable<Object>> stoptimes();
-  }
-  
   /** Stoptime represents the time when a specific trip arrives to or departs from a specific stop. */
   public interface GraphQLStoptime {
     public DataFetcher<Object> stop();
@@ -105,45 +134,20 @@ public class GraphQLDataFetchers {
     public DataFetcher<Integer> scheduledDeparture();
   }
   
-  /** Station equipment such as an escalator or elevator. */
-  public interface GraphQLEquipment {
-    public DataFetcher<String> mtaEquipmentId();
-    public DataFetcher<Boolean> isCurrentlyAccessible();
-    public DataFetcher<Iterable<Object>> alerts();
-  }
-  
-  /** A public transport agency */
-  public interface GraphQLAgency {
+  /** Trip is a specific occurance of a pattern, usually identified by route, direction on the route and exact departure time. */
+  public interface GraphQLTrip {
     public DataFetcher<String> gtfsId();
-    public DataFetcher<String> name();
-    public DataFetcher<String> url();
-    public DataFetcher<String> timezone();
-    public DataFetcher<String> lang();
-    public DataFetcher<String> phone();
-    public DataFetcher<String> fareUrl();
-    public DataFetcher<Iterable<Object>> routes();
-    public DataFetcher<Iterable<Object>> alerts();
-    public DataFetcher<Iterable<Object>> mtaEquipment();
-  }
-  
-  public interface GraphQLPairwiseAccessibleResult {
-    public DataFetcher<Object> from();
-    public DataFetcher<Object> to();
-    public DataFetcher<Iterable<String>> dependsOnEquipment();
-    public DataFetcher<Boolean> isCurrentlyAccessible();
-    public DataFetcher<Iterable<Object>> alerts();
-  }
-  
-  public interface GraphQLQueryType {
-    public DataFetcher<Iterable<Object>> feeds();
-    public DataFetcher<Object> feedByFeedId();
-    public DataFetcher<Iterable<Object>> agencies();
-    public DataFetcher<Object> agency();
-    public DataFetcher<Iterable<Object>> stops();
-    public DataFetcher<Iterable<Object>> alerts();
-    public DataFetcher<Iterable<Object>> routes();
+    public DataFetcher<String> serviceId();
     public DataFetcher<Object> route();
-    public DataFetcher<Iterable<Object>> stopAccessibility();
+    public DataFetcher<String> tripShortName();
+    public DataFetcher<String> tripHeadsign();
+    public DataFetcher<String> routeShortName();
+    public DataFetcher<String> directionId();
+    public DataFetcher<String> wheelchairAccessible();
+    public DataFetcher<String> bikesAllowed();
+    public DataFetcher<String> blockId();
+    public DataFetcher<String> shapeId();
+    public DataFetcher<Iterable<Object>> stoptimes();
   }
   
 }

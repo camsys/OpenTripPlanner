@@ -12,3 +12,14 @@ The files can be generated using the following snippet
 ```
 npm run generate
 ```
+
+Or TL;DR:
+
+```
+npm install --save graphql
+npm install --save-dev @graphql-codegen/cli
+npm install --save-dev @graphql-codegen/add
+npm install --save-dev @graphql-codegen/java
+npm install --save-dev @graphql-codegen/java-resolvers
+npm run generate
+```

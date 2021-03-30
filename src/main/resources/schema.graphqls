@@ -22,6 +22,10 @@ type Feed {
 
     """List of routes included in this feed"""
     routes: [Route]
+
+    """List of trips included in this feed"""
+    trips: [Trip]
+
 }
 
 
@@ -281,6 +285,17 @@ enum LocationType {
     ENTRANCE
 }
 
+enum BikesAllowed {
+    """There is no bike information for the trip."""
+    NO_INFORMATION
+
+    """The vehicle being used on this particular trip can accommodate at least one bicycle."""
+    ALLOWED
+
+    """No bicycles are allowed on this trip."""    
+    NOT_ALLOWED
+}
+
 """
 Stop can represent either a single public transport stop, where passengers can
 board and/or disembark vehicles, or a station, which contains multiple stops.
@@ -377,6 +392,8 @@ type Trip {
 
     serviceId: String
 
+	route: Route
+
     tripShortName: String
 
     """Headsign of the vehicle when running on this trip"""
@@ -393,6 +410,13 @@ type Trip {
     the pattern has trips only in one direction.
     """
     directionId: String
+
+    """
+    Whether wheelchair boarding is possible for at least some of vehicles on this stop
+    """
+	wheelchairAccessible: WheelchairBoarding!
+
+	bikesAllowed: BikesAllowed!
 
     blockId: String
 

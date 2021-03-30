@@ -95,21 +95,21 @@ public class GraphQLAlertImpl implements GraphQLDataFetchers.GraphQLAlert {
 	}
 
 	@Override
-	public DataFetcher<Object> alertEffect() {
+	public DataFetcher<String> alertEffect() {
 		 return environment -> {
 			AlertPatch e = environment.getSource();
-		    return e.isRoutingConsequence() == true ? GraphQLAlertEffectType.MODIFIED_SERVICE : GraphQLAlertEffectType.UNKNOWN_EFFECT;
+		    return e.isRoutingConsequence() == true ? GraphQLAlertEffectType.MODIFIED_SERVICE.name() : GraphQLAlertEffectType.UNKNOWN_EFFECT.name();
 		 };
 	}
 
 	@Override
-	public DataFetcher<Object> alertCause() {
-		 return environment -> GraphQLAlertCauseType.UNKNOWN_CAUSE;
+	public DataFetcher<String> alertCause() {
+		 return environment -> GraphQLAlertCauseType.UNKNOWN_CAUSE.name();
 	}
 
 	@Override
-	public DataFetcher<Object> alertSeverityLevel() {
-		 return environment -> GraphQLAlertSeverityLevelType.UNKNOWN_SEVERITY;
+	public DataFetcher<String> alertSeverityLevel() {
+		 return environment -> GraphQLAlertSeverityLevelType.UNKNOWN_SEVERITY.name();
 	}
 
 	@Override

@@ -1,4 +1,6 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<name>OpenTripPlanner</name>
@@ -143,7 +145,7 @@
 				<targetPath>../..</targetPath>
 			</testResource>
 		</testResources>
-	
+
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -178,8 +180,6 @@
 				<executions>
 					<execution>
 						<id>sign-artifacts</id>
-						<!-- We sign in the verify phase, which means it will happen for install 
-							and deploy but not package. -->
 						<phase>verify</phase>
 						<goals>
 							<goal>sign</goal>
@@ -220,14 +220,22 @@
 								-Dfile.encoding=UTF-8
 								--illegal-access=permit
 								--add-opens java.base/java.lang.module=ALL-UNNAMED
-								--add-opens java.base/jdk.internal.reflect=ALL-UNNAMED
-								--add-opens java.base/jdk.internal.misc=ALL-UNNAMED
-								--add-opens java.base/jdk.internal.loader=ALL-UNNAMED
-								--add-opens java.base/jdk.internal.ref=ALL-UNNAMED
-								--add-opens java.base/jdk.internal.util=ALL-UNNAMED
-								--add-opens java.base/jdk.internal.util.jar=ALL-UNNAMED
-								--add-opens java.base/jdk.internal.module=ALL-UNNAMED
-								--add-opens java.base/java.lang=ALL-UNNAMED
+								--add-opens
+								java.base/jdk.internal.reflect=ALL-UNNAMED
+								--add-opens
+								java.base/jdk.internal.misc=ALL-UNNAMED
+								--add-opens
+								java.base/jdk.internal.loader=ALL-UNNAMED
+								--add-opens
+								java.base/jdk.internal.ref=ALL-UNNAMED
+								--add-opens
+								java.base/jdk.internal.util=ALL-UNNAMED
+								--add-opens
+								java.base/jdk.internal.util.jar=ALL-UNNAMED
+								--add-opens
+								java.base/jdk.internal.module=ALL-UNNAMED
+								--add-opens
+								java.base/java.lang=ALL-UNNAMED
 							</argLine>
 							<!-- Jenkins needs XML test reports to determine whether the build 
 								is stable. -->
@@ -242,7 +250,8 @@
 				<version>3.0.0-M1</version>
 				<configuration>
 					<disableXmlReport>false</disableXmlReport>
-					<argLine>-Xmx28g -Xms4g -Dfile.encoding=UTF-8 --illegal-access=permit</argLine>
+					<argLine>-Xmx28g -Xms4g -Dfile.encoding=UTF-8
+						--illegal-access=permit</argLine>
 				</configuration>
 				<dependencies>
 					<dependency>
@@ -307,7 +316,7 @@
 					properly if some input files are missing a terminating newline) -->
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>2.2</version>
+				<version>3.2.4</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -340,8 +349,10 @@
 								<includes> <include>**</include> </includes> </filter> <filter> <artifact>org.opentripplanner:*</artifact> 
 								<includes> <include>**</include> </includes> </filter> </filters> -->
 							<transformers>
-								<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<manifestEntries>
 										<Main-Class>org.opentripplanner.standalone.OTPMain</Main-Class>
 										<!-- The ImageIO lines allow some image reader plugins to work 
@@ -370,7 +381,39 @@
 					<useReleaseProfile>false</useReleaseProfile>
 				</configuration>
 			</plugin>
+
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>3.0.0</version>
+				<executions>
+					<execution>
+						<id>server</id>
+						<goals>
+							<goal>java</goal>
+						</goals>
+						<configuration>
+							<mainClass>org.opentripplanner.standalone.OTPMain</mainClass>
+							<jvmArgs>-Duser.timezone=America/New_York </jvmArgs>
+							<commandlineArgs>--router default --server --verbose --clientFiles /var/otp/ui --clientPath / --disableNativeClient --clientFallback</commandlineArgs>
+						</configuration>
+					</execution>
+					<execution>
+						<id>bundle</id>
+						<goals>
+							<goal>java</goal>
+						</goals>
+						<configuration>
+							<mainClass>org.opentripplanner.standalone.OTPMain</mainClass>
+							<jvmArgs>-Duser.timezone=America/New_York </jvmArgs>
+							<commandlineArgs>--build /var/otp/graphs/default --verbose</commandlineArgs>
+						</configuration>
+					</execution>
+	
+				</executions>
+			</plugin>
 		</plugins>
+
 		<!-- In Maven 3, ssh wagon is no longer enabled by default. Since many 
 			of our internal deployments use ssh, we enable it here -->
 		<extensions>
@@ -763,8 +806,8 @@
 		<dependency>
 			<groupId>org.onebusaway</groupId>
 			<artifactId>onebusaway-gtfs-realtime-api</artifactId>
-            <version>1.2.22</version>
-        </dependency>
+			<version>1.2.22</version>
+		</dependency>
 		<!-- Processing is used for the debug GUI (though we could probably use 
 			just Java2D) -->
 		<dependency>
@@ -879,12 +922,12 @@
 			<artifactId>lucene-queryparser</artifactId>
 			<version>4.7.1</version>
 		</dependency>
-        <dependency>
-            <groupId>com.graphql-java</groupId>
-            <artifactId>graphql-java</artifactId>
-            <version>14.0</version>
-        </dependency>
-   		<dependency>
+		<dependency>
+			<groupId>com.graphql-java</groupId>
+			<artifactId>graphql-java</artifactId>
+			<version>14.0</version>
+		</dependency>
+		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-core</artifactId>
 			<version>1.11.916</version>

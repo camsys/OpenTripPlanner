@@ -22,4 +22,12 @@ config:
   scalars:
     ID: graphql.relay.Relay.ResolvedGlobalId
   mappers:
+    AlertCauseType: String
+    AlertEffectType: String
+    AlertSeverityLevelType: String
+    WheelchairBoarding: String
+    NYMtaADAFlag: String
+    LocationType: String
+    BikesAllowed: String
     Stop: Object # Can be either Stop or Station
+    

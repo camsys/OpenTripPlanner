@@ -1,5 +1,14 @@
 {
   "scripts": {
     "generate": "graphql-codegen --config graphql-codegen.yml"
+  },
+  "dependencies": {
+    "graphql": "^15.5.0"
+  },
+  "devDependencies": {
+    "@graphql-codegen/add": "^2.0.2",
+    "@graphql-codegen/cli": "^1.21.3",
+    "@graphql-codegen/java": "^1.18.0",
+    "@graphql-codegen/java-resolvers": "^1.17.9"
   }
 }

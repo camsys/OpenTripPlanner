@@ -89,10 +89,10 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	}
 
 	@Override
-	public DataFetcher<Object> locationType() {
+	public DataFetcher<String> locationType() {
 	    return environment -> {
 	    	Stop e = environment.getSource();
-	    	return GraphQLLocationType.values()[e.getLocationType()];
+	    	return GraphQLLocationType.values()[e.getLocationType()].name();
 	    };
 	}
 
@@ -105,10 +105,10 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	}
 
 	@Override
-	public DataFetcher<Object> wheelchairBoarding() {
+	public DataFetcher<String> wheelchairBoarding() {
 	    return environment -> {
 	    	Stop e = environment.getSource();
-	    	return GraphQLWheelchairBoarding.values()[e.getWheelchairBoarding()];
+	    	return GraphQLWheelchairBoarding.values()[e.getWheelchairBoarding()].name();
 	    };
 	}
 
@@ -248,13 +248,13 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	}
 
 	@Override
-	public DataFetcher<Object> mtaAdaAccessible() {
+	public DataFetcher<String> mtaAdaAccessible() {
 		return environment -> {
 	    	Stop e = environment.getSource();
 	    	String gtfsId = e.getParentStation() != null ? e.getParentStation() : e.getId().getId();
 	    	
 	    	return GraphQLNyMtaAdaFlag.values()[Integer.parseInt(getGraphIndex(environment).mtaSubwayStationsByGtfsId
-	    			.get(gtfsId).get(0).get("ADA"))];
+	    			.get(gtfsId).get(0).get("ADA"))].name();
 	    };	
 	}
 

@@ -49,12 +49,20 @@ public class GraphQLTypes {
     
   }
   
-  
-  /** Accessibility information from GTFS. */
-  public enum GraphQLWheelchairBoarding {
+  public enum GraphQLBikesAllowed {
     NO_INFORMATION,
-    POSSIBLE,
-    NOT_POSSIBLE
+    ALLOWED,
+    NOT_ALLOWED
+    
+  }
+  
+  
+  
+  /** Identifies whether this stop represents a stop or station. */
+  public enum GraphQLLocationType {
+    STOP,
+    STATION,
+    ENTRANCE
     
   }
   
@@ -66,19 +74,6 @@ public class GraphQLTypes {
     PARTLY_ACCESSIBLE
     
   }
-  
-  /** Identifies whether this stop represents a stop or station. */
-  public enum GraphQLLocationType {
-    STOP,
-    STATION,
-    ENTRANCE
-    
-  }
-  
-  
-  
-  
-  
   
   
   public static class GraphQLQueryTypeFeedByFeedIdArgs {
@@ -158,4 +153,16 @@ public class GraphQLTypes {
     public void setGraphQLMtaComplexId(String mtaComplexId) { this.mtaComplexId = mtaComplexId; }
     public void setGraphQLMtaStationId(String mtaStationId) { this.mtaStationId = mtaStationId; }
   }
+  
+  
+  
+  
+  /** Accessibility information from GTFS. */
+  public enum GraphQLWheelchairBoarding {
+    NO_INFORMATION,
+    POSSIBLE,
+    NOT_POSSIBLE
+    
+  }
+  
 }
