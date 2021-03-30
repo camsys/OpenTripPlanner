@@ -316,7 +316,7 @@ type Stop {
     mtaEquipment: [Equipment]
 
     """NY MTA's ADA Accessibility Status Flag"""
-    mtaAdaAccessible: NYMtaADAFlag
+    mtaAdaAccessible: String!
 
     """NY MTA's ADA Accessibility Description"""
     mtaAdaAccessibleNotes: String
@@ -341,7 +341,7 @@ type Stop {
     url: String
 
     """Identifies whether this stop represents a stop or station."""
-    locationType: LocationType
+    locationType: String!
 
     """
     The GTFS station which this stop is part of (or null if this stop is not part of a station). 
@@ -351,7 +351,7 @@ type Stop {
     """
     Whether wheelchair boarding is possible for at least some of vehicles on this stop
     """
-    wheelchairBoarding: WheelchairBoarding
+    wheelchairBoarding: String!
 
     direction: String
 
@@ -414,9 +414,9 @@ type Trip {
     """
     Whether wheelchair boarding is possible for at least some of vehicles on this stop
     """
-	wheelchairAccessible: WheelchairBoarding!
+	wheelchairAccessible: String!
 
-	bikesAllowed: BikesAllowed!
+	bikesAllowed: String!
 
     blockId: String
 
