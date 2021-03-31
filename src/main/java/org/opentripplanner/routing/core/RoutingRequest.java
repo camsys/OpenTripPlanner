@@ -7,6 +7,9 @@ import org.opentripplanner.api.parameter.QualifiedModeSet;
 import org.opentripplanner.common.MavenVersion;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.common.model.NamedPlace;
+import org.opentripplanner.model.Stop;
+import org.opentripplanner.model.Trip;
+import org.opentripplanner.routing.alertpatch.Alert;
 import org.opentripplanner.routing.edgetype.StreetEdge;
 import org.opentripplanner.routing.error.TrivialPathException;
 import org.opentripplanner.routing.graph.Edge;
@@ -26,18 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.TimeZone;
+import java.util.*;
 
 /**
  * A trip planning request. Some parameters may not be honored by the trip planner for some or all itineraries.
@@ -81,6 +73,11 @@ public class RoutingRequest implements Cloneable, Serializable {
      * Defaults to unlimited.
      */
     public double maxWalkDistance = Double.MAX_VALUE;
+
+    /**
+     * Maximum walking distance for heuristic.
+     */
+    public double maxWalkDistanceHeuristic = Double.MAX_VALUE;
 
     /**
      * The maximum distance (in meters) the user is willing to walk for transfer legs.
@@ -281,9 +278,15 @@ public class RoutingRequest implements Cloneable, Serializable {
     
     /** Set of preferred routes by user. */
     public RouteMatcher preferredRoutes = RouteMatcher.emptyMatcher();
-    
+
     /** Set of preferred agencies by user. */
     public HashSet<String> preferredAgencies = new HashSet<String>();
+
+    public HashSet<Integer> preferredRouteTypes = new HashSet<>();
+
+    public HashSet<Integer> bannedRouteTypes = new HashSet<>();
+
+    private Set<String> bannedPaths = new HashSet<>();
 
     /**
      * Penalty added for using every route that is not preferred if user set any route as preferred. We return number of seconds that we are willing
@@ -554,6 +557,9 @@ public class RoutingRequest implements Cloneable, Serializable {
     /** A trip where this trip must start from (depart-onboard routing) */
     public FeedScopedId startingTransitTripId;
 
+    /** Keep track of alerts to add to GraphPath */
+    public List<Alert> planAlerts = new ArrayList<>();
+
     public boolean walkingBike;
 
     public boolean softWalkLimiting = true;
@@ -573,6 +579,13 @@ public class RoutingRequest implements Cloneable, Serializable {
     public boolean bikeParkAndRide = false;
     public boolean parkAndRide  = false;
     public boolean kissAndRide  = false;
+
+    // smart kiss and ride - if this option is turned on, intelligently use pre-transit and post-transit kiss-and-ride
+    public boolean smartKissAndRide = false;
+    public boolean preTransitKissAndRide = false;
+    public boolean postTransitKissAndRide = false;
+    public Set<FeedScopedId> kissAndRideWhitelist = Collections.emptySet();
+    public Set<String> kissAndRideOverrides = Collections.emptySet();
 
     /* Whether we are in "long-distance mode". This is currently a server-wide setting, but it could be made per-request. */
     // TODO remove
@@ -626,6 +639,15 @@ public class RoutingRequest implements Cloneable, Serializable {
      * service.
      */
     public int flexMinPartialHopLength = 400;
+
+    /** How far to look out, in seconds, to add upcoming trips. Defaults to half an hour. */
+    public int nextDepartureWindow = 1800;
+
+    /** Whether to apply "hard path banning", where after a sequence of routes is used, it can't be used again */
+    public boolean hardPathBanning = false;
+
+    /** What agencies to apply hard path banning to */
+    public HashSet<String> hardPathBanningAgencies = new HashSet<>();
 
     /** Saves split edge which can be split on origin/destination search
      *
@@ -820,6 +842,24 @@ public class RoutingRequest implements Cloneable, Serializable {
         if (!s.isEmpty()) {
             preferredAgencies = new HashSet<>();
             Collections.addAll(preferredAgencies, s.split(","));
+        }
+    }
+
+    public void setPreferredRouteTypes(String s) {
+        if (s != null && !s.equals("")) {
+            preferredRouteTypes = new HashSet<>();
+            for (String si : s.split(",")) {
+                preferredRouteTypes.add(Integer.parseInt(si));
+            }
+        }
+    }
+
+    public void setBannedRouteTypes(String s) {
+        if (s != null && !s.equals("")) {
+            bannedRouteTypes = new HashSet<>();
+            for (String si : s.split(",")) {
+                bannedRouteTypes.add(Integer.parseInt(si));
+            }
         }
     }
 
@@ -1079,7 +1119,15 @@ public class RoutingRequest implements Cloneable, Serializable {
             clone.whiteListedAgencies = (HashSet<String>) whiteListedAgencies.clone();
             clone.whiteListedRoutes = whiteListedRoutes.clone();
             clone.preferredAgencies = (HashSet<String>) preferredAgencies.clone();
+            clone.preferredAgencies = (HashSet<String>) preferredAgencies.clone();
+            clone.preferredRouteTypes = (HashSet<Integer>) preferredRouteTypes.clone();
+            clone.bannedRouteTypes = (HashSet<Integer>) bannedRouteTypes.clone();
             clone.preferredRoutes = preferredRoutes.clone();
+            clone.unpreferredAgencies = (HashSet<String>) unpreferredAgencies.clone();
+            clone.unpreferredRoutes = unpreferredRoutes.clone();
+            clone.bannedPaths = new HashSet<>(bannedPaths);
+            clone.kissAndRideOverrides = new HashSet<>(kissAndRideOverrides);
+            clone.kissAndRideWhitelist = new HashSet<>(kissAndRideWhitelist);
             if (this.bikeWalkingOptions != this)
                 clone.bikeWalkingOptions = this.bikeWalkingOptions.clone();
             else
@@ -1096,6 +1144,8 @@ public class RoutingRequest implements Cloneable, Serializable {
         ret.setArriveBy(!ret.arriveBy);
         ret.reverseOptimizing = !ret.reverseOptimizing; // this is not strictly correct
         ret.useBikeRentalAvailabilityInformation = false;
+        ret.preTransitKissAndRide = this.postTransitKissAndRide;
+        ret.postTransitKissAndRide = this.preTransitKissAndRide;
         return ret;
     }
 
@@ -1246,7 +1296,11 @@ public class RoutingRequest implements Cloneable, Serializable {
                 && flexMinPartialHopLength == other.flexMinPartialHopLength
                 && pathIgnoreStrategy.equals(pathIgnoreStrategy)
                 && clockTimeSec == other.clockTimeSec
-                && serviceDayLookout == other.serviceDayLookout;
+                && serviceDayLookout == other.serviceDayLookout
+                && smartKissAndRide == other.smartKissAndRide
+                && kissAndRideWhitelist.equals(other.kissAndRideWhitelist)
+                && kissAndRideOverrides.equals(other.kissAndRideOverrides)
+                && maxWalkDistanceHeuristic == other.maxWalkDistanceHeuristic;
     }
 
     /**
@@ -1295,7 +1349,11 @@ public class RoutingRequest implements Cloneable, Serializable {
                 + new Double(minTransferTimeHard).hashCode() * 31
                 + new Double(tripShownRangeTime).hashCode() * 790052909
                 + pathIgnoreStrategy.hashCode() * 1301081
-                + Integer.hashCode(serviceDayLookout) * 31558519;
+                + Integer.hashCode(serviceDayLookout) * 31558519
+                + Boolean.hashCode(smartKissAndRide) * 10169
+                + kissAndRideWhitelist.hashCode() * 63061489
+                + kissAndRideOverrides.hashCode() * 731980
+                + Double.hashCode(maxWalkDistanceHeuristic) * 731980;
 
         if (batch) {
             hashCode *= -1;
@@ -1433,10 +1491,6 @@ public class RoutingRequest implements Cloneable, Serializable {
         }
     }
 
-    public void banTrip(FeedScopedId trip) {
-        bannedTrips.put(trip, BannedStopSet.ALL);
-    }
-
     public boolean routeIsBanned(Route route) {
         /* check if agency is banned for this plan */
         if (bannedAgencies != null) {
@@ -1473,6 +1527,45 @@ public class RoutingRequest implements Cloneable, Serializable {
 
         if (whiteListInUse && !whiteListed) {
             return true;
+        }
+
+        return false;
+    }
+
+    public void banTrip(FeedScopedId trip) {
+        bannedTrips.put(trip, BannedStopSet.ALL);
+    }
+
+    public void addUnpreferredRoute(FeedScopedId routeId) {
+        unpreferredRoutes.addRouteId(routeId);
+    }
+
+    /**
+     * tripIsBanned is a misnomer: this checks whether the agency or route are banned.
+     * banning of individual trips is actually performed inside the trip search,
+     * in TripTimes.tripAcceptable.
+     */
+    public boolean tripIsBanned(Trip trip) {
+        /* check if agency is banned for this plan */
+        if (bannedAgencies != null) {
+            if (bannedAgencies.contains(trip.getRoute().getAgency().getId())) {
+                return true;
+            }
+        }
+
+        /* check if route banned for this plan */
+        if (bannedRoutes != null) {
+            Route route = trip.getRoute();
+            if (bannedRoutes.matches(route)) {
+                return true;
+            }
+        }
+
+        /* check if route type is banned */
+        if (bannedRouteTypes != null) {
+            if (bannedRouteTypes.contains(trip.getRoute().getType())) {
+                return true;
+            }
         }
 
         return false;
@@ -1575,6 +1668,47 @@ public class RoutingRequest implements Cloneable, Serializable {
             return new RTDPathIgnoreStrategy();
         }
         return new DefaultPathIgnoreStrategy();
+    }
+
+    public void banPath(GraphPath path) {
+        bannedPaths.add(path.getRoutePatternHash());
+    }
+
+    public boolean isPathBanned(GraphPath path) {
+        if (hardPathBanningAgencies != null && !hardPathBanningAgencies.isEmpty()) {
+            for (FeedScopedId id : path.getRoutes()) {
+                if (!hardPathBanningAgencies.contains(id.getAgencyId())) {
+                    return false;
+                }
+            }
+        }
+        String hash = path.getRoutePatternHash();
+        if (bannedPaths.contains(hash)) {
+            return true;
+        }
+        // Ensure we don't get trivially different paths. (Todo - will this kick out useful paths too?)
+        for (String other : bannedPaths) {
+            if (hash.startsWith(other + "#")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean canUseStopForKissAndRide(Stop stop) {
+        if (kissAndRideWhitelist.contains(stop.getId())) {
+            return true;
+        }
+        if (stop.getParentStation() != null) {
+            FeedScopedId id = new FeedScopedId(stop.getId().getAgencyId(), stop.getParentStation());
+            return kissAndRideWhitelist.contains(id);
+        }
+        return false;
+    }
+
+    public void addPlanAlert(Alert alert) {
+        if (!planAlerts.contains(alert))
+            planAlerts.add(alert);
     }
 
 }

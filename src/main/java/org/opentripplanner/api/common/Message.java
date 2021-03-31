@@ -11,6 +11,11 @@ import org.opentripplanner.util.Properties;
 public enum Message {
     // id field is loosely based on HTTP error codes http://en.wikipedia.org/wiki/List_of_HTTP_status_codes
     PLAN_OK(200),
+
+    ORIGIN_TOO_FAR(250),
+    DESTINATION_TOO_FAR(251),
+    BOTH_ENDPOINTS_TOO_FAR(252),
+
     SYSTEM_ERROR(500),
     GRAPH_UNAVAILABLE(503),
 
@@ -27,8 +32,8 @@ public enum Message {
 
     GEOCODE_FROM_AMBIGUOUS(340),
     GEOCODE_TO_AMBIGUOUS(350),
-    GEOCODE_FROM_TO_AMBIGUOUS(360), 
-    
+    GEOCODE_FROM_TO_AMBIGUOUS(360),
+
     UNDERSPECIFIED_TRIANGLE(370),
     TRIANGLE_NOT_AFFINE(371),
     TRIANGLE_OPTIMIZE_TYPE_NOT_SET(372),
