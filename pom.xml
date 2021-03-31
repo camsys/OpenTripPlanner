@@ -368,9 +368,7 @@
 						<configuration>
 							<mainClass>org.opentripplanner.standalone.OTPMain</mainClass>
 							<jvmArgs>-Duser.timezone=America/New_York </jvmArgs>
-							<commandlineArgs>--router default --server --verbose
-								--clientFiles /var/otp/ui --clientPath / --disableNativeClient
-								--clientFallback</commandlineArgs>
+							<commandlineArgs>--router default --server --verbose --clientFiles /var/otp/ui --clientPath / --disableNativeClient --clientFallback</commandlineArgs>
 						</configuration>
 					</execution>
 					<execution>
