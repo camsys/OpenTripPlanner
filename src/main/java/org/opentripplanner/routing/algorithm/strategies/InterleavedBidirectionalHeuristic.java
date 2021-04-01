@@ -15,8 +15,8 @@ package org.opentripplanner.routing.algorithm.strategies;
 
 import gnu.trove.map.TObjectDoubleMap;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
-import org.onebusaway.gtfs.model.Route;
 import org.opentripplanner.common.pqueue.BinHeap;
+import org.opentripplanner.model.Route;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.core.TraverseMode;
@@ -458,10 +458,6 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
         seen.add(tstop);
         while (!queue.isEmpty()) {
             TransitStop v = queue.pop();
-            if (!v.isEntrance() && !v.isExtendedLocationType()) {
-                if (!routingRequest.bannedRouteTypes.containsAll(getRouteTypes(v)))
-                    return false;
-            }
             for (Edge e : v.getOutgoing()) {
                 if (e instanceof PathwayEdge) {
                     TransitStop w = (TransitStop) e.getToVertex();
@@ -484,6 +480,7 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
     }
 
     private void checkEndpoints() {
+        routingRequest.farEndpointsException = true;
         if (!routingRequest.farEndpointsException || routingRequest.kissAndRide || routingRequest.parkAndRide)
             return;
         boolean preTransitFar = preTransitStopsByDistance.empty()

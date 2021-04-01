@@ -671,6 +671,8 @@ public class RoutingRequest implements Cloneable, Serializable {
      */
     public long clockTimeSec;
 
+    public boolean farEndpointsException = false;
+
     /* CONSTRUCTORS */
 
     /** Constructor for options; modes defaults to walk and transit */
@@ -1300,7 +1302,8 @@ public class RoutingRequest implements Cloneable, Serializable {
                 && smartKissAndRide == other.smartKissAndRide
                 && kissAndRideWhitelist.equals(other.kissAndRideWhitelist)
                 && kissAndRideOverrides.equals(other.kissAndRideOverrides)
-                && maxWalkDistanceHeuristic == other.maxWalkDistanceHeuristic;
+                && maxWalkDistanceHeuristic == other.maxWalkDistanceHeuristic
+                && farEndpointsException == other.farEndpointsException;
     }
 
     /**
@@ -1353,7 +1356,8 @@ public class RoutingRequest implements Cloneable, Serializable {
                 + Boolean.hashCode(smartKissAndRide) * 10169
                 + kissAndRideWhitelist.hashCode() * 63061489
                 + kissAndRideOverrides.hashCode() * 731980
-                + Double.hashCode(maxWalkDistanceHeuristic) * 731980;
+                + Double.hashCode(maxWalkDistanceHeuristic) * 731980
+                + Boolean.hashCode(farEndpointsException) * 538799;
 
         if (batch) {
             hashCode *= -1;

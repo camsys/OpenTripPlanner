@@ -1,6 +1,9 @@
 package org.opentripplanner.common.pqueue;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class BinHeap<T> {
     
@@ -137,6 +140,10 @@ public class BinHeap<T> {
         elem[i] = lastElem;
         prio[i] = lastPrio;
         return minElem;
+    }
+
+    public Collection<T> getElements() {
+        return Arrays.stream(elem).filter(Objects::nonNull).collect(Collectors.toList());
     }
     
     public void resize(int capacity) {
