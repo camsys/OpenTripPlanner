@@ -109,6 +109,8 @@ public class GtfsRealtimeAlertsUpdater extends PollingGraphUpdater {
 
     @Override
     protected void runPolling() {
+        Thread.currentThread().setName("Graph Update Thread: " + url);
+
         try {
             InputStream data = HttpUtils.getData(url);
             if (data == null) {
@@ -118,8 +120,8 @@ public class GtfsRealtimeAlertsUpdater extends PollingGraphUpdater {
             final FeedMessage feed = FeedMessage.PARSER.parseFrom(data, _extensionRegistry);
 
             long feedTimestamp = feed.getHeader().getTimestamp();
-            if (feedTimestamp <= lastTimestamp) {
-                LOG.info("Ignoring feed with an old timestamp.");
+            if (feedTimestamp < lastTimestamp) {
+                LOG.info("Ignoring feed {} with an old timestamp ({} vs {}).", url, feedTimestamp, lastTimestamp);
                 return;
             }
 

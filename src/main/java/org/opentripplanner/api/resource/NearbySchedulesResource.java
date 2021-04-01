@@ -14,8 +14,11 @@ package org.opentripplanner.api.resource;
 
 import org.locationtech.jts.geom.Coordinate;
 import org.apache.commons.lang.StringUtils;
+import org.joda.time.DateTime;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Stop;
+import org.onebusaway.gtfs.model.Trip;
+import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.opentripplanner.api.util.StopFinder;
 import org.opentripplanner.index.IndexAPI;
 import org.opentripplanner.index.model.StopTimesByStop;
@@ -338,12 +341,27 @@ public class NearbySchedulesResource {
         Collection<TripPattern> tripPatterns = null;
         tripPatterns = index.patternsForStop.get(stop);
 
+        if(stop.getId() == null)
+        	return;
+        
+        List<AlertPatch> agencyPatchSnapshot = index.graph.getAlertPatches()
+        		.collect(Collectors.toList());
+        
         if (tripPatterns != null) {
             for (TripPattern tripPattern : tripPatterns) {
-
-                if (direction != null && !direction.equals(tripPattern.getDirection())) {
+                if (direction != null && !(direction + "").equals(tripPattern.getDirection())) {
                     continue;
                 }
+
+                // trip patches--patches are filtered for a trip match elsewhere
+                List<AlertPatch> vehiclePosUpdates = agencyPatchSnapshot.stream()
+                		.filter(it -> it.hasVehicleInfo() && it.getTrip() != null)
+                		.collect(Collectors.toList());
+
+                for(AlertPatch a : vehiclePosUpdates) {
+                	stopTimes.addAlert(a, new Locale("en"));
+                }
+                	
                 for (int i = 0; i < tripPattern.stopPattern.stops.length; i++) {
                     if (stop == null || stop.equals(tripPattern.stopPattern.stops[i])) {
                         AlertPatch[] alertPatchesBoardEdges = index.graph.getAlertPatches(tripPattern.boardEdges[i]);

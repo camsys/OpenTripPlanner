@@ -59,8 +59,11 @@ public abstract class PollingGraphUpdater implements GraphUpdater {
 
     @Override
     final public void run() {
-        try {
+        Thread.currentThread().setName("Graph Update Thread: " + this.getClass().getCanonicalName());
+
+    	try {
             LOG.info("Polling updater started: {}", this);
+                        
             // Run "forever"
             while (true) {
                 try {
@@ -79,6 +82,7 @@ public abstract class PollingGraphUpdater implements GraphUpdater {
                     // TODO Should we cancel the task? Or after n consecutive failures?
                     // cancel();
                 }
+                               
                 // Sleep a given number of seconds
                 Thread.sleep(frequencySec * 1000);
             }
