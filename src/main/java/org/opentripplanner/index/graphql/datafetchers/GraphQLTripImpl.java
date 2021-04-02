@@ -6,6 +6,7 @@ import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.FeedInfo;
 import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.Trip;
+import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
 import org.opentripplanner.index.graphql.generated.GraphQLTypes.GraphQLBikesAllowed;
@@ -23,7 +24,7 @@ public class GraphQLTripImpl implements GraphQLDataFetchers.GraphQLTrip {
 	public DataFetcher<String> gtfsId() {
 	    return environment -> {
 	    	Trip t = environment.getSource();
-	    	return AgencyAndId.convertToString(t.getId());
+	    	return GtfsLibrary.convertIdToString(t.getId());
 	    };
 	}
 
@@ -31,7 +32,7 @@ public class GraphQLTripImpl implements GraphQLDataFetchers.GraphQLTrip {
 	public DataFetcher<String> serviceId() {
 	    return environment -> {
 	    	Trip t = environment.getSource();
-	    	return AgencyAndId.convertToString(t.getServiceId());
+	    	return GtfsLibrary.convertIdToString(t.getServiceId());
 	    };
 	}
 
@@ -79,7 +80,7 @@ public class GraphQLTripImpl implements GraphQLDataFetchers.GraphQLTrip {
 	public DataFetcher<String> shapeId() {
 	    return environment -> {
 	    	Trip t = environment.getSource();
-	    	return AgencyAndId.convertToString(t.getShapeId());
+	    	return GtfsLibrary.convertIdToString(t.getShapeId());
 	    };
 	}
 

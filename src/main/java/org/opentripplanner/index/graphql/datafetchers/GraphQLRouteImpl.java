@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Route;
+import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
 import org.opentripplanner.routing.edgetype.TripPattern;
@@ -20,7 +21,7 @@ public class GraphQLRouteImpl implements GraphQLDataFetchers.GraphQLRoute {
 	public DataFetcher<String> gtfsId() {
 	    return environment -> {
 	    	Route e = environment.getSource();
-	    	return AgencyAndId.convertToString(e.getId());
+	    	return GtfsLibrary.convertIdToString(e.getId());
 	    };
 	}
 

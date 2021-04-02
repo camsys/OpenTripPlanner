@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.onebusaway.gtfs.model.Stop;
 
 import org.onebusaway.gtfs.model.AgencyAndId;
+import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
 import org.opentripplanner.index.graphql.generated.GraphQLTypes.GraphQLLocationType;
@@ -28,7 +29,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	public DataFetcher<String> gtfsId() {
 	    return environment -> {
 	    	Stop e = environment.getSource();
-	    	return AgencyAndId.convertToString(e.getId());
+	    	return GtfsLibrary.convertIdToString(e.getId());
 	    };
 	}
 
