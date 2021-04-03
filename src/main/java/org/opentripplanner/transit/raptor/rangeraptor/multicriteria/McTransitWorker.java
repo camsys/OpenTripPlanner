@@ -54,6 +54,8 @@ public final class McTransitWorker<T extends RaptorTripSchedule> implements Rout
     @Override
     public void routeTransitAtStop(int stopPos) {
         final int stopIndex = pattern.stopIndex(stopPos);
+        int tripIndex = tripSearch.getCandidateTripIndex();
+        boolean alreadyInTripIndex = false;
 
         // Alight at boardStopPos
         if (pattern.alightingPossibleAt(stopPos)) {
@@ -68,12 +70,14 @@ public final class McTransitWorker<T extends RaptorTripSchedule> implements Rout
         }
 
         // If it is not possible to board the pattern at this stop, then return
-        if(!pattern.boardingPossibleAt(stopPos)) {
+        if(!pattern.boardingPossibleAt(stopPos) || alreadyInTripIndex) {
             return;
         }
 
         // For each arrival at the current stop
         for (AbstractStopArrival<T> prevArrival : state.listStopArrivalsPreviousRound(stopIndex)) {
+
+
 
             int earliestBoardTime = calculator.plusDuration(
                 prevArrival.arrivalTime(),
@@ -87,9 +91,9 @@ public final class McTransitWorker<T extends RaptorTripSchedule> implements Rout
             }
 
             //TODO see if we can add a latest board time as well Translink transfers max tranfer time
-            int latestBoardingTime = earliestBoardTime+ (calculator.getSearchWindowInSeconds() * 5);
+            int latestBoardingTime = earliestBoardTime + (calculator.getSearchWindowInSeconds());
 
-            //Let's incremebt the boarding time by 1 minute to see if there other options can be found
+            //Let's increment the boarding time by 1 minute to see if there other options can be found
             int nextBoardingTime = earliestBoardTime + (60);
 
             int testBoradingTimeCounts = 0;
