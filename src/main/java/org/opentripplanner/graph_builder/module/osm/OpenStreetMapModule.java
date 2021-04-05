@@ -512,6 +512,11 @@ public class OpenStreetMapModule implements GraphBuilderModule {
                 new ParkAndRideLinkEdge(parkAndRideVertex, accessVertex);
                 new ParkAndRideLinkEdge(accessVertex, parkAndRideVertex);
             }
+
+            if(creativeName.toString().contains("Arapahoe")){
+                int DELETEME = 0;
+            }
+
             LOG.debug("Created P+R '{}' ({})", creativeName, osmId);
             return true;
         }

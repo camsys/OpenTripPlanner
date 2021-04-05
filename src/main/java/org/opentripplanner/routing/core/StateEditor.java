@@ -376,6 +376,21 @@ public class StateEditor {
         }
     }
 
+    public void setUsingCar() {
+        cloneStateDataAsNeeded();
+        child.stateData.carState = StateData.CarState.USING;
+    }
+
+    public void setUsedCar() {
+        cloneStateDataAsNeeded();
+        child.stateData.carState = StateData.CarState.USED;
+    }
+
+    public void setUnusedCar() {
+        cloneStateDataAsNeeded();
+        child.stateData.carState = StateData.CarState.UNUSED;
+    }
+
     public void setBikeParked(boolean bikeParked) {
         cloneStateDataAsNeeded();
         child.stateData.bikeParked = bikeParked;
@@ -403,6 +418,21 @@ public class StateEditor {
     public void setStartTimeSeconds(long seconds) {
         cloneStateDataAsNeeded();
         child.stateData.startTime = seconds;
+    }
+
+    public void setPreTransitNumBoardings() {
+        cloneStateDataAsNeeded();
+        child.stateData.preTransitNumBoardings = child.stateData.numBoardings;
+    }
+
+    public void setTransferNotPermissible() {
+        cloneStateDataAsNeeded();
+        child.stateData.transferPermissible = false;
+    }
+
+    public void setTransferPermissible() {
+        cloneStateDataAsNeeded();
+        child.stateData.transferPermissible = true;
     }
 
     /**
@@ -545,6 +575,20 @@ public class StateEditor {
 
     public boolean hasEnteredNoThroughTrafficArea() {
         return child.hasEnteredNoThruTrafficArea();
+    }
+
+    public double getWalkSinceLastTransit() {
+        return child.walkDistance - child.stateData.lastTransitWalk;
+    }
+
+    public void setNonTransitMode(TraverseMode mode) {
+        cloneStateDataAsNeeded();;
+        child.stateData.nonTransitMode = mode;
+    }
+
+    public void recalculateNonTransitMode() {
+        cloneStateDataAsNeeded();
+        child.stateData.calculateNonTransitMode(child.stateData.opt);
     }
 
 }

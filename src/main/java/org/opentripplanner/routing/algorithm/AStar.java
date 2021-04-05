@@ -295,7 +295,6 @@ public class AStar {
             SearchTerminationStrategy terminationStrategy) {
         ShortestPathTree spt = null;
         long abortTime = DateUtils.absoluteTimeout(relTimeoutSeconds);
-
         startSearch (options, terminationStrategy, abortTime);
 
         if (runState != null) {

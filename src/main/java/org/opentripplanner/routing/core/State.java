@@ -50,7 +50,8 @@ public class State implements Cloneable {
     protected int[] pathParserStates;
 
     int callAndRideTime = 0;
-    
+
+
     private static final Logger LOG = LoggerFactory.getLogger(State.class);
 
     /* CONSTRUCTORS */
@@ -254,6 +255,14 @@ public class State implements Cloneable {
     
     public boolean isCarParked() {
         return stateData.carParked;
+    }
+
+    public boolean isCarUnused() {
+        return stateData.carState.equals(StateData.CarState.UNUSED);
+    }
+
+    public boolean isUsingCar() {
+        return stateData.carState.equals(StateData.CarState.USING);
     }
 
     public boolean isBikeParked() {
@@ -835,6 +844,24 @@ public class State implements Cloneable {
 
     public boolean hasEnteredNoThruTrafficArea() {
         return stateData.enteredNoThroughTrafficArea;
+    }
+
+    public int getPreTransitNumBoardings() {
+        return stateData.preTransitNumBoardings;
+    }
+
+    /**
+     * Check that transfer is allowed - after transit, or if we've started at a TransitVertex.
+     */
+    public boolean isTransferPermissible() {
+        return stateData.transferPermissible || backEdge == null;
+    }
+
+    // allow one transfer, needed for DirectTransferGenerator
+    public static State stateAllowingTransfer(Vertex v, RoutingRequest options) {
+        State s = new State(v, options);
+        s.stateData.transferPermissible = true;
+        return s;
     }
 
 }
