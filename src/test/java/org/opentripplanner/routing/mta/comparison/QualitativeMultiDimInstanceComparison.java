@@ -12,9 +12,11 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 package org.opentripplanner.routing.mta.comparison;
 
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.rank.Max;
 import org.apache.commons.math3.stat.descriptive.rank.Min;
+import org.apache.commons.math3.stat.inference.TTest;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.function.Executable;
@@ -30,9 +32,9 @@ import java.io.*;
 
 public class QualitativeMultiDimInstanceComparison {
 	
-    private String TEST_RESULTS_TXT = "src/test/resources/mta/comparison/dev.txt"; 
+    private String TEST_RESULTS_TXT = "src/test/resources/mta/comparison/baseline_results.txt"; 
 
-    private String BASELINE_RESULTS_TXT = "src/test/resources/mta/comparison/prod.txt";
+    private String BASELINE_RESULTS_TXT = "src/test/resources/mta/comparison/baseline.txt";
 
 	public void setBaselineResultsFile(String f) {
 		this.BASELINE_RESULTS_TXT = f;
@@ -42,123 +44,114 @@ public class QualitativeMultiDimInstanceComparison {
 		this.TEST_RESULTS_TXT = f;
 	}
 	
-	private enum optimizationDim {ALL};
-	
-	private final String[] optimizationDimLabels = new String[] { "ALL" };
-	
-    private enum metricsDim { W, X, T, hasResults, match };
+    private enum metricsDim { W, X, T, hasResults, topMatch };
 
     private final String[] metricsDimLabels = new String[] { "WALKING (km)", "TRANSFERS", "TIME (min)", "PRODUCED A RESULT", "BASELINE TOP IN TEST RESULTS**" };
 
 	public enum platformDim { BASELINE, TEST, TIE };
 	
-	// dimensions: optimization
-	private int[] totalByOptimization = new int[3];
-
-	// dimensions: optimization | metric | metric
+	// dimensions: metric | (win/loss/tie)
 	@SuppressWarnings("unchecked")
-	private List<Double>[][][]resultWinMargin = new ArrayList[3][5][3];
+	private SummaryStatistics[][] resultStats = new SummaryStatistics[5][3];
 
-	// dimensions: optimization | metric | platform
-	private int[][][] resultSummary = new int[3][5][3];
+	// dimensions: metric | (win/loss/tie)
+	private int[][] resultSummary = new int[5][3];
 		
 	private List<Query> noResultQueries = new ArrayList<Query>();
 
 	private List<Query> testIsWorseQueries = new ArrayList<Query>();
 
-	private void scorePlatform(optimizationDim optimization, metricsDim metric, 
-			List<ItinerarySummary> sortedResults, Comparator<ItinerarySummary> ranker, Query query) {
+	private void scorePlatform(metricsDim metric, List<ItinerarySummary> sortedResults, 
+			Comparator<ItinerarySummary> ranker, Query query) {
 
 		sortedResults.sort(ranker);	    				
 		
-		if(sortedResults.size() > 0) {
-			ItinerarySummary winningResult = sortedResults.get(0);
-			platformDim winningPlatform = sortedResults.get(0).platform;	
+		if(sortedResults.size() <= 0)
+			return;
+		
+		ItinerarySummary topResult = sortedResults.get(0);
+		platformDim topPlatform = sortedResults.get(0).platform;	
 
-			// the other platform's first result, equal or not to our top result
-			ItinerarySummary otherPlatformFirstResult = null;
+		// the other platform's first result, equal or not to our top result
+		ItinerarySummary otherPlatformTopResult = null;
 			
-			// the first result that is less than our result
-			ItinerarySummary runnerUpResult = null; 						
-			
-			for(int i = 1; i < sortedResults.size(); i++) {
-				ItinerarySummary p_Result = sortedResults.get(i);
-				platformDim p_Platform = sortedResults.get(i).platform;
+		for(int i = 1; i < sortedResults.size(); i++) {
+			ItinerarySummary p_Result = sortedResults.get(i);
+			platformDim p_Platform = sortedResults.get(i).platform;
 
-				if(winningPlatform != p_Platform && otherPlatformFirstResult == null) {
-					otherPlatformFirstResult = p_Result;
-				}
-				
-				int compareResult = ranker.compare(winningResult, p_Result);
-				if(compareResult < 0 && runnerUpResult == null) {
-					runnerUpResult = p_Result;
-				}
-			} // for sortedResults, looking for runner up
-
-			// other platform has no first result = one winner
-			if(otherPlatformFirstResult == null) {
-				this.resultSummary
-				[optimization.ordinal()]
-				[metric.ordinal()]
-				[winningPlatform.ordinal()]++;	
-			} else {
-				// other platform produced a result--is it equal to the winner? If so, tie
-				if(ranker.compare(otherPlatformFirstResult, winningResult) == 0) {
-					this.resultSummary
-					[optimization.ordinal()]
-					[metric.ordinal()]
-					[platformDim.TIE.ordinal()]++;	
-				} else {
-				// one winner
-					this.resultSummary
-					[optimization.ordinal()]
-					[metric.ordinal()]
-					[winningPlatform.ordinal()]++;						
-				}
+			if(topPlatform != p_Platform && otherPlatformTopResult == null) {
+				otherPlatformTopResult = p_Result;
 			}
-			
-			// if we won and the other platform produced a losing result
-			if(otherPlatformFirstResult != null 
-					&& ranker.compare(otherPlatformFirstResult, winningResult) != 0) {
+		}
 
-				if(winningPlatform.equals(platformDim.BASELINE))
-					testIsWorseQueries.add(query);
+		// other platform has no first result = one winner
+		if(otherPlatformTopResult == null) {
+			this.resultSummary
+			[metric.ordinal()]
+			[topPlatform.ordinal()]++;	
+		} else {
+			// other platform produced a result--is it equal to the winner? If so, tie
+			if(ranker.compare(otherPlatformTopResult, topResult) == 0) {
+				this.resultSummary
+				[metric.ordinal()]
+				[platformDim.TIE.ordinal()]++;	
+			} else {
+				// one winner
+				this.resultSummary
+				[metric.ordinal()]
+				[topPlatform.ordinal()]++;						
+			}
+		}
 
-				switch(metric) {
-				case T:
-					this.resultWinMargin
-						[optimization.ordinal()]
-						[metric.ordinal()]
-						[winningResult.platform.ordinal()].add((double)(winningResult.transitTime - otherPlatformFirstResult.transitTime));
-					break;
-				case W:
-					this.resultWinMargin
-						[optimization.ordinal()]
-						[metric.ordinal()]
-						[winningResult.platform.ordinal()].add(winningResult.walkDistance - otherPlatformFirstResult.walkDistance);
-					break;
-				case X:
-					this.resultWinMargin
-						[optimization.ordinal()]
-						[metric.ordinal()]
-						[winningResult.platform.ordinal()].add((double)(winningResult.routes.split(">").length - otherPlatformFirstResult.routes.split(">").length));
-					break;
-					
-				// nothing to do here
-				case hasResults:
-				case match:
-				default:
-					break;					
-				}					
-			} 			
-			
+		if(otherPlatformTopResult == null || topResult == null)
+			return;
+		
+		switch(metric) {
+		case T:
+			this.resultStats
+				[metric.ordinal()]
+				[topResult.platform.ordinal()].addValue((double)topResult.transitTime);
+	
+			this.resultStats
+				[metric.ordinal()]
+				[otherPlatformTopResult.platform.ordinal()].addValue((double)otherPlatformTopResult.transitTime);
+	
+			break;
+		case W:
+			this.resultStats
+				[metric.ordinal()]
+				[topResult.platform.ordinal()].addValue((double)topResult.walkDistance);
+
+			this.resultStats
+				[metric.ordinal()]
+				[otherPlatformTopResult.platform.ordinal()].addValue((double)otherPlatformTopResult.walkDistance);
+	
+			break;
+		case X:
+			this.resultStats
+				[metric.ordinal()]
+				[topResult.platform.ordinal()].addValue((double)topResult.routes.split(">").length);
+
+			this.resultStats
+				[metric.ordinal()]
+				[otherPlatformTopResult.platform.ordinal()].addValue((double)otherPlatformTopResult.routes.split(">").length);
+
+			break;
+				
+			// nothing to do here
+		case hasResults:
+		case topMatch:
+		default:
+			break;					
 		}
 	}
 	
 	private boolean isSetup = false;
+
 	public void setup() throws IOException, Exception {    	
 		if(isSetup)
 			return;
+
 		isSetup = true;
 
 		File devResultsFile = new File(TEST_RESULTS_TXT);
@@ -168,24 +161,19 @@ public class QualitativeMultiDimInstanceComparison {
 		List<Result> baselineResults = Result.loadResults(baselineResultsFile, platformDim.BASELINE);
 
 		// initialize stats storage array
-		for(int i = 0; i < resultWinMargin.length; i++) {
-			for(int z = 0; z < resultWinMargin[i].length; z++)
-				for(int a = 0; a < resultWinMargin[i][z].length; a++)
-					resultWinMargin[i][z][a] = new ArrayList();
-		}
+		for(int z = 0; z < resultStats.length; z++)
+			for(int i = 0; i < platformDim.values().length; i++)
+				resultStats[z][i] = new SummaryStatistics();
 
-
+		
 		// ==========================COMPARE RESULTS=====================================
 
 		for(int i = 0; i < Math.min(baselineResults.size(), devResults.size()); i++) {
 			Result testResult = devResults.get(i);
 			Result baselineResult = baselineResults.get(i);
-
 			Query query = baselineResult.query;
 
-			int o = optimizationDim.ALL.ordinal();
-
-			// add all system's itineraries to an array to sort based on metric and score
+			// add all systems' itineraries to an array to sort based on metric and score
 			List<ItinerarySummary> sortedResults = new ArrayList<ItinerarySummary>();
 			sortedResults.addAll(baselineResult.itineraries);
 			sortedResults.addAll(testResult.itineraries);
@@ -193,49 +181,39 @@ public class QualitativeMultiDimInstanceComparison {
 			// both systems produced nothing; skip?
 			if(sortedResults.isEmpty()) {
 				noResultQueries.add(baselineResult.query);
-
 				continue;
 			}
-
-			totalByOptimization[o]++;
 
 			for(int m = 0; m < metricsDim.values().length; m++) {
 				switch(metricsDim.values()[m]) {
 				case T:
 					// time, walk, transfers
-					scorePlatform(optimizationDim.values()[o], 
-							metricsDim.values()[m], sortedResults, ItinerarySummary.RANKER_TIME, query);
+					scorePlatform(metricsDim.values()[m], sortedResults, ItinerarySummary.RANKER_TIME, query);
 
 					break;
 				case W:
 					// walk, transit time, transfers
-
-					scorePlatform(optimizationDim.values()[o], 
-							metricsDim.values()[m], sortedResults, ItinerarySummary.RANKER_WALKING, query);
+					scorePlatform(metricsDim.values()[m], sortedResults, ItinerarySummary.RANKER_WALKING, query);
 
 					break;
 				case X:
 					// transfers, time, walk distance
-
-					scorePlatform(optimizationDim.values()[o], 
-							metricsDim.values()[m], sortedResults, ItinerarySummary.RANKER_XFERS, query);
+					scorePlatform(metricsDim.values()[m], sortedResults, ItinerarySummary.RANKER_XFERS, query);
 
 					break;
 
-				case match:
+				case topMatch:
 					if(baselineResult.itineraries.size() == 0)
 						break;
 
-					ItinerarySummary ourTopResult = baselineResult.itineraries.get(0);
-
+					ItinerarySummary baselineTopResult = baselineResult.itineraries.get(0);
 					for(int z = 0; z < testResult.itineraries.size(); z++) {
-						ItinerarySummary theirResult = testResult.itineraries.get(z);
+						ItinerarySummary testResultItem = testResult.itineraries.get(z);
 
-						if(ItinerarySummary.RANKER_EQUAL.compare(ourTopResult, theirResult) == 0) {
+						if(ItinerarySummary.RANKER_EQUAL.compare(baselineTopResult, testResultItem) == 0) {
 							this.resultSummary
-							[o]
 									[m]	
-											[platformDim.TIE.ordinal()]++;
+									[platformDim.TIE.ordinal()]++;
 							break;
 						}
 					}
@@ -243,28 +221,23 @@ public class QualitativeMultiDimInstanceComparison {
 					break;
 
 				case hasResults:
-
 					if(!baselineResult.itineraries.isEmpty() && !testResult.itineraries.isEmpty()) {
 						this.resultSummary
-						[o]
-								[m]
-										[platformDim.TIE.ordinal()]++;
-
+							[m]
+							[platformDim.TIE.ordinal()]++;
 					} else if(!baselineResult.itineraries.isEmpty()) {
 						this.resultSummary
-						[o]
-								[m]
-										[platformDim.BASELINE.ordinal()]++;
+							[m]
+							[platformDim.BASELINE.ordinal()]++;
 					} else if(!testResult.itineraries.isEmpty()) {
 						this.resultSummary
-						[o]
-								[m]
-										[platformDim.TEST.ordinal()]++;
+							[m]
+							[platformDim.TEST.ordinal()]++;
 					}
 
 					break;
 
-					// will never get here
+				// will never get here
 				default:
 					break; 
 				} // end switch
@@ -272,134 +245,104 @@ public class QualitativeMultiDimInstanceComparison {
 		}
 		
 		// ==========================PRINT RESULTS=====================================
-
-    	boolean overallResult = true;
     	    	
     	System.out.println("");
-    	System.out.println("TOTAL RESULTS: " + baselineResults.size() + "\n");
+    	System.out.println("n=" + baselineResults.size() + "\n");
   
-    	for(int o = 0; o < optimizationDim.values().length; o++) {
-    		String header = "OPTIMIZATION: " + String.format("%-10s (n=%3d)", optimizationDimLabels[o], totalByOptimization[o]) + 
-    				"         BASELINE           TIE           TEST      BASELINE SUCCESS MARGIN STATS*          TEST SUCCESS MARGIN STATS*";
-        	System.out.println(header);
-        	System.out.println(header.replaceAll("[^\\s]", "-"));
+    	String header = "                                         BASELINE          TIE          TEST       BASELINE VALUES                              TEST VALUES";
+        System.out.println(header);
+        System.out.println(header.replaceAll("[^\\s]", "-"));
         	
-        	for(int m = 0; m < metricsDim.values().length; m++) {
-        		int total = totalByOptimization[o];
+        for(int m = 0; m < metricsDim.values().length; m++) {	
+    		float total = this.resultSummary[m][platformDim.BASELINE.ordinal()] + 
+    				this.resultSummary[m][platformDim.TEST.ordinal()] + 
+    				this.resultSummary[m][platformDim.TIE.ordinal()];
+
+    		SummaryStatistics[] metricStatsByPlatform = resultStats[m];
         		
-        		double[] baselineValuesAsPrimitive = new double[this.resultWinMargin[o][m][platformDim.BASELINE.ordinal()].size()];
-        		for(int ii = 0; ii < this.resultWinMargin[o][m][platformDim.BASELINE.ordinal()].size(); ii++) {
-        			baselineValuesAsPrimitive[ii] = this.resultWinMargin[o][m][platformDim.BASELINE.ordinal()].get(ii);   
+            System.out.print(String.format("%-30s", metricsDimLabels[m]) + 
+        	"           " + 
+        	String.format("%-3d (%-3.0f%%)", 
+        		this.resultSummary
+    			[m]
+    			[platformDim.BASELINE.ordinal()], 
+    			((float)this.resultSummary
+    			[m]
+    			[platformDim.BASELINE.ordinal()]/total)*100)
+    		+ "    " + 
+        	String.format("%-3d (%-3.0f%%)", 
+            	this.resultSummary
+        		[m]
+        		[platformDim.TIE.ordinal()], 
+        		((float)this.resultSummary
+        		[m]
+        		[platformDim.TIE.ordinal()]/total)*100)
+    		+ "    " + 
+        	String.format("%-3d (%-3.0f%%)", 
+        		this.resultSummary
+    			[m]
+    			[platformDim.TEST.ordinal()], 
+    			((float)this.resultSummary
+    			[m]
+    			[platformDim.TEST.ordinal()]/total)*100)
+        	+ "   " + 
+    		(m != metricsDim.topMatch.ordinal() && m != metricsDim.hasResults.ordinal() 
+    			? String.format(" M=%-6.2f SD=%-6.2f n=%3d,[%6.2f,%-6.2f]", metricStatsByPlatform[platformDim.BASELINE.ordinal()].getMean(), 
+    					metricStatsByPlatform[platformDim.BASELINE.ordinal()].getStandardDeviation(),
+    					metricStatsByPlatform[platformDim.BASELINE.ordinal()].getN(),
+    					metricStatsByPlatform[platformDim.BASELINE.ordinal()].getMin(), 
+    					metricStatsByPlatform[platformDim.BASELINE.ordinal()].getMax()) + "    " 
+    					: "                                             ")
+        	+ 
+    		(m != metricsDim.topMatch.ordinal() && m != metricsDim.hasResults.ordinal() 
+    			? String.format(" M=%-6.2f SD=%-6.2f n=%3d,[%6.2f,%-6.2f]", metricStatsByPlatform[platformDim.TEST.ordinal()].getMean(), 
+    					metricStatsByPlatform[platformDim.TEST.ordinal()].getStandardDeviation(),
+    					metricStatsByPlatform[platformDim.TEST.ordinal()].getN(),
+    					metricStatsByPlatform[platformDim.TEST.ordinal()].getMin(), 
+    					metricStatsByPlatform[platformDim.TEST.ordinal()].getMax()) + "    " 
+    					: "                                             ")
+        	);
+
+
+    		// for each optimization, require our result to be the winner 80% of the time
+    		if(m == metricsDim.T.ordinal() || m == metricsDim.W.ordinal() || m == metricsDim.X.ordinal()) {
+    			TTest t = new TTest();
+    			double pValue = t.tTest(metricStatsByPlatform[platformDim.TEST.ordinal()], 
+    					metricStatsByPlatform[platformDim.BASELINE.ordinal()]) * 100;
+    			
+        		if(pValue < 65) {
+            		System.out.print(" [FAIL p(t)=" + String.format("%3.1f",  pValue) + "% need 65%+]");
+        		} else {
+            		System.out.print(" [PASS p(t)=" + String.format("%3.1f",  pValue) + "%]");
         		}
-        		
-        		double[] devValuesAsPrimitive = new double[this.resultWinMargin[o][m][platformDim.TEST.ordinal()].size()];
-        		for(int ii = 0; ii < this.resultWinMargin[o][m][platformDim.TEST.ordinal()].size(); ii++) {
-        			devValuesAsPrimitive[ii] = this.resultWinMargin[o][m][platformDim.TEST.ordinal()].get(ii);   
+        	} else {
+                float ourPercentage = 
+        				((float)((this.resultSummary[m][platformDim.TEST.ordinal()] + 
+        						this.resultSummary[m][platformDim.TIE.ordinal()])
+        				/ (float)total)) * 100;
+
+        		// for the other two metrics (has results and matches), require 100% and 80%+ respectively
+        		if(m == metricsDim.hasResults.ordinal()) {
+            		if(ourPercentage < 95) {
+                		System.out.print(" [FAIL; have " + String.format("%.0f",  ourPercentage) + "% need 95%+]");
+            		} else {
+                		System.out.print(" [PASS with " + String.format("%.0f",  ourPercentage) + "%]");
+            		}
+        		} else if(m == metricsDim.topMatch.ordinal()) {
+            		if(ourPercentage < 60) {
+                		System.out.print(" [FAIL; have " + String.format("%.0f",  ourPercentage) + "% need 60%+]");
+            		} else {
+                		System.out.print(" [PASS with " + String.format("%.0f",  ourPercentage) + "%]");
+            		}
+        		} else {
+        			System.out.println("");
         		}
-
-        		Mean meanStat = new Mean();
-        		Max maxStat = new Max();        		  
-        		Min minStat = new Min();        		  
-        		
-            	System.out.print(String.format("%-30s", metricsDimLabels[m]) + 
-            		"           " + 
-            		String.format("%-3d (%-3.0f%%)", 
-            			this.resultSummary
-        				[o]
-        				[m]
-        				[platformDim.BASELINE.ordinal()], 
-        				((float)this.resultSummary
-        				[o]
-        				[m]
-        				[platformDim.BASELINE.ordinal()]/total)*100)
-        			+ "    " + 
-            		String.format("%-3d (%-3.0f%%)", 
-                			this.resultSummary
-            				[o]
-            				[m]
-            				[platformDim.TIE.ordinal()], 
-            				((float)this.resultSummary
-            				[o]
-            				[m]
-            				[platformDim.TIE.ordinal()]/total)*100)
-        			+ "    " + 
-            		String.format("%-3d (%-3.0f%%)", 
-            			this.resultSummary
-        				[o]
-        				[m]
-        				[platformDim.TEST.ordinal()], 
-        				((float)this.resultSummary
-        				[o]
-        				[m]
-        				[platformDim.TEST.ordinal()]/total)*100)
-            		+ "   " + 
-        			(m != metricsDim.match.ordinal() && m != metricsDim.hasResults.ordinal() 
-        				? String.format(" M=%-6.2f n=%3d,[%6.2f,%-6.2f]", meanStat.evaluate(baselineValuesAsPrimitive), 
-        						this.resultWinMargin[o][m][platformDim.BASELINE.ordinal()].size(),
-        						minStat.evaluate(baselineValuesAsPrimitive), 
-        						maxStat.evaluate(baselineValuesAsPrimitive)) + "    " 
-        						: "                                   ")
-            		+ 
-        			(m != metricsDim.match.ordinal() && m != metricsDim.hasResults.ordinal() 
-        				? String.format(" M=%-6.2f n=%3d,[%6.2f,%-6.2f]", meanStat.evaluate(devValuesAsPrimitive), 
-        						this.resultWinMargin[o][m][platformDim.TEST.ordinal()].size(),
-        						minStat.evaluate(devValuesAsPrimitive), 
-        						maxStat.evaluate(devValuesAsPrimitive)) + "    " 
-        						: "                                   ")
-
-            	);
-
-            	
-            	// if this is the metric for the optimization--e.g. it's the WALKING results for the optimization WALKING, make 
-            	// it one of the things that makes the whole test pass/fail
-        		float ourPercentage = 
-        				((float)((this.resultSummary[o][m][platformDim.TEST.ordinal()] + 
-        						this.resultSummary[o][m][platformDim.TIE.ordinal()])
-        				/ (float)totalByOptimization[o])) * 100;
-
-        		// for each optimization, require our result to be the winner 80% of the time
-        		if(m == metricsDim.T.ordinal() || m == metricsDim.W.ordinal() || m == metricsDim.X.ordinal()) {
-//        				metricsDimLabels[m].startsWith(optimizationDimLabels[o])) {
-            		if(ourPercentage < 80) {
-            			overallResult = false;
-                		System.out.println(" [FAIL; have " + String.format("%.0f",  ourPercentage) + "% need 80%+]");
-            		} else {
-                		System.out.println(" [PASS with " + String.format("%.0f",  ourPercentage) + "%]");
-            		}
-            	} else {
-            		// for the other two metrics (has results and matches), require 100% and 80%+ respectively
-            		if(m == metricsDim.hasResults.ordinal()) {
-                		if(ourPercentage < 95) {
-                			overallResult = false;
-                    		System.out.println(" [FAIL; have " + String.format("%.0f",  ourPercentage) + "% need 95%+]");
-                		} else {
-                    		System.out.println(" [PASS with " + String.format("%.0f",  ourPercentage) + "%]");
-                		}
-            		} else if(m == metricsDim.match.ordinal()) {
-                		if(ourPercentage < 60) {
-                			overallResult = false;
-                    		System.out.println(" [FAIL; have " + String.format("%.0f",  ourPercentage) + "% need 60%+]");
-                		} else {
-                    		System.out.println(" [PASS with " + String.format("%.0f",  ourPercentage) + "%]");
-                		}
-            		} else {
-            			System.out.println("");
-            		}
-            	}
-        	}    
+        	}
         	
         	System.out.println("");
        	}
     	
-    	System.out.println("* success margin stats are computed against the opposing platform's top result, if it produces one. Ties are not included.\n"
-    			+ "** 'no result' matches are included.\n");
-    	
-    	System.out.println("SYSTEM UNDER TEST WAS WORSE (n=" + testIsWorseQueries.size() + "):");
-    	for(Query q : testIsWorseQueries) {
-    		System.out.println("http://otp-mta-dev.camsys-apps.com/plan?" + q.toQueryString());
-    	}
-
-    	System.out.println("");
+    	System.out.println("** 'no result' matches are included.\n");
     	System.out.println("");
 
     	System.out.println("NO RESULT QUERIES (ACROSS BOTH SYSTEMS):");
@@ -417,16 +360,19 @@ public class QualitativeMultiDimInstanceComparison {
     	
     	Collection<DynamicTest> results = new ArrayList<DynamicTest>();
     	    	
-    	for(int o = 0; o < optimizationDim.values().length; o++) {
         	for(int m = 0; m < metricsDim.values().length; m++) {
-                float ourPercentage = 
-                		((float)((this.resultSummary[o][m][platformDim.TEST.ordinal()] + 
-                				this.resultSummary[o][m][platformDim.TIE.ordinal()])
-                		/ (float)totalByOptimization[o])) * 100;
+        		float total = this.resultSummary[m][platformDim.BASELINE.ordinal()] + 
+        				this.resultSummary[m][platformDim.TEST.ordinal()] + 
+        				this.resultSummary[m][platformDim.TIE.ordinal()];
+
+        		float ourPercentage = 
+                		((float)((this.resultSummary[m][platformDim.TEST.ordinal()] + 
+                				this.resultSummary[m][platformDim.TIE.ordinal()])
+                		/ (float)total)) * 100;
 
                 // for each optimization, require our result to be the winner 80% of the time
-                if(metricsDimLabels[m].startsWith(optimizationDimLabels[o])) {
-            		results.add(DynamicTest.dynamicTest("MultiDim: Optimization " + optimizationDimLabels[o] + " | Metric " + metricsDimLabels[m] + ""
+        		if(m == metricsDim.T.ordinal() || m == metricsDim.W.ordinal() || m == metricsDim.X.ordinal()) {
+            		results.add(DynamicTest.dynamicTest("MultiDim: Metric " + metricsDimLabels[m] + ""
             				+ " > System under test equal to/greater on optimization vs. baseline >= 95%", new Executable() {
             			@Override
             			public void execute() throws Throwable {
@@ -437,7 +383,7 @@ public class QualitativeMultiDimInstanceComparison {
             	} else {
             		// for the other two metrics (has results and matches), require 100% and 80%+ respectively
             		if(m == metricsDim.hasResults.ordinal()) {
-                		results.add(DynamicTest.dynamicTest("MultiDim: Optimization " + optimizationDimLabels[o] + " | Metric " + metricsDimLabels[m] + " "
+                		results.add(DynamicTest.dynamicTest("MultiDim: Metric " + metricsDimLabels[m] + " "
                 				+ "> System under test provided a result >= 98%", new Executable() {
                 			@Override
                 			public void execute() throws Throwable {
@@ -445,8 +391,8 @@ public class QualitativeMultiDimInstanceComparison {
                 			}
                        	}));
 
-            		} else if(m == metricsDim.match.ordinal()) {
-                		results.add(DynamicTest.dynamicTest("MultiDim: Optimization " + optimizationDimLabels[o] + " | Metric " + metricsDimLabels[m] + " "
+            		} else if(m == metricsDim.topMatch.ordinal()) {
+                		results.add(DynamicTest.dynamicTest("MultiDim: Metric " + metricsDimLabels[m] + " "
                 				+ "> System under test matches baseline >= 90%", new Executable() {
                 			@Override
                 			public void execute() throws Throwable {
@@ -455,7 +401,6 @@ public class QualitativeMultiDimInstanceComparison {
                        	}));
             		}
             	}
-        	}
     	}
    
        	return results;
