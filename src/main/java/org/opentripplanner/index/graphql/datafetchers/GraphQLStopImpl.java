@@ -101,7 +101,11 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	public DataFetcher<Object> parentStation() {
 	    return environment -> {
 	    	Stop e = environment.getSource();
-	    	return e.getParentStation();
+	    	
+	    	if(e.getParentStation() != null) 
+	    		return getGraphIndex(environment).stopForId.get(new AgencyAndId(e.getId().getAgencyId(), e.getParentStation()));	    	
+	    	else 
+	    		return null;
 	    };
 	}
 
