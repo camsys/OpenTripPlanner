@@ -30,9 +30,11 @@ import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.core.TraverseModeSet;
+import org.opentripplanner.routing.edgetype.Timetable;
 import org.opentripplanner.routing.edgetype.TripPattern;
 import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.routing.services.StreetVertexIndexService;
+import org.opentripplanner.routing.trippattern.TripTimes;
 import org.opentripplanner.routing.vertextype.TransitStop;
 import org.opentripplanner.standalone.OTPServer;
 import org.opentripplanner.standalone.Router;
@@ -346,6 +348,31 @@ public class NearbySchedulesResource {
         
         List<AlertPatch> agencyPatchSnapshot = index.graph.getAlertPatches()
         		.collect(Collectors.toList());
+
+        /*
+         * DEBUG TOOL 
+         * 
+        for(AlertPatch a : agencyPatchSnapshot) {
+	    	Trip t = router.graph.index.tripForId.get(a.getTrip());
+	    	TripPattern p = router.graph.index.patternForTrip.get(t);
+	    	Timetable tt = router.graph.index.currentUpdatedTimetableForTripPattern(p);
+	    	TripTimes ttimes = tt.getTripTimes(t);
+	    	    	
+	    	long start = new ServiceDate().getAsDate().getTime() 
+	    			+ (ttimes.getDepartureTime(0) * 1000);
+	
+	    	long end = new ServiceDate().getAsDate().getTime() 
+	    			+ (ttimes.getDepartureTime(ttimes.getNumStops() - 1) * 1000);
+	
+	    	System.out.println("Trip=" + t + " start=" + new DateTime(start) + " end=" + new DateTime(end));
+	    	
+	    	if(new DateTime().toDate().getTime() > start && 
+	    		new DateTime().toDate().getTime() < end) {
+	    		System.out.println("Trip=" + t + " lastStop=" + p.getStops().get(p.getStops().size() -1));
+	    	}
+        }
+        */
+    	    	
         
         if (tripPatterns != null) {
             for (TripPattern tripPattern : tripPatterns) {

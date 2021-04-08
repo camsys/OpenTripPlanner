@@ -114,15 +114,17 @@ public class VehiclePositionsUpdateHandler extends AbstractUpdateHandler {
 				vehicleInfo.setBearing((double) vehiclePosition.getPosition().getBearing());
 			}
 
+			vehicleInfo.setOccupancyStatus(convertOccupancyStatus(vehiclePosition.getOccupancyStatus()));
+			
 			// now look for extensions
 			List<CarriageDetails> carriages = vehiclePosition.getMultiCarriageDetailsList();
-
 			if (carriages != null) {
 				for (CarriageDetails carriage : carriages) {
 					CarriageInfo carriageInfo = new CarriageInfo();
 					carriageInfo.setId(carriage.getId());
 					carriageInfo.setLabel(carriage.getLabel());
 					carriageInfo.setOccupancyStatus(convertOccupancyStatus(carriage.getOccupancyStatus()));
+
 					if (vehicleInfo.getCarriages() == null) {
 						vehicleInfo.setCarriages(new ArrayList<>());
 					}
