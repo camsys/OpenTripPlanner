@@ -81,7 +81,7 @@ public final class Path<T extends RaptorTripSchedule> {
      * The journey end time. The arrival time at the journey destination.
      */
     public final int endTime() {
-        return endTime;
+         return endTime;
     }
 
     /**

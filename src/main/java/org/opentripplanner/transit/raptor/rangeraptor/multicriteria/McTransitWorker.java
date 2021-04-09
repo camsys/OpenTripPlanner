@@ -86,38 +86,41 @@ public final class McTransitWorker<T extends RaptorTripSchedule> implements Rout
 
             boolean found = tripSearch.search(earliestBoardTime, stopPos);
 
+            int pattern_rides_before_add = patternRides.size();
+
             if (found) {
                 process_trip_search(stopPos, stopIndex, prevArrival);
             }
 
-            //TODO see if we can add a latest board time as well Translink transfers max tranfer time
-            int latestBoardingTime = earliestBoardTime + (calculator.getSearchWindowInSeconds());
+            if (pattern_rides_before_add == patternRides.size()) {
+                continue;
+            }
 
-            //Let's increment the boarding time by 1 minute to see if there other options can be found
-            int nextBoardingTime = earliestBoardTime + (60);
+            int max_search_window = 2 * 60 * 60;// 2 hours
+            if (calculator.getSearchWindowInSeconds() <= max_search_window){
+                //TODO see if we can add a latest board time as well Translink transfers max tranfer time
+                int latestBoardingTime = earliestBoardTime + (calculator.getSearchWindowInSeconds());
 
-            int testBoradingTimeCounts = 0;
+                //Let's increment the boarding time by 1 minute to see if there other options can be found
+                int nextBoardingTime = earliestBoardTime + (60);
 
-            //We will continue doing this until the boarding time is greater than the searchWindow allotted time
-            while (nextBoardingTime < latestBoardingTime) {
+                int testBoradingTimeCounts = 0;
 
-                found = tripSearch.search(nextBoardingTime, stopPos);
+                //We will continue doing this until the boarding time is greater than the searchWindow allotted time
+                while (nextBoardingTime < latestBoardingTime) {
 
-                if (found) {
-                    if ( prevArrival.getClass().getName().equals("org.opentripplanner.transit.raptor.rangeraptor.multicriteria.arrivals.TransitStopArrival")) {
-                        testBoradingTimeCounts++;
+                    found = tripSearch.search(nextBoardingTime, stopPos);
+
+                    if (found) {
+                        if ( prevArrival.getClass().getName().equals("org.opentripplanner.transit.raptor.rangeraptor.multicriteria.arrivals.TransitStopArrival")) {
+                            testBoradingTimeCounts++;
+                        }
+                        process_trip_search(stopPos, stopIndex, prevArrival);
                     }
-                    process_trip_search(stopPos, stopIndex, prevArrival);
+
+                    nextBoardingTime = nextBoardingTime + (60);
                 }
-
-                nextBoardingTime = nextBoardingTime + (60);
             }
-
-            if ( patternRides.size() > 2 ) {
-                int test = testBoradingTimeCounts;
-            }
-
-
         }
     }
 
@@ -146,19 +149,29 @@ public final class McTransitWorker<T extends RaptorTripSchedule> implements Rout
         );
 
         int tripIndex = tripSearch.getCandidateTripIndex();
-
-        patternRides.add(
-            new PatternRide<>(
-                    prevArrival,
-                    stopIndex,
-                    stopPos,
+        PatternRide pr = new PatternRide<>(
+                prevArrival,
+                stopIndex,
+                stopPos,
                 boardTime,
                 boardWaitTime,
                 relativeBoardCost,
                 trip,
                 tripIndex
-            )
         );
+
+
+
+        if(patternRides.contains(pr)) {
+            return;
+        } else
+        {
+            patternRides.add(pr);
+        }
+
+
+
+
     }
 
     /**
