@@ -90,7 +90,9 @@ public class GraphQLTripImpl implements GraphQLDataFetchers.GraphQLTrip {
 	    	Trip t = environment.getSource();
 	    	return TripTimeShort.fromTripTimes(
 	    			getGraphIndex(environment).patternForTrip.get(t).scheduledTimetable, t)
-	    			.stream().collect(Collectors.toList());
+					.stream()
+					.distinct()
+	    			.collect(Collectors.toList());
 	    };
 	}
 	

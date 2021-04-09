@@ -96,6 +96,7 @@ public class GraphQLRouteImpl implements GraphQLDataFetchers.GraphQLRoute {
 	    	return getGraphIndex(environment).patternsForRoute.get(e)
 	    			.stream()
 	    			.flatMap(s -> s.getStops().stream())
+					.distinct()
 	    			.collect(Collectors.toList());
 	    	};
 	}
@@ -104,9 +105,10 @@ public class GraphQLRouteImpl implements GraphQLDataFetchers.GraphQLRoute {
 	public DataFetcher<Iterable<Object>> trips() {
 	    return environment -> {
 	    	Route e = environment.getSource();	    	
-	    	return getGraphIndex(environment).patternsForRoute.get(e)
-	    			.parallelStream()
-	    			.flatMap(s -> s.getTrips().stream())
+	    	return getGraphIndex(environment).tripForId.values()
+	    			.stream()
+					.filter(s -> s.getRoute() != null ? s.getRoute().equals(e) : false)
+					.distinct()
 	    			.collect(Collectors.toList());
 	    	};
 	}

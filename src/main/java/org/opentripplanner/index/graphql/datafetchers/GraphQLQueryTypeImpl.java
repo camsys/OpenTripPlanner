@@ -89,6 +89,7 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 				return getGraphIndex(environment)
 						.stopForId.values().stream()
 						.filter(c -> ids.stream().anyMatch(inputItem -> c.getId().getId().startsWith(inputItem)))
+						.distinct()
 						.collect(Collectors.toList());				
 			
 			} else if(input.getGraphQLMtaComplexId() != null) {
@@ -104,6 +105,7 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 				return getGraphIndex(environment)
 						.stopForId.values().stream()
 						.filter(c -> ids.stream().anyMatch(inputItem -> c.getId().getId().startsWith(inputItem)))
+						.distinct()
 						.collect(Collectors.toList());				
 				
 			} else {			
@@ -111,6 +113,7 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 
 			    return getGraphIndex(environment).stopForId.values().stream()
 						.filter(c -> c.getId().getId().startsWith(gtfsAgencyAndId.getId()))
+						.distinct()
 						.collect(Collectors.toList());			
 			}	
 		};
@@ -128,17 +131,20 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 				return getGraphIndex(environment)
 						.routeForId.values().stream()
 						.filter(c -> inputStream.anyMatch(inputItem -> inputItem.equals(AgencyAndId.convertToString(c.getId()))))
+						.distinct()
 						.collect(Collectors.toList());				
 			
 			} else if(input.getGraphQLName() != null) {
 				return getGraphIndex(environment)
 						.routeForId.values().stream()
 						.filter(c -> c.getShortName().equals(input.getGraphQLName()) || c.getLongName().equals(input.getGraphQLName()))
+						.distinct()
 						.collect(Collectors.toList());
 				
 			} else {			
 				return getGraphIndex(environment)
 						.routeForId.values().stream()
+						.distinct()
 						.collect(Collectors.toList());
 			}
 		};
