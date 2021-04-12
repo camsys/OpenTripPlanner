@@ -12,10 +12,11 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 package org.opentripplanner.routing.mta.comparison;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.math3.stat.Frequency;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
-import org.apache.commons.math3.stat.descriptive.moment.Mean;
-import org.apache.commons.math3.stat.descriptive.rank.Max;
-import org.apache.commons.math3.stat.descriptive.rank.Min;
+import org.apache.commons.math3.stat.inference.ChiSquareTest;
 import org.apache.commons.math3.stat.inference.TTest;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
@@ -53,6 +54,8 @@ public class QualitativeMultiDimInstanceComparison {
 	// dimensions: metric | (win/loss/tie)
 	@SuppressWarnings("unchecked")
 	private SummaryStatistics[][] resultStats = new SummaryStatistics[5][3];
+	private Frequency[][] resultDists = new Frequency[5][3];
+	private ArrayList<Double>[][] resultData = new ArrayList[5][3];
 
 	// dimensions: metric | (win/loss/tie)
 	private int[][] resultSummary = new int[5][3];
@@ -116,6 +119,22 @@ public class QualitativeMultiDimInstanceComparison {
 				[metric.ordinal()]
 				[otherPlatformTopResult.platform.ordinal()].addValue((double)otherPlatformTopResult.transitTime);
 	
+			this.resultDists
+				[metric.ordinal()]
+				[topResult.platform.ordinal()].addValue((double)topResult.transitTime);
+
+			this.resultDists
+				[metric.ordinal()]
+				[otherPlatformTopResult.platform.ordinal()].addValue((double)otherPlatformTopResult.transitTime);
+
+			this.resultData
+				[metric.ordinal()]
+				[topResult.platform.ordinal()].add((double)topResult.transitTime);
+
+			this.resultData
+				[metric.ordinal()]
+				[otherPlatformTopResult.platform.ordinal()].add((double)otherPlatformTopResult.transitTime);		
+		
 			break;
 		case W:
 			this.resultStats
@@ -125,7 +144,23 @@ public class QualitativeMultiDimInstanceComparison {
 			this.resultStats
 				[metric.ordinal()]
 				[otherPlatformTopResult.platform.ordinal()].addValue((double)otherPlatformTopResult.walkDistance);
-	
+
+			this.resultDists
+				[metric.ordinal()]
+				[topResult.platform.ordinal()].addValue((double)topResult.walkDistance);
+
+			this.resultDists
+				[metric.ordinal()]
+				[otherPlatformTopResult.platform.ordinal()].addValue((double)otherPlatformTopResult.walkDistance);
+
+			this.resultData
+				[metric.ordinal()]
+				[topResult.platform.ordinal()].add((double)topResult.walkDistance);
+
+			this.resultData
+				[metric.ordinal()]
+				[otherPlatformTopResult.platform.ordinal()].add((double)otherPlatformTopResult.walkDistance);		
+
 			break;
 		case X:
 			this.resultStats
@@ -135,6 +170,22 @@ public class QualitativeMultiDimInstanceComparison {
 			this.resultStats
 				[metric.ordinal()]
 				[otherPlatformTopResult.platform.ordinal()].addValue((double)otherPlatformTopResult.routes.split(">").length);
+
+			this.resultDists
+				[metric.ordinal()]
+				[topResult.platform.ordinal()].addValue((double)otherPlatformTopResult.routes.split(">").length);
+
+			this.resultDists
+				[metric.ordinal()]
+				[otherPlatformTopResult.platform.ordinal()].addValue((double)otherPlatformTopResult.routes.split(">").length);
+			
+			this.resultData
+				[metric.ordinal()]
+				[topResult.platform.ordinal()].add((double)topResult.routes.split(">").length);
+
+			this.resultData
+				[metric.ordinal()]
+				[otherPlatformTopResult.platform.ordinal()].add((double)otherPlatformTopResult.routes.split(">").length);		
 
 			break;
 				
@@ -162,10 +213,13 @@ public class QualitativeMultiDimInstanceComparison {
 
 		// initialize stats storage array
 		for(int z = 0; z < resultStats.length; z++)
-			for(int i = 0; i < platformDim.values().length; i++)
+			for(int i = 0; i < platformDim.values().length; i++) {
 				resultStats[z][i] = new SummaryStatistics();
+				resultDists[z][i] = new Frequency();
+				resultData[z][i] = new ArrayList<Double>();
+			}
+			
 
-		
 		// ==========================COMPARE RESULTS=====================================
 
 		for(int i = 0; i < Math.min(baselineResults.size(), devResults.size()); i++) {
@@ -259,7 +313,7 @@ public class QualitativeMultiDimInstanceComparison {
     				this.resultSummary[m][platformDim.TIE.ordinal()];
 
     		SummaryStatistics[] metricStatsByPlatform = resultStats[m];
-        		
+
             System.out.print(String.format("%-30s", metricsDimLabels[m]) + 
         	"           " + 
         	String.format("%-3d (%-3.0f%%)", 
@@ -287,7 +341,8 @@ public class QualitativeMultiDimInstanceComparison {
     			[platformDim.TEST.ordinal()]/total)*100)
         	+ "   " + 
     		(m != metricsDim.topMatch.ordinal() && m != metricsDim.hasResults.ordinal() 
-    			? String.format(" M=%-6.2f SD=%-6.2f n=%3d,[%6.2f,%-6.2f]", metricStatsByPlatform[platformDim.BASELINE.ordinal()].getMean(), 
+    			? String.format(" M=%-6.2f SD=%-6.2f n=%3d,[%6.2f,%-6.2f]", 
+    					metricStatsByPlatform[platformDim.BASELINE.ordinal()].getMean(), 
     					metricStatsByPlatform[platformDim.BASELINE.ordinal()].getStandardDeviation(),
     					metricStatsByPlatform[platformDim.BASELINE.ordinal()].getN(),
     					metricStatsByPlatform[platformDim.BASELINE.ordinal()].getMin(), 
@@ -295,7 +350,8 @@ public class QualitativeMultiDimInstanceComparison {
     					: "                                             ")
         	+ 
     		(m != metricsDim.topMatch.ordinal() && m != metricsDim.hasResults.ordinal() 
-    			? String.format(" M=%-6.2f SD=%-6.2f n=%3d,[%6.2f,%-6.2f]", metricStatsByPlatform[platformDim.TEST.ordinal()].getMean(), 
+    			? String.format(" M=%-6.2f SD=%-6.2f n=%3d,[%6.2f,%-6.2f]", 
+    					metricStatsByPlatform[platformDim.TEST.ordinal()].getMean(), 
     					metricStatsByPlatform[platformDim.TEST.ordinal()].getStandardDeviation(),
     					metricStatsByPlatform[platformDim.TEST.ordinal()].getN(),
     					metricStatsByPlatform[platformDim.TEST.ordinal()].getMin(), 
@@ -303,9 +359,11 @@ public class QualitativeMultiDimInstanceComparison {
     					: "                                             ")
         	);
 
+            ArrayList<Double> dataBaseline = resultData[m][platformDim.BASELINE.ordinal()];
+            ArrayList<Double> dataTest = resultData[m][platformDim.TEST.ordinal()];
 
     		// for each optimization, require our result to be the winner 80% of the time
-    		if(m == metricsDim.T.ordinal() || m == metricsDim.W.ordinal() || m == metricsDim.X.ordinal()) {
+    		if(m == metricsDim.T.ordinal() || m == metricsDim.W.ordinal() || m == metricsDim.X.ordinal()) {    			
     			TTest t = new TTest();
     			double pValue = t.tTest(metricStatsByPlatform[platformDim.TEST.ordinal()], 
     					metricStatsByPlatform[platformDim.BASELINE.ordinal()]) * 100;
@@ -315,6 +373,26 @@ public class QualitativeMultiDimInstanceComparison {
         		} else {
             		System.out.print(" [PASS p(t)=" + String.format("%3.1f",  pValue) + "%]");
         		}
+        		
+        		System.out.println("");
+        		System.out.println("");
+        		
+    			long[] testHistogram = calcHistogram(ArrayUtils.toPrimitive((Double[])dataTest.toArray(new Double[] {})), 
+    					metricStatsByPlatform[platformDim.TEST.ordinal()].getMin(), 
+    					metricStatsByPlatform[platformDim.TEST.ordinal()].getMax(), 
+    					(int)Math.min(metricStatsByPlatform[platformDim.TEST.ordinal()].getMax(), 10));
+    			long[] baselineHistogram = calcHistogram(ArrayUtils.toPrimitive((Double[])dataBaseline.toArray(new Double[] {})), 
+    					metricStatsByPlatform[platformDim.BASELINE.ordinal()].getMin(), 
+    					metricStatsByPlatform[platformDim.BASELINE.ordinal()].getMax(), 
+    					(int)Math.min(metricStatsByPlatform[platformDim.BASELINE.ordinal()].getMax(), 10));
+    			
+    			System.out.println("Bin TEST:                                                                                         BASELINE:");
+
+    			for(int i = 0; i < testHistogram.length; i++) {
+       				System.out.println(String.format("%-2d",(i + 1)) + " " + String.format("| %90s |  %90s", 
+       						StringUtils.repeat("*", Math.min(90,(int)testHistogram[i])), 
+       						StringUtils.repeat("*", Math.min(90, (int)baselineHistogram[i]))));
+    			}    			
         	} else {
                 float ourPercentage = 
         				((float)((this.resultSummary[m][platformDim.TEST.ordinal()] + 
@@ -406,4 +484,18 @@ public class QualitativeMultiDimInstanceComparison {
        	return results;
     }
 
+    public static long[] calcHistogram(double[] data, double min, double max, int numBins) {
+    	  final long[] result = new long[numBins];
+    	  final double binSize = (max - min)/numBins;
+
+    	  for (double d : data) {
+    	    int bin = (int) ((d - min) / binSize);
+    	    if (bin < 0) { /* this data is smaller than min */ }
+    	    else if (bin >= numBins) { /* this data point is bigger than max */ }
+    	    else {
+    	      result[bin] += 1;
+    	    }
+    	  }
+    	  return result;
+    	}
 }
