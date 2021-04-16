@@ -414,9 +414,9 @@ type Trip {
     """
     Whether wheelchair boarding is possible for at least some of vehicles on this stop
     """
-	wheelchairAccessible: String!
+	wheelchairAccessible: String
 
-	bikesAllowed: String!
+	bikesAllowed: String
 
     blockId: String
 
@@ -453,7 +453,7 @@ type Stoptime {
 type Equipment {
 
     """NY MTA Equipment ID"""
-    mtaEquipmentId: String!
+    mtaEquipmentId: String
 
     """Whether this equipment is currently in service and accessible"""
     isCurrentlyAccessible: Boolean
@@ -474,10 +474,10 @@ type Agency {
     name: String!
 
     """URL to the home page of the agency"""
-    url: String!
+    url: String
 
     """ID of the time zone which this agency operates on"""
-    timezone: String!
+    timezone: String
 
     lang: String
 
