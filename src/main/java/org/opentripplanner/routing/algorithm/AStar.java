@@ -171,10 +171,19 @@ public class AStar {
         
         Collection<Edge> edges = runState.options.arriveBy ? runState.u_vertex.getIncoming() : runState.u_vertex.getOutgoing();
         for (Edge edge : edges) {
+            //TODO delete this
+            if ( edges.size() > 1 ) {
+                int sdf = 0;
+            }
 
             // Iterate over traversal results. When an edge leads nowhere (as indicated by
             // returning NULL), the iteration is over. TODO Use this to board multiple trips.
             for (State v = edge.traverse(runState.u); v != null; v = v.getNextResult()) {
+                //TODO delete this
+                if ( edges.size() > 1 ) {
+                    int sdf = 0;
+                }
+
                 // Could be: for (State v : traverseEdge...)
 
                 if (traverseVisitor != null) {
@@ -390,13 +399,6 @@ public class AStar {
         boolean lonClose = (currentLonCeiling.compareTo(targetLonCeiling) == 0 || currentLonCeiling.compareTo(targetLonFloor) == 0
                 || currentLonFloor.compareTo(targetLonCeiling) == 0 || currentLonFloor.compareTo(targetLonFloor ) ==0 );
 
-        //TODO remove this
-        if (latClose) {
-            int i =0;
-        }
-        if (lonClose) {
-            int i =0;
-        }
 
         return latClose && lonClose;
     }
