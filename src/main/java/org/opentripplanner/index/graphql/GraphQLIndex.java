@@ -15,14 +15,15 @@ import graphql.schema.idl.TypeDefinitionRegistry;
 
 import org.apache.commons.io.Charsets;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLStopImpl;
+import org.opentripplanner.index.graphql.datafetchers.GraphQLStoptimeImpl;
+import org.opentripplanner.index.graphql.datafetchers.GraphQLTripImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLAgencyImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLAlertImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLEquipmentImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLFeedImpl;
-import org.opentripplanner.index.graphql.datafetchers.GraphQLNodeTypeResolver;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLPairwiseAccessibleResultImpl;
-import org.opentripplanner.index.graphql.datafetchers.GraphQLPlaceInterfaceTypeResolver;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLQueryTypeImpl;
+import org.opentripplanner.index.graphql.datafetchers.GraphQLQueryTypeInputs;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLRouteImpl;
 import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.standalone.Router;
@@ -58,17 +59,17 @@ class GraphQLIndex {
       TypeDefinitionRegistry typeRegistry = new SchemaParser().parse(sdl);
       RuntimeWiring runtimeWiring = RuntimeWiring
           .newRuntimeWiring()
-          .type("Node", type -> type.typeResolver(new GraphQLNodeTypeResolver()))
-          .type("PlaceInterface", type -> type.typeResolver(new GraphQLPlaceInterfaceTypeResolver()))
-          .type(IntrospectionTypeWiring.build(GraphQLStopImpl.class))
-          .type(IntrospectionTypeWiring.build(GraphQLAgencyImpl.class))
-          .type(IntrospectionTypeWiring.build(GraphQLPairwiseAccessibleResultImpl.class))
-          .type(IntrospectionTypeWiring.build(GraphQLEquipmentImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLAgencyImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLAlertImpl.class))
+          .type(IntrospectionTypeWiring.build(GraphQLEquipmentImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLFeedImpl.class))
+          .type(IntrospectionTypeWiring.build(GraphQLPairwiseAccessibleResultImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLQueryTypeImpl.class))
+          .type(IntrospectionTypeWiring.build(GraphQLQueryTypeInputs.class))
           .type(IntrospectionTypeWiring.build(GraphQLRouteImpl.class))
+          .type(IntrospectionTypeWiring.build(GraphQLStopImpl.class))
+          .type(IntrospectionTypeWiring.build(GraphQLStoptimeImpl.class))
+          .type(IntrospectionTypeWiring.build(GraphQLTripImpl.class))
           .build();
       SchemaGenerator schemaGenerator = new SchemaGenerator();
       return schemaGenerator.makeExecutableSchema(typeRegistry, runtimeWiring);

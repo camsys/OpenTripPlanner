@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.onebusaway.gtfs.model.Agency;
 import org.onebusaway.gtfs.model.FeedInfo;
+import org.onebusaway.gtfs.model.Trip;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
 import org.opentripplanner.routing.graph.GraphIndex;
