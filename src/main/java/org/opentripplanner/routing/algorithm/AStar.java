@@ -172,16 +172,23 @@ public class AStar {
         Collection<Edge> edges = runState.options.arriveBy ? runState.u_vertex.getIncoming() : runState.u_vertex.getOutgoing();
         for (Edge edge : edges) {
             //TODO delete this
-            if ( edges.size() > 1 ) {
-                int sdf = 0;
+            State b = edge.traverse(runState.u);
+            boolean bIsNull = b == null;
+            int sdf = 0;
+            if ( edges.size() > 1 || bIsNull) {
+                sdf = 0;
+                State d = edge.traverse(runState.u);
+                State c = d.getNextResult();
             }
+
+
 
             // Iterate over traversal results. When an edge leads nowhere (as indicated by
             // returning NULL), the iteration is over. TODO Use this to board multiple trips.
             for (State v = edge.traverse(runState.u); v != null; v = v.getNextResult()) {
                 //TODO delete this
                 if ( edges.size() > 1 ) {
-                    int sdf = 0;
+                    int sddas = 0;
                 }
 
                 // Could be: for (State v : traverseEdge...)
