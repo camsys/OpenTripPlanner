@@ -50,7 +50,7 @@ public class GraphQLFeedImpl implements GraphQLDataFetchers.GraphQLFeed {
 	    	
 	    	return getGraphIndex(environment).routeForId.values()
 	    			.stream()
-	    			.filter(it -> { return agenciesToInclude.contains(it.getAgency()); })
+	    			.filter(it -> agenciesToInclude.contains(it.getAgency()))
 	    			.distinct()
 	    			.collect(Collectors.toList());
 	    };
@@ -69,9 +69,9 @@ public class GraphQLFeedImpl implements GraphQLDataFetchers.GraphQLFeed {
 	    	// so add the feedID to the list of agency IDs to look for
 	    	agencyIdsToInclude.add(f.getId());
 	    	
-	    	return getGraphIndex(environment).tripForId.entrySet()
+	    	return getGraphIndex(environment).tripForId.values()
 	    			.stream()
-	    			.filter(it -> { return agencyIdsToInclude.contains(it.getKey().getAgencyId()); })
+	    			.filter(it -> agencyIdsToInclude.contains(it.getId().getAgencyId()))
 	    			.distinct()
 	    			.collect(Collectors.toList());
 	    };

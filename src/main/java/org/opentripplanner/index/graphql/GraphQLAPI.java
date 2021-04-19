@@ -35,7 +35,7 @@ import java.util.concurrent.Future;
 
 // TODO move to org.opentripplanner.api.resource, this is a Jersey resource class
 
-@Path("/routers/{routerId}/index")
+@Path("/routers/{routerId}/index/graphql-v2")
 @Produces(MediaType.APPLICATION_JSON) // One @Produces annotation for all endpoints.
 public class GraphQLAPI {
 
@@ -63,7 +63,7 @@ public class GraphQLAPI {
   }
 
   @POST
-  @Path("/graphql")
+  @Path("/")
   @Consumes(MediaType.APPLICATION_JSON)
   public Response getGraphQL(
       HashMap<String, Object> queryParameters,
@@ -118,7 +118,7 @@ public class GraphQLAPI {
   }
 
   @POST
-  @Path("/graphql")
+  @Path("/")
   @Consumes("application/graphql")
   public Response getGraphQL(
       String query,
@@ -140,7 +140,7 @@ public class GraphQLAPI {
   }
 
   @POST
-  @Path("/graphql/batch")
+  @Path("/batch")
   @Consumes(MediaType.APPLICATION_JSON)
   public Response getGraphQLBatch(
       List<HashMap<String, Object>> queries,
