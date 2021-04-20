@@ -176,9 +176,9 @@ public class AStar {
             boolean bIsNull = b == null;
             int sdf = 0;
             if ( edges.size() > 1 || bIsNull) {
-                sdf = 0;
                 State d = edge.traverse(runState.u);
                 State c = d.getNextResult();
+                sdf = 0;
             }
 
 
