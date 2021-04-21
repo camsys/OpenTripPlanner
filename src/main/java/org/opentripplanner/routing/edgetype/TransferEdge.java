@@ -72,45 +72,33 @@ public class TransferEdge extends Edge {
     }
 
     public State traverse(State s0) {
+        RoutingRequest options = s0.getOptions();
+
+        // Only transfer right after riding a vehicle.
         /* Disallow chaining of transfer edges. TODO: This should really be guaranteed by the PathParser
            but the default Pathparser is currently very hard to read because
            we need a complement operator. */
+        if (s0.getBackEdge() instanceof TransferEdge) return null;
+        if (s0.getOptions().wheelchairAccessible && !wheelchairAccessible) return null;
+        if (this.getDistance() > s0.getOptions().maxTransferWalkDistance) return null;
+        StateEditor s1 = s0.edit(this);
+        s1.incrementTimeInSeconds(time);
+        s1.incrementWeight(time);
+        s1.setBackMode(TraverseMode.WALK);
 
-        RoutingRequest options = s0.getOptions();
-        int time = getTime(options);
-        double weight = time * (options.applyWalkReluctanceInTransfers ? options.walkReluctance : 1.0);
-
-        // Forbid taking shortcuts composed of two transfers in a row
-        if (s0.backEdge instanceof TransferEdge) {
-            return null;
-        }
-        if (s0.backEdge instanceof StreetTransitLink) {
-            return null;
-        }
-//        if (!s0.isTransferPermissible()) {
-//            return null;
-//        }
-        if (distance > s0.getOptions().maxTransferWalkDistance) {
-            return null;
-        }
         if (distance > s0.getOptions().maxWalkDistance && s0.getOptions().walkLimitingByLeg) {
             double beforeStateWalk = s0.getWalkSinceLastTransit();
             double afterStateWalk =  beforeStateWalk + getDistance();
-            weight += calculateOverageWeight(beforeStateWalk, afterStateWalk,
-                    options.getMaxWalkDistance(), options.softWalkPenalty,
-                    options.softWalkOverageRate);
+//            weight += calculateOverageWeight(beforeStateWalk, afterStateWalk,
+//                    options.getMaxWalkDistance(), options.softWalkPenalty,
+//                    options.softWalkOverageRate);
         }
-        if (s0.getOptions().wheelchairAccessible && !wheelchairAccessible) {
-            return null;
-        }
-        // Only transfer right after riding a vehicle.
-        StateEditor se = s0.edit(this);
-        se.setBackMode(TraverseMode.WALK);
-        se.incrementTimeInSeconds(time);
-        se.incrementWeight(weight);
-        se.incrementWalkDistance(distance);
-        se.setTransferNotPermissible();
-        return se.makeState();
+
+//        if (!s0.isTransferPermissible()) {
+//            return null;
+//        }
+
+        return s1.makeState();
     }
 
     /*
