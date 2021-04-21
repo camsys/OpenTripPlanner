@@ -111,9 +111,7 @@ public class AStar {
         // Initializing the bidirectional heuristic is a pretty complicated operation that involves searching through
         // the streets around the origin and destination.
         runState.heuristic.initialize(runState.options, abortTime);
-
-        boolean shouldAbort = false;
-        if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime && shouldAbort) {
+        if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime) {
             LOG.warn("Timeout during initialization of goal direction heuristic.");
             options.rctx.debugOutput.timedOut = true;
             runState = null; // Search timed out
@@ -171,26 +169,10 @@ public class AStar {
         
         Collection<Edge> edges = runState.options.arriveBy ? runState.u_vertex.getIncoming() : runState.u_vertex.getOutgoing();
         for (Edge edge : edges) {
-            //TODO delete this
-            State b = edge.traverse(runState.u);
-            boolean bIsNull = b == null;
-            int sdf = 0;
-            if ( edges.size() > 1 || bIsNull) {
-                State d = edge.traverse(runState.u);
-                State c = d.getNextResult();
-                sdf = 0;
-            }
-
-
 
             // Iterate over traversal results. When an edge leads nowhere (as indicated by
             // returning NULL), the iteration is over. TODO Use this to board multiple trips.
             for (State v = edge.traverse(runState.u); v != null; v = v.getNextResult()) {
-                //TODO delete this
-                if ( edges.size() > 1 ) {
-                    int sddas = 0;
-                }
-
                 // Could be: for (State v : traverseEdge...)
 
                 if (traverseVisitor != null) {
@@ -247,8 +229,7 @@ public class AStar {
             /*
              * Terminate based on timeout?
              */
-            boolean shouldAbort = false;
-            if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime && shouldAbort) {
+            if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime) {
                 LOG.warn("Search timeout. origin={} target={}", runState.rctx.origin, runState.rctx.target);
                 // Rather than returning null to indicate that the search was aborted/timed out,
                 // we instead set a flag in the routing context and return the SPT anyway. This
@@ -406,6 +387,13 @@ public class AStar {
         boolean lonClose = (currentLonCeiling.compareTo(targetLonCeiling) == 0 || currentLonCeiling.compareTo(targetLonFloor) == 0
                 || currentLonFloor.compareTo(targetLonCeiling) == 0 || currentLonFloor.compareTo(targetLonFloor ) ==0 );
 
+        //TODO remove this
+        if (latClose) {
+            int i =0;
+        }
+        if (lonClose) {
+            int i =0;
+        }
 
         return latClose && lonClose;
     }
