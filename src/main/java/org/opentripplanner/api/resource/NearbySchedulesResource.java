@@ -269,14 +269,8 @@ public class NearbySchedulesResource {
             throw new IllegalArgumentException("Must supply lat/lon/radius, or list of stops.");
         }
         
-        if(transitStops.isEmpty()) {
-            throw new IllegalArgumentException("No stops provided or found.");        	
-        }
-        
-        List<AlertPatch> alertPatchSnapshot = index.graph.getAlertPatchesAsList();
-        	
         Map<AgencyAndId, StopTimesByStop> stopIdAndStopTimesMap = getStopTimesByParentStop(transitStops, startTime, 
-        		transitStopStates, alertPatchSnapshot);
+        		transitStopStates);
         Collection<StopTimesByStop> stopTimesByStops = stopIdAndStopTimesMap.values();
         for (StopTimesByStop stbs : stopTimesByStops) {
             stbs.limitTimes(startTime, timeRange, numberOfDepartures);
@@ -286,8 +280,10 @@ public class NearbySchedulesResource {
     }
 
     private Map<AgencyAndId, StopTimesByStop> getStopTimesByParentStop(Collection<TransitStop> transitStops, 
-    		long startTime, Map<TransitStop, State> stateMap, List<AlertPatch> alertPatchSnapshot){
+    		long startTime, Map<TransitStop, State> stateMap){
         Map<AgencyAndId, StopTimesByStop> stopIdAndStopTimesMap = new LinkedHashMap<>();
+        List<AlertPatch> alertPatchSnapshot = index.graph.getAlertPatchesAsList();    	
+
         RouteMatcher routeMatcher = RouteMatcher.parse(routesStr);
         for (TransitStop tstop : transitStops) {
             if(tstop == null || tstop.equals(null))
