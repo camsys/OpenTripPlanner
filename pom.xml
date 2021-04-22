@@ -7,7 +7,7 @@
 
 	<groupId>org.opentripplanner</groupId>
 	<artifactId>otp</artifactId>
-	<version>1.3.0.72</version>
+	<version>1.3.0.72-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<licenses>
@@ -17,7 +17,7 @@
 		</license>
 	</licenses>
 
-	<!-- Developer entries are provided only for Steering Committee members. 
+	<!-- Developer entries are provided only for Steering Committee members.
 		For other contributors, see https://github.com/opentripplanner/OpenTripPlanner/graphs/contributors -->
 	<developers>
 		<developer>
@@ -104,7 +104,7 @@
 	</distributionManagement>
 
 	<build>
-		<!-- Filtering will perform substitution on maven-version.properties, see 
+		<!-- Filtering will perform substitution on maven-version.properties, see
 			git commit id plugin below. -->
 		<resources>
 			<resource>
@@ -112,7 +112,7 @@
 				<filtering>true</filtering>
 			</resource>
 			<resource>
-				<!-- shell scripts to start up OTP, need to be filtered to get JAR file 
+				<!-- shell scripts to start up OTP, need to be filtered to get JAR file
 					name -->
 				<directory>src/scripts</directory>
 				<filtering>true</filtering>
@@ -130,11 +130,11 @@
 				<directory>src/test/resources</directory>
 			</testResource>
 			<testResource>
-				<!-- Shell scripts to start up OTP, need to be filtered to insert the 
+				<!-- Shell scripts to start up OTP, need to be filtered to insert the
 					JAR file name. -->
-				<!-- These are treated as testResources rather than resources to keep 
+				<!-- These are treated as testResources rather than resources to keep
 					them out of the JAR. -->
-				<!-- The staging repo will reject a JAR containing them as they use traversal 
+				<!-- The staging repo will reject a JAR containing them as they use traversal
 					paths (../..). -->
 				<directory>src/scripts</directory>
 				<filtering>true</filtering>
@@ -176,10 +176,10 @@
 								<exclude>**/mta/comparison/*.java</exclude>
 								<exclude>**/mta/comparison/**/*.java</exclude>
 							</excludes>
-							<!-- we have to fork the JVM during tests so that the argLine is passed 
+							<!-- we have to fork the JVM during tests so that the argLine is passed
 								along -->
 							<forkCount>3</forkCount>
-							<!-- enable the restricted reflection under Java 11 so that the ObjectDiffer 
+							<!-- enable the restricted reflection under Java 11 so that the ObjectDiffer
 								works -->
 							<argLine>
 								-Xmx4G
@@ -203,7 +203,7 @@
 								--add-opens
 								java.base/java.lang=ALL-UNNAMED
 							</argLine>
-							<!-- Jenkins needs XML test reports to determine whether the build 
+							<!-- Jenkins needs XML test reports to determine whether the build
 								is stable. -->
 							<disableXmlReport>false</disableXmlReport>
 						</configuration>
@@ -235,9 +235,9 @@
 			</plugin>
 
 			<plugin>
-				<!-- Get current Git commit information for use in MavenVersion class. 
-					Commit information is stored in Maven variables, which are then substituted 
-					into the properties file. The plugin has a mode to generate a git.properties 
+				<!-- Get current Git commit information for use in MavenVersion class.
+					Commit information is stored in Maven variables, which are then substituted
+					into the properties file. The plugin has a mode to generate a git.properties
 					file, but we need the Maven project version as well, so we perform substitution. -->
 				<groupId>pl.project13.maven</groupId>
 				<artifactId>git-commit-id-plugin</artifactId>
@@ -257,8 +257,8 @@
 				</configuration>
 			</plugin>
 
-			<!-- There used to be a dependency-plugin:copy-dependencies plugin entry 
-				here, but the shade-plugin will explode the dependencies even if they aren't 
+			<!-- There used to be a dependency-plugin:copy-dependencies plugin entry
+				here, but the shade-plugin will explode the dependencies even if they aren't
 				manually copied in. -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -274,18 +274,18 @@
 			</plugin>
 
 			<plugin>
-				<!-- We want to create a standalone jar that can be run on the command 
-					line. Java does not really allow this - you cannot place jars inside of jars. 
-					You must either provide all the dependency jars to the user (usually lib/ 
-					under the directory containing the runnable jar) or explode all the jars 
-					and repackage them into a single jar. The problem is that while class files 
-					are nicely organized into the package namespace and should not collide, the 
-					META-INF directories of the jars will collide. Maven's standard assembly 
-					plugin does not account for this and will just clobber metadata. This then 
-					causes runtime errors, particularly with Spring. Instead, we use the shade 
-					plugin which has transformers that will for example append files of the same 
-					name rather than overwrite them in the combined JAR. NB: Don't use a version 
-					of the shade plugin older than 1.3.2, as it fixed MSHADE-76 (files not merged 
+				<!-- We want to create a standalone jar that can be run on the command
+					line. Java does not really allow this - you cannot place jars inside of jars.
+					You must either provide all the dependency jars to the user (usually lib/
+					under the directory containing the runnable jar) or explode all the jars
+					and repackage them into a single jar. The problem is that while class files
+					are nicely organized into the package namespace and should not collide, the
+					META-INF directories of the jars will collide. Maven's standard assembly
+					plugin does not account for this and will just clobber metadata. This then
+					causes runtime errors, particularly with Spring. Instead, we use the shade
+					plugin which has transformers that will for example append files of the same
+					name rather than overwrite them in the combined JAR. NB: Don't use a version
+					of the shade plugin older than 1.3.2, as it fixed MSHADE-76 (files not merged
 					properly if some input files are missing a terminating newline) -->
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
@@ -299,7 +299,7 @@
 						<configuration>
 							<filters>
 								<filter>
-									<!-- exclude signatures from merged JAR to avoid invalid signature 
+									<!-- exclude signatures from merged JAR to avoid invalid signature
 										messages -->
 									<artifact>*:*</artifact>
 									<excludes>
@@ -309,24 +309,24 @@
 									</excludes>
 								</filter>
 							</filters>
-							<!-- The shaded JAR will not be the main artifact for the project, 
+							<!-- The shaded JAR will not be the main artifact for the project,
 								it will be attached for deployment in the way source and docs are. -->
 							<shadedArtifactAttached>true</shadedArtifactAttached>
 							<shadedClassifierName>shaded</shadedClassifierName>
-							<!-- MinimizeJar removes unused classes, (classes not imported explicitly 
-								by name). We have eliminated most Jersey auto-scanning, but there is still 
-								some need for include filters to force-include classes that are dynamically 
+							<!-- MinimizeJar removes unused classes, (classes not imported explicitly
+								by name). We have eliminated most Jersey auto-scanning, but there is still
+								some need for include filters to force-include classes that are dynamically
 								loaded by name/auto-scanned. -->
-							<!-- This roughly halves the size of the OTP JAR, bringing it down 
-								to around 20 MB. <minimizeJar>true</minimizeJar> <filters> <filter> <artifact>com.sun.jersey:*</artifact> 
-								<includes> <include>**</include> </includes> </filter> <filter> <artifact>org.opentripplanner:*</artifact> 
+							<!-- This roughly halves the size of the OTP JAR, bringing it down
+								to around 20 MB. <minimizeJar>true</minimizeJar> <filters> <filter> <artifact>com.sun.jersey:*</artifact>
+								<includes> <include>**</include> </includes> </filter> <filter> <artifact>org.opentripplanner:*</artifact>
 								<includes> <include>**</include> </includes> </filter> </filters> -->
 							<transformers>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<manifestEntries>
 										<Main-Class>org.opentripplanner.standalone.OTPMain</Main-Class>
-										<!-- The ImageIO lines allow some image reader plugins to work 
+										<!-- The ImageIO lines allow some image reader plugins to work
 											https://stackoverflow.com/questions/7051603/jai-vendorname-null#18495658 -->
 										<Specification-Title>Java Advanced Imaging Image I/O Tools</Specification-Title>
 										<Specification-Version>1.1</Specification-Version>
@@ -383,7 +383,7 @@
 			</plugin>
 		</plugins>
 
-		<!-- In Maven 3, ssh wagon is no longer enabled by default. Since many 
+		<!-- In Maven 3, ssh wagon is no longer enabled by default. Since many
 			of our internal deployments use ssh, we enable it here -->
 		<extensions>
 			<extension>
@@ -400,7 +400,7 @@
 	</build>
 
 	<reporting>
-		<!-- Reporting plugin versions cannot be managed with entries in <build><plugins><pluginmanagement> 
+		<!-- Reporting plugin versions cannot be managed with entries in <build><plugins><pluginmanagement>
 			but would need a separate <reporting><plugins><pluginmanagement> section. -->
 		<plugins>
 			<plugin>
@@ -416,8 +416,8 @@
 				</reportSets>
 			</plugin>
 			<plugin>
-				<!-- This plugin must be configured both here (for site generation) and 
-					in "build" (for attach-javadoc during release), preferably with identical 
+				<!-- This plugin must be configured both here (for site generation) and
+					in "build" (for attach-javadoc during release), preferably with identical
 					version numbers. -->
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
@@ -439,10 +439,10 @@
 	</reporting>
 
 	<repositories>
-		<!-- Hack to force maven to check central first. Maven central is inherited 
-			from the superpom, but ends up at the end of the list. Though most of the 
-			time the artifact is in central, Maven tries to download from every other 
-			repository and fails before checking central. Do not change the id from central2 
+		<!-- Hack to force maven to check central first. Maven central is inherited
+			from the superpom, but ends up at the end of the list. Though most of the
+			time the artifact is in central, Maven tries to download from every other
+			repository and fails before checking central. Do not change the id from central2
 			to central, otherwise the entry will be ignored. -->
 		<repository>
 			<id>central2</id>
@@ -514,16 +514,16 @@
 			<artifactId>logback-classic</artifactId>
 			<version>1.0.13</version>
 		</dependency>
-		<!-- Jersey uses java.util logging, redirect it to slf4j API (we use the 
+		<!-- Jersey uses java.util logging, redirect it to slf4j API (we use the
 			Logback implementation) -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>jul-to-slf4j</artifactId>
 			<version>1.7.6</version>
 		</dependency>
-		<!-- AWS SDK uses Java commons logging. Redirect it to the slf4j API (we 
+		<!-- AWS SDK uses Java commons logging. Redirect it to the slf4j API (we
 			use the Logback implementation) -->
-		<!-- Why does this work? It seems like we'd need to declare JCL "provided" 
+		<!-- Why does this work? It seems like we'd need to declare JCL "provided"
 			to avoid using the true JCL. -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -537,7 +537,7 @@
 			<artifactId>guava</artifactId>
 			<version>18.0</version>
 		</dependency>
-		<!-- Trove provides optimized map/set collections for native types (int, 
+		<!-- Trove provides optimized map/set collections for native types (int,
 			long...) -->
 		<dependency>
 			<groupId>net.sf.trove4j</groupId>
@@ -615,8 +615,8 @@
 			<groupId>de.grundid.opendatalab</groupId>
 			<artifactId>geojson-jackson</artifactId>
 			<version>1.2</version>
-			<!-- We explicitely exclude jackson-core/databind as we use a more recent 
-				version than the one geojson-jackson depends on, and the two seems to be 
+			<!-- We explicitely exclude jackson-core/databind as we use a more recent
+				version than the one geojson-jackson depends on, and the two seems to be
 				somehow incompatible. -->
 			<exclusions>
 				<exclusion>
@@ -674,7 +674,7 @@
 			<artifactId>jersey-media-multipart</artifactId>
 			<version>${jersey.version}</version>
 		</dependency>
-		<!-- Deploy Jersey apps in stand-alone Grizzly server instead of a servlet 
+		<!-- Deploy Jersey apps in stand-alone Grizzly server instead of a servlet
 			container. -->
 		<dependency>
 			<groupId>org.glassfish.jersey.containers</groupId>
@@ -688,7 +688,7 @@
 			<artifactId>jackson-core</artifactId>
 			<version>${jackson.version}</version>
 		</dependency>
-		<!-- TODO - temporary security vulnerability - this should be jackson.version 
+		<!-- TODO - temporary security vulnerability - this should be jackson.version
 			on next upgrade -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
@@ -706,7 +706,7 @@
 			<artifactId>jackson-dataformat-xml</artifactId>
 			<version>${jackson.version}</version>
 			<exclusions>
-				<!-- jackson 2.9.9 includes reference to woodstox-core 5.1.0 which requires 
+				<!-- jackson 2.9.9 includes reference to woodstox-core 5.1.0 which requires
 					stax2-api:4.1 which is binary imcompatible stax2-api:3.1.4 -->
 				<exclusion>
 					<artifactId>com.fasterxml.woodstox</artifactId>
@@ -724,7 +724,7 @@
 			<artifactId>jackson-module-jaxb-annotations</artifactId>
 			<version>${jackson.version}</version>
 			<exclusions>
-				<!-- jackson 2.9.9 includes reference to woodstox-core 5.1.0 which requires 
+				<!-- jackson 2.9.9 includes reference to woodstox-core 5.1.0 which requires
 					stax2-api:4.1 which is binary imcompatible stax2-api:3.1.4 -->
 				<exclusion>
 					<artifactId>com.fasterxml.woodstox</artifactId>
@@ -738,9 +738,9 @@
 			<version>${jackson.version}</version>
 		</dependency>
 
-		<!-- Asynchronous Websocket-capable client, for message-driven incremental 
+		<!-- Asynchronous Websocket-capable client, for message-driven incremental
 			GTFS-RT -->
-		<!-- AsyncHttpClient Websockets need a newer version of Grizzly than Jersey 
+		<!-- AsyncHttpClient Websockets need a newer version of Grizzly than Jersey
 			does. -->
 		<dependency>
 			<groupId>com.ning</groupId>
@@ -777,7 +777,7 @@
 			<artifactId>onebusaway-gtfs-realtime-api</artifactId>
 			<version>1.2.22</version>
 		</dependency>
-		<!-- Processing is used for the debug GUI (though we could probably use 
+		<!-- Processing is used for the debug GUI (though we could probably use
 			just Java2D) -->
 		<dependency>
 			<groupId>org.processing</groupId>
@@ -918,12 +918,12 @@
 			<artifactId>bsf</artifactId>
 			<version>2.4.0</version>
 		</dependency>
-		<!-- Scripting language dependencies such as Groovy and Jython can double 
-			the size of the OTP JAR. Therefore we don't include them by default. You 
-			can either update the POM in your fork to include the scripting dependencies, 
-			or simply download them and add them to the classpath on the command line. 
-			<dependency> <groupId>org.codehaus.groovy</groupId> <artifactId>groovy-all</artifactId> 
-			<version>2.3.8</version> </dependency> <dependency> <groupId>org.python</groupId> 
+		<!-- Scripting language dependencies such as Groovy and Jython can double
+			the size of the OTP JAR. Therefore we don't include them by default. You
+			can either update the POM in your fork to include the scripting dependencies,
+			or simply download them and add them to the classpath on the command line.
+			<dependency> <groupId>org.codehaus.groovy</groupId> <artifactId>groovy-all</artifactId>
+			<version>2.3.8</version> </dependency> <dependency> <groupId>org.python</groupId>
 			<artifactId>jython</artifactId> <version>2.7.0</version> </dependency> -->
 		<!-- support for OpenTraffic data -->
 		<dependency>
@@ -937,7 +937,7 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		<!-- OTP 2.0 will adopt routing methods based on those in R5. This also 
+		<!-- OTP 2.0 will adopt routing methods based on those in R5. This also
 			contains a serialization test framework. -->
 		<dependency>
 			<groupId>com.conveyal</groupId>
