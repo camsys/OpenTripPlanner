@@ -268,7 +268,15 @@ public class NearbySchedulesResource {
         } else {
             throw new IllegalArgumentException("Must supply lat/lon/radius, or list of stops.");
         }
-        Map<AgencyAndId, StopTimesByStop> stopIdAndStopTimesMap = getStopTimesByParentStop(transitStops, startTime, transitStopStates);
+        
+        if(transitStops.isEmpty()) {
+            throw new IllegalArgumentException("No stops provided or found.");        	
+        }
+        
+        List<AlertPatch> alertPatchSnapshot = index.graph.getAlertPatchesAsList();
+        	
+        Map<AgencyAndId, StopTimesByStop> stopIdAndStopTimesMap = getStopTimesByParentStop(transitStops, startTime, 
+        		transitStopStates, alertPatchSnapshot);
         Collection<StopTimesByStop> stopTimesByStops = stopIdAndStopTimesMap.values();
         for (StopTimesByStop stbs : stopTimesByStops) {
             stbs.limitTimes(startTime, timeRange, numberOfDepartures);
@@ -277,7 +285,8 @@ public class NearbySchedulesResource {
         return stopIdAndStopTimesMap.values();
     }
 
-    private Map<AgencyAndId, StopTimesByStop> getStopTimesByParentStop(Collection<TransitStop> transitStops, long startTime, Map<TransitStop, State> stateMap){
+    private Map<AgencyAndId, StopTimesByStop> getStopTimesByParentStop(Collection<TransitStop> transitStops, 
+    		long startTime, Map<TransitStop, State> stateMap, List<AlertPatch> alertPatchSnapshot){
         Map<AgencyAndId, StopTimesByStop> stopIdAndStopTimesMap = new LinkedHashMap<>();
         RouteMatcher routeMatcher = RouteMatcher.parse(routesStr);
         for (TransitStop tstop : transitStops) {
@@ -332,7 +341,7 @@ public class NearbySchedulesResource {
                 stopTimes.addPatterns(stopTimesPerPattern);
 
 
-                addAlertsToStopTimes(stop, stopTimes);
+                addAlertsToStopTimes(stop, stopTimes, alertPatchSnapshot);
             }
         }
 
@@ -340,15 +349,13 @@ public class NearbySchedulesResource {
         return stopIdAndStopTimesMap;
     }
 
-    private void addAlertsToStopTimes(Stop stop, StopTimesByStop stopTimes){
+    private void addAlertsToStopTimes(Stop stop, StopTimesByStop stopTimes, List<AlertPatch> agencyPatchSnapshot){
         Collection<TripPattern> tripPatterns = null;
         tripPatterns = index.patternsForStop.get(stop);
 
         if(stop.getId() == null)
         	return;
-        
-        List<AlertPatch> agencyPatchSnapshot = index.graph.getAlertPatchesAsList();
-        	
+
         /*
          * DEBUG TOOL 
          * 

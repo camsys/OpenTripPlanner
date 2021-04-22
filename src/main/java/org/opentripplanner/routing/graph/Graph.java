@@ -439,6 +439,7 @@ public class Graph implements Serializable {
         return new AlertPatch[0];
     }
     
+    // Thread safe
     public List<AlertPatch> getAlertPatchesAsList() {
         synchronized (alertPatches) {
         	return this.alertPatches.values().parallelStream()
@@ -449,6 +450,7 @@ public class Graph implements Serializable {
         }
     }
     
+    // *NOT* Thread safe
     public Stream<AlertPatch> getAlertPatches() {
         synchronized (alertPatches) {
         	return this.alertPatches.values().parallelStream()
