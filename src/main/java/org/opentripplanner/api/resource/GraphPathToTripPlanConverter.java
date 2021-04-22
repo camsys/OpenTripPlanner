@@ -20,6 +20,7 @@ import org.opentripplanner.routing.core.*;
 import org.opentripplanner.routing.edgetype.*;
 import org.opentripplanner.routing.edgetype.flex.PartialPatternHop;
 import org.opentripplanner.routing.edgetype.flex.TemporaryDirectPatternHop;
+import org.opentripplanner.routing.error.PathNotFoundException;
 import org.opentripplanner.routing.error.TrivialPathException;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
@@ -91,12 +92,15 @@ public abstract class GraphPathToTripPlanConverter {
                 bestDuration = itinerary.duration;
             }
 
+
 //          When there is very infrequent service a trip that takes 20 minutes could also have an option that takes 3 hours and returns as a viable result.  This is not an acceptable user experience it is better to not show the user options that to do this.
-            if(itineraries.size() < 1 || itinerary.transitTime == 0  || (itinerary.transitTime > 0 &&
-                    (bestDuration >= tripDurationInSecondsToFilterOn && itinerary.duration < bestDuration*durationMultiplier) ||
-                    (bestDuration < tripDurationInSecondsToFilterOn && itinerary.duration < maxShotTripDurationInSecondsToFilterOn)) )
-            {
-                itineraries.add(itinerary);
+            if (itineraries.size() < 1 || itinerary.transitTime == 0 || (itinerary.transitTime > 0 &&
+                    (bestDuration >= tripDurationInSecondsToFilterOn && itinerary.duration < bestDuration * durationMultiplier) ||
+                    (bestDuration < tripDurationInSecondsToFilterOn && itinerary.duration < maxShotTripDurationInSecondsToFilterOn))) {
+                //TODO add option for measuring distance
+                if (!itinerary.hasDriveLeg || (itinerary.hasDriveLeg && itinerary.walkTime < itinerary.transitTime)) {
+                    itineraries.add(itinerary);
+                }
             }
         }
 
@@ -104,7 +108,7 @@ public abstract class GraphPathToTripPlanConverter {
         for (Itinerary itinerary : itineraries) {
             // If this is a transit option whose walk/bike time is greater than that of the walk/bike-only option,
             // do not include in plan
-            if(itinerary.transitTime > 0 && itinerary.walkTime > bestNonTransitTime) continue;
+            if (itinerary.transitTime > 0 && itinerary.walkTime > bestNonTransitTime) continue;
 
             plan.addItinerary(itinerary);
         }
@@ -125,7 +129,12 @@ public abstract class GraphPathToTripPlanConverter {
             }
         }
         request.rctx.debugOutput.finishedRendering();
-        return plan;
+
+        if (plan.itinerary.size() > 0) {
+            return plan;
+        }
+
+        throw new PathNotFoundException();
     }
 
     /**
