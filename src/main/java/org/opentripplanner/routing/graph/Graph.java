@@ -439,6 +439,16 @@ public class Graph implements Serializable {
         return new AlertPatch[0];
     }
     
+    public List<AlertPatch> getAlertPatchesAsList() {
+        synchronized (alertPatches) {
+        	return this.alertPatches.values().parallelStream()
+    			.flatMap(e -> e.parallelStream())
+    			.filter(e -> e instanceof AlertPatch) // something's putting Alerts in the pool here, tsk tsk 
+    			.distinct()
+        		.collect(Collectors.toList());
+        }
+    }
+    
     public Stream<AlertPatch> getAlertPatches() {
         synchronized (alertPatches) {
         	return this.alertPatches.values().parallelStream()
@@ -447,7 +457,7 @@ public class Graph implements Serializable {
     			.distinct();
         }
     }
-    
+
     /**
      * Add a {@link TurnRestriction} to the {@link TurnRestriction} {@link List} belonging to an
      * {@link Edge}. This method is not thread-safe.

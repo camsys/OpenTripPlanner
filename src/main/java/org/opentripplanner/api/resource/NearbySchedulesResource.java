@@ -32,6 +32,7 @@ import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.core.TraverseModeSet;
 import org.opentripplanner.routing.edgetype.Timetable;
 import org.opentripplanner.routing.edgetype.TripPattern;
+import org.opentripplanner.routing.error.VertexNotFoundException;
 import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.routing.services.StreetVertexIndexService;
 import org.opentripplanner.routing.trippattern.TripTimes;
@@ -346,9 +347,8 @@ public class NearbySchedulesResource {
         if(stop.getId() == null)
         	return;
         
-        List<AlertPatch> agencyPatchSnapshot = index.graph.getAlertPatches()
-        		.collect(Collectors.toList());
-
+        List<AlertPatch> agencyPatchSnapshot = index.graph.getAlertPatchesAsList();
+        	
         /*
          * DEBUG TOOL 
          * 
@@ -428,16 +428,20 @@ public class NearbySchedulesResource {
     }
 
     private Map<TransitStop, State> getNearbyStops(double lat, double lon, double radius) {
-        RoutingRequest options = router.defaultRoutingRequest.clone();
-        options.modes = new TraverseModeSet(TraverseMode.WALK);
-        options.batch = true;
-        options.setFrom(lat, lon);
-        options.setRoutingContext(index.graph);
-        AStar search = new AStar();
-        StopFinder finder = new StopFinder(radius, minStops, maxStops, groupByParent, getModes());
-        search.setTraverseVisitor(finder);
-        search.getShortestPathTree(options, -1, finder);
-        return finder.getStops();
+    	try {
+	        RoutingRequest options = router.defaultRoutingRequest.clone();
+	        options.modes = new TraverseModeSet(TraverseMode.WALK);
+	        options.batch = true;
+	        options.setFrom(lat, lon);
+	        options.setRoutingContext(index.graph);
+	        AStar search = new AStar();
+	        StopFinder finder = new StopFinder(radius, minStops, maxStops, groupByParent, getModes());
+	        search.setTraverseVisitor(finder);
+	        search.getShortestPathTree(options, -1, finder);
+	        return finder.getStops();
+    	} catch (VertexNotFoundException e) {
+    		return new HashMap<TransitStop, State>();
+    	}
     }
 
     private List<TransitStop> getStopsFromList(String stopsStr) {
