@@ -43,18 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
+import java.util.*;
 
 /**
  * A trip planning request. Some parameters may not be honored by the trip planner for some or all itineraries.
@@ -1248,10 +1237,12 @@ public class RoutingRequest implements Cloneable, Serializable {
         return ret;
     }
 
-    public void setRoutingContext(Graph graph) {
+    // Set routing context with passed-in set of temporary vertices. Needed for intermediate places
+    // as a consequence of the check that temporary vertices are request-specific.
+    public void setRoutingContext(Graph graph, Collection<Vertex> temporaryVertices) {
         if (rctx == null) {
             // graphService.getGraph(routerId)
-            this.rctx = new RoutingContext(this, graph);
+            this.rctx = new RoutingContext(this, graph, temporaryVertices);
             // check after back reference is established, to allow temp edge cleanup on exceptions
             this.rctx.check();
         } else {
@@ -1263,6 +1254,10 @@ public class RoutingRequest implements Cloneable, Serializable {
                 return;
             }
         }
+    }
+
+    public void setRoutingContext(Graph graph) {
+        setRoutingContext(graph, null);
     }
 
     /** For use in tests. Force RoutingContext to specific vertices rather than making temp edges. */
