@@ -14,6 +14,8 @@
 package org.opentripplanner.common.geometry;
 
 import com.vividsolutions.jts.geom.*;
+import com.vividsolutions.jts.io.ParseException;
+import com.vividsolutions.jts.io.WKTReader;
 import com.vividsolutions.jts.linearref.LengthLocationMap;
 import com.vividsolutions.jts.linearref.LinearLocation;
 import com.vividsolutions.jts.linearref.LocationIndexedLine;
@@ -193,5 +195,14 @@ public class GeometryUtils {
             coords[i++] = new Coordinate(p.getLatitude(), p.getLongitude());
         }
         return coords;
+    }
+
+    public static Geometry parseWkt(String wkt) {
+        try {
+            return new WKTReader(GeometryUtils.getGeometryFactory()).read(wkt);
+        } catch(ParseException e) {
+            LOG.error("Unable to parse wkt: " + e);
+        }
+        return null;
     }
 }

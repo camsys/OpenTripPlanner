@@ -41,12 +41,16 @@ public class PatternHop extends TablePatternEdge implements OnboardEdge, HopEdge
 
     private LineString geometry = null;
 
-    public PatternHop(PatternStopVertex from, PatternStopVertex to, Stop begin, Stop end, int stopIndex) {
+    public PatternHop(PatternStopVertex from, PatternStopVertex to, Stop begin, Stop end, int stopIndex, boolean setInPattern) {
         super(from, to);
         this.begin = begin;
         this.end = end;
         this.stopIndex = stopIndex;
         getPattern().setPatternHop(stopIndex, this);
+    }
+
+    public PatternHop(PatternStopVertex from, PatternStopVertex to, Stop begin, Stop end, int stopIndex) {
+        this(from, to, begin, end, stopIndex, true);
     }
 
     public double getDistance() {
@@ -95,8 +99,13 @@ public class PatternHop extends TablePatternEdge implements OnboardEdge, HopEdge
     public double weightLowerBound(RoutingRequest options) {
         return timeLowerBound(options);
     }
-    
+
+    @Override
     public State traverse(State s0) {
+        return traverse(s0, s0.edit(this));
+    }
+
+    public State traverse(State s0, StateEditor s1) {
         RoutingRequest options = s0.getOptions();
         
         // Ignore this edge if either of its stop is banned hard
@@ -106,11 +115,12 @@ public class PatternHop extends TablePatternEdge implements OnboardEdge, HopEdge
                 return null;
             }
         }
-        
+
         TripTimes tripTimes = s0.getTripTimes();
         int runningTime = tripTimes.getRunningTime(stopIndex);
-        StateEditor s1 = s0.edit(this);
+
         s1.incrementTimeInSeconds(runningTime);
+
         if (s0.getOptions().arriveBy)
             s1.setZone(getBeginStop().getZoneId());
         else
@@ -148,6 +158,13 @@ public class PatternHop extends TablePatternEdge implements OnboardEdge, HopEdge
 
     public String toString() {
     	return "PatternHop(" + getFromVertex() + ", " + getToVertex() + ")";
+    }
+
+    /**
+     * Return true if any GTFS-Flex service is defined for this hop.
+     */
+    public boolean hasFlexService() {
+        return false;
     }
 
     @Override

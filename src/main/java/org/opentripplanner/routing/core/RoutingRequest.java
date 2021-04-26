@@ -459,6 +459,142 @@ public class RoutingRequest implements Cloneable, Serializable {
     public boolean ignoreRealtimeUpdates = false;
 
     /**
+     * Extra penalty added for flag-stop boarding/alighting. This parameter only applies to
+     * GTFS-Flex routing, which must be explicitly turned on via the useFlexService parameter
+     * in router-config.json.
+     *
+     * In GTFS-Flex, a flag stop is a point at which a vehicle is boarded or alighted which is not
+     * a defined stop, e.g. the bus is flagged down in between stops. This parameter is an
+     * additional cost added when a board/alight occurs at a flag stop. Increasing this parameter
+     * increases the cost of using a flag stop relative to a regular scheduled stop.
+     */
+    public int flexFlagStopExtraPenalty = 90;
+
+    /**
+     * Extra penalty added for deviated-route boarding/alighting. This parameter only applies to
+     * GTFS-Flex routing, which must be explicitly turned on via the useFlexService parameter
+     * in router-config.json.
+     *
+     * In GTFS-Flex, deviated-route service is when a vehicle can deviate a certain distance
+     * (or within a certain area) in order to drop off or pick up a passenger. This parameter is an
+     * additional cost added when a board/alight occurs before/after a deviation. Increasing this
+     * parameter increases the cost of using deviated-route service relative to fixed-route.
+     */
+    public int flexDeviatedRouteExtraPenalty = 180;
+
+    /**
+     * Reluctance for call-n-ride. This parameter only applies to GTFS-Flex routing, which must be
+     * explicitly turned on via the useFlexService parameter in router-config.json.
+     *
+     * Call-and-ride service is when a vehicle picks up and drops off a passenger at their origin
+     * and destination, without regard to a fixed route. In the GTFS-Flex data standard, call-and-
+     * ride service is defined analogously to deviated-route service, but with more permissive
+     * parameters. Depending on the particular origin and destination and the size of the area in
+     * which a route can deviate, a single route could be used for both deviated-route and call-
+     * and-ride service. This parameter is multiplied with the time on board call-and-ride in order to
+     * increase the cost of call-and-ride's use relative to normal transit.
+     */
+    public double flexCallAndRideReluctance = 2.0;
+
+    /**
+     * Total time which can be spent on a call-n-ride leg. This parameter only applies to GTFS-Flex
+     * routing, which must be explicitly turned on via the useFlexService parameter in
+     * router-config.json.
+     *
+     * "Trip-banning" as a method of obtaining different itinerary results does not work for call-
+     * and-ride service: the same trip can be used in different ways, for example to drop off a
+     * passenger at different transfer points. Thus, rather than trip-banning, after each itinerary
+     * is found, flexMaxCallAndRideSeconds is reduced in order to obtain different itineraries. The
+     * new value of the parameter to calculated according to the following formula:
+     * min(duration - options.flexReduceCallAndRideSeconds, duration * flexReduceCallAndRideRatio)
+     */
+    public int flexMaxCallAndRideSeconds = Integer.MAX_VALUE;
+
+    /**
+     * Control the reduction of call-and-ride time. This parameter only applies to GTFS-Flex
+     * routing, which must be explicitly turned on via the useFlexService parameter in
+     * router-config.json.
+     *
+     * Seconds to reduce flexMaxCallAndRideSeconds after a complete call-n-ride itinerary. The
+     * rationale for this parameter is given in the docs for flexMaxCallAndRideSeconds.
+     */
+    public int flexReduceCallAndRideSeconds = 15 * 60;
+
+    /**
+     * Control the reduction of call-and-ride time. This parameter only applies to GTFS-Flex
+     * routing, which must be explicitly turned on via the useFlexService parameter in
+     * router-config.json.
+     *
+     * Percentage to reduce flexMaxCallAndRideSeconds after a complete call-n-ride itinerary. The
+     * rationale for this parameter is given in the docs for flexMaxCallAndRideSeconds.
+     */
+    public double flexReduceCallAndRideRatio = 0.5;
+
+    /**
+     * Control the size of flag-stop buffer returned in API response. This parameter only applies
+     * to GTFS-Flex routing, which must be explicitly turned on via the useFlexService parameter in
+     * router-config.json.
+     *
+     * This allows the UI to specify the length in meters of a segment around flag stops it wants
+     * to display, as an indication to the user that the vehicle may be flagged down anywhere on
+     * the segment. The backend will supply such a cropped geometry in its response
+     * (`Place.flagStopArea`). The segment will be up to flexFlagStopBufferSize meters ahead or
+     * behind the board/alight location. The actual length may be less if the board/alight location
+     * is near the beginning or end of a route.
+     */
+    public double flexFlagStopBufferSize;
+
+    /**
+     * Whether to use reservation-based services. This parameter only applies to GTFS-Flex
+     * routing, which must be explicitly turned on via the useFlexService parameter in
+     * router-config.json.
+     *
+     * In GTFS-Flex, some trips may be defined as "reservation services," which indicates that
+     * they require a reservation in order to be used. Such services will only be used if this
+     * parameter is true.
+     */
+    public boolean flexUseReservationServices = true;
+
+    /**
+     * Whether to use eligibility-based services. This parameter only applies to GTFS-Flex
+     * routing, which must be explicitly turned on via the useFlexService parameter in
+     * router-config.json.
+     *
+     * In GTFS-Flex, some trips may be defined as "eligibility services," which indicates that
+     * they require customers to meet a certain set of requirements in order to be used. Such
+     * services will only be used if this parameter is true.
+     */
+    public boolean flexUseEligibilityServices = true;
+
+    /**
+     * Whether to ignore DRT time limits. This parameter only applies to GTFS-Flex routing, which
+     * must be explicitly turned on via the useFlexService parameter in router-config.json.
+     *
+     * In GTFS-Flex, deviated-route and call-and-ride service can define a trip-level parameter
+     * `drt_advance_book_min`, which determines how far in advance the flexible segment must be
+     * scheduled. If `flexIgnoreDrtAdvanceBookMin = false`, OTP will only provide itineraries which
+     * are feasible based on that constraint. For example, if the current time is 1:00pm and a
+     * particular service must be scheduled one hour in advance, the earliest time the service
+     * is usable is 2:00pm.
+     */
+    public boolean flexIgnoreDrtAdvanceBookMin = false;
+
+    /**
+     * Minimum length in meters of partial hop edges. This parameter only applies to GTFS-Flex
+     * routing, which must be explicitly turned on via the useFlexService parameter in router-
+     * config.json.
+     *
+     * Flag stop and deviated-route service require creating partial PatternHops from points along
+     * the route to a scheduled stop. This parameter provides a minimum length of such partial
+     * hops, in order to reduce the amount of hops created when they redundant with regular
+     * service.
+     */
+    public int flexMinPartialHopLength = 400;
+
+    /** Minimum length of partial hop edges */
+    public int minPartialHopLength = 400;
+
+    /**
      * If true, the remaining weight heuristic is disabled. Currently only implemented for the long
      * distance path service.
      */
@@ -533,6 +669,13 @@ public class RoutingRequest implements Cloneable, Serializable {
     /** Whether to apply the ellipsoid->geoid offset to all elevations in the response */
     public boolean geoidElevation = false;
 
+    /**
+     * This parameter is used in GTFS-Flex routing. Preliminary searches before the main search
+     * need to be able to discover TransitStops in order to create call-and-ride legs which allow
+     * transfers to fixed-route services.
+     */
+    public boolean enterStationsWithCar = false;
+
     /** Whether to find impacts of realtime alerts */
     public boolean findRealtimeConsequences = true;
 
@@ -574,6 +717,19 @@ public class RoutingRequest implements Cloneable, Serializable {
 
 
     public boolean farEndpointsException = false;
+
+    /**
+     * Keep track of epoch time the request was created by OTP. This is currently only used by the
+     * GTFS-Flex implementation.
+     *
+     * In GTFS-Flex, deviated-route and call-and-ride service can define a trip-level parameter
+     * `drt_advance_book_min`, which determines how far in advance the flexible segment must be
+     * scheduled. If `flexIgnoreDrtAdvanceBookMin = false`, OTP will only provide itineraries which
+     * are feasible based on that constraint. For example, if the current time is 1:00pm and a
+     * particular service must be scheduled one hour in advance, the earliest time the service
+     * is usable is 2:00pm.
+     */
+    public long clockTimeSec;
 
     /* CONSTRUCTORS */
 
@@ -1239,7 +1395,19 @@ public class RoutingRequest implements Cloneable, Serializable {
                 && stopLinking == other.stopLinking
                 && pathIgnoreStrategy.equals(pathIgnoreStrategy)
                 && useTransitServiceExtension == other.useTransitServiceExtension
-                && farEndpointsException == other.farEndpointsException;
+                && farEndpointsException == other.farEndpointsException
+                && flexFlagStopExtraPenalty == other.flexFlagStopExtraPenalty
+                && flexDeviatedRouteExtraPenalty == other.flexDeviatedRouteExtraPenalty
+                && flexCallAndRideReluctance == other.flexCallAndRideReluctance
+                && flexReduceCallAndRideSeconds == other.flexReduceCallAndRideSeconds
+                && flexReduceCallAndRideRatio == other.flexReduceCallAndRideRatio
+                && flexFlagStopBufferSize == other.flexFlagStopBufferSize
+                && flexUseReservationServices == other.flexUseReservationServices
+                && flexUseEligibilityServices == other.flexUseEligibilityServices
+                && flexIgnoreDrtAdvanceBookMin == other.flexIgnoreDrtAdvanceBookMin
+                && flexMinPartialHopLength == other.flexMinPartialHopLength
+                && minPartialHopLength == other.minPartialHopLength
+                && clockTimeSec == other.clockTimeSec;
     }
 
     /**
@@ -1287,7 +1455,19 @@ public class RoutingRequest implements Cloneable, Serializable {
                 + new Double(tripShownRangeTime).hashCode() * 790052909
                 + pathIgnoreStrategy.hashCode() * 1301081
                 + Boolean.hashCode(useTransitServiceExtension) * 1300931
-                + Boolean.hashCode(farEndpointsException) * 538799;
+                + Boolean.hashCode(farEndpointsException) * 538799
+                + Integer.hashCode(flexFlagStopExtraPenalty) * 179424691
+                + Integer.hashCode(flexDeviatedRouteExtraPenalty) *  7424299
+                + Double.hashCode(flexCallAndRideReluctance) * 86666621
+                + Integer.hashCode(flexMaxCallAndRideSeconds) * 9994393
+                + Integer.hashCode(flexReduceCallAndRideSeconds) * 92356763
+                + Double.hashCode(flexReduceCallAndRideRatio) *  171157957
+                + Double.hashCode(flexFlagStopBufferSize) * 803989
+                + Boolean.hashCode(flexUseReservationServices) * 92429033
+                + Boolean.hashCode(flexUseEligibilityServices) * 7916959
+                + Boolean.hashCode(flexIgnoreDrtAdvanceBookMin) * 179992387
+                + Integer.hashCode(flexMinPartialHopLength) * 15485863
+                + Long.hashCode(clockTimeSec) * 833389;
         if (batch) {
             hashCode *= -1;
             // batch mode, only one of two endpoints matters
@@ -1579,6 +1759,10 @@ public class RoutingRequest implements Cloneable, Serializable {
             }
         }
 
+    }
+
+    public void resetClockTime() {
+        this.clockTimeSec = System.currentTimeMillis() / 1000;
     }
 
     public Comparator<GraphPath> getPathComparator(boolean compareStartTimes) {

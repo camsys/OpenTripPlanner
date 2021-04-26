@@ -133,10 +133,43 @@ public class Timetable implements Serializable {
     /**
      * Get the next (previous) trip that departs (arrives) from the specified stop at or after
      * (before) the specified time.
+     *
+     * For GTFS-Flex service, this method will take into account the fact that the passenger
+     * may be boarding or alighting midway between stops (flag stops), and that the vehicle may
+     * be deviating off-route to pick up or drop off the passenger (deviated-route service.) In
+     * both cases, unscheduled timepoints on the route in between scheduled stops are calculated
+     * via linear interpolation.
+     *
+     * The parameters `flexOffsetScale`, `preBoardDirectTime`, and `postAlightDirectTime` are
+     * specific to GTFS-Flex service. If arrivals/departures are being evaluated for default
+     * fixed-route service, these parameters will have the value 0 (see
+     * {@link #getNextTrip(State, ServiceDay, int, boolean)}).
+     *
+     * @param s0 State to evaluate the method at; the method uses the state's time.
+     * @param serviceDay Only consider trips if their service_id is active on this day
+     * @param stopIndex Index of stop in the trip to evaluate departure or arrival at
+     * @param boarding If true, find next trip which departs specified stop; if false, find
+     *                 previous trip which arrives at specified stop
+     * @param flexOffsetScale For GTFS-Flex routing, a control parameter to determine the amount of
+     *                        seconds to offset the scheduled timepoint due to a board/alight in
+     *                        the middle of a
+     *                        {@link org.opentripplanner.routing.edgetype.flex.FlexPatternHop}.
+     *                        Use the percentage in [0, 1] ([-1, 0]) from the beginning (end) of
+     *                        the hop at which the board (alight) is taking place. Note that the
+     *                        value is expected to be negative when evaluating alight points. Use
+     *                        0 if this is not a flag stop or deviated-route board (alight) point.
+     * @param flexPreBoardDirectTime For GTFS-Flex routing, the amount of time the vehicle travels
+     *                               before rejoining the route, or 0 if this is not a deviated-
+     *                               route board (alight) point.
+     * @param flexPostAlightDirectTime For GTFS-Flex routing, the amount of time the vehicle
+     *                                 travels after leaving the route, or 0 if this is not a
+     *                                 deviated-route board (alight) point.
+     *
      * @return the TripTimes object representing the (possibly updated) best trip, or null if no
      * trip matches both the time and other criteria.
      */
-    public TripTimes getNextTrip(State s0, ServiceDay serviceDay, int stopIndex, boolean boarding) {
+    public TripTimes getNextTrip(State s0, ServiceDay serviceDay, int stopIndex, boolean boarding, double flexOffsetScale,
+                                 int flexPreBoardDirectTime, int flexPostAlightDirectTime) {
         /* Search at the state's time, but relative to midnight on the given service day. */
         int time = serviceDay.secondsSinceMidnight(s0.getTimeSeconds());
         // NOTE the time is sometimes negative here. That is fine, we search for the first trip of the day.
@@ -158,41 +191,56 @@ public class Timetable implements Serializable {
         int bestTime = boarding ? Integer.MAX_VALUE : Integer.MIN_VALUE;
         // Hoping JVM JIT will distribute the loop over the if clauses as needed.
         // We could invert this and skip some service days based on schedule overlap as in RRRR.
-
-        // Only compute transfer once, if possible - it's expensive.
-        int exampleAdjustedTime = -1;
-        boolean recomputeTime = transferDependsOnTrip(s0, currentStop, boarding);
-        if (!recomputeTime && tripTimes.size() > 0) {
-            exampleAdjustedTime = adjustTimeForTransfer(s0, currentStop, getTripTimes(0).trip, boarding, serviceDay, time);
-        }
-
         for (TripTimes tt : tripTimes) {
-            int adjustedTime = recomputeTime
-                ? adjustTimeForTransfer(s0, currentStop, tt.trip, boarding, serviceDay, time)
-                : exampleAdjustedTime;
+            if (tt.isCanceled()) continue;
+            if ( ! serviceDay.serviceRunning(tt.serviceCode)) continue; // TODO merge into call on next line
+            if ( ! tt.tripAcceptable(s0, stopIndex)) continue;
+            int adjustedTime = adjustTimeForTransfer(s0, currentStop, tt.trip, boarding, serviceDay, time);
             if (adjustedTime == -1) continue;
-            adjustedTime += tt.getDepartureBuffer(stopIndex);
             if (boarding) {
-                int depTime = tt.getDepartureTime(stopIndex);
-                if (depTime < 0) continue; // negative values were previously used for canceled trips/passed stops/skipped stops, but
-                                           // now its not sure if this check should be still in place because there is a boolean field
-                                           // for canceled trips
-                if (depTime >= adjustedTime && depTime < bestTime) {
-                    if (isTripTimesOk(tt, serviceDay, s0, stopIndex, true)
-                            && isWaitOk(s0, serviceDay, depTime)) {
-                        bestTrip = tt;
-                        bestTime = depTime;
+                // For GTFS-Flex, if this is a flag-stop or deviated-route board/alight, we need to
+                // add to the scheduled timepoint the amount of time the vehicle travels along the
+                // hop before the board/alight, and subtract the amount of time the vehicle travels
+                // off-route before rejoining the route. Both these values are 0 for regular fixed-
+                // route board/alights.
+                int flexTimeAdjustment = 0;
+                if (flexOffsetScale != 0 || flexPreBoardDirectTime != 0) {
+                    int timeIntoHop = 0;
+                    if (stopIndex + 1 < tt.getNumStops() && flexOffsetScale != 0.0) {
+                        timeIntoHop = (int) Math.round(flexOffsetScale * tt.getRunningTime(stopIndex));
                     }
+                    int vehicleTime = flexPreBoardDirectTime;
+                    flexTimeAdjustment = timeIntoHop - vehicleTime;
+                }
+
+                int depTime = tt.getDepartureTime(stopIndex) + flexTimeAdjustment;
+                if (depTime < 0) continue; // negative values were previously used for canceled trips/passed stops/skipped stops, but
+                // now its not sure if this check should be still in place because there is a boolean field
+                // for canceled trips
+                if (depTime >= adjustedTime && depTime < bestTime) {
+                    bestTrip = tt;
+                    bestTime = depTime;
                 }
             } else {
-                int arvTime = tt.getArrivalTime(stopIndex);
+                // For GTFS-Flex, subtract from the scheduled timepoint the amount of time left in
+                // the hop after the vehicle drops off the passenger (note flexOffsetScale < 0
+                // in this case), and add the amount of time the vehicle travels off-route before
+                // the passenger alights.
+                int flexTimeAdjustment = 0;
+                if (flexOffsetScale != 0 || flexPostAlightDirectTime != 0) {
+                    int timeIntoHop = 0;
+                    if (stopIndex - 1 >= 0 && flexOffsetScale != 0.0) {
+                        timeIntoHop = (int) Math.round(flexOffsetScale * tt.getRunningTime(stopIndex - 1));
+                    }
+                    int vehicleTime = flexPostAlightDirectTime;
+                    flexTimeAdjustment = timeIntoHop + vehicleTime;
+                }
+
+                int arvTime = tt.getArrivalTime(stopIndex) + flexTimeAdjustment;
                 if (arvTime < 0) continue;
                 if (arvTime <= adjustedTime && arvTime > bestTime) {
-                    if (isTripTimesOk(tt, serviceDay, s0, stopIndex, true)
-                            && isWaitOk(s0, serviceDay, arvTime)) {
-                        bestTrip = tt;
-                        bestTime = arvTime;
-                    }
+                    bestTrip = tt;
+                    bestTime = arvTime;
                 }
             }
         }
@@ -201,25 +249,23 @@ public class Timetable implements Serializable {
         FrequencyEntry bestFreq = null;
         for (FrequencyEntry freq : frequencyEntries) {
             TripTimes tt = freq.tripTimes;
-            if (!isTripTimesOk(tt, serviceDay, s0, stopIndex, true))
-                continue;
+            if (tt.isCanceled()) continue;
+            if ( ! serviceDay.serviceRunning(tt.serviceCode)) continue; // TODO merge into call on next line
+            if ( ! tt.tripAcceptable(s0, stopIndex)) continue;
             int adjustedTime = adjustTimeForTransfer(s0, currentStop, tt.trip, boarding, serviceDay, time);
             if (adjustedTime == -1) continue;
-            adjustedTime += tt.getDepartureBuffer(stopIndex);
             LOG.debug("  running freq {}", freq);
             if (boarding) {
                 int depTime = freq.nextDepartureTime(stopIndex, adjustedTime); // min transfer time included in search
-                if (depTime < 0) continue; 
-                if (depTime >= adjustedTime && depTime < bestTime
-                        && isWaitOk(s0, serviceDay, depTime)) {
+                if (depTime < 0) continue;
+                if (depTime >= adjustedTime && depTime < bestTime) {
                     bestFreq = freq;
                     bestTime = depTime;
                 }
             } else {
                 int arvTime = freq.prevArrivalTime(stopIndex, adjustedTime); // min transfer time included in search
                 if (arvTime < 0) continue;
-                if (arvTime <= adjustedTime && arvTime > bestTime
-                        && isWaitOk(s0, serviceDay, arvTime)) {
+                if (arvTime <= adjustedTime && arvTime > bestTime) {
                     bestFreq = freq;
                     bestTime = arvTime;
                 }
@@ -228,8 +274,67 @@ public class Timetable implements Serializable {
         if (bestFreq != null) {
             // A FrequencyEntry beat all the TripTimes.
             // Materialize that FrequencyEntry entry at the given time.
-            bestTrip = bestFreq.tripTimes.timeShift(stopIndex, bestTime, boarding, bestFreq);
+            //TODO set this to null may have consequences for RTD Flex
+            bestTrip = bestFreq.tripTimes.timeShift(stopIndex, bestTime, boarding, null);
         }
+        return bestTrip;
+    }
+
+    /**
+     * Get the next (previous) trip that departs (arrives) from the specified stop at or after
+     * (before) the specified time.
+     *
+     * @param s0 State to evaluate the method at; the method uses the state's time.
+     * @param serviceDay Only consider trips if their service_id is active on this day
+     * @param stopIndex index of stop in the trip to evaluate departure or arrival at
+     * @param boarding if true, find next trip which departs specified stop; if false, find
+     *                 previous trip which arrives at specified stop
+     *
+     * @return the TripTimes object representing the (possibly updated) best trip, or null if no
+     * trip matches both the time and other criteria.
+     */
+    public TripTimes getNextTrip(State s0, ServiceDay serviceDay, int stopIndex, boolean boarding) {
+        return getNextTrip(s0, serviceDay, stopIndex, boarding, 0, 0, 0);
+    }
+
+    // could integrate with getNextTrip
+    public TripTimes getNextCallNRideTrip(State s0, ServiceDay serviceDay, int stopIndex, boolean boarding, int directTime) {
+        /* Search at the state's time, but relative to midnight on the given service day. */
+        int time = serviceDay.secondsSinceMidnight(s0.getTimeSeconds());
+        // NOTE the time is sometimes negative here. That is fine, we search for the first trip of the day.
+        // Adjust for possible boarding time TODO: This should be included in the trip and based on GTFS
+        if (boarding) {
+            time += s0.getOptions().getBoardTime(this.pattern.mode);
+        } else {
+            time -= s0.getOptions().getAlightTime(this.pattern.mode);
+        }
+        TripTimes bestTrip = null;
+        Stop currentStop = pattern.getStop(stopIndex);
+        long bestTime = boarding ? Long.MAX_VALUE : Long.MIN_VALUE;
+        boolean useClockTime = !s0.getOptions().flexIgnoreDrtAdvanceBookMin;
+        long clockTime = s0.getOptions().clockTimeSec;
+        for (TripTimes tt : tripTimes) {
+            if (tt.isCanceled()) continue;
+            if ( ! serviceDay.serviceRunning(tt.serviceCode)) continue; // TODO merge into call on next line
+            if ( ! tt.tripAcceptable(s0, stopIndex)) continue;
+            int adjustedTime = adjustTimeForTransfer(s0, currentStop, tt.trip, boarding, serviceDay, time);
+            if (adjustedTime == -1) continue;
+            if (boarding) {
+                long depTime = getCallAndRideBoardTime(stopIndex, adjustedTime, directTime, serviceDay, useClockTime, clockTime, tt);
+                if (depTime >= adjustedTime && depTime < bestTime && inBounds(depTime)) {
+                    bestTrip = tt;
+                    bestTime = depTime;
+                }
+            } else {
+                long arvTime = getCallAndRideAlightTime(stopIndex, adjustedTime, directTime, serviceDay, useClockTime, clockTime, tt);
+                if (arvTime < 0) continue;
+                if (arvTime <= adjustedTime && arvTime > bestTime && inBounds(arvTime)) {
+                    bestTrip = tt;
+                    bestTime = arvTime;
+                }
+            }
+        }
+
         return bestTrip;
     }
 
@@ -247,6 +352,10 @@ public class Timetable implements Serializable {
             return wait <= s0.getOptions().maxTransferTime && wait >= s0.getOptions().minTransferTimeHard;
         }
         return true;
+    }
+
+    private boolean inBounds(long time) {
+        return time >= minTime && time <= maxTime;
     }
 
     /**
@@ -627,6 +736,46 @@ public class Timetable implements Serializable {
             TripTimes tt = freq.tripTimes;
             tt.serviceCode = serviceCodes.get(tt.trip.getServiceId());
         }
+    }
+
+    public int getCallAndRideBoardTime(int stop, long currTime, int directTime, ServiceDay sd, boolean useClockTime, long startClockTime, TripTimes tt) {
+        //TODO fix this fro RTD Flex
+//        int travelTime = getDemandResponseMaxTime(directTime);
+        int travelTime = directTime;
+        int minBoardTime = tt.getArrivalTime(stop + 1) - travelTime;
+        int ret = (int) Math.min(Math.max(currTime, tt.getDepartureTime(stop)), minBoardTime);
+        if (useClockTime) {
+            int clockTime = (int) (sd.secondsSinceMidnight(startClockTime) + Math.round(tt.trip.getDrtAdvanceBookMin() * 60.0));
+            if (ret >= clockTime) {
+                return ret;
+            } else if (clockTime < minBoardTime) {
+                return clockTime;
+            } else {
+                return -1;
+            }
+        }
+        return ret;
+    }
+
+    public int getCallAndRideAlightTime(int stop, long currTime, int directTime, ServiceDay sd, boolean useClockTime, long startClockTime, TripTimes tt) {
+        //TODO fix this fro RTD Flex
+//        int travelTime = getDemandResponseMaxTime(directTime);
+        int travelTime = directTime;
+        int maxAlightTime = tt.getDepartureTime(stop - 1) + travelTime;
+        int ret = (int) Math.max(Math.min(currTime, tt.getArrivalTime(stop)), maxAlightTime);
+        if (useClockTime) {
+            int clockTime = (int) (sd.secondsSinceMidnight(startClockTime) + Math.round(tt.trip.getDrtAdvanceBookMin() * 60.0));
+            // boarding time must be > clockTime
+            int boardTime = ret - travelTime;
+            if (boardTime >= clockTime) {
+                return ret;
+            }
+            ret += (clockTime - boardTime);
+            if (ret >= maxAlightTime) {
+                return -1;
+            }
+        }
+        return ret;
     }
 
 } 

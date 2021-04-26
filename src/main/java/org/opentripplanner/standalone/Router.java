@@ -172,6 +172,12 @@ public class Router {
                 }
             }
         }
+
+        /* Set whether to use flex service */
+        JsonNode useFlexService = config.get("useFlexService");
+        if (useFlexService != null) {
+            graph.setUseFlexService(useFlexService.asBoolean(false));
+        }
         
         JsonNode stopClusterMode = config.get("stopClusterMode");
         if (stopClusterMode != null) {

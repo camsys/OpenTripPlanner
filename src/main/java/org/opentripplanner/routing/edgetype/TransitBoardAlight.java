@@ -16,6 +16,8 @@ package org.opentripplanner.routing.edgetype;
 import java.util.BitSet;
 
 import java.util.Locale;
+
+import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.Trip;
 import org.opentripplanner.routing.core.RoutingContext;
@@ -147,6 +149,14 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
         if (options.wheelchairAccessible && ! getPattern().wheelchairAccessible(stopIndex)) {
             return null;
         };
+
+        // if eligibility-restricted services are disallowed, check this route. Only supports 0/1 values.
+        if (!options.flexUseEligibilityServices) {
+            Route route = getPattern().route;
+            if (route.hasEligibilityRestricted() && route.getEligibilityRestricted() == 1) {
+                return null;
+            }
+        }
 
         /*
          * Determine whether we are going onto or off of transit. Entering and leaving transit is

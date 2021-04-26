@@ -16,8 +16,12 @@ package org.opentripplanner.routing.location;
 import com.vividsolutions.jts.geom.Coordinate;
 import org.opentripplanner.routing.edgetype.TemporaryEdge;
 import org.opentripplanner.routing.graph.Edge;
+import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.vertextype.TemporaryVertex;
+import org.opentripplanner.routing.vertextype.TemporaryVertexDispose;
 import org.opentripplanner.util.I18NString;
+
+import java.util.Collection;
 
 final public class TemporaryStreetLocation extends StreetLocation implements TemporaryVertex {
     final private boolean endVertex;
@@ -59,10 +63,25 @@ final public class TemporaryStreetLocation extends StreetLocation implements Tem
         return endVertex;
     }
 
-    @Override
+
     public void dispose() {
         for (Object temp : endVertex ? getIncoming() : getOutgoing()) {
             ((TemporaryEdge) temp).dispose();
         }
+    }
+
+    static Collection<Vertex> disposeAll(Collection<Vertex> vertices) {
+        TemporaryVertexDispose task = new TemporaryVertexDispose();
+        for (Vertex vertex : vertices) {
+            if (vertex instanceof TemporaryVertex) {
+                task.todo.add(vertex);
+            }
+        }
+        task.search(true);
+        return task.done;
+    }
+
+    static Collection<Vertex> findSubgraph(Vertex vertex) {
+        return TemporaryVertexDispose.search(vertex, false);
     }
 }

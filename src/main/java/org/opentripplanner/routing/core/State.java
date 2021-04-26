@@ -62,7 +62,9 @@ public class State implements Cloneable {
 
     // track the states of all path parsers -- probably changes frequently
     protected int[] pathParserStates;
-    
+
+    int callAndRideTime = 0;
+
     private static final Logger LOG = LoggerFactory.getLogger(State.class);
 
     /* CONSTRUCTORS */
@@ -316,6 +318,10 @@ public class State implements Cloneable {
 
     public int getPreTransitTime() {
         return preTransitTime;
+    }
+
+    public int getCallAndRideTime() {
+        return callAndRideTime;
     }
 
     public Vertex getVertex() {

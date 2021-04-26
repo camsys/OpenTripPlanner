@@ -32,6 +32,7 @@ import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.onebusaway.gtfs.services.calendar.CalendarService;
 import org.opentripplanner.analyst.core.GeometryIndex;
 import org.opentripplanner.analyst.request.SampleFactory;
+import org.opentripplanner.api.parameter.FeedScopedId;
 import org.opentripplanner.common.MavenVersion;
 import org.opentripplanner.common.TurnRestriction;
 import org.opentripplanner.common.geometry.GraphUtils;
@@ -49,6 +50,7 @@ import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.edgetype.EdgeWithCleanup;
 import org.opentripplanner.routing.edgetype.StreetEdge;
 import org.opentripplanner.routing.edgetype.TripPattern;
+import org.opentripplanner.routing.flex.FlexIndex;
 import org.opentripplanner.routing.impl.DefaultStreetVertexIndexFactory;
 import org.opentripplanner.routing.consequences.ConsequencesStrategyFactory;
 import org.opentripplanner.routing.services.StreetVertexIndexFactory;
@@ -121,6 +123,8 @@ public class Graph implements Serializable {
     public transient StreetVertexIndexService streetIndex;
 
     public transient GraphIndex index;
+
+    public transient FlexIndex flexIndex;
 
     private transient GeometryIndex geomIndex;
 
@@ -217,6 +221,12 @@ public class Graph implements Serializable {
 
     /** The difference in meters between the WGS84 ellipsoid height and geoid height at the graph's center */
     public Double ellipsoidToGeoidDifference = 0.0;
+
+    /** Whether to use flex modes */
+    public boolean useFlexService = false;
+
+    /** Areas for flex service */
+    public Map<AgencyAndId, Geometry> flexAreasById = new HashMap<>();
 
     /** Parent stops **/
     public Map<AgencyAndId, Stop> parentStopById = new HashMap<>();
@@ -747,6 +757,10 @@ public class Graph implements Serializable {
         }
         // TODO: Move this ^ stuff into the graph index
         this.index = new GraphIndex(this);
+        if (useFlexService ) {
+            this.flexIndex = new FlexIndex();
+            flexIndex.init(this);
+        }
     }
     
     /**
@@ -1111,6 +1125,15 @@ public class Graph implements Serializable {
 
     public long getTransitServiceEnds() {
         return transitServiceEnds;
+    }
+
+    public void setUseFlexService(boolean useFlexService) {
+        // when passing in graph from memory, router config had not loaded when "index()" called
+        if (useFlexService && !this.useFlexService) {
+            this.flexIndex = new FlexIndex();
+            flexIndex.init(this);
+        }
+        this.useFlexService = useFlexService;
     }
 
     public String getFeedInfo() {

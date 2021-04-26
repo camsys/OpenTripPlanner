@@ -16,6 +16,7 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.execution.ExecutorServiceExecutionStrategy;
@@ -99,6 +100,7 @@ public class GraphIndex {
     public final Map<Stop, StopCluster> stopClusterForStop = Maps.newHashMap();
     public final Map<String, StopCluster> stopClusterForId = Maps.newHashMap();
     public final Multimap<String, PathwayEdge> pathwayForElevator = ArrayListMultimap.create();
+    public final Map<AgencyAndId, Geometry> flexAreasById = Maps.newHashMap();
 
     /* Should eventually be replaced with new serviceId indexes. */
     private final CalendarService calendarService;
@@ -193,6 +195,13 @@ public class GraphIndex {
                 new ExecutorServiceExecutionStrategy(Executors.newCachedThreadPool(
                         new ThreadFactoryBuilder().setNameFormat("GraphQLExecutor-" + graph.routerId + "-%d").build()
                 )));
+
+        if (graph.flexAreasById != null) {
+            for (AgencyAndId id : graph.flexAreasById.keySet()) {
+                flexAreasById.put(id, graph.flexAreasById.get(id));
+            }
+        }
+
         LOG.info("Done indexing graph.");
     }
 

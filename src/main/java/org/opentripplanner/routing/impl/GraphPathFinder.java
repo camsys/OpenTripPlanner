@@ -29,6 +29,8 @@ import org.opentripplanner.routing.edgetype.LegSwitchingEdge;
 import org.opentripplanner.routing.edgetype.TransitBoardAlight;
 import org.opentripplanner.routing.error.PathNotFoundException;
 import org.opentripplanner.routing.error.VertexNotFoundException;
+import org.opentripplanner.routing.flex.DeviatedRouteGraphModifier;
+import org.opentripplanner.routing.flex.FlagStopGraphModifier;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.consequences.ConsequencesStrategy;
@@ -174,6 +176,20 @@ public class GraphPathFinder {
         if (options.maxWalkDistance == Double.MAX_VALUE) options.maxWalkDistance = DEFAULT_MAX_WALK;
         if (options.maxWalkDistance > CLAMP_MAX_WALK) options.maxWalkDistance = CLAMP_MAX_WALK;
 
+        if (options.modes.isTransit() && router.graph.useFlexService) {
+            // create temporary flex stops/hops (just once even if we run multiple searches)
+            FlagStopGraphModifier flagStopGraphModifier = new FlagStopGraphModifier(router.graph);
+            DeviatedRouteGraphModifier deviatedRouteGraphModifier = new DeviatedRouteGraphModifier(router.graph);
+            flagStopGraphModifier.createForwardHops(options);
+            if (options.flexUseReservationServices) {
+                deviatedRouteGraphModifier.createForwardHops(options);
+            }
+            flagStopGraphModifier.createBackwardHops(options);
+            if (options.flexUseReservationServices) {
+                deviatedRouteGraphModifier.createBackwardHops(options);
+            }
+        }
+
         long searchBeginTime = System.currentTimeMillis();
         LOG.debug("BEGIN SEARCH");
         List<GraphPath> paths = Lists.newArrayList();
@@ -233,6 +249,19 @@ public class GraphPathFinder {
                         continue;
                     else
                         options.banPath(path);
+                }
+
+                // Call-and-Ride trips should not use regular trip-banning, since call-and-ride trips can beused in
+                // multiple ways (e.g. from origin to destination, or from origin to a transfer stop.) Instead,
+                // after an itinerary which uses call-and-ride is found, reduce the allowable call-and-ride duration
+                // so that the same leg cannot be found in a subsequent search.
+                if (tripIds.size() < 2) {
+                    int duration = path.getCallAndRideDuration();
+                    if (duration > 0) { // only true if there are call-and-ride legs
+                        int constantLimit = Math.min(0, duration - options.flexReduceCallAndRideSeconds);
+                        int ratioLimit = (int) Math.round(options.flexReduceCallAndRideRatio * duration);
+                        options.flexMaxCallAndRideSeconds = Math.min(constantLimit, ratioLimit);
+                    }
                 }
 
                 // If this Path Violates the End Route Preference, Keep Looking

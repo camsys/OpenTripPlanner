@@ -29,16 +29,7 @@ import com.vividsolutions.jts.linearref.LocationIndexedLine;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import org.apache.commons.math3.util.FastMath;
-import org.onebusaway.gtfs.model.Agency;
-import org.onebusaway.gtfs.model.AgencyAndId;
-import org.onebusaway.gtfs.model.FeedInfo;
-import org.onebusaway.gtfs.model.Frequency;
-import org.onebusaway.gtfs.model.Pathway;
-import org.onebusaway.gtfs.model.Route;
-import org.onebusaway.gtfs.model.ShapePoint;
-import org.onebusaway.gtfs.model.Stop;
-import org.onebusaway.gtfs.model.StopTime;
-import org.onebusaway.gtfs.model.Trip;
+import org.onebusaway.gtfs.model.*;
 import org.onebusaway.gtfs.services.GtfsRelationalDao;
 import org.onebusaway.gtfs.services.calendar.CalendarService;
 import org.opentripplanner.common.geometry.GeometryUtils;
@@ -62,6 +53,7 @@ import org.opentripplanner.graph_builder.module.GtfsFeedId;
 import org.opentripplanner.gtfs.GtfsContext;
 import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.model.StopPattern;
+import org.opentripplanner.model.StopPatternFlexFields;
 import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.edgetype.FreeEdge;
 import org.opentripplanner.routing.edgetype.PathwayEdge;
@@ -102,41 +94,8 @@ import java.util.Map;
 // Filtering out (removing) stoptimes from a trip forces us to either have two copies of that list,
 // or do all the steps within one loop over trips. It would be clearer if there were multiple loops over the trips.
 
-/** A wrapper class for Trips that allows them to be sorted. */
-class InterliningTrip  implements Comparable<InterliningTrip> {
-    public Trip trip;
-    public StopTime firstStopTime;
-    public StopTime lastStopTime;
-    TripPattern tripPattern;
-
-    InterliningTrip(Trip trip, List<StopTime> stopTimes, TripPattern tripPattern) {
-        this.trip = trip;
-        this.firstStopTime = stopTimes.get(0);
-        this.lastStopTime = stopTimes.get(stopTimes.size() - 1);
-        this.tripPattern = tripPattern;
-    }
-
-    public int getPatternIndex() {
-        return tripPattern.getTripIndex(trip);
-    }
-    
-    @Override
-    public int compareTo(InterliningTrip o) {
-        return firstStopTime.getArrivalTime() - o.firstStopTime.getArrivalTime();
-    }
-    
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof InterliningTrip) {
-            return compareTo((InterliningTrip) o) == 0;
-        }
-        return false;
-    }
-    
-}
-
-/** 
- * This compound key object is used when grouping interlining trips together by (serviceId, blockId). 
+/**
+ * This compound key object is used when grouping interlining trips together by (serviceId, blockId).
  */
 class BlockIdAndServiceId {
     public String blockId;
@@ -146,7 +105,7 @@ class BlockIdAndServiceId {
         this.blockId = trip.getBlockId();
         this.serviceId = trip.getServiceId();
     }
-    
+
     public boolean equals(Object o) {
         if (o instanceof BlockIdAndServiceId) {
             BlockIdAndServiceId other = ((BlockIdAndServiceId) o);
@@ -160,7 +119,6 @@ class BlockIdAndServiceId {
         return blockId.hashCode() * 31 + serviceId.hashCode();
     }
 }
-
 /* TODO Move this stuff into the geometry library */
 class IndexedLineSegment {
     private static final double RADIUS = SphericalDistanceLibrary.RADIUS_OF_EARTH_IN_M;
@@ -192,8 +150,8 @@ class IndexedLineSegment {
         double bearingToCoord = bearing(start, coord);
         double bearingToEnd = bearing(start, end);
         return FastMath.asin(FastMath.sin(distanceFromStart / RADIUS)
-            * FastMath.sin(bearingToCoord - bearingToEnd))
-            * RADIUS;
+                * FastMath.sin(bearingToCoord - bearingToEnd))
+                * RADIUS;
     }
 
     double distance(Coordinate coord) {
@@ -227,8 +185,8 @@ class IndexedLineSegment {
     private double inverseAlongTrackDistance(Coordinate coord, double inverseCrossTrackError) {
         double distanceFromEnd = SphericalDistanceLibrary.fastDistance(end, coord);
         double alongTrackDistance = FastMath.acos(FastMath.cos(distanceFromEnd / RADIUS)
-            / FastMath.cos(inverseCrossTrackError / RADIUS))
-            * RADIUS;
+                / FastMath.cos(inverseCrossTrackError / RADIUS))
+                * RADIUS;
         return alongTrackDistance;
     }
 
@@ -252,8 +210,8 @@ class IndexedLineSegment {
     private double alongTrackDistance(Coordinate coord, double crossTrackError) {
         double distanceFromStart = SphericalDistanceLibrary.fastDistance(start, coord);
         double alongTrackDistance = FastMath.acos(FastMath.cos(distanceFromStart / RADIUS)
-            / FastMath.cos(crossTrackError / RADIUS))
-            * RADIUS;
+                / FastMath.cos(crossTrackError / RADIUS))
+                * RADIUS;
         return alongTrackDistance;
     }
 }
@@ -271,6 +229,54 @@ class IndexedLineSegmentComparator implements Comparator<IndexedLineSegment> {
         return (int) FastMath.signum(a.distance(coord) - b.distance(coord));
     }
 }
+
+/** A wrapper class for Trips that allows them to be sorted. */
+class InterliningTrip  implements Comparable<InterliningTrip> {
+    public Trip trip;
+    public StopTime firstStopTime;
+    public StopTime lastStopTime;
+    TripPattern tripPattern;
+
+    InterliningTrip(Trip trip, List<StopTime> stopTimes, TripPattern tripPattern) {
+        this.trip = trip;
+        this.firstStopTime = stopTimes.get(0);
+        this.lastStopTime = stopTimes.get(stopTimes.size() - 1);
+        this.tripPattern = tripPattern;
+    }
+
+    public int getPatternIndex() {
+        return tripPattern.getTripIndex(trip);
+    }
+    
+    @Override
+    public int compareTo(InterliningTrip o) {
+        return firstStopTime.getArrivalTime() - o.firstStopTime.getArrivalTime();
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof InterliningTrip) {
+            return compareTo((InterliningTrip) o) == 0;
+        }
+        return false;
+    }
+    
+}
+
+
+//class IndexedLineSegmentComparator implements Comparator<IndexedLineSegment> {
+//
+//    private Coordinate coord;
+//
+//    public IndexedLineSegmentComparator(Coordinate coord) {
+//        this.coord = coord;
+//    }
+//
+//    @Override
+//    public int compare(IndexedLineSegment a, IndexedLineSegment b) {
+//        return (int) FastMath.signum(a.distance(coord) - b.distance(coord));
+//    }
+//}
 
 /**
  * Generates a set of edges from GTFS.
@@ -294,7 +300,9 @@ public class GTFSPatternHopFactory {
     private Map<AgencyAndId, LineString> _geometriesByShapeId = new HashMap<AgencyAndId, LineString>();
 
     private Map<AgencyAndId, double[]> _distancesByShapeId = new HashMap<AgencyAndId, double[]>();
-    
+
+    private Map<String, Geometry> flexAreasById = new HashMap<>();
+
     private FareServiceFactory fareServiceFactory;
 
     private Multimap<StopPattern, TripPattern> tripPatterns = HashMultimap.create();
@@ -363,7 +371,10 @@ public class GTFSPatternHopFactory {
         loadAgencies(graph);
         // TODO: Why is there cached "data", and why are we clearing it? Due to a general lack of comments, I have no idea.
         // Perhaps it is to allow name collisions with previously loaded feeds.
-        clearCachedData(); 
+        clearCachedData();
+
+        loadFlexAreaMap();
+        loadFlexAreasIntoGraph(graph);
 
         /* Assign 0-based numeric codes to all GTFS service IDs. */
         for (AgencyAndId serviceId : _dao.getAllServiceIds()) {
@@ -435,8 +446,13 @@ public class GTFSPatternHopFactory {
                 directionId = -1;
             }
 
+            boolean hasFlexService = stopTimes.stream().anyMatch(this::stopTimeHasFlex);
+
             /* Get the existing TripPattern for this filtered StopPattern, or create one. */
-            StopPattern stopPattern = new StopPattern(stopTimes);
+            StopPattern stopPattern = new StopPattern(stopTimes, graph.deduplicator);
+            if (hasFlexService) {
+                stopPattern.setFlexFields(new StopPatternFlexFields(stopTimes, flexAreasById, graph.deduplicator));
+            }
             TripPattern tripPattern = findOrCreateTripPattern(stopPattern, trip.getRoute(), directionId);
 
             /* Create a TripTimes object for this list of stoptimes, which form one trip. */
@@ -1106,6 +1122,7 @@ public class GTFSPatternHopFactory {
         _geometriesByShapeId.clear();
         _distancesByShapeId.clear();
         _geometriesByShapeSegmentKey.clear();
+        flexAreasById.clear();
     }
 
     private void loadTransfers(Graph graph) {
@@ -1466,5 +1483,80 @@ public class GTFSPatternHopFactory {
 
     public void setMaxHopTime(long maxHopTime) {
         this.maxHopTime = maxHopTime;
+    }
+
+    private Collection<Transfer> expandTransfer (Transfer source) {
+        Stop fromStop = source.getFromStop();
+        Stop toStop = source.getToStop();
+
+        if (fromStop.getLocationType() == STOP_LOCATION_TYPE && toStop.getLocationType() == STOP_LOCATION_TYPE) {
+            // simple, no need to copy anything
+            return Arrays.asList(source);
+        } else {
+            // at least one of the stops is a parent station
+            // all the stops this transfer originates with
+            List<Stop> fromStops;
+
+            // all the stops this transfer terminates with
+            List<Stop> toStops;
+
+            if (fromStop.getLocationType() == PARENT_STATION_LOCATION_TYPE) {
+                fromStops = _dao.getStopsForStation(fromStop);
+            } else {
+                fromStops = Arrays.asList(fromStop);
+            }
+
+            if (toStop.getLocationType() == PARENT_STATION_LOCATION_TYPE) {
+                toStops = _dao.getStopsForStation(toStop);
+            } else {
+                toStops = Arrays.asList(toStop);
+            }
+
+            List<Transfer> expandedTransfers = new ArrayList<>(fromStops.size() * toStops.size());
+
+            for (Stop expandedFromStop : fromStops) {
+                for (Stop expandedToStop : toStops) {
+                    Transfer expanded = new Transfer(source);
+                    expanded.setFromStop(expandedFromStop);
+                    expanded.setToStop(expandedToStop);
+                    expandedTransfers.add(expanded);
+                }
+            }
+
+            LOG.info(
+                    "Expanded transfer between stations \"{} ({})\" and \"{} ({})\" to {} transfers between {} and {} stops",
+                    fromStop.getName(),
+                    fromStop.getId(),
+                    toStop.getName(),
+                    toStop.getId(),
+                    expandedTransfers.size(),
+                    fromStops.size(),
+                    toStops.size()
+            );
+
+            return expandedTransfers;
+        }
+    }
+    private void loadFlexAreaMap() {
+        for (Area flexArea : _dao.getAllAreas()) {
+            Geometry geometry = GeometryUtils.parseWkt(flexArea.getWkt());
+            flexAreasById.put(flexArea.getAreaId(), geometry);
+        }
+    }
+
+    private void loadFlexAreasIntoGraph(Graph graph) {
+        String agencyId = _dao.getAllAgencies().stream().findFirst().get().getId();
+        for (Map.Entry<String, Geometry> entry : flexAreasById.entrySet()) {
+            AgencyAndId id = new AgencyAndId(agencyId, entry.getKey());
+            graph.flexAreasById.put(id, entry.getValue());
+        }
+    }
+
+    private boolean stopTimeHasFlex(StopTime st) {
+        return (st.getContinuousPickup() != 1 && st.getContinuousPickup() != StopTime.MISSING_VALUE)
+                || (st.getContinuousDropOff() != 1 && st.getContinuousDropOff() != StopTime.MISSING_VALUE)
+                || st.getStartServiceArea() != null || st.getEndServiceArea() != null
+                || st.getStartServiceAreaRadius() != StopTime.MISSING_VALUE
+                || st.getEndServiceAreaRadius() != StopTime.MISSING_VALUE;
     }
 }

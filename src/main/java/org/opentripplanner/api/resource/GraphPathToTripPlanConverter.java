@@ -33,6 +33,8 @@ import org.opentripplanner.routing.alertpatch.Alert;
 import org.opentripplanner.routing.alertpatch.AlertPatch;
 import org.opentripplanner.routing.core.*;
 import org.opentripplanner.routing.edgetype.*;
+import org.opentripplanner.routing.edgetype.flex.PartialPatternHop;
+import org.opentripplanner.routing.edgetype.flex.TemporaryDirectPatternHop;
 import org.opentripplanner.routing.error.TrivialPathException;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
@@ -240,6 +242,12 @@ public abstract class GraphPathToTripPlanConverter {
         return itinerary;
     }
 
+    private static Calendar makeCalendar(TimeZone timeZone, long timeMillis) {
+        Calendar calendar = Calendar.getInstance(timeZone);
+        calendar.setTimeInMillis(timeMillis);
+        return calendar;
+    }
+
     private static Calendar makeCalendar(State state) {
         RoutingRequest request = state.getOptions();
         return request != null ? makeCalendar(state, request.getOrigTravelDateTime(), request.getDateTime()) :
@@ -296,7 +304,7 @@ public abstract class GraphPathToTripPlanConverter {
      * @param edges The array of input edges
      * @return The coordinates of the points on the edges
      */
-    private static CoordinateArrayListSequence makeCoordinates(Edge[] edges) {
+    public static CoordinateArrayListSequence makeCoordinates(Edge[] edges) {
         CoordinateArrayListSequence coordinates = new CoordinateArrayListSequence();
 
         for (Edge edge : edges) {
@@ -954,6 +962,11 @@ public abstract class GraphPathToTripPlanConverter {
             leg.tripShortName = trip.getTripShortName();
             leg.tripBlockId = trip.getBlockId();
             leg.peakOffpeak = trip.getPeakOffpeak();
+            leg.flexDrtAdvanceBookMin = trip.getDrtAdvanceBookMin();
+            leg.flexDrtPickupMessage = trip.getDrtPickupMessage();
+            leg.flexDrtDropOffMessage = trip.getDrtDropOffMessage();
+            leg.flexFlagStopPickupMessage = trip.getContinuousPickupMessage();
+            leg.flexFlagStopDropOffMessage = trip.getContinuousDropOffMessage();
 
             if (serviceDay != null) {
                 leg.serviceDate = serviceDay.getServiceDate().getAsString();
@@ -968,6 +981,30 @@ public abstract class GraphPathToTripPlanConverter {
 
             if (tripTimes.isFrequencyBased()) {
                 leg.frequencyDetail = new FrequencyDetail(tripTimes.getFrequencyEntry());
+            }
+
+            Edge edge = states[states.length - 1].backEdge;
+            if (edge instanceof TemporaryDirectPatternHop) {
+                leg.callAndRide = true;
+            }
+            if (edge instanceof PartialPatternHop) {
+                PartialPatternHop hop = (PartialPatternHop) edge;
+                int directTime = hop.getDirectVehicleTime();
+                TripTimes tt = states[states.length - 1].getTripTimes();
+                //TODO getDemandResponseMaxTime for RTD Flex currently using directTime
+                int maxTime = directTime;
+                int avgTime = directTime;
+                int delta = maxTime - avgTime;
+                if (directTime != 0 && delta > 0) {
+                    if (hop.isDeviatedRouteBoard()) {
+                        long maxStartTime = leg.startTime.getTimeInMillis() + (delta * 1000);
+                        leg.flexCallAndRideMaxStartTime = makeCalendar(leg.startTime.getTimeZone(), maxStartTime);
+                    }
+                    if (hop.isDeviatedRouteAlight()) {
+                        long minEndTime = leg.endTime.getTimeInMillis() - (delta * 1000);
+                        leg.flexCallAndRideMinEndTime = makeCalendar(leg.endTime.getTimeZone(), minEndTime);
+                    }
+                }
             }
         }
     }
