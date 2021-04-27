@@ -27,24 +27,6 @@ public class FlexPatternHop extends PatternHop {
     }
 
     /**
-     * Return the permissions associated with unscheduled pickups in between the endpoints of this
-     * PatternHop. This relates to flag-stops in the GTFS-Flex specification; if flex and/or flag
-     * stops are not enabled, this will always be RequestStops.NO.
-     */
-    public RequestStops getRequestPickup() {
-        return requestPickup;
-    }
-
-    /**
-     * Return the permissions associated with unscheduled dropoffs in between the endpoints of this
-     * PatternHop. This relates to flag-stops in the GTFS-Flex specification; if flex and/or flag
-     * stops are not enabled, this will always be RequestStops.NO.
-     */
-    public RequestStops getRequestDropoff() {
-        return requestDropoff;
-    }
-
-    /**
      * Return whether flag stops are enabled in this hop. Flag stops are enabled if either pickups
      * or dropoffs at unscheduled locations can be requested. This is a GTFS-Flex feature.
      */

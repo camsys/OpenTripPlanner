@@ -190,6 +190,20 @@ public class GraphPathFinder {
             }
         }
 
+        if (options.modes.isTransit() && router.graph.useFlexService) {
+            // create temporary flex stops/hops (just once even if we run multiple searches)
+            FlagStopGraphModifier flagStopGraphModifier = new FlagStopGraphModifier(router.graph);
+            DeviatedRouteGraphModifier deviatedRouteGraphModifier = new DeviatedRouteGraphModifier(router.graph);
+            flagStopGraphModifier.createForwardHops(options);
+            if (options.flexUseReservationServices) {
+                deviatedRouteGraphModifier.createForwardHops(options);
+            }
+            flagStopGraphModifier.createBackwardHops(options);
+            if (options.flexUseReservationServices) {
+                deviatedRouteGraphModifier.createBackwardHops(options);
+            }
+        }
+
         long searchBeginTime = System.currentTimeMillis();
         LOG.debug("BEGIN SEARCH");
         List<GraphPath> paths = Lists.newArrayList();

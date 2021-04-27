@@ -578,10 +578,10 @@ public class RoutingRequest implements Cloneable, Serializable {
      * hops, in order to reduce the amount of hops created when they redundant with regular
      * service.
      */
-    public int flexMinPartialHopLength = 400;
+    public int flexMinPartialHopLength = 150;
 
     /** Minimum length of partial hop edges */
-    public int minPartialHopLength = 400;
+    public int minPartialHopLength = 150;
 
     /**
      * If true, the remaining weight heuristic is disabled. Currently only implemented for the long
@@ -644,7 +644,7 @@ public class RoutingRequest implements Cloneable, Serializable {
     public boolean longDistance = false;
 
     /** Should traffic congestion be considered when driving? */
-    public boolean useTraffic = true;
+    public boolean useTraffic = false;
 
     /** The function that compares paths converging on the same vertex to decide which ones continue to be explored. */
     public DominanceFunction dominanceFunction = new DominanceFunction.Pareto();

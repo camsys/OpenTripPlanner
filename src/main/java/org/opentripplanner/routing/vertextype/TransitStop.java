@@ -61,7 +61,11 @@ public class TransitStop extends TransitStationStop {
         isEntrance = stop.getLocationType() == 2;
         isExtendedLocationType = stop.getLocationType() > 2;
         //Adds this vertex into graph envelope so that we don't need to loop over all vertices
-        graph.expandToInclude(stop.getLon(), stop.getLat());
+        //Adds this vertex into graph envelope so that we don't need to loop over all vertices
+        // Temporary transit stops, needed for GTFS-Flex support, will not be added to the envelope.
+        if (graph != null) {
+            graph.expandToInclude(stop.getLon(), stop.getLat());
+        }
     }
 
     public boolean hasWheelchairEntrance() {

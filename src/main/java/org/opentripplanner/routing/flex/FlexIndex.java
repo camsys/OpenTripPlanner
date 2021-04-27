@@ -37,6 +37,7 @@ public class FlexIndex {
     private final Multimap<Edge, FlexPatternHop> hopsForEdge = HashMultimap.create();
 
     public void init(Graph graph) {
+
         LOG.info("initializing hops-for-edge map...");
         initializeHopsForEdgeMap(graph);
     }
@@ -56,6 +57,11 @@ public class FlexIndex {
         StreetMatcher matcher = new StreetMatcher(graph);
         LOG.info("Finding corresponding street edges for trip patterns...");
         for (TripPattern pattern : graph.index.patternForId.values()) {
+            //TODO remove this for RTD Flex
+            if (pattern.route.getShortName().contains("FX")) {
+                int j = 0;
+            }
+
             if (pattern.hasFlexService()) {
                 LOG.debug("Matching {}", pattern);
                 for(PatternHop ph : pattern.getPatternHops()) {

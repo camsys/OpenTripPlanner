@@ -26,6 +26,7 @@ import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.spt.GraphPath;
+import org.opentripplanner.routing.spt.ShortestPathTree;
 import org.opentripplanner.routing.vertextype.PatternArriveVertex;
 import org.opentripplanner.routing.vertextype.PatternDepartVertex;
 import org.opentripplanner.routing.vertextype.PatternStopVertex;
@@ -261,7 +262,12 @@ public abstract class GtfsFlexGraphModifier {
 
 
         Vertex initVertex = rr.arriveBy ? rr.rctx.toVertex : rr.rctx.fromVertex;
-        gd.getShortestPathTree(new State(initVertex, rr));
+        ShortestPathTree spt = gd.getShortestPathTree(new State(initVertex, rr));
+
+        //TODO remove this
+        if(spt != null) {
+            int i = 0;
+        }
 
         return patternHopStateMap.entrySet()
                 .stream()
@@ -322,9 +328,9 @@ public abstract class GtfsFlexGraphModifier {
 
         TemporaryPartialPatternHop hop = makeHopNewFrom(rr, state, originalPatternHop, patternDepartVertex, flagStop);
         if (hop == null || hop.isTrivial(rr)) {
-            if (hop != null) {
-                removeEdge(hop);
-            }
+//            if (hop != null) {
+//                removeEdge(hop);
+//            }
             return;
         }
         createBoardEdge(rr, transitStopDepart, patternDepartVertex, hop);

@@ -531,6 +531,10 @@ public class TripPattern implements Cloneable, Serializable {
                 hop.setRequestDropoff(flexFields.continuousDropOff[stop]);
                 hop.setServiceAreaRadius(flexFields.serviceAreaRadius[stop]);
                 hop.setServiceArea(flexFields.serviceAreas[stop]);
+                //TODO see if there is a better fix for RTD Flex
+                if(hop.getServiceArea() == null){
+                    hop.setServiceArea(flexFields.serviceAreas[stop + 1]);
+                }
                 hopEdges[stop] = hop;
             } else {
                 hopEdges[stop] = new PatternHop(pdv0, pav1, s0, s1, stop);

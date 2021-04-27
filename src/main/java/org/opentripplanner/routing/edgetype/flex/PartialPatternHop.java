@@ -195,7 +195,8 @@ public class PartialPatternHop extends FlexPatternHop {
                     getOriginalHop().getBeginStop(), getOriginalHop().getEndStop());
             return true;
         }
-        return length + 50 >= parentLength;
+        //TODO fix this for RTD
+        return false;
     }
 
     /**
