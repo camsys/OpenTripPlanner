@@ -404,6 +404,29 @@ public class RoutingContext implements Cloneable {
         serviceDays.sort(Comparator.comparing(ServiceDay::getServiceDate));
     }
 
+    // utility method - this should be moved somewhere it makes sense
+    public static ArrayList<ServiceDay> getServiceDays(Graph graph, long time) {
+        Calendar c = Calendar.getInstance();
+        c.setTime(new Date(time * 1000));
+        c.setTimeZone(graph.getTimeZone());
+
+        final ServiceDate serviceDate = new ServiceDate(c);
+        ArrayList<ServiceDay> serviceDays = new ArrayList<ServiceDay>(3);
+
+        CalendarService calendarService = graph.getCalendarService();
+        if (calendarService == null)
+            return null;
+        for (String feedId : graph.getFeedIds()) {
+            for (Agency agency : graph.getAgencies(feedId)) {
+                addIfNotExists(serviceDays, new ServiceDay( graph, serviceDate.previous(), calendarService, agency.getId()));
+                addIfNotExists(serviceDays, new ServiceDay(graph, serviceDate, calendarService, agency.getId()));
+                addIfNotExists(serviceDays, new ServiceDay(graph, serviceDate.next(),
+                        calendarService, agency.getId()));
+            }
+        }
+        return serviceDays;
+    }
+
     private static <T> void addIfNotExists(ArrayList<T> list, T item) {
         if (!list.contains(item)) {
             list.add(item);
