@@ -137,7 +137,7 @@ public class GraphPathFinder {
          */
         if (options.maxWalkDistance == Double.MAX_VALUE) options.maxWalkDistance = DEFAULT_MAX_WALK;
         if (options.maxWalkDistance > CLAMP_MAX_WALK) options.maxWalkDistance = CLAMP_MAX_WALK;
-        if (options.modes.isTransit() && router.graph.useFlexService) {
+        if (options.modes.isTransit() && router.graph.useFlexService && (options.flexUseReservationServices || options.flexUseReservationServices) ) {
             // create temporary flex stops/hops (just once even if we run multiple searches)
             FlagStopGraphModifier flagStopGraphModifier = new FlagStopGraphModifier(router.graph);
             DeviatedRouteGraphModifier deviatedRouteGraphModifier = new DeviatedRouteGraphModifier(router.graph);
