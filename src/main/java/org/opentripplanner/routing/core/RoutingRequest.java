@@ -968,6 +968,14 @@ public class RoutingRequest implements Cloneable, Serializable {
         this.to = GenericLocation.fromOldStyleString(to);
     }
 
+    public void setFrom(double lat, double lon) {
+        this.from = new GenericLocation(lat, lon);
+    }
+
+    public void setTo(double lat, double lon) {
+        this.to = new GenericLocation(lat, lon);
+    }
+
     /**
      * Clear the allowed modes.
      */

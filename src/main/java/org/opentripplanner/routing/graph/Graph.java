@@ -23,6 +23,7 @@ import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.joda.time.DateTime;
 import org.objenesis.strategy.SerializingInstantiatorStrategy;
 import org.opentripplanner.calendar.impl.CalendarServiceImpl;
+import org.opentripplanner.graph_builder.model.GraphVersion;
 import org.opentripplanner.model.*;
 import org.opentripplanner.model.calendar.CalendarServiceData;
 import org.opentripplanner.model.calendar.ServiceDate;
@@ -231,6 +232,8 @@ public class Graph implements Serializable {
 
     /** Areas for flex service */
     public Map<FeedScopedId, Geometry> flexAreasById = new HashMap<>();
+
+    public GraphVersion graphVersion = null;
 
     public Graph(Graph basedOn) {
         this();
@@ -1118,5 +1121,21 @@ public class Graph implements Serializable {
             flexIndex.init(this);
         }
         this.useFlexService = useFlexService;
+    }
+
+    public void addLandmark(Landmark landmark) {
+        landmarksByName.put(landmark.getName(), landmark);
+    }
+
+    public void setGraphVersion(GraphVersion gi) {
+        if (gi == null) {
+            // default if not found
+            gi = new GraphVersion();
+            gi.setCreatedDate(new Date());
+        }
+        graphVersion = gi;
+    }
+    public GraphVersion getGraphVersion() {
+        return graphVersion;
     }
 }
