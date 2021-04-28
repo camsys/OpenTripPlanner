@@ -111,7 +111,9 @@ public class AStar {
         // Initializing the bidirectional heuristic is a pretty complicated operation that involves searching through
         // the streets around the origin and destination.
         runState.heuristic.initialize(runState.options, abortTime);
-        if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime) {
+        //TODO remove this for RTD Flex
+        boolean should_abort = false;
+        if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime && should_abort) {
             LOG.warn("Timeout during initialization of goal direction heuristic.");
             options.rctx.debugOutput.timedOut = true;
             runState = null; // Search timed out
@@ -136,6 +138,9 @@ public class AStar {
     }
 
     boolean iterate(){
+        //TODO delete this RTD
+        verbose = true;
+
         // print debug info
         if (verbose) {
             double w = runState.pq.peek_min_key();
@@ -229,7 +234,9 @@ public class AStar {
             /*
              * Terminate based on timeout?
              */
-            if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime) {
+            //TODO DELETE THIS
+            boolean shouldAbort = false;
+            if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime&& shouldAbort) {
                 LOG.warn("Search timeout. origin={} target={}", runState.rctx.origin, runState.rctx.target);
                 // Rather than returning null to indicate that the search was aborted/timed out,
                 // we instead set a flag in the routing context and return the SPT anyway. This

@@ -452,6 +452,12 @@ public class OpenStreetMapModule implements GraphBuilderModule {
                 osmId = area.parent.getId();
                 if (creativeName == null || area.parent.getTag("name") != null)
                     creativeName = wayPropertySet.getCreativeNameForWay(area.parent);
+                    //TODO Remove this
+                    String stringName = creativeName.toString();
+                    if(stringName.contains("Arapahoe") || stringName.contains("Southmoor") ){
+                        int i = 0;
+                    }
+
                 for (Ring ring : area.outermostRings) {
                     for (OSMNode node : ring.nodes) {
                         envelope.expandToInclude(new Coordinate(node.lon, node.lat));

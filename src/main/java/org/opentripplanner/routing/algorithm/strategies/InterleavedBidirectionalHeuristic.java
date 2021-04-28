@@ -331,28 +331,30 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
             pq.insert(initState, 0);
         }
 
-//        if(fromTarget) {
-//            // Add all the targets for trips with multiple possible targets.
+        if(fromTarget) {
+            // Add all the targets for trips with multiple possible targets.
 //            for (int i = 0; i < rr.rctx.targets.size(); i++) {
-//                Vertex anotherVertex = rr.rctx.targets.get(i);
-//                State anotherState = new State(anotherVertex, rr);
-//                pq.insert(anotherState, 0);
+                Vertex anotherVertex = rr.rctx.target;
+                State anotherState = new State(anotherVertex, rr);
+                pq.insert(anotherState, 0);
 //            }
-//        }
-//        else{
-//            // Add all the origins for trips with multiple possible targets.
+        }
+        else{
+            // Add all the origins for trips with multiple possible targets.
 //            for (int i = 0; i < rr.rctx.origins.size(); i++) {
-//                Vertex anotherVertex = rr.rctx.origins.get(i);
-//                State anotherState = new State(anotherVertex, rr);
-//                pq.insert(anotherState, 0);
+                Vertex anotherVertex = rr.rctx.origin;
+                State anotherState = new State(anotherVertex, rr);
+                pq.insert(anotherState, 0);
 //            }
-//        }
+        }
 
         // override is irrelevant if not defined in request
         boolean foundOverrideStop = routingRequest.kissAndRideOverrides.isEmpty();
 
         while ( ! pq.empty()) {
-            if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime) {
+            //TODO remove this
+            boolean shouldAbort = false;
+            if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime && shouldAbort) {
                 return null;
             }
             State s = pq.extract_min();
