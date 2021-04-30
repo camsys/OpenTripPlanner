@@ -92,6 +92,12 @@ public class TripTimeShort {
     /** direction ID for the trip */
     public String directionId;
 
+    public String headsign;
+    public int continuousPickup;
+    public int continuousDropOff;
+    public double serviceAreaRadius;
+    public String serviceArea;
+
     /**
      * This is stop-specific, so the index i is a stop index, not a hop index.
      */
@@ -109,6 +115,11 @@ public class TripTimeShort {
         realtime           = !tt.isScheduled();
         realtimeState      = tt.getRealTimeState();
         blockId            = tt.trip.getBlockId();
+        headsign           = tt.getHeadsign(i);
+        continuousPickup   = tt.getContinuousPickup(i);
+        continuousDropOff  = tt.getContinuousDropOff(i);
+        serviceAreaRadius  = tt.getServiceAreaRadius(i);
+        serviceArea        = tt.getServiceArea(i);
         tripHeadsign       = tt.trip.getTripHeadsign();
         stopHeadsign       = tt.hasStopHeadsigns() ? tt.getHeadsign(i) : null;
         track              = tt.getTrack(i);

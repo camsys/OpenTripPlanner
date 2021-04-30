@@ -18,6 +18,7 @@ import com.beust.jcommander.internal.Sets;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
 import org.onebusaway.gtfs.model.Agency;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.FeedInfo;
@@ -27,6 +28,7 @@ import org.onebusaway.gtfs.model.Trip;
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.opentripplanner.common.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.gtfs.GtfsLibrary;
+import org.opentripplanner.index.model.AreaShort;
 import org.opentripplanner.index.model.PatternDetail;
 import org.opentripplanner.index.model.PatternShort;
 import org.opentripplanner.index.model.RouteShort;
@@ -38,6 +40,7 @@ import org.opentripplanner.index.model.TripShort;
 import org.opentripplanner.index.model.TripTimeShort;
 import org.opentripplanner.model.Landmark;
 import org.opentripplanner.profile.StopCluster;
+import org.opentripplanner.routing.edgetype.SimpleTransfer;
 import org.opentripplanner.routing.edgetype.Timetable;
 import org.opentripplanner.routing.edgetype.TransferEdge;
 import org.opentripplanner.routing.edgetype.TripPattern;
@@ -678,6 +681,26 @@ public class IndexAPI {
             response.add(new StopShort(stop.getStop()));
         }
         return Response.status(Status.OK).entity(response).build();
+    }
+
+    /** Return all area IDs. */
+    @GET
+    @Path("/areas")
+    public Response getAllAreas() {
+        List<AgencyAndId> ids = new ArrayList<>(index.areasById.keySet());
+        return Response.status(Status.OK).entity(ids).build();
+    }
+
+    /** Return a specific area given an ID in Agency:ID format. */
+    @GET
+    @Path("/areas/{id}")
+    public Response getAreaIdByFeedId(@PathParam("id") String areaIdString) {
+        AgencyAndId id = GtfsLibrary.convertIdFromString(areaIdString);
+        Geometry area = index.areasById.get(id);
+        if (area == null) {
+            return Response.status(Status.NOT_FOUND).build();
+        }
+        return Response.status(Status.OK).entity(new AreaShort(id, area)).build();
     }
 
     @POST

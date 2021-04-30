@@ -32,6 +32,7 @@ import org.apache.commons.math3.util.FastMath;
 import org.onebusaway.gtfs.model.Agency;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.FeedInfo;
+import org.onebusaway.gtfs.model.Area;
 import org.onebusaway.gtfs.model.Frequency;
 import org.onebusaway.gtfs.model.Pathway;
 import org.onebusaway.gtfs.model.Route;
@@ -294,7 +295,9 @@ public class GTFSPatternHopFactory {
     private Map<AgencyAndId, LineString> _geometriesByShapeId = new HashMap<AgencyAndId, LineString>();
 
     private Map<AgencyAndId, double[]> _distancesByShapeId = new HashMap<AgencyAndId, double[]>();
-    
+
+    private Map<String, Geometry> _areasById = new HashMap<>();
+
     private FareServiceFactory fareServiceFactory;
 
     private Multimap<StopPattern, TripPattern> tripPatterns = HashMultimap.create();
@@ -364,6 +367,9 @@ public class GTFSPatternHopFactory {
         // TODO: Why is there cached "data", and why are we clearing it? Due to a general lack of comments, I have no idea.
         // Perhaps it is to allow name collisions with previously loaded feeds.
         clearCachedData(); 
+
+        loadAreaMap();
+        loadAreasIntoGraph(graph);
 
         /* Assign 0-based numeric codes to all GTFS service IDs. */
         for (AgencyAndId serviceId : _dao.getAllServiceIds()) {
@@ -436,7 +442,7 @@ public class GTFSPatternHopFactory {
             }
 
             /* Get the existing TripPattern for this filtered StopPattern, or create one. */
-            StopPattern stopPattern = new StopPattern(stopTimes);
+            StopPattern stopPattern = new StopPattern(stopTimes, _areasById::get);
             TripPattern tripPattern = findOrCreateTripPattern(stopPattern, trip.getRoute(), directionId);
 
             /* Create a TripTimes object for this list of stoptimes, which form one trip. */
@@ -1106,6 +1112,7 @@ public class GTFSPatternHopFactory {
         _geometriesByShapeId.clear();
         _distancesByShapeId.clear();
         _geometriesByShapeSegmentKey.clear();
+        _areasById.clear();
     }
 
     private void loadTransfers(Graph graph) {
@@ -1330,10 +1337,18 @@ public class GTFSPatternHopFactory {
         StopTime prev = null;
         Iterator<StopTime> it = stopTimes.iterator();
         TIntList stopSequencesRemoved = new TIntArrayList();
+        double serviceAreaRadius = 0.0d;
+        String serviceAreaWkt = null;
         while (it.hasNext()) {
             StopTime st = it.next();
+            if (st.getStartServiceAreaRadius() != StopTime.MISSING_VALUE) {
+                serviceAreaRadius = st.getStartServiceAreaRadius();
+            }
+            if (st.getStartServiceArea() != null) {
+                serviceAreaWkt = st.getStartServiceArea().getWkt();
+            }
             if (prev != null) {
-                if (prev.getStop().equals(st.getStop())) {
+                if (prev.getStop().equals(st.getStop()) && serviceAreaRadius == 0.0d && serviceAreaWkt == null) {
                     // OBA gives us unmodifiable lists, but we have copied them.
 
                     // Merge the two stop times, making sure we're not throwing out a stop time with times in favor of an
@@ -1351,6 +1366,12 @@ public class GTFSPatternHopFactory {
                 }
             }
             prev = st;
+            if (st.getEndServiceAreaRadius() != StopTime.MISSING_VALUE) {
+                serviceAreaRadius = 0.0d;
+            }
+            if (st.getEndServiceArea() != null) {
+                serviceAreaWkt = null;
+            }
         }
         return stopSequencesRemoved;
     }
@@ -1450,11 +1471,9 @@ public class GTFSPatternHopFactory {
         this.context = context;
     }
 
-
     public double getMaxStopToShapeSnapDistance() {
         return maxStopToShapeSnapDistance;
     }
-
 
     public void setMaxStopToShapeSnapDistance(double maxStopToShapeSnapDistance) {
         this.maxStopToShapeSnapDistance = maxStopToShapeSnapDistance;
@@ -1466,5 +1485,18 @@ public class GTFSPatternHopFactory {
 
     public void setMaxHopTime(long maxHopTime) {
         this.maxHopTime = maxHopTime;
+    }
+    private void loadAreaMap() {
+        for (Area area : _dao.getAllAreas()) {
+            Geometry geometry = GeometryUtils.parseWkt(area.getWkt());
+            _areasById.put(area.getAreaId(), geometry);
+        }
+    }
+
+    private void loadAreasIntoGraph(Graph graph) {
+        for (Map.Entry<String, Geometry> entry : _areasById.entrySet()) {
+            AgencyAndId id = new AgencyAndId(_feedId.getId(), entry.getKey());
+            graph.areasById.put(id, entry.getValue());
+        }
     }
 }

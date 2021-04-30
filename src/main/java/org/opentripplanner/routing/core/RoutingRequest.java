@@ -106,7 +106,8 @@ public class RoutingRequest implements Cloneable, Serializable {
     public double maxWalkDistance = Double.MAX_VALUE;
 
     /**
-     * Maximum walking distance for heuristic.
+     * The maximum distance (in meters) the heuristic should explore to find transit access/egress.
+     * Defaults to unlimited.
      */
     public double maxWalkDistanceHeuristic = Double.MAX_VALUE;
 
@@ -465,6 +466,57 @@ public class RoutingRequest implements Cloneable, Serializable {
     public boolean disableRemainingWeightHeuristic = false;
 
     /**
+     * Extra penalty added for flag-stop boarding/alighting
+     */
+    public int flagStopExtraPenalty = 90;
+
+    /**
+     * Extra penalty added for deviated-route boarding/alighting
+     */
+    public int deviatedRouteExtraPenalty = 180;
+
+    /**
+     * Reluctance for call-n-ride
+     */
+    public double callAndRideReluctance = 2.0;
+
+    /**
+     * Total time we can spend on call-n-ride legs. After an itinerary is found, this value is
+     * reduced to min(duration - options.reduceCallAndRideSeconds, duration * reduceCallAndRideRatio)
+     */
+    public int maxCallAndRideSeconds = Integer.MAX_VALUE;
+
+    /**
+     * Seconds to reduce maxCallAndRideSeconds after a complete call-n-ride itinerary
+     */
+    public int reduceCallAndRideSeconds = 15 * 60;
+
+    /**
+     * Percentage to reduce maxCallAndRideSeconds after a complete call-n-ride itinerary
+     */
+    public double reduceCallAndRideRatio = 0.5;
+
+    /**
+     * Size of flag stop buffer in UI
+     */
+    public double flagStopBufferSize;
+
+    /**
+     * Whether to use reservation-based services
+     */
+    public boolean useReservationServices = true;
+
+    /**
+     * Whether to use eligibility-based services
+     */
+    public boolean useEligibilityServices = true;
+
+    /**
+     * Whether to ignore DRT time limits
+     */
+    public boolean ignoreDrtAdvanceBookMin = false;
+
+    /**
      * The routing context used to actually carry out this search. It is important to build States from TraverseOptions
      * rather than RoutingContexts,and just keep a reference to the context in the TraverseOptions, rather than using
      * RoutingContexts for everything because in some testing and graph building situations we need to build a bunch of
@@ -519,7 +571,7 @@ public class RoutingRequest implements Cloneable, Serializable {
     public boolean longDistance = false;
 
     /** Should traffic congestion be considered when driving? */
-    public boolean useTraffic = true;
+    public boolean useTraffic = false;
 
     /** The function that compares paths converging on the same vertex to decide which ones continue to be explored. */
     public DominanceFunction dominanceFunction = new DominanceFunction.Pareto();
@@ -532,6 +584,14 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     /** Whether to apply the ellipsoid->geoid offset to all elevations in the response */
     public boolean geoidElevation = false;
+
+    public boolean enterStationsWithCar = false;
+
+    /** Totally exclude walking from trip plan results */
+    public boolean excludeWalking = false;
+
+    /** Minimum length of partial hop edges */
+    public int minPartialHopLength = 400;
 
     /** Whether to find impacts of realtime alerts */
     public boolean findRealtimeConsequences = true;
@@ -562,6 +622,8 @@ public class RoutingRequest implements Cloneable, Serializable {
      * This is used so that TrivialPathException is thrown if origin and destination search would split the same edge
      */
     private StreetEdge splitEdge = null;
+
+    public long clockTimeSec;
 
     /** Should attempt to determine when the enxt bus goes through this stop. */
     public boolean showNextFromDeparture = false;
@@ -682,8 +744,6 @@ public class RoutingRequest implements Cloneable, Serializable {
         this.wheelchairAccessible = wheelchairAccessible;
     }
 
-
-
     /**
      * only allow traversal by the specified mode; don't allow walking bikes. This is used during contraction to reduce the number of possible paths.
      */
@@ -795,7 +855,7 @@ public class RoutingRequest implements Cloneable, Serializable {
         if (s != null && !s.equals(""))
             unpreferredAgencies = new HashSet<String>(Arrays.asList(s.split(",")));
     }
-
+    
     public void setUnpreferredRoutes(String s) {
         if (s != null && !s.equals(""))
             unpreferredRoutes = RouteMatcher.parse(s);
@@ -1119,7 +1179,7 @@ public class RoutingRequest implements Cloneable, Serializable {
         this.rctx = new RoutingContext(this, graph, from, to);
         this.rctx.originBackEdge = fromBackEdge;
     }
-
+    
     public void setRoutingContext(Graph graph, Vertex from, Vertex to) {
         setRoutingContext(graph, null, from, to);
     }
@@ -1176,6 +1236,7 @@ public class RoutingRequest implements Cloneable, Serializable {
                 && wheelchairAccessible == other.wheelchairAccessible
                 && optimize.equals(other.optimize)
                 && maxWalkDistance == other.maxWalkDistance
+                && maxWalkDistanceHeuristic == other.maxWalkDistanceHeuristic
                 && maxTransferWalkDistance == other.maxTransferWalkDistance
                 && maxPreTransitTime == other.maxPreTransitTime
                 && transferPenalty == other.transferPenalty
@@ -1240,6 +1301,19 @@ public class RoutingRequest implements Cloneable, Serializable {
                 && pathIgnoreStrategy.equals(pathIgnoreStrategy)
                 && useTransitServiceExtension == other.useTransitServiceExtension
                 && farEndpointsException == other.farEndpointsException;
+                && geoidElevation == other.geoidElevation
+                && flagStopExtraPenalty == other.flagStopExtraPenalty
+                && deviatedRouteExtraPenalty == other.deviatedRouteExtraPenalty
+                && callAndRideReluctance == other.callAndRideReluctance
+                && reduceCallAndRideSeconds == other.reduceCallAndRideSeconds
+                && reduceCallAndRideRatio == other.reduceCallAndRideRatio
+                && flagStopBufferSize == other.flagStopBufferSize
+                && useReservationServices == other.useReservationServices
+                && useEligibilityServices == other.useEligibilityServices
+                && ignoreDrtAdvanceBookMin == other.ignoreDrtAdvanceBookMin
+                && excludeWalking == other.excludeWalking
+                && minPartialHopLength == other.minPartialHopLength
+                && clockTimeSec == other.clockTimeSec;
     }
 
     /**
@@ -1253,6 +1327,7 @@ public class RoutingRequest implements Cloneable, Serializable {
                 + (int) (worstTime & 0xffffffff) + modes.hashCode()
                 + (arriveBy ? 8966786 : 0) + (wheelchairAccessible ? 731980 : 0)
                 + optimize.hashCode() + new Double(maxWalkDistance).hashCode()
+                + new Double(maxWalkDistanceHeuristic).hashCode()
                 + new Double(maxTransferWalkDistance).hashCode()
                 + new Double(transferPenalty).hashCode() + new Double(maxSlope).hashCode()
                 + new Double(walkReluctance).hashCode() + new Double(waitReluctance).hashCode() + new Double(carReluctance).hashCode()
@@ -1287,7 +1362,21 @@ public class RoutingRequest implements Cloneable, Serializable {
                 + new Double(tripShownRangeTime).hashCode() * 790052909
                 + pathIgnoreStrategy.hashCode() * 1301081
                 + Boolean.hashCode(useTransitServiceExtension) * 1300931
-                + Boolean.hashCode(farEndpointsException) * 538799;
+                + Boolean.hashCode(farEndpointsException) * 538799
+                + new Boolean(useTraffic).hashCode() * 10169
+                + Integer.hashCode(flagStopExtraPenalty) * 179424691
+                + Integer.hashCode(deviatedRouteExtraPenalty) *  7424299
+                + Double.hashCode(callAndRideReluctance) * 86666621
+                + Integer.hashCode(maxCallAndRideSeconds) * 9994393
+                + Integer.hashCode(reduceCallAndRideSeconds) * 92356763
+                + Double.hashCode(reduceCallAndRideRatio) *  171157957
+                + Double.hashCode(flagStopBufferSize) * 803989
+                + Boolean.hashCode(useReservationServices) * 92429033
+                + Boolean.hashCode(useEligibilityServices) * 7916959
+                + Boolean.hashCode(ignoreDrtAdvanceBookMin) * 179992387
+                + Boolean.hashCode(excludeWalking) * 989684221
+                + Integer.hashCode(minPartialHopLength) * 15485863
+                + Long.hashCode(clockTimeSec) * 833389;
         if (batch) {
             hashCode *= -1;
             // batch mode, only one of two endpoints matters
@@ -1636,5 +1725,9 @@ public class RoutingRequest implements Cloneable, Serializable {
     public void addPlanAlert(Alert alert) {
         if (!planAlerts.contains(alert))
             planAlerts.add(alert);
+    }
+
+    public void resetClockTime() {
+        this.clockTimeSec = System.currentTimeMillis() / 1000;
     }
 }

@@ -29,6 +29,8 @@ import org.opentripplanner.routing.edgetype.LegSwitchingEdge;
 import org.opentripplanner.routing.edgetype.TransitBoardAlight;
 import org.opentripplanner.routing.error.PathNotFoundException;
 import org.opentripplanner.routing.error.VertexNotFoundException;
+import org.opentripplanner.routing.flex.DeviatedRouteGraphModifier;
+import org.opentripplanner.routing.flex.FlagStopGraphModifier;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.consequences.ConsequencesStrategy;
@@ -173,6 +175,19 @@ public class GraphPathFinder {
          * This would cause long distance mode to do unbounded street searches and consider the whole graph walkable. */
         if (options.maxWalkDistance == Double.MAX_VALUE) options.maxWalkDistance = DEFAULT_MAX_WALK;
         if (options.maxWalkDistance > CLAMP_MAX_WALK) options.maxWalkDistance = CLAMP_MAX_WALK;
+        if (options.modes.isTransit() && router.graph.useFlexService) {
+            // create temporary flex stops/hops (just once even if we run multiple searches)
+            FlagStopGraphModifier svc1 = new FlagStopGraphModifier(router.graph);
+            DeviatedRouteGraphModifier svc2 = new DeviatedRouteGraphModifier(router.graph);
+            svc1.createForwardHops(options);
+            if (options.useReservationServices) {
+                svc2.createForwardHops(options);
+            }
+            svc1.createBackwardHops(options);
+            if (options.useReservationServices) {
+                svc2.createBackwardHops(options);
+            }
+        }
 
         long searchBeginTime = System.currentTimeMillis();
         LOG.debug("BEGIN SEARCH");
@@ -223,7 +238,9 @@ public class GraphPathFinder {
                 //path.dump();
                 List<AgencyAndId> tripIds = path.getTrips();
                 for (AgencyAndId tripId : tripIds) {
-                    options.banTrip(tripId);
+                    if (!router.graph.index.tripIsCallAndRide(tripId)) {
+                        options.banTrip(tripId);
+                    }
                 }
                 if (tripIds.isEmpty()) {
                     // This path does not use transit (is entirely on-street). Do not repeatedly find the same one.
@@ -248,6 +265,15 @@ public class GraphPathFinder {
                     AgencyAndId first_route = path.getRoutes().get(0);
                     if (!options.preferredStartRoutes.matchesAgencyAndId(first_route)) {
                         continue;
+                    }
+                }
+                // for direct-hop trip banning, limit the allowable call-n-ride time to what it is currently
+                if (tripIds.size() < 2) {
+                    int duration = path.getCallAndRideDuration();
+                    if (duration > 0) {
+                        int constantLimit = Math.min(0, duration - options.reduceCallAndRideSeconds);
+                        int ratioLimit = (int) Math.round(options.reduceCallAndRideRatio * duration);
+                        options.maxCallAndRideSeconds = Math.min(constantLimit, ratioLimit);
                     }
                 }
 
@@ -283,7 +309,9 @@ public class GraphPathFinder {
             LOG.debug("we have {} paths", paths.size());
         }
         LOG.debug("END SEARCH ({} msec)", System.currentTimeMillis() - searchBeginTime);
-        Collections.sort(paths, options.getPathComparator(options.arriveBy));
+//        Collections.sort(paths, options.getPathComparator(options.arriveBy));
+        paths.sort(new PathComparator(options.arriveBy));
+
         return paths;
     }
 

@@ -15,12 +15,14 @@ package org.opentripplanner.routing.edgetype;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
-import com.google.common.collect.Lists;
+import com.beust.jcommander.internal.Lists;
+
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.Trip;
@@ -136,7 +138,7 @@ public class Timetable implements Serializable {
      * @return the TripTimes object representing the (possibly updated) best trip, or null if no
      * trip matches both the time and other criteria.
      */
-    public TripTimes getNextTrip(State s0, ServiceDay serviceDay, int stopIndex, boolean boarding) {
+    public TripTimes getNextTrip(State s0, ServiceDay serviceDay, int stopIndex, boolean boarding, double flexOffsetScale, int preBoardDirectTime, int postAlightDirectTime) {
         /* Search at the state's time, but relative to midnight on the given service day. */
         int time = serviceDay.secondsSinceMidnight(s0.getTimeSeconds());
         // NOTE the time is sometimes negative here. That is fine, we search for the first trip of the day.
@@ -231,6 +233,55 @@ public class Timetable implements Serializable {
             bestTrip = bestFreq.tripTimes.timeShift(stopIndex, bestTime, boarding, bestFreq);
         }
         return bestTrip;
+    }
+
+    public TripTimes getNextTrip(State s0, ServiceDay serviceDay, int stopIndex, boolean boarding) {
+        return getNextTrip(s0, serviceDay, stopIndex, boarding, 0, 0, 0);
+    }
+
+    // could integrate with getNextTrip
+    public TripTimes getNextCallNRideTrip(State s0, ServiceDay serviceDay, int stopIndex, boolean boarding, int directTime) {
+        /* Search at the state's time, but relative to midnight on the given service day. */
+        int time = serviceDay.secondsSinceMidnight(s0.getTimeSeconds());
+        // NOTE the time is sometimes negative here. That is fine, we search for the first trip of the day.
+        // Adjust for possible boarding time TODO: This should be included in the trip and based on GTFS
+        if (boarding) {
+            time += s0.getOptions().getBoardTime(this.pattern.mode);
+        } else {
+            time -= s0.getOptions().getAlightTime(this.pattern.mode);
+        }
+        TripTimes bestTrip = null;
+        Stop currentStop = pattern.getStop(stopIndex);
+        long bestTime = boarding ? Long.MAX_VALUE : Long.MIN_VALUE;
+        boolean useClockTime = !s0.getOptions().ignoreDrtAdvanceBookMin;
+        long clockTime = s0.getOptions().clockTimeSec;
+        for (TripTimes tt : tripTimes) {
+            if (tt.isCanceled()) continue;
+            if ( ! serviceDay.serviceRunning(tt.serviceCode)) continue; // TODO merge into call on next line
+            if ( ! tt.tripAcceptable(s0, stopIndex)) continue;
+            int adjustedTime = adjustTimeForTransfer(s0, currentStop, tt.trip, boarding, serviceDay, time);
+            if (adjustedTime == -1) continue;
+            if (boarding) {
+                long depTime = tt.getCallAndRideBoardTime(stopIndex, adjustedTime, serviceDay, useClockTime, clockTime);
+                if (depTime >= adjustedTime && depTime < bestTime && inBounds(depTime)) {
+                    bestTrip = tt;
+                    bestTime = depTime;
+                }
+            } else {
+                long arvTime = tt.getCallAndRideAlightTime(stopIndex, adjustedTime, directTime, serviceDay, useClockTime, clockTime);
+                if (arvTime < 0) continue;
+                if (arvTime <= adjustedTime && arvTime > bestTime && inBounds(arvTime)) {
+                    bestTrip = tt;
+                    bestTime = arvTime;
+                }
+            }
+        }
+
+        return bestTrip;
+    }
+
+    private boolean inBounds(long time) {
+        return time >= minTime && time <= maxTime;
     }
 
     public boolean isTripTimesOk(TripTimes tt, ServiceDay serviceDay, State s0, int stopIndex, boolean checkBannedTrips) {
@@ -554,12 +605,12 @@ public class Timetable implements Serializable {
                 }
             }
             if (update != null) {
-                LOG.trace("Part of a TripUpdate object could not be applied successfully to trip {}.", tripId);
+                LOG.error("Part of a TripUpdate object could not be applied successfully to trip {}.", tripId);
                 return null;
             }
         }
         if (!newTimes.timesIncreasing()) {
-            LOG.trace("TripTimes are non-increasing after applying GTFS-RT delay propagation to trip {}.", tripId);
+            LOG.error("TripTimes are non-increasing after applying GTFS-RT delay propagation to trip {}.", tripId);
             return null;
         }
 
@@ -629,4 +680,12 @@ public class Timetable implements Serializable {
         }
     }
 
-} 
+    public int getMaxTime() {
+        return maxTime;
+    }
+
+    public int getMinTime() {
+        return minTime;
+    }
+
+}

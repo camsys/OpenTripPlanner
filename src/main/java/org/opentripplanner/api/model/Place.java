@@ -21,6 +21,7 @@ import org.onebusaway.gtfs.model.AgencyAndId;
 import org.opentripplanner.util.Constants; 
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.opentripplanner.util.model.EncodedPolylineBean;
 
 import static org.opentripplanner.util.DateUtils.formatDateIso;
 
@@ -130,6 +131,26 @@ public class Place {
     @XmlAttribute
     @JsonSerialize
     public String track;
+
+    /**
+     * Type of board or alight (to distinguish flexible transit modes).
+     */
+    public BoardAlightType boardAlightType;
+
+    /**
+     * Board or alight area for flag stops
+     */
+    public EncodedPolylineBean flagStopArea;
+
+    /**
+     * The longitude of the route geometry endpoint for a deviated-route place.
+     */
+    public Double deviatedRouteLon = null;
+
+    /**
+     * The latitude of the route geometry endpoint for a deviated-route place.
+     */
+    public Double deviatedRouteLat = null;
 
     /**
      * Returns the geometry in GeoJSON format

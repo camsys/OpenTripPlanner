@@ -245,6 +245,15 @@ public class StateEditor {
         child.preTransitTime += seconds;
     }
 
+    public void incrementCallAndRideTime(int seconds) {
+        if (seconds < 0) {
+            LOG.warn("A state's call-n-ride time is being incremented by a negative amount.");
+            defectiveTraversal = true;
+            return;
+        }
+        child.callAndRideTime += seconds;
+    }
+
     public void incrementNumBoardings() {
         cloneStateDataAsNeeded();
         child.stateData.numBoardings++;
@@ -532,6 +541,10 @@ public class StateEditor {
         return child.getPreTransitTime();
     }
 
+    public int getCallAndRideTime() {
+        return child.getCallAndRideTime();
+    }
+
     public Vertex getVertex() {
         return child.getVertex();
     }
@@ -557,6 +570,12 @@ public class StateEditor {
         cloneStateDataAsNeeded();
         child.stateData.lastPattern = pattern;
     }
+
+    public void setIsLastBoardAlightDeviated(boolean isLastBoardAlightDeviated) {
+        cloneStateDataAsNeeded();
+        child.stateData.isLastBoardAlightDeviated = isLastBoardAlightDeviated;
+    }
+
     public void setOptions(RoutingRequest options) {
         cloneStateDataAsNeeded();
         child.stateData.opt = options;

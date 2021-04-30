@@ -104,7 +104,7 @@ public abstract class RoutingResource {
     @QueryParam("maxWalkDistance")
     protected Double maxWalkDistance;
 
-    /** Maximum walk distance for heuristic */
+    /** The maximum distance (in meters) the user is willing to walk - specific to IBH. Defaults to unlimited. */
     @QueryParam("maxWalkDistanceHeuristic")
     protected Double maxWalkDistanceHeuristic;
 
@@ -496,6 +496,62 @@ public abstract class RoutingResource {
     @QueryParam("disableRemainingWeightHeuristic")
     protected Boolean disableRemainingWeightHeuristic;
 
+    /**
+     * An additional penalty added for flag stop boarding/alighting. The value is in OTP's
+     * internal weight units, which are roughly equivalent to seconds.  Set this to a high
+     * value to discourage flag stop usage.
+     */
+    @QueryParam("flagStopExtraPenalty")
+    protected Integer flagStopExtraPenalty;
+
+    /**
+     * An additional penalty added for deviated-route boarding/alighting. The value is in OTP's
+     * internal weight units, which are roughly equivalent to seconds.  Set this to a high
+     * value to discourage deviated-route pickups/dropoffs.
+     */
+    @QueryParam("deviatedRouteExtraPenalty")
+    protected Integer deviatedRouteExtraPenalty;
+
+    /**
+     * A multiplier for call-and-ride costs, relative to equal lengths of time using transit. For
+     * example, if this is set to 2, OTP will prefer fixed-route transit over call-and-ride if all
+     * else is equal, unless fixed-route transit takes over 2X as long.
+     */
+    @QueryParam("callAndRideReluctance")
+    protected Double callAndRideReluctance;
+
+    /*
+     * Controls the size of "Place.flagStopArea" in the API output. Place.flagStopArea is a guide
+     * for downstream systems, e.g. UIs, to the bus route geometry directly around a flag stop
+     * board/alight location. The APIs will return up to flagStopBufferSize meters ahead or behind
+     * the board/alight location. The actual length may be less if the board/alight location is
+     * near the beginning or end of a route.
+     */
+    @QueryParam("flagStopBufferSize")
+    protected Double flagStopBufferSize;
+
+    /**
+     * Whether to use reservation-based services
+     */
+    @QueryParam("useReservationServices")
+    protected Boolean useReservationServices = true;
+
+    /**
+     * Whether to use eligibility-based services
+     */
+    @QueryParam("useEligibilityServices")
+    protected Boolean useEligibilityServices = true;
+
+    /**
+     * Whether to ignore DRT time limits.
+     *
+     * According to the GTFS-flex spec, demand-response transit (DRT) service must be reserved
+     * at least `drt_advance_book_min` minutes in advance. OTP not allow DRT service to be used
+     * inside that time window, unless this parameter is set to true.
+     */
+    @QueryParam("ignoreDrtAdvanceBookMin")
+    protected Boolean ignoreDrtAdvanceBookMin;
+
     /** The maximum duration of a returned itinerary, in hours. Default to unlimited. */
     @Ignore
     @QueryParam("maxHours")
@@ -657,6 +713,8 @@ public abstract class RoutingResource {
 
                 }
             }
+
+            request.resetClockTime();
         }
 
         if (wheelchair != null)
@@ -668,9 +726,16 @@ public abstract class RoutingResource {
         if (maxWalkDistance != null) {
             request.setMaxWalkDistance(maxWalkDistance);
             request.maxTransferWalkDistance = maxWalkDistance;
+            if (maxWalkDistance == 0.0) {
+                request.excludeWalking = true;
+            }
             if (request.maxWalkDistanceHeuristic == Double.MAX_VALUE) {
                 request.maxWalkDistanceHeuristic = maxWalkDistance;
             }
+        }
+
+        if (maxWalkDistanceHeuristic != null) {
+            request.maxWalkDistanceHeuristic = maxWalkDistanceHeuristic;
         }
 
         if (maxWalkDistanceHeuristic != null)
@@ -888,6 +953,27 @@ public abstract class RoutingResource {
 
         if (disableRemainingWeightHeuristic != null)
             request.disableRemainingWeightHeuristic = disableRemainingWeightHeuristic;
+
+        if (flagStopExtraPenalty != null)
+            request.flagStopExtraPenalty = flagStopExtraPenalty;
+
+        if (deviatedRouteExtraPenalty != null)
+            request.deviatedRouteExtraPenalty = deviatedRouteExtraPenalty;
+
+        if (callAndRideReluctance != null)
+            request.callAndRideReluctance = callAndRideReluctance;
+
+        if (flagStopBufferSize != null)
+            request.flagStopBufferSize = flagStopBufferSize;
+
+        if (useReservationServices != null)
+            request.useReservationServices = useReservationServices;
+
+        if (useEligibilityServices != null)
+            request.useEligibilityServices = useEligibilityServices;
+
+        if (ignoreDrtAdvanceBookMin != null)
+            request.ignoreDrtAdvanceBookMin = ignoreDrtAdvanceBookMin;
 
         if (maxHours != null)
             request.maxHours = maxHours;

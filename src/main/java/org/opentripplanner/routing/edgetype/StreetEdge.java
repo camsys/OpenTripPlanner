@@ -257,6 +257,10 @@ public class StreetEdge extends Edge implements Cloneable {
     @Override
     public State traverse(State s0) {
         final RoutingRequest options = s0.getOptions();
+        final TraverseMode currMode = s0.getNonTransitMode();
+        if (options.excludeWalking && currMode.equals(TraverseMode.WALK)) {
+            return null;
+        }
         StateEditor editor = doTraverse(s0, options, s0.getNonTransitMode());
         State state = (editor == null) ? null : editor.makeState();
         /* Kiss and ride support. Mode transitions occur without the explicit loop edges used in park-and-ride. */
@@ -319,7 +323,8 @@ public class StreetEdge extends Edge implements Cloneable {
                 return editor.makeState(); // return only the "parked" walking state
             }
         }
-        return null;
+        //RTD Flex returns null may cause trouble
+        return state;
     }
 
     /** return a StateEditor rather than a State so that we can make parking/mode switch modifications for kiss-and-ride. */
@@ -423,7 +428,7 @@ public class StreetEdge extends Edge implements Cloneable {
         } else if (traverseMode.equals(TraverseMode.CAR)) {
             weight *= options.carReluctance;
         } else {
-            // TODO: this is being applied even when biking.
+            // TODO: this is being applied even when biking or driving.
             weight *= options.walkReluctance;
         }
 
@@ -714,7 +719,6 @@ public class StreetEdge extends Edge implements Cloneable {
 	    }
 	}
 
-	@Override
 	public boolean isWheelchairAccessible() {
 		return BitSetUtils.get(flags, WHEELCHAIR_ACCESSIBLE_FLAG_INDEX);
 	}
@@ -846,6 +850,7 @@ public class StreetEdge extends Edge implements Cloneable {
 
             // copy the wayId to the split edges, so we can trace them back to their parent if need be
             e1.wayId = this.wayId;
+            e2.wayId = this.wayId;
 
             // figure the lengths, ensuring that they sum to the length of this edge
             e1.calculateLengthFromGeometry();

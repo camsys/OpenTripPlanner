@@ -26,6 +26,7 @@ import org.opentripplanner.routing.error.BothEndpointsTooFarException;
 import org.opentripplanner.routing.error.DestinationTooFarException;
 import org.opentripplanner.routing.error.OriginTooFarException;
 import org.opentripplanner.routing.graph.Edge;
+import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.location.StreetLocation;
 import org.opentripplanner.routing.spt.DominanceFunction;
@@ -82,35 +83,34 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
     private static final int OVERRIDE_THRESHOLD = 1608; // one mile
 
     /** The vertex at which the main search begins. */
-    private Vertex origin;
+    Vertex origin;
 
     /** The vertex that the main search is working towards. */
-    private Vertex target;
-
-    /** Or search works towards multiple targets (landmark support) */
-    private List<Vertex> targets;
+    Vertex target;
 
     /** All vertices within walking distance of the origin (the vertex at which the main search begins). */
-    private Set<Vertex> preTransitVertices;
+    Set<Vertex> preTransitVertices;
 
     /**
      * A lower bound on the weight of the lowest-cost path to the target (the vertex at which the main search ends)
      * from each vertex within walking distance of the target. As the heuristic progressively improves, this map will
      * include lower bounds on path weights for an increasing number of vertices on board transit.
      */
-    private TObjectDoubleMap<Vertex> postBoardingWeights;
+    TObjectDoubleMap<Vertex> postBoardingWeights;
 
-    private RoutingRequest routingRequest;
+    Graph graph;
+
+    RoutingRequest routingRequest;
 
     // The maximum weight yet seen at a closed node in the reverse search. The priority queue head has a uniformly
     // increasing weight, so any unreached transit node must have greater weight than this.
-    private double maxWeightSeen = 0;
+    double maxWeightSeen = 0;
 
     // The priority queue for the interleaved backward search through the transit network.
-    private BinHeap<Vertex> transitQueue;
+    BinHeap<Vertex> transitQueue;
 
     // True when the entire transit network has been explored by the reverse search.
-    private boolean finished = false;
+    boolean finished = false;
 
     // Keep track of "pre-transit" transit stops so we can check for kiss-and-ride access
     private BinHeap<TransitStop> preTransitStopsByDistance;
@@ -129,9 +129,13 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
      * Before the main search begins, the heuristic must search on the streets around the origin and destination.
      * This also sets up the initial states for the reverse search through the transit network, which progressively
      * improves lower bounds on travel time to the target to guide the main search.
+     *
      */
     @Override
     public void initialize(RoutingRequest request, long abortTime) {
+        // This code used to use the RoutingRequest for the original search, & as a side effect,
+        // set softWalkLimiting = false and maxWalkDistance = Infinity. Now, we use a cloned version of the
+        // request instead.
         Vertex target = request.rctx.target;
         List<Vertex> targets = request.rctx.targets;
         if ((target != null && target == this.target || (targets != null && targets == this.targets))) {
@@ -145,29 +149,31 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
             return;
         }
         LOG.debug("Initializing heuristic computation.");
+        this.graph = request.rctx.graph;
         long start = System.currentTimeMillis();
         this.target = target;
         this.targets = targets;
-        this.routingRequest = request;
+        this.routingRequest = request.clone();
+        routingRequest.excludeWalking = false;
+        routingRequest.softWalkLimiting = false;
+        routingRequest.softPreTransitLimiting = false;
+        routingRequest.maxWalkDistance = request.maxWalkDistanceHeuristic;
         transitQueue = new BinHeap<>();
         maxWeightSeen = 0;
         preTransitStopsByDistance = new BinHeap<>();
         postTransitStopByDistance = new BinHeap<>();
         // Forward street search first, mark street vertices around the origin so H evaluates to 0
-        TObjectDoubleMap<Vertex> forwardStreetSearchResults = streetSearch(request, false, abortTime, false);
+        TObjectDoubleMap<Vertex> forwardStreetSearchResults = streetSearch(routingRequest, false, abortTime, false);
         if (forwardStreetSearchResults == null) {
             return; // Search timed out
         }
         preTransitVertices = forwardStreetSearchResults.keySet();
         LOG.debug("end forward street search {} ms", System.currentTimeMillis() - start);
-        postBoardingWeights = streetSearch(request, true, abortTime, false);
+        postBoardingWeights = streetSearch(routingRequest, true, abortTime, false);
         if (postBoardingWeights == null) {
             return; // Search timed out
         }
         LOG.debug("end backward street search {} ms", System.currentTimeMillis() - start);
-        // once street searches are done, raise the limits to max
-        // because hard walk limiting is incorrect and is observed to cause problems 
-        // for trips near the cutoff
         LOG.debug("initialized SSSP");
         if (request.smartKissAndRide) {
             modifyForSmartKissAndRide(request);

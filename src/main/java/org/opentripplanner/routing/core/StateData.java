@@ -14,6 +14,7 @@
 package org.opentripplanner.routing.core;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.onebusaway.gtfs.model.AgencyAndId;
@@ -68,6 +69,8 @@ public class StateData implements Cloneable {
     protected RoutingRequest opt;
 
     protected TripPattern lastPattern;
+
+    protected boolean isLastBoardAlightDeviated = false;
 
     protected ServiceDay serviceDay;
 

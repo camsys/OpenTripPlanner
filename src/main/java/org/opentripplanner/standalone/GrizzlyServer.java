@@ -25,6 +25,8 @@ public class GrizzlyServer {
 
     private static final Logger LOG = LoggerFactory.getLogger(GrizzlyServer.class);
 
+    private static final int MIN_THREADS = 4;
+
     static {
         // Remove existing handlers attached to the j.u.l root logger
         SLF4JBridgeHandler.removeHandlersForRootLogger();  // (since SLF4J 1.6.5)
@@ -43,6 +45,26 @@ public class GrizzlyServer {
     }
 
     /**
+     * OTP is CPU-bound, so we want roughly as many worker threads as we have cores, subject to some constraints.
+     */
+    private int getMaxThreads() {
+        int maxThreads = Runtime.getRuntime().availableProcessors();
+        LOG.info("Java reports that this machine has {} available processors.", maxThreads);
+        // Testing shows increased throughput up to 1.25x as many threads as cores
+        maxThreads *= 1.25;
+        if (params.maxThreads != null) {
+            maxThreads = params.maxThreads;
+            LOG.info("Based on configuration, forced max thread pool size to {} threads.", maxThreads);
+        }
+        if (maxThreads < MIN_THREADS) {
+            // Some machines apparently report 1 processor even when they have 8.
+            maxThreads = MIN_THREADS;
+        }
+        LOG.info("Maximum HTTP handler thread pool size will be {} threads.", maxThreads);
+        return maxThreads;
+    }
+
+    /**
      * This function goes through roughly the same steps as Jersey's GrizzlyServerFactory, but we instead construct
      * an HttpServer and NetworkListener manually so we can set the number of threads and other details.
      */
@@ -58,50 +80,19 @@ public class GrizzlyServer {
         sslConfig.setKeyStoreFile(new File(params.basePath, "keystore").getAbsolutePath());
         sslConfig.setKeyStorePass("opentrip");
 
-
-        int threadPoolMaxPoolSize = Runtime.getRuntime().availableProcessors();
-        if (System.getProperty("otp.threadPoolMaxPoolSize") != null) {
-            try {
-                threadPoolMaxPoolSize = Integer.parseInt(System.getProperty("otp.threadPoolMaxPoolSize"));
-                LOG.info("Thread pool size override to " + threadPoolMaxPoolSize);
-            } catch (NumberFormatException nfe) {
-                // ignore
-            }
-        }
-        /* OTP is CPU-bound, so we want only as many worker threads as we have cores. */
+        // Set up a pool of threads to handle incoming HTTP requests.
+        // According to the Grizzly docs, setting the core and max pool size equal with no queue limit
+        // will use a more efficient fixed-size thread pool implementation.
+        // TODO we should probably use Grizzly async processing rather than tying up the HTTP handler threads.
+        int nHandlerThreads = getMaxThreads();
         ThreadPoolConfig threadPoolConfig = ThreadPoolConfig.defaultConfig()
-            .setCorePoolSize(threadPoolMaxPoolSize)
-            .setMaxPoolSize(threadPoolMaxPoolSize);
-
-        if (System.getProperty("otp.threadPoolQueueLimit") != null) {
-            int threadPoolQueueLimit = Integer.parseInt(System.getProperty("otp.threadPoolQueueLimit"));
-            LOG.info("threadPoolQueueLimit = {}", threadPoolQueueLimit);
-            threadPoolConfig.setQueueLimit(threadPoolQueueLimit); // force QueueLimitedThreadPool
-        } else {
-            LOG.info("threadPoolQueueLimit = {}", -1);
-            threadPoolConfig.setQueueLimit(-1); // coerce FixedThreadPool
-        }
-
-        LOG.info("Thread pool size = " + threadPoolConfig.getMaxPoolSize());
+            .setCorePoolSize(nHandlerThreads)
+            .setMaxPoolSize(nHandlerThreads)
+            .setQueueLimit(-1);
 
         /* HTTP (non-encrypted) listener */
         NetworkListener httpListener = new NetworkListener("otp_insecure", params.bindAddress, params.port);
         httpListener.setSecure(false);
-
-        if (System.getProperty("otp.transport_same_thread") != null
-                && "true".equalsIgnoreCase(System.getProperty("otp.transport_same_thread"))) {
-            // NOTE:  if this is set it undoes the pool configuration above
-            LOG.info("using SameThreadIOStrategy transport policy.  Thread Pool Config will be ignored");
-            httpListener.getTransport().setIOStrategy(SameThreadIOStrategy.getInstance());
-        } else {
-            LOG.info("defaulting to normal transport policy");
-        }
-
-        if (System.getProperty("otp.transport_backlog") != null) {
-            int backlog = Integer.parseInt(System.getProperty("otp.transport_backlog"));
-            LOG.info("setting transport backlog to {}", backlog);
-            httpListener.getTransport().setServerConnectionBackLog(backlog);
-        }
 
         /* HTTPS listener */
         NetworkListener httpsListener = new NetworkListener("otp_secure", params.bindAddress, params.securePort);
@@ -130,17 +121,13 @@ public class GrizzlyServer {
         HttpHandler dynamicHandler = ContainerFactory.createContainer(HttpHandler.class, app);
         httpServer.getServerConfiguration().addHttpHandler(dynamicHandler, "/otp/");
 
-        if (!params.disableNativeClient) {
-            /* 2. A static content handler to serve the client JS apps etc. from the classpath. */
-            CLStaticHttpHandler staticHandler = new CLStaticHttpHandler(GrizzlyServer.class.getClassLoader(), "/client/");
-            if (params.disableFileCache) {
-                LOG.info("Disabling HTTP server static file cache.");
-                staticHandler.setFileCacheEnabled(false);
-            }
-            httpServer.getServerConfiguration().addHttpHandler(staticHandler, "/");
-        } else {
-            LOG.info("disabling native UI");
+        /* 2. A static content handler to serve the client JS apps etc. from the classpath. */
+        CLStaticHttpHandler staticHandler = new CLStaticHttpHandler(GrizzlyServer.class.getClassLoader(), "/client/");
+        if (params.disableFileCache) {
+            LOG.info("Disabling HTTP server static file cache.");
+            staticHandler.setFileCacheEnabled(false);
         }
+        httpServer.getServerConfiguration().addHttpHandler(staticHandler, "/");
 
         /* 3. A static content handler to serve local files from the filesystem, under the "local" path. */
         if (params.clientDirectory != null) {

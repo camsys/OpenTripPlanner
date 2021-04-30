@@ -320,6 +320,60 @@ public class Leg {
     @JsonSerialize
     public Boolean rentedBike;
 
+     /**
+      * True if this is a call-and-ride leg.
+      */
+    @XmlAttribute
+    @JsonSerialize
+    public Boolean callAndRide;
+
+    /* For call-n-ride leg, supply maximum start time based on calculation. */
+    @XmlAttribute
+    @JsonSerialize
+    public Calendar maxStartTime = null;
+
+     /* For call-n-ride leg, supply minimum end time based on calculation. */
+    @XmlAttribute
+    @JsonSerialize
+    public Calendar minEndTime = null;
+
+    /** trip.drt_advance_book_min if this is a demand-response leg */
+    @XmlAttribute
+    @JsonSerialize
+    public double drtAdvanceBookMin;
+
+     /**
+      *  Agency message if this is leg has a demand-response pickup and the Trip has
+      *  `drt_pickup_message` defined.
+      */
+     @XmlAttribute
+     @JsonSerialize
+     public String drtPickupMessage;
+
+     /**
+      * Agency message if this is leg has a demand-response dropoff and the Trip has
+      * `drt_drop_off_message` defined.
+      */
+     @XmlAttribute
+     @JsonSerialize
+     public String drtDropOffMessage;
+
+     /**
+      * Agency message if this is leg has a flag stop pickup and the Trip has
+      * `continuous_pickup_message` defined.
+      */
+     @XmlAttribute
+     @JsonSerialize
+     public String continuousPickupMessage;
+
+     /**
+      * Agency message if this is leg has a flag stop dropoff and the Trip has
+      * `continuous_drop_off_message` defined.
+      */
+     @XmlAttribute
+     @JsonSerialize
+     public String continuousDropOffMessage;
+
     /** Upcoming arrival/departures at this stop grouped by route and headsign */
     public Collection<StopTimesByRouteAndHeadsign> upcomingStopTimes;
 
@@ -351,8 +405,8 @@ public class Leg {
         else if (mode.equals(TraverseMode.BICYCLE.toString())) return false;
         else return true;
     }
-
-    /**
+    
+    /** 
      * The leg's duration in seconds
      */
     @XmlElement
@@ -383,6 +437,7 @@ public class Leg {
         agencyTimeZoneOffset = timeZone.getOffset(startTime.getTimeInMillis());
     }
 
+    //TOSO RTD Flex find all the places where start time is set and call this insteat
     public void setStartTime(Calendar calendar) {
         this.startTime = calendar;
         this.startTimeFmt = formatDateIso(calendar);
@@ -392,4 +447,14 @@ public class Leg {
         this.endTime = calendar;
         this.endTimeFmt = formatDateIso(calendar);
     }
+
+    public void getStartTimeFmt()  {
+        return formatDateIso(startTime)
+    }
+    public void getEndTimeFmt() {
+        return formatDateIso(endTime)
+    }
+
+
+
 }

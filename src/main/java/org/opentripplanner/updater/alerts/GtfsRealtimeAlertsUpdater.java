@@ -103,7 +103,7 @@ public class GtfsRealtimeAlertsUpdater extends PollingGraphUpdater {
     }
 
     @Override
-    public void setup() {
+    public void setup(Graph graph) {
         if (updateHandler == null) {
             updateHandler = vehiclePositions ? new VehiclePositionsUpdateHandler() : new AlertsUpdateHandler();
         }

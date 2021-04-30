@@ -44,7 +44,9 @@ import org.slf4j.LoggerFactory;
 
 /** A set of edges on a single route, with associated information for calculating fares */
 class Ride {
-    
+
+    String feedId;
+
     String agency; // route agency
 
     AgencyAndId route;
@@ -190,6 +192,7 @@ public class DefaultFareServiceImpl implements FareService, Serializable {
                 ride.startTime = state.getBackState().getTimeSeconds();
                 ride.firstStop = hEdge.getBeginStop();
                 ride.trip = state.getTripId();
+                ride.feedId = hEdge.getFeedId();
             }
             ride.lastStop = hEdge.getEndStop();
             ride.endZone  = ride.lastStop.getZoneId();
@@ -215,15 +218,10 @@ public class DefaultFareServiceImpl implements FareService, Serializable {
         for (Map.Entry<FareType, Collection<FareRuleSet>> kv : fareRulesPerType.entrySet()) {
             FareType fareType = kv.getKey();
             Collection<FareRuleSet> fareRules = kv.getValue();
-
-            // pick up a random currency from fareAttributes,
-            // we assume that all tickets use the same currency
+            // Get the currency from the first fareAttribute, assuming that all tickets use the same currency.
             Currency currency = null;
-            WrappedCurrency wrappedCurrency = null;
             if (fareRules.size() > 0) {
-                currency = Currency.getInstance(fareRules.iterator().next().getFareAttribute()
-                        .getCurrencyType());
-                wrappedCurrency = new WrappedCurrency(currency);
+                currency = Currency.getInstance(fareRules.iterator().next().getFareAttribute().getCurrencyType());
             }
             hasFare = populateFare(fare, currency, fareType, rides, fareRules);
         }
@@ -356,12 +354,11 @@ public class DefaultFareServiceImpl implements FareService, Serializable {
         long   startTime = firstRide.startTime;
         String startZone = firstRide.startZone;
         String endZone = firstRide.endZone;
-        // stops don't really have an agency id, they have the per-feed default id
-        String feedId = firstRide.firstStop.getId().getAgencyId();  
+        String feedId = firstRide.feedId;
         long lastRideStartTime = firstRide.startTime;
         long lastRideEndTime = firstRide.endTime;
         for (Ride ride : rides) {
-            if ( ! ride.firstStop.getId().getAgencyId().equals(feedId)) {
+            if ( ! ride.feedId.equals(feedId)) {
                 LOG.debug("skipped multi-feed ride sequence {}", rides);
                 return new FareAndId(Float.POSITIVE_INFINITY, null);
             }

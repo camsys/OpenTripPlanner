@@ -33,6 +33,8 @@ import org.opentripplanner.routing.alertpatch.Alert;
 import org.opentripplanner.routing.alertpatch.AlertPatch;
 import org.opentripplanner.routing.core.*;
 import org.opentripplanner.routing.edgetype.*;
+import org.opentripplanner.routing.edgetype.flex.PartialPatternHop;
+import org.opentripplanner.routing.edgetype.flex.TemporaryDirectPatternHop;
 import org.opentripplanner.routing.error.TrivialPathException;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
@@ -57,7 +59,6 @@ import java.util.*;
 public abstract class GraphPathToTripPlanConverter {
 
     private static final Logger LOG = LoggerFactory.getLogger(GraphPathToTripPlanConverter.class);
-
     private static final double MAX_ZAG_DISTANCE = 30; // TODO add documentation, what is a "zag"?
 
     /**
@@ -176,6 +177,7 @@ public abstract class GraphPathToTripPlanConverter {
      * @param requestedLocale
      * @return
      */
+    //RTD Flex including the routing request is something that used to be done but might not still be necessary
     public static Itinerary generateItinerary(GraphPath path, boolean showIntermediateStops, boolean disableAlertFiltering, Locale requestedLocale) {
         return generateItinerary(path, showIntermediateStops, disableAlertFiltering, requestedLocale, path.states.peekFirst().getOptions());
     }
@@ -223,8 +225,8 @@ public abstract class GraphPathToTripPlanConverter {
         fixupLegs(itinerary.legs, legsStates);
 
         itinerary.duration = lastState.getElapsedTimeSeconds();
-        itinerary.setStartTime(makeCalendar(states[0]));
-        itinerary.setEndTime(makeCalendar(lastState));
+        itinerary.startTime = makeCalendar(states[0]);
+        itinerary.endTime = makeCalendar(lastState);
 
         calculateTimes(itinerary, states);
 
@@ -249,6 +251,10 @@ public abstract class GraphPathToTripPlanConverter {
     private static Calendar makeCalendar(State state, Date origRequestDate, Date requestDate) {
         RoutingContext rctx = state.getContext();
         TimeZone timeZone = rctx.graph.getTimeZone();
+        return makeCalendar(timeZone, state.getTimeInMillis());
+    }
+
+    private static Calendar makeCalendar(TimeZone timeZone, long time) {
         Calendar calendar = Calendar.getInstance(timeZone);
 
         if (origRequestDate != null && requestDate != null) {
@@ -296,13 +302,15 @@ public abstract class GraphPathToTripPlanConverter {
      * @param edges The array of input edges
      * @return The coordinates of the points on the edges
      */
-    private static CoordinateArrayListSequence makeCoordinates(Edge[] edges) {
+    public static CoordinateArrayListSequence makeCoordinates(Edge[] edges) {
         CoordinateArrayListSequence coordinates = new CoordinateArrayListSequence();
 
         for (Edge edge : edges) {
-            LineString geometry = edge.getGeometry();
+            //RTD Flex was edge.getGeometry
+            LineString geometry = edge.getDisplayGeometry();
 
-            if (geometry != null && !edge.isApproximateGeometry()) {
+            //RTD Flex we do not care about the former & !edge.isApprocimateGeometry()
+            if (geometry != null) {
                 if (coordinates.size() == 0) {
                     coordinates.extend(geometry.getCoordinates());
                 } else {
@@ -349,6 +357,7 @@ public abstract class GraphPathToTripPlanConverter {
             if (backMode == null || forwardMode == null)
                 continue;
 
+            //RTD Flex we may not care as much about TimedTransferEddges incase this throws errors
             if (states[i].getBackEdge() instanceof TimedTransferEdge)
                 continue;
 
@@ -365,19 +374,19 @@ public abstract class GraphPathToTripPlanConverter {
             }
 
             if (backMode == TraverseMode.LEG_SWITCH || forwardMode == TraverseMode.LEG_SWITCH) {
-                if (backMode != TraverseMode.LEG_SWITCH) { // Start of leg switch
+                if (backMode != TraverseMode.LEG_SWITCH) {              // Start of leg switch
                     legIndexPairs[1] = i;
-                } else if (forwardMode != TraverseMode.LEG_SWITCH) { // End of leg switch
+                } else if (forwardMode != TraverseMode.LEG_SWITCH) {    // End of leg switch
                     if (legIndexPairs[1] != states.length - 1) {
                         legsIndexes.add(legIndexPairs);
                     }
                     legIndexPairs = new int[] { i, states.length - 1 };
                 }
-            } else if (backMode != forwardMode) { // Mode change => leg switch
+            } else if (backMode != forwardMode) {                       // Mode change => leg switch
                 legIndexPairs[1] = i;
                 legsIndexes.add(legIndexPairs);
                 legIndexPairs = new int[] { i, states.length - 1 };
-            } else if (edge instanceof PatternInterlineDwell) { // Interlining => leg switch
+            } else if (edge instanceof PatternInterlineDwell) {         // Interlining => leg switch
                 legIndexPairs[1] = i;
                 legsIndexes.add(legIndexPairs);
                 legIndexPairs = new int[] { i + 1, states.length - 1 };
@@ -411,13 +420,14 @@ public abstract class GraphPathToTripPlanConverter {
      *        next bus leaves that stop
      * @return The generated leg
      */
+    ..RTD Flex the flex call did not care about the routingrequest
     private static Leg generateLeg(Graph graph, State[] states, boolean showIntermediateStops, boolean disableAlertFiltering, Locale requestedLocale, RoutingRequest request) {
         Leg leg = new Leg();
 
         Edge[] edges = new Edge[states.length - 1];
 
-        leg.setStartTime(makeCalendar(states[0]));
-        leg.setEndTime(makeCalendar(states[states.length - 1]));
+        leg.startTime = makeCalendar(states[0]);
+        leg.endTime = makeCalendar(states[states.length - 1]);
 
         // Calculate leg distance and fill array of edges
         leg.distance = 0.0;
@@ -575,8 +585,8 @@ public abstract class GraphPathToTripPlanConverter {
     }
 
     /**
-     * Add a {@link WalkStep} {@link List} to a {@link Leg} {@link List}. It's more convenient to
-     * process all legs in one go because the previous step should be kept.
+     * Add a {@link WalkStep} {@link List} to a {@link Leg} {@link List}.
+     * It's more convenient to process all legs in one go because the previous step should be kept.
      *
      * @param legs The legs of the itinerary
      * @param legsStates The states that go with the legs
@@ -700,10 +710,10 @@ public abstract class GraphPathToTripPlanConverter {
     }
 
     /**
-     * This was originally in TransitUtils.handleBoardAlightType. Edges that always block traversal
-     * (forbidden pickups/dropoffs) are simply not ever created.
+     * This was originally in TransitUtils.handleBoardAlightType.
+     * Edges that always block traversal (forbidden pickups/dropoffs) are simply not ever created.
      */
-    public static String getBoardAlightMessage(int boardAlightType) {
+    public static String getBoardAlightMessage (int boardAlightType) {
         switch (boardAlightType) {
         case 1:
             return "impossible";
@@ -717,10 +727,10 @@ public abstract class GraphPathToTripPlanConverter {
     }
 
     /**
-     * Fix up a {@link Leg} {@link List} using the information available at the leg boundaries. This
-     * method will fill holes in the arrival and departure times associated with a {@link Place}
-     * within a leg and add board and alight rules. It will also ensure that stop names propagate
-     * correctly to the non-transit legs that connect to them.
+     * Fix up a {@link Leg} {@link List} using the information available at the leg boundaries.
+     * This method will fill holes in the arrival and departure times associated with a
+     * {@link Place} within a leg and add board and alight rules. It will also ensure that stop
+     * names propagate correctly to the non-transit legs that connect to them.
      *
      * @param legs The legs of the itinerary
      * @param legsStates The states that go with the legs
@@ -764,11 +774,11 @@ public abstract class GraphPathToTripPlanConverter {
             }
 
             if (legs.get(i).isTransitLeg()) {
-                if (boardRule != null && !fromOther) { // If boarding in some other leg
-                    legs.get(i).boardRule = boardRule; // (interline), don't board now.
+                if (boardRule != null && !fromOther) {      // If boarding in some other leg
+                    legs.get(i).boardRule = boardRule;      // (interline), don't board now.
                 }
-                if (alightRule != null && !toOther) { // If alighting in some other
-                    legs.get(i).alightRule = alightRule; // leg, don't alight now.
+                if (alightRule != null && !toOther) {       // If alighting in some other
+                    legs.get(i).alightRule = alightRule;    // leg, don't alight now.
                 }
             }
         }
@@ -794,6 +804,7 @@ public abstract class GraphPathToTripPlanConverter {
                     itinerary.waitingTime += state.getTimeDeltaSeconds();
                     break;
 
+                    //RTD Flex WALK Bike and Car are all the same outside of RTD
                 case WALK:
                     itinerary.walkTime += state.getTimeDeltaSeconds();
                     break;
@@ -867,8 +878,7 @@ public abstract class GraphPathToTripPlanConverter {
             for (AlertPatch alertPatch : graph.getAlertPatches(edge)) {
                 if (disableAlertFiltering || alertPatch.displayDuring(state)) {
                     if (alertPatch.hasTrip()) {
-                        // If the alert patch contains a trip and that trip match this leg only add
-                        // the alert for
+                        // If the alert patch contains a trip and that trip match this leg only add the alert for
                         // this leg.
                         if (alertPatch.getTrip().equals(leg.tripId)) {
                             if (alertPatch.hasAlert()) {
@@ -879,8 +889,7 @@ public abstract class GraphPathToTripPlanConverter {
                             }
                         }
                     } else {
-                        // If we are not matching a particular trip add all known alerts for this
-                        // trip pattern.
+                        // If we are not matching a particular trip add all known alerts for this trip pattern.
                         leg.addAlert(alertPatch.getAlert(), requestedLocale);
                     }
                 }
@@ -953,6 +962,11 @@ public abstract class GraphPathToTripPlanConverter {
             leg.tripId = trip.getId();
             leg.tripShortName = trip.getTripShortName();
             leg.tripBlockId = trip.getBlockId();
+            leg.drtAdvanceBookMin = trip.getDrtAdvanceBookMin();
+            leg.drtPickupMessage = trip.getDrtPickupMessage();
+            leg.drtDropOffMessage = trip.getDrtDropOffMessage();
+            leg.continuousPickupMessage = trip.getContinuousPickupMessage();
+            leg.continuousDropOffMessage = trip.getContinuousDropOffMessage();
             leg.peakOffpeak = trip.getPeakOffpeak();
 
             if (serviceDay != null) {
@@ -969,12 +983,37 @@ public abstract class GraphPathToTripPlanConverter {
             if (tripTimes.isFrequencyBased()) {
                 leg.frequencyDetail = new FrequencyDetail(tripTimes.getFrequencyEntry());
             }
+
+            Edge edge = states[states.length - 1].backEdge;
+            if (edge instanceof TemporaryDirectPatternHop) {
+                leg.callAndRide = true;
+            }
+            if (edge instanceof PartialPatternHop) {
+                PartialPatternHop hop = (PartialPatternHop) edge;
+                int directTime = hop.getDirectVehicleTime();
+                TripTimes tt = states[states.length - 1].getTripTimes();
+                int maxTime = tt.getDemandResponseMaxTime(directTime);
+                int avgTime = tt.getDemandResponseAvgTime(directTime);
+                int delta = maxTime - avgTime;
+                if (directTime != 0 && delta > 0) {
+                    if (hop.isDeviatedRouteBoard()) {
+                        long maxStartTime = leg.startTime.getTimeInMillis() + (delta * 1000);
+                        leg.maxStartTime = makeCalendar(leg.startTime.getTimeZone(), maxStartTime);
+                    }
+                    if (hop.isDeviatedRouteAlight()) {
+                        long minEndTime = leg.endTime.getTimeInMillis() - (delta * 1000);
+                        leg.minEndTime = makeCalendar(leg.endTime.getTimeZone(), minEndTime);
+                    }
+                }
+            }
+
         }
     }
 
     /**
-     * Add {@link Place} fields to a {@link Leg}. There is some code duplication because of subtle
-     * differences between departure, arrival and intermediate stops.
+     * Add {@link Place} fields to a {@link Leg}.
+     * There is some code duplication because of subtle differences between departure, arrival and
+     * intermediate stops.
      *
      * @param leg The leg to add the places to
      * @param states The states that go with the leg
@@ -986,10 +1025,10 @@ public abstract class GraphPathToTripPlanConverter {
         Vertex firstVertex = states[0].getVertex();
         Vertex lastVertex = states[states.length - 1].getVertex();
 
-        Stop firstStop = firstVertex instanceof TransitVertex
-                ? ((TransitVertex) firstVertex).getStop() : null;
-        Stop lastStop = lastVertex instanceof TransitVertex ? ((TransitVertex) lastVertex).getStop()
-                : null;
+        Stop firstStop = firstVertex instanceof TransitVertex ?
+                ((TransitVertex) firstVertex).getStop(): null;
+        Stop lastStop = lastVertex instanceof TransitVertex ?
+                ((TransitVertex) lastVertex).getStop(): null;
         TripTimes tripTimes = states[states.length - 1].getTripTimes();
 
         leg.from = makePlace(states[0], firstVertex, edges[0], firstStop, tripTimes,
@@ -1016,7 +1055,7 @@ public abstract class GraphPathToTripPlanConverter {
                     continue;
 
                 if (currentStop == previousStop) {                  // Avoid duplication of stops
-                    leg.stop.get(leg.stop.size() - 1).setDeparture(makeCalendar(states[i]));
+                    leg.stop.get(leg.stop.size() - 1).departure = makeCalendar(states[i]);
                     continue;
                 }
 
@@ -1046,16 +1085,14 @@ public abstract class GraphPathToTripPlanConverter {
         boolean endOfLeg = (edge == null);
         String name = vertex.getName(requestedLocale);
 
-        // This gets nicer names instead of osm:node:id when changing mode of transport
-        // Names are generated from all the streets in a corner, same as names in origin and
-        // destination
-        // We use name in TemporaryStreetLocation since this name generation already happened when
-        // temporary location was generated
+        //This gets nicer names instead of osm:node:id when changing mode of transport
+        //Names are generated from all the streets in a corner, same as names in origin and destination
+        //We use name in TemporaryStreetLocation since this name generation already happened when temporary location was generated
         if (vertex instanceof StreetVertex && !(vertex instanceof TemporaryStreetLocation)) {
-            name = ((StreetVertex) vertex).getIntersectionName(requestedLocale)
-                    .toString(requestedLocale);
+            name = ((StreetVertex) vertex).getIntersectionName(requestedLocale).toString(requestedLocale);
         }
-        Place place = new Place(vertex.getX(), vertex.getY(), name, makeCalendar(state), makeCalendar(state));
+        Place place = new Place(vertex.getX(), vertex.getY(), name,
+                makeCalendar(state), makeCalendar(state));
 
         if (endOfLeg)
             edge = state.getBackEdge();
@@ -1073,6 +1110,28 @@ public abstract class GraphPathToTripPlanConverter {
             }
             place.vertexType = VertexType.TRANSIT;
             place.track = tripTimes.getTrack(place.stopIndex);
+            place.boardAlightType = BoardAlightType.DEFAULT;
+            if (edge instanceof PartialPatternHop) {
+                PartialPatternHop hop = (PartialPatternHop) edge;
+                if (hop.hasBoardArea() && !endOfLeg) {
+                    place.flagStopArea = PolylineEncoder.createEncodings(hop.getBoardArea());
+                }
+                if (hop.hasAlightArea() && endOfLeg) {
+                    place.flagStopArea = PolylineEncoder.createEncodings(hop.getAlightArea());
+                }
+                if ((endOfLeg && hop.isFlagStopAlight()) || (!endOfLeg && hop.isFlagStopBoard())) {
+                    place.boardAlightType = BoardAlightType.FLAG_STOP;
+                }
+                if ((endOfLeg && hop.isDeviatedRouteAlight()) || (!endOfLeg && hop.isDeviatedRouteBoard())) {
+                    place.boardAlightType = BoardAlightType.DEVIATED;
+                    if (hop.getDisplayGeometry().getNumPoints() > 0) {
+                        int i = endOfLeg ? hop.getDisplayGeometry().getNumPoints() - 1 : 0;
+                        Coordinate c = hop.getDisplayGeometry().getCoordinateN(i);
+                        place.deviatedRouteLat = c.getOrdinate(1);
+                        place.deviatedRouteLon = c.getOrdinate(0);
+                    }
+                }
+            }
         } else if(vertex instanceof BikeRentalStationVertex) {
             place.bikeShareId = ((BikeRentalStationVertex) vertex).getId();
             LOG.trace("Added bike share Id {} to place", place.bikeShareId);
@@ -1102,9 +1161,10 @@ public abstract class GraphPathToTripPlanConverter {
                 leg.from.track = tripTimes.getTrack(leg.from.stopIndex);
             }
             if (leg.to.stopIndex != null) {
-                leg.arrivalDelay = tripTimes.getArrivalDelay(leg.to.stopIndex);
                 leg.to.track = tripTimes.getTrack(leg.to.stopIndex);
             }
+            //RTD Flex this was in the if above in RTD but not in flex
+            leg.arrivalDelay = tripTimes.getArrivalDelay(leg.to.stopIndex);
         }
     }
 
@@ -1154,13 +1214,11 @@ public abstract class GraphPathToTripPlanConverter {
     /**
      * Converts a list of street edges to a list of turn-by-turn directions.
      * 
-     * @param previous a non-transit leg that immediately precedes this one (bike-walking, say), or
-     *        null
+     * @param previous a non-transit leg that immediately precedes this one (bike-walking, say), or null
      * 
      * @return
      */
-    public static List<WalkStep> generateWalkSteps(Graph graph, State[] states, WalkStep previous,
-            Locale requestedLocale) {
+    public static List<WalkStep> generateWalkSteps(Graph graph, State[] states, WalkStep previous, Locale requestedLocale) {
         List<WalkStep> steps = new ArrayList<WalkStep>();
         WalkStep step = null;
         double lastAngle = 0, distance = 0; // distance used for appending elevation profiles
@@ -1169,55 +1227,71 @@ public abstract class GraphPathToTripPlanConverter {
 
         State onBikeRentalState = null, offBikeRentalState = null;
 
-        // Check if this leg is a SimpleTransfer; if so, rebuild state array based on stored transfer edges.
-        // Now that there are pathways, a leg may contain several Pathways and a TransferEdge.
+        // Check if this leg is a SimpleTransfer; if so, rebuild state array based on stored transfer edges
+        /** RTD Flex
+         * This was necessary with pathways but should be obsolete here:
+         * // Now that there are pathways, a leg may contain several Pathways and a TransferEdge.
+         *
+         *         List<State> allStates = new ArrayList<>();
+         *         for (int i = 0; i < states.length; i++) {
+         *             if (i < states.length - 1 && states[i + 1].getBackEdge() instanceof SimpleTransfer) {
+         *                 if (states[i].getBackEdge() instanceof PathwayEdge) {
+         *                     allStates.add(states[i]);
+         *                 }
+         *                 SimpleTransfer transferEdge = ((SimpleTransfer) states[i + 1].getBackEdge());
+         *                 List<Edge> transferEdges = transferEdge.getEdges();
+         *                 if (transferEdges != null) {
+         *                     // Create a new initial state. Some parameters may have change along the way, copy them from the first state
+         *                     RoutingRequest options = states[i].getOptions().clone();
+         *                     options.preTransitKissAndRide = false;
+         *                     options.postTransitKissAndRide = false;
+         *                     StateEditor se = new StateEditor(options, transferEdges.get(0).getFromVertex());
+         *                     se.setNonTransitOptionsFromState(states[i]);
+         *                     State s = se.makeState();
+         *                     allStates.add(s);
+         *                     for (Edge e : transferEdges) {
+         *                         s = e.traverse(s);
+         *                         allStates.add(s);
+         *                     }
+         *                     i++; // skip next
+         *                     continue;
+         *                 }
+         *             }
+         *             allStates.add(states[i]);
+         *         }
+         */
 
-        List<State> allStates = new ArrayList<>();
-        for (int i = 0; i < states.length; i++) {
-            if (i < states.length - 1 && states[i + 1].getBackEdge() instanceof SimpleTransfer) {
-                if (states[i].getBackEdge() instanceof PathwayEdge) {
-                    allStates.add(states[i]);
+        if (states.length == 2 && states[1].getBackEdge() instanceof SimpleTransfer) {
+            SimpleTransfer transferEdge = ((SimpleTransfer) states[1].getBackEdge());
+            List<Edge> transferEdges = transferEdge.getEdges();
+            if (transferEdges != null) {
+                // Create a new initial state. Some parameters may have change along the way, copy them from the first state
+                StateEditor se = new StateEditor(states[0].getOptions(), transferEdges.get(0).getFromVertex());
+                se.setNonTransitOptionsFromState(states[0]);
+                State s = se.makeState();
+                ArrayList<State> transferStates = new ArrayList<>();
+                transferStates.add(s);
+                for (Edge e : transferEdges) {
+                    s = e.traverse(s);
+                    transferStates.add(s);
                 }
-                SimpleTransfer transferEdge = ((SimpleTransfer) states[i + 1].getBackEdge());
-                List<Edge> transferEdges = transferEdge.getEdges();
-                if (transferEdges != null) {
-                    // Create a new initial state. Some parameters may have change along the way, copy them from the first state
-                    RoutingRequest options = states[i].getOptions().clone();
-                    options.preTransitKissAndRide = false;
-                    options.postTransitKissAndRide = false;
-                    StateEditor se = new StateEditor(options, transferEdges.get(0).getFromVertex());
-                    se.setNonTransitOptionsFromState(states[i]);
-                    State s = se.makeState();
-                    allStates.add(s);
-                    for (Edge e : transferEdges) {
-                        s = e.traverse(s);
-                        allStates.add(s);
-                    }
-                    i++; // skip next
-                    continue;
-                }
+                states = transferStates.toArray(new State[transferStates.size()]);
             }
-            allStates.add(states[i]);
         }
-
-        states = allStates.toArray(new State[allStates.size()]);
 
         for (int i = 0; i < states.length - 1; i++) {
             State backState = states[i];
             State forwardState = states[i + 1];
             Edge edge = forwardState.getBackEdge();
 
-            if (edge instanceof RentABikeOnEdge)
-                onBikeRentalState = forwardState;
-            if (edge instanceof RentABikeOffEdge)
-                offBikeRentalState = forwardState;
+            if(edge instanceof RentABikeOnEdge) onBikeRentalState = forwardState;
+            if(edge instanceof RentABikeOffEdge) offBikeRentalState = forwardState;
 
             boolean createdNewStep = false, disableZagRemovalForThisStep = false;
             if (edge instanceof FreeEdge) {
                 continue;
             }
-            if (forwardState.getBackMode() == null
-                    || !forwardState.getBackMode().isOnStreetNonTransit()) {
+            if (forwardState.getBackMode() == null || !forwardState.getBackMode().isOnStreetNonTransit()) {
                 continue; // ignore STLs and the like
             }
             Geometry geom = edge.getGeometry();
@@ -1271,11 +1345,9 @@ public abstract class GraphPathToTripPlanConverter {
                 }
                 // new step, set distance to length of first edge
                 distance = edge.getDistance();
-            } else if (((step.streetName != null
-                    && !step.streetNameNoParens().equals(streetNameNoParens))
-                    && (!step.bogusName || !edge.hasBogusName()))
-                    || edge.isRoundabout() != (roundaboutExit > 0) || // went on to or off of a
-                                                                      // roundabout
+            } else if (((step.streetName != null && !step.streetNameNoParens().equals(streetNameNoParens))
+                    && (!step.bogusName || !edge.hasBogusName())) ||
+                    edge.isRoundabout() != (roundaboutExit > 0) || // went on to or off of a roundabout
                     isLink(edge) && !isLink(backState.getBackEdge())) {
                 // Street name has changed, or we've gone on to or off of a roundabout.
                 if (roundaboutExit > 0) {
@@ -1407,27 +1479,27 @@ public abstract class GraphPathToTripPlanConverter {
                     WalkStep twoBack = steps.get(last - 1);
                     WalkStep lastStep = steps.get(last);
 
-                    if (twoBack.distance < MAX_ZAG_DISTANCE && lastStep.streetNameNoParens()
-                            .equals(threeBack.streetNameNoParens())) {
-
-                        if (((lastStep.relativeDirection == RelativeDirection.RIGHT
-                                || lastStep.relativeDirection == RelativeDirection.HARD_RIGHT)
-                                && (twoBack.relativeDirection == RelativeDirection.RIGHT
-                                        || twoBack.relativeDirection == RelativeDirection.HARD_RIGHT))
-                                || ((lastStep.relativeDirection == RelativeDirection.LEFT
-                                        || lastStep.relativeDirection == RelativeDirection.HARD_LEFT)
-                                        && (twoBack.relativeDirection == RelativeDirection.LEFT
-                                                || twoBack.relativeDirection == RelativeDirection.HARD_LEFT))) {
-                            // in this case, we have two left turns or two right turns in quick
+                    if (twoBack.distance < MAX_ZAG_DISTANCE
+                            && lastStep.streetNameNoParens().equals(threeBack.streetNameNoParens())) {
+                        
+                        if (((lastStep.relativeDirection == RelativeDirection.RIGHT || 
+                                lastStep.relativeDirection == RelativeDirection.HARD_RIGHT) &&
+                                (twoBack.relativeDirection == RelativeDirection.RIGHT ||
+                                twoBack.relativeDirection == RelativeDirection.HARD_RIGHT)) ||
+                                ((lastStep.relativeDirection == RelativeDirection.LEFT || 
+                                lastStep.relativeDirection == RelativeDirection.HARD_LEFT) &&
+                                (twoBack.relativeDirection == RelativeDirection.LEFT ||
+                                twoBack.relativeDirection == RelativeDirection.HARD_LEFT))) {
+                            // in this case, we have two left turns or two right turns in quick 
                             // succession; this is probably a U-turn.
 
                             steps.remove(last - 1);
 
                             lastStep.distance += twoBack.distance;
-
-                            // A U-turn to the left, typical in the US.
-                            if (lastStep.relativeDirection == RelativeDirection.LEFT
-                                    || lastStep.relativeDirection == RelativeDirection.HARD_LEFT)
+                            
+                            // A U-turn to the left, typical in the US. 
+                            if (lastStep.relativeDirection == RelativeDirection.LEFT || 
+                                    lastStep.relativeDirection == RelativeDirection.HARD_LEFT)
                                 lastStep.relativeDirection = RelativeDirection.UTURN_LEFT;
                             else
                                 lastStep.relativeDirection = RelativeDirection.UTURN_RIGHT;
@@ -1452,8 +1524,7 @@ public abstract class GraphPathToTripPlanConverter {
                                     step.elevation = twoBack.elevation;
                                 } else {
                                     for (P2<Double> d : twoBack.elevation) {
-                                        step.elevation.add(
-                                                new P2<Double>(d.first + step.distance, d.second));
+                                        step.elevation.add(new P2<Double>(d.first + step.distance, d.second));
                                     }
                                 }
                             }
@@ -1483,21 +1554,20 @@ public abstract class GraphPathToTripPlanConverter {
         }
 
         // add bike rental information if applicable
-        if (onBikeRentalState != null && !steps.isEmpty()) {
-            steps.get(steps.size() - 1).bikeRentalOnStation = new BikeRentalStationInfo(
-                    (BikeRentalStationVertex) onBikeRentalState.getBackEdge().getToVertex());
+        if(onBikeRentalState != null && !steps.isEmpty()) {
+            steps.get(steps.size()-1).bikeRentalOnStation = 
+                    new BikeRentalStationInfo((BikeRentalStationVertex) onBikeRentalState.getBackEdge().getToVertex());
         }
-        if (offBikeRentalState != null && !steps.isEmpty()) {
-            steps.get(0).bikeRentalOffStation = new BikeRentalStationInfo(
-                    (BikeRentalStationVertex) offBikeRentalState.getBackEdge().getFromVertex());
+        if(offBikeRentalState != null && !steps.isEmpty()) {
+            steps.get(0).bikeRentalOffStation = 
+                    new BikeRentalStationInfo((BikeRentalStationVertex) offBikeRentalState.getBackEdge().getFromVertex());
         }
 
         return steps;
     }
 
     private static boolean isLink(Edge edge) {
-        return edge instanceof StreetEdge && (((StreetEdge) edge).getStreetClass()
-                & StreetEdge.CLASS_LINK) == StreetEdge.CLASS_LINK;
+        return edge instanceof StreetEdge && (((StreetEdge)edge).getStreetClass() & StreetEdge.CLASS_LINK) == StreetEdge.CLASS_LINK;
     }
 
     private static double getAbsoluteAngleDiff(double thisAngle, double lastAngle) {

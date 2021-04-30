@@ -26,7 +26,7 @@ import org.opentripplanner.routing.vertextype.TransitStop;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.LineString;
-import org.opentripplanner.routing.vertextype.TransitVertex;
+import org.opentripplanner.routing.vertextype.flex.TemporaryTransitStop;
 
 import java.util.Locale;
 
@@ -94,7 +94,13 @@ public class StreetTransitLink extends Edge {
         }
 
         // Do not re-enter the street network following a transfer.
-        if (s0.backEdge instanceof TransferEdge) {
+        //RTD Flex was a transfer Edge
+        if (s0.backEdge instanceof SimpleTransfer) {
+            return null;
+        }
+
+        // Do not get off at a real stop when on call-n-ride (force a transfer instead).
+        if (s0.isLastBoardAlightDeviated() && !(transitStop.checkCallAndRideStreetLinkOk(s0))) {
             return null;
         }
 
@@ -117,6 +123,7 @@ public class StreetTransitLink extends Edge {
         // This allows searching for nearby transit stops using walk-only options.
         StateEditor s1 = s0.edit(this);
 
+        //RTD Flex this was not present in future Flex
         // Require that if we enter the transit network, we use transit before leaving.
         // This forbids shortcuts through the transit network, in the context of pathways -
         // conceptually it's similar to (s0.backEdge instanceof StreetTransitLink) but with
@@ -136,10 +143,11 @@ public class StreetTransitLink extends Edge {
         if (leavingTransit && !s0.isTransferPermissible()) {
             return null;
         }
+        //RTD Flex end of addition
 
         /* Only enter stations in CAR mode if parking is not required (kiss and ride) */
         /* Note that in arriveBy searches this is double-traversing link edges to fork the state into both WALK and CAR mode. This is an insane hack. */
-        if (s0.getNonTransitMode() == TraverseMode.CAR) {
+        if (s0.getNonTransitMode() == TraverseMode.CAR && !req.enterStationsWithCar) {
             if (req.kissAndRide && !s0.isCarParked()) {
                 s1.setCarParked(true);
             } else if (!req.preTransitKissAndRide && !req.postTransitKissAndRide) {
@@ -162,6 +170,7 @@ public class StreetTransitLink extends Edge {
         s1.incrementTimeInSeconds(transitStop.getStreetToStopTime() + STL_TRAVERSE_COST);
         s1.incrementWeight(STL_TRAVERSE_COST + transitStop.getStreetToStopTime());
         s1.setBackMode(TraverseMode.LEG_SWITCH);
+        //RTD Flex watch this for transfer issues
         s1.setTransferNotPermissible();
         return s1.makeState();
     }

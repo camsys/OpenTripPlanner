@@ -180,6 +180,13 @@ public class Router {
             graph.stopClusterMode = "proximity";
         }
 
+        /* Set whether to use flex service */
+        JsonNode useFlexService = config.get("useFlexService");
+        if (useFlexService != null) {
+            graph.setUseFlexService(useFlexService.asBoolean(false));
+        }
+
+
         JsonNode kissAndRideWhitelist = config.get("kissAndRideWhitelist");
         if (kissAndRideWhitelist != null) {
             Set<AgencyAndId> stopList = new HashSet<>();

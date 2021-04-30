@@ -1,6 +1,8 @@
 package org.opentripplanner.routing.graph;
 
 import com.google.common.collect.ArrayListMultimap;
+
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
@@ -16,6 +18,7 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.execution.ExecutorServiceExecutionStrategy;
@@ -78,6 +81,7 @@ public class GraphIndex {
     private static final int CLUSTER_RADIUS = 400; // meters
 
     /** maximum distance to walk after leaving transit in Analyst */
+    //RTD Flex changes updated version was 1000 but I didn't want to change base expectations
     public static final int MAX_WALK_METERS = 3500;
 
     // TODO: consistently key on model object or id string
@@ -94,11 +98,13 @@ public class GraphIndex {
     public final Multimap<String, TripPattern> patternsForFeedId = ArrayListMultimap.create();
     public final Multimap<Route, TripPattern> patternsForRoute = ArrayListMultimap.create();
     public final Multimap<Stop, TripPattern> patternsForStop = ArrayListMultimap.create();
+    //RTD Flex now AgencyAndId was String
     public final Multimap<AgencyAndId, Stop> stopsForParentStation = ArrayListMultimap.create();
     final HashGridSpatialIndex<TransitStop> stopSpatialIndex = new HashGridSpatialIndex<TransitStop>();
     public final Map<Stop, StopCluster> stopClusterForStop = Maps.newHashMap();
     public final Map<String, StopCluster> stopClusterForId = Maps.newHashMap();
     public final Multimap<String, PathwayEdge> pathwayForElevator = ArrayListMultimap.create();
+    public final Map<AgencyAndId, Geometry> areasById = Maps.newHashMap();
 
     /* Should eventually be replaced with new serviceId indexes. */
     private final CalendarService calendarService;
@@ -168,6 +174,7 @@ public class GraphIndex {
             Envelope envelope = new Envelope(stopVertex.getCoordinate());
             stopSpatialIndex.insert(envelope, stopVertex);
         }
+
         for (TripPattern pattern : patternForId.values()) {
             patternsForFeedId.put(pattern.getFeedId(), pattern);
             patternsForRoute.put(pattern.route, pattern);
@@ -193,6 +200,14 @@ public class GraphIndex {
                 new ExecutorServiceExecutionStrategy(Executors.newCachedThreadPool(
                         new ThreadFactoryBuilder().setNameFormat("GraphQLExecutor-" + graph.routerId + "-%d").build()
                 )));
+
+        LOG.info("Initializing areas....");
+        if (graph.areasById != null) {
+            for (AgencyAndId id : graph.areasById.keySet()) {
+                areasById.put(id, graph.areasById.get(id));
+            }
+        }
+
         LOG.info("Done indexing graph.");
     }
 
@@ -415,6 +430,7 @@ public class GraphIndex {
      * @param omitNonPickups If true, do not include vehicles that will not pick up passengers.
      * @return
      */
+    //RTD Flex old method signature public List<StopTimesInPattern> stopTimesForStop(Stop stop, long startTime, int timeRange, int numberOfDepartures, boolean omitNonPickups) {
     public List<StopTimesInPattern> stopTimesForStop(Stop stop, long startTime, int timeRange, int numberOfDepartures, boolean omitNonPickups,
                                                      RouteMatcher routeMatcher, Integer direction, String headsign, Set<String> bannedAgencies, Set<Integer> bannedRouteTypes) {
         if (startTime == 0) {
@@ -483,7 +499,8 @@ public class GraphIndex {
                             if (headsign != null && !t.getHeadsign(sidx).equals(headsign)) continue;
                             if (t.getDepartureTime(sidx) != -1 &&
                                     t.getDepartureTime(sidx) >= secondsSinceMidnight) {
-                                pq.insertWithOverflow(new TripTimeShort(pattern, t, sidx, stop, sd, graph.getTimeZone()));
+                                //RTD Flex TripTimesShort has pattern included now it is not TripTimeShort(pattern, t, sidx, stop, sd, graph.getTimeZone()));
+                                pq.insertWithOverflow(new TripTimeShort(t, sidx, stop, sd));
                             }
                         }
 
@@ -496,7 +513,8 @@ public class GraphIndex {
                                     freq.tripTimes.getDepartureTime(0);
                             int i = 0;
                             while (departureTime <= lastDeparture && i < numberOfDepartures) {
-                                pq.insertWithOverflow(new TripTimeShort(pattern, freq.materialize(sidx, departureTime, true), sidx, stop, sd, graph.getTimeZone()));
+                                //RTD Flex TripTimesShort has pattern included now it is not TripTimeShort(pattern, freq.materialize(sidx, departureTime, true), sidx, stop, sd, graph.getTimeZone()));
+                                pq.insertWithOverflow(new TripTimeShort(freq.materialize(sidx, departureTime, true), sidx, stop, sd));
                                 departureTime += freq.headway;
                                 i++;
                             }
@@ -571,7 +589,8 @@ public class GraphIndex {
                     if(omitNonPickups && pattern.stopPattern.pickups[sidx] == pattern.stopPattern.PICKDROP_NONE) continue;
                     for (TripTimes t : tt.tripTimes) {
                         if (!sd.serviceRunning(t.serviceCode)) continue;
-                        stopTimes.times.add(new TripTimeShort(pattern, t, sidx, stop, sd, graph.getTimeZone()));
+                        //RTD Flex TripTimesShort has pattern included now it is not TripTimeShort(pattern, t, sidx, stop, sd, graph.getTimeZone()))
+                        stopTimes.times.add(new TripTimeShort(t, sidx, stop, sd));
                     }
                 }
                 sidx++;
@@ -767,4 +786,10 @@ public class GraphIndex {
         return allAgencies;
     }
 
+    // Heuristic for deciding if trip is call-n-ride, only used for transfer and banning rules
+    public boolean tripIsCallAndRide(AgencyAndId tripId) {
+        Trip trip = tripForId.get(tripId);
+        TripPattern pattern = patternForTrip.get(trip);
+        return pattern.geometry == null;
+    }
 }

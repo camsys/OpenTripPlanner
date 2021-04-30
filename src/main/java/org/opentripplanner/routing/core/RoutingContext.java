@@ -27,6 +27,7 @@ import org.opentripplanner.routing.algorithm.strategies.EuclideanRemainingWeight
 import org.opentripplanner.routing.algorithm.strategies.RemainingWeightHeuristic;
 import org.opentripplanner.routing.algorithm.strategies.TrivialRemainingWeightHeuristic;
 import org.opentripplanner.routing.edgetype.StreetEdge;
+import org.opentripplanner.routing.edgetype.TemporaryEdge;
 import org.opentripplanner.routing.edgetype.TemporaryPartialStreetEdge;
 import org.opentripplanner.routing.edgetype.TimetableSnapshot;
 import org.opentripplanner.routing.error.GraphNotFoundException;
@@ -49,12 +50,14 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.List;
+
 
 /**
  * A RoutingContext holds information needed to carry out a search for a particular TraverseOptions, on a specific graph.
@@ -134,6 +137,10 @@ public class RoutingContext implements Cloneable {
 
     /** Indicates that a maximum slope constraint was specified but was removed during routing to produce a result. */
     public boolean slopeRestrictionRemoved = false;
+
+    public Collection<TemporaryEdge> temporaryEdges = new ArrayList<>();
+
+    public Collection<Vertex> temporaryVertices = new ArrayList<>();
 
     /* CONSTRUCTORS */
 
@@ -432,6 +439,7 @@ public class RoutingContext implements Cloneable {
                 addIfNotExists(serviceDays, new ServiceDay(graph, serviceDate.next(),
                         calendarService, agency.getId()));
             }
+
         }
         return serviceDays;
     }
@@ -468,5 +476,13 @@ public class RoutingContext implements Cloneable {
     public void destroy() {
         if (origin instanceof TemporaryVertex) ((TemporaryVertex) origin).dispose();
         if (target instanceof TemporaryVertex) ((TemporaryVertex) target).dispose();
+
+        LOG.debug("ms Cleaning up {} temporary edges", temporaryEdges.size());
+        temporaryEdges.forEach(TemporaryEdge::dispose);
+        temporaryEdges.clear();
+
+        temporaryVertices.forEach(graph::remove);
+        temporaryVertices.clear();
+
     }
 }
