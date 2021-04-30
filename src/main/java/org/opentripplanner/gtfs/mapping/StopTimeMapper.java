@@ -62,8 +62,11 @@ class StopTimeMapper {
                 System.out.println("rhs = "+rhs.getId());
             }
 
-            stop.setId(lhs.getTrip().getId());
-            lhs.setStop(stop);
+            if(stop != null && lhs.getTrip() != null)
+            {
+                stop.setId(lhs.getTrip().getId());
+                lhs.setStop(stop);
+            }
         }else{
             lhs.setStop(stopMapper.map(rhs.getStop()));
         }
