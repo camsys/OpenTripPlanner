@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
 
+import com.esotericsoftware.minlog.Log;
 import org.onebusaway.gtfs.model.StopTime;
 import org.onebusaway.gtfs.model.Trip;
 import org.opentripplanner.common.MavenVersion;
@@ -178,9 +179,9 @@ public class TripTimes implements Serializable, Comparable<TripTimes>, Cloneable
         for (final StopTime st : stopTimes) {
             // This should be filtered out by GTFSPatternHopFactory but just in case:
             if (s > 0 && st.getArrivalTime() - lastDepartureTime < 0)
-                throw new RuntimeException("Negative running time for trip " + trip.getId());
+                Log.warn("Negative running time for trip " + trip.getId());
             if (s > 0 && s < stopTimes.size() - 1 && st.getDepartureTime() - st.getArrivalTime() < 0)
-                throw new RuntimeException("Negative dwell time for trip " + trip.getId());
+                Log.warn("Negative dwell time for trip " + trip.getId());
             departures[s] = st.getDepartureTime() - timeShift;
             arrivals[s] = st.getArrivalTime() - timeShift;
             sequences[s] = st.getStopSequence();

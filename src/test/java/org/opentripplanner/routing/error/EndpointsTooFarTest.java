@@ -34,6 +34,10 @@ public class EndpointsTooFarTest {
 
     private static final String MIDDLE_LOCATION_2 = "39.96383,-82.96291";
 
+    private static final String FAR_LOCATION_1 = "02.9908,-15.0118";
+
+    private static final String FAR_LOCATION_2 = "85.96383,-99.96291";
+
     private static Graph graph;
 
     @BeforeClass
@@ -55,7 +59,7 @@ public class EndpointsTooFarTest {
 
     @Test(expected = OriginTooFarException.class)
     public void testOriginTooFar() {
-        RoutingRequest opt = getOptions(MIDDLE_LOCATION_1, NEAR_STOP_S2);
+        RoutingRequest opt = getOptions(FAR_LOCATION_1, NEAR_STOP_S2);
         AStar aStar = new AStar();
         aStar.getShortestPathTree(opt, -1);
         opt.cleanup();
@@ -63,7 +67,7 @@ public class EndpointsTooFarTest {
 
     @Test(expected = DestinationTooFarException.class)
     public void testDestinationTooFar() {
-        RoutingRequest opt = getOptions(NEAR_STOP_S2, MIDDLE_LOCATION_1);
+        RoutingRequest opt = getOptions(NEAR_STOP_S2, FAR_LOCATION_1);
         AStar aStar = new AStar();
         aStar.getShortestPathTree(opt, -1);
         opt.cleanup();
@@ -71,7 +75,7 @@ public class EndpointsTooFarTest {
 
     @Test(expected = BothEndpointsTooFarException.class)
     public void testBothTooFar() {
-        RoutingRequest opt = getOptions(MIDDLE_LOCATION_2, MIDDLE_LOCATION_1);
+        RoutingRequest opt = getOptions(FAR_LOCATION_1, FAR_LOCATION_2);
         AStar aStar = new AStar();
         aStar.getShortestPathTree(opt, -1);
         opt.cleanup();

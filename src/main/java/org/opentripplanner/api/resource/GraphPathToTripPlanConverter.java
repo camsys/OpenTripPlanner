@@ -476,17 +476,20 @@ public abstract class GraphPathToTripPlanConverter {
     }
 
     private static List<StopTimesInPattern> getStopTimesForStopOrParent(Graph graph, AgencyAndId stopId, ServiceDate serviceDate) {
-        Stop stop = graph.index.stopForId.get(stopId);
-        List<StopTimesInPattern> stopTimes;
-        if (stop.getParentStation() != null) {
-            Stop parent = graph.index.getParentStopForStop(stop);
-            stopTimes = graph.index.getStopTimesForStopParent(parent, serviceDate, false);
-            stopTimes.addAll(graph.index.getStopTimesForStopParent(parent, serviceDate.next(), false));
-        } else {
-            stopTimes = graph.index.getStopTimesForStop(stop, serviceDate, false);
-            stopTimes.addAll(graph.index.getStopTimesForStop(stop, serviceDate.next(), false));
+        if(!stopId.getId().contains("temp")){
+            List<StopTimesInPattern> stopTimes;
+            Stop stop = graph.index.stopForId.get(stopId);
+            if (stop.getParentStation() != null) {
+                Stop parent = graph.index.getParentStopForStop(stop);
+                stopTimes = graph.index.getStopTimesForStopParent(parent, serviceDate, false);
+                stopTimes.addAll(graph.index.getStopTimesForStopParent(parent, serviceDate.next(), false));
+            } else {
+                stopTimes = graph.index.getStopTimesForStop(stop, serviceDate, false);
+                stopTimes.addAll(graph.index.getStopTimesForStop(stop, serviceDate.next(), false));
+            }
+            return stopTimes;
         }
-        return stopTimes;
+        return new ArrayList<StopTimesInPattern>();
     }
 
     private static Calendar determineNextDepartureTimeForStop(Graph graph, Leg leg,
