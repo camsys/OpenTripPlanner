@@ -448,11 +448,11 @@ public class Leg {
         this.endTimeFmt = formatDateIso(calendar);
     }
 
-    public void getStartTimeFmt()  {
-        return formatDateIso(startTime)
+    public String getStartTimeFmt()  {
+        return formatDateIso(startTime);
     }
-    public void getEndTimeFmt() {
-        return formatDateIso(endTime)
+    public String getEndTimeFmt() {
+     return formatDateIso(endTime);
     }
 
 

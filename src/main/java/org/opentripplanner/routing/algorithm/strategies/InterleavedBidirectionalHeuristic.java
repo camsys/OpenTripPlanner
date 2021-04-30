@@ -86,7 +86,10 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
     Vertex origin;
 
     /** The vertex that the main search is working towards. */
-    Vertex target;
+    private Vertex target;
+
+    /** Or search works towards multiple targets (landmark support) */
+    private List<Vertex> targets;
 
     /** All vertices within walking distance of the origin (the vertex at which the main search begins). */
     Set<Vertex> preTransitVertices;

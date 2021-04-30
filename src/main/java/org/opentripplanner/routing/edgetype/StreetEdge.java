@@ -324,7 +324,7 @@ public class StreetEdge extends Edge implements Cloneable {
             }
         }
         //RTD Flex returns null may cause trouble
-        return state;
+        return null;
     }
 
     /** return a StateEditor rather than a State so that we can make parking/mode switch modifications for kiss-and-ride. */

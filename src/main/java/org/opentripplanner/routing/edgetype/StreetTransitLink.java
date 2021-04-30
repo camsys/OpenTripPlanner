@@ -26,6 +26,7 @@ import org.opentripplanner.routing.vertextype.TransitStop;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.LineString;
+import org.opentripplanner.routing.vertextype.TransitVertex;
 import org.opentripplanner.routing.vertextype.flex.TemporaryTransitStop;
 
 import java.util.Locale;

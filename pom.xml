@@ -82,7 +82,10 @@
         <geotools.version>10.5</geotools.version>
         <jackson.version>2.5.3</jackson.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <aws.version>1.9.39</aws.version>
+        <aws.version>1.11.104</aws.version>
+        <site_id>developer.onebusaway.org</site_id>
+        <site_deployment_base>scp://developer.onebusaway.org/var/www/sites/developer/modules</site_deployment_base>
+        <site_url>${site_deployment_base}/${project.name}/${project.version}</site_url>
     </properties>
 
     <distributionManagement>

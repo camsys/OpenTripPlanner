@@ -1300,7 +1300,7 @@ public class RoutingRequest implements Cloneable, Serializable {
                 && stopLinking == other.stopLinking
                 && pathIgnoreStrategy.equals(pathIgnoreStrategy)
                 && useTransitServiceExtension == other.useTransitServiceExtension
-                && farEndpointsException == other.farEndpointsException;
+                && farEndpointsException == other.farEndpointsException
                 && geoidElevation == other.geoidElevation
                 && flagStopExtraPenalty == other.flagStopExtraPenalty
                 && deviatedRouteExtraPenalty == other.deviatedRouteExtraPenalty

@@ -243,18 +243,20 @@ public abstract class GraphPathToTripPlanConverter {
     }
 
     private static Calendar makeCalendar(State state) {
-        RoutingRequest request = state.getOptions();
-        return request != null ? makeCalendar(state, request.getOrigTravelDateTime(), request.getDateTime()) :
-                makeCalendar(state, null, null);
-    }
-
-    private static Calendar makeCalendar(State state, Date origRequestDate, Date requestDate) {
         RoutingContext rctx = state.getContext();
         TimeZone timeZone = rctx.graph.getTimeZone();
         return makeCalendar(timeZone, state.getTimeInMillis());
     }
 
     private static Calendar makeCalendar(TimeZone timeZone, long time) {
+        Calendar calendar = Calendar.getInstance(timeZone);
+        calendar.setTimeInMillis(time);
+        return calendar;
+    }
+
+    private static Calendar makeCalendar(State state, Date origRequestDate, Date requestDate) {
+        RoutingContext rctx = state.getContext();
+        TimeZone timeZone = rctx.graph.getTimeZone();
         Calendar calendar = Calendar.getInstance(timeZone);
 
         if (origRequestDate != null && requestDate != null) {
@@ -420,7 +422,7 @@ public abstract class GraphPathToTripPlanConverter {
      *        next bus leaves that stop
      * @return The generated leg
      */
-    ..RTD Flex the flex call did not care about the routingrequest
+    //RTD Flex the flex call did not care about the routingrequest
     private static Leg generateLeg(Graph graph, State[] states, boolean showIntermediateStops, boolean disableAlertFiltering, Locale requestedLocale, RoutingRequest request) {
         Leg leg = new Leg();
 

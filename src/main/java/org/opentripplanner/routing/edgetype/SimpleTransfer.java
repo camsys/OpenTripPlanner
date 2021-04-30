@@ -13,12 +13,17 @@
 
 package org.opentripplanner.routing.edgetype;
 
+import org.opentripplanner.routing.core.RoutingRequest;
+import org.opentripplanner.routing.core.State;
+import org.opentripplanner.routing.core.StateEditor;
+import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.vertextype.TransitStop;
 
 import com.vividsolutions.jts.geom.LineString;
 
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Represents a transfer between stops that does not take the street network into account.
@@ -29,11 +34,17 @@ import java.util.List;
 public class SimpleTransfer extends Edge {
     private static final long serialVersionUID = 20140408L;
 
+    private double distance;
+
+    private LineString geometry;
     private List<Edge> edges;
 
+    private boolean wheelchairAccessible = true;
+
     public SimpleTransfer(TransitStop from, TransitStop to, double distance, LineString geometry, List<Edge> edges) {
-        super(from, to, distance);
-        setGeometry(geometry);
+        super(from, to);
+        this.distance = distance;
+        this.geometry = geometry;
         this.edges = edges;
         if (edges != null) {
             setWheelchairAccessible(edges.stream().allMatch(Edge::isWheelchairAccessible));
@@ -83,7 +94,7 @@ public class SimpleTransfer extends Edge {
         return this.getName();
     }
 
-    @Override
+//    @Override
     public double weightLowerBound(RoutingRequest rr) {
         int time = (int) (distance / rr.walkSpeed); 
         return (time * rr.walkReluctance);
@@ -100,10 +111,24 @@ public class SimpleTransfer extends Edge {
 	   return this.geometry;
    }
 
+    public void setGeometry(LineString geometry) {
+        this.geometry = geometry;
+    }
+
     public List<Edge> getEdges() { return this.edges; }
 
     @Override
     public String toString() {
         return "SimpleTransfer " + getName();
     }
+
+    public void setWheelchairAccessible(boolean wheelchairAccessible) {
+        this.wheelchairAccessible = wheelchairAccessible;
+    }
+
+    public boolean isWheelchairAccessible() {
+        return wheelchairAccessible;
+    }
+
+
 }

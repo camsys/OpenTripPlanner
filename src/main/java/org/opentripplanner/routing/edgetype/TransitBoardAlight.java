@@ -348,8 +348,6 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
             s1.incrementWeight(preferences_penalty);
             s1.incrementWeight(transferPenalty);
 
-            /* Compute penalty for non-preferred transfers. */
-            int transferPenalty = 0;
             /* If this is not the first boarding, then we are transferring. */
             if (s0.isEverBoarded()) {
                 TransferTable transferTable = options.getRoutingContext().transferTable;

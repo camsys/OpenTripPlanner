@@ -64,7 +64,7 @@ public class FakeGraph {
         r.route_short_name = "1";
         r.route_long_name = "High Street";
         r.route_type = 3;
-        r.agency = a;
+        r.agency_id = a.agency_id;
         r.route_id = "route";
         feed.routes.put(r.route_id, r);
 
@@ -87,8 +87,8 @@ public class FakeGraph {
         for (int departure = 7 * 3600; departure < 20 * 3600; departure += FREQUENCY) {
             Trip t = new Trip();
             t.trip_id = "trip" + departure;
-            t.service = s;
-            t.route = r;
+            t.service_id = s.service_id;
+            t.route_id = r.route_id;
             feed.trips.put(t.trip_id, t);
 
             StopTime st1 = new StopTime();
@@ -129,7 +129,7 @@ public class FakeGraph {
         r.route_short_name = "1";
         r.route_long_name = "High Street";
         r.route_type = 3;
-        r.agency = a;
+        r.agency_id = a.agency_id;
         r.route_id = "route";
         feed.routes.put(r.route_id, r);
 
@@ -154,8 +154,8 @@ public class FakeGraph {
             int departure = 8 * 3600;
             Trip t = new Trip();
             t.trip_id = "trip" + departure + "_" + stopIdx;
-            t.service = s;
-            t.route = r;
+            t.service_id = s.service_id;
+            t.route_id = r.route_id;
             feed.trips.put(t.trip_id, t);
 
             StopTime st1 = new StopTime();
@@ -213,7 +213,7 @@ public class FakeGraph {
             route.route_short_name = "hr" + i;
             route.route_long_name = i + "th Horizontal Street";
             route.route_type = Route.BUS;
-            route.agency = agencyA;
+            route.agency_id = agencyA.agency_id;
             route.route_id = "horizontalroute" + i;
             feed.routes.put(route.route_id, route);
         }
@@ -222,7 +222,7 @@ public class FakeGraph {
             route.route_short_name = "vr" + i;
             route.route_long_name = i + "th Vertical Street";
             route.route_type = Route.TRAM;
-            route.agency = agencyB;
+            route.agency_id = agencyB.agency_id;
             route.route_id = "verticalroute" + i;
             feed.routes.put(route.route_id, route);
         }
@@ -236,8 +236,8 @@ public class FakeGraph {
             for (int departure = 7 * 3600; departure < 20 * 3600; departure += FREQUENCY) {
                 Trip t = new Trip();
                 t.trip_id = "trip:" + route.route_id + ":" + departure;
-                t.service = s;
-                t.route = route;
+                t.service_id = s.service_id;
+                t.route_id = route.route_id;
                 feed.trips.put(t.trip_id, t);
 
                 int departureTime = departure;
@@ -278,7 +278,7 @@ public class FakeGraph {
     private static Service createDummyService() {
         Service s = new Service("service");
         s.calendar = new Calendar();
-        s.calendar.service = s;
+        s.calendar.service_id = s.service_id;
         s.calendar.monday = s.calendar.tuesday = s.calendar.wednesday = s.calendar.thursday = s.calendar.friday =
                 s.calendar.saturday = s.calendar.sunday = 1;
         s.calendar.start_date = 19991231;
@@ -314,7 +314,7 @@ public class FakeGraph {
         r.route_short_name = "1";
         r.route_long_name = "High Street";
         r.route_type = 3;
-        r.agency = a;
+        r.agency_id = a.agency_id;
         r.route_id = "route";
         feed.routes.put(r.route_id, r);
 
@@ -343,8 +343,8 @@ public class FakeGraph {
         for (int departure = 7 * 3600, dcount = 0; departure < 20 * 3600; departure += FREQUENCY) {
             Trip t = new Trip();
             t.trip_id = "trip" + departure;
-            t.service = s;
-            t.route = r;
+            t.service_id = s.service_id;
+            t.route_id = r.route_id;
             feed.trips.put(t.trip_id, t);
 
             StopTime st1 = new StopTime();
@@ -470,7 +470,7 @@ public class FakeGraph {
         r.route_short_name = "1";
         r.route_long_name = "High Street";
         r.route_type = 3;
-        r.agency = a;
+        r.agency_id = a.agency_id;
         r.route_id = "route";
         feed.routes.put(r.route_id, r);
 
@@ -493,8 +493,8 @@ public class FakeGraph {
         for (int departure = 7 * 3600; departure < 20 * 3600; departure += FREQUENCY) {
             Trip t = new Trip();
             t.trip_id = "trip" + departure;
-            t.service = s;
-            t.route = r;
+            t.service_id = s.service_id;
+            t.route_id = r.route_id;
             t.direction_id = 0;
             feed.trips.put(t.trip_id, t);
 
@@ -517,8 +517,8 @@ public class FakeGraph {
             // opposite direction
             t = new Trip();
             t.trip_id = "trip_back" + departure;
-            t.service = s;
-            t.route = r;
+            t.service_id = s.service_id;
+            t.route_id = r.route_id;
             t.direction_id = 1;
             feed.trips.put(t.trip_id, t);
 
