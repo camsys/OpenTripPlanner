@@ -353,7 +353,9 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
         boolean foundOverrideStop = routingRequest.kissAndRideOverrides.isEmpty();
 
         while ( ! pq.empty()) {
-            if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime) {
+            //TODO Remove for RTD Flex
+            boolean shouldAbort = false;
+            if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime && shouldAbort) {
                 return null;
             }
             State s = pq.extract_min();

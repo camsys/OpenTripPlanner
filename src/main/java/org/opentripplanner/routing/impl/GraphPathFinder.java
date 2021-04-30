@@ -190,20 +190,6 @@ public class GraphPathFinder {
             }
         }
 
-        if (options.modes.isTransit() && router.graph.useFlexService) {
-            // create temporary flex stops/hops (just once even if we run multiple searches)
-            FlagStopGraphModifier flagStopGraphModifier = new FlagStopGraphModifier(router.graph);
-            DeviatedRouteGraphModifier deviatedRouteGraphModifier = new DeviatedRouteGraphModifier(router.graph);
-            flagStopGraphModifier.createForwardHops(options);
-            if (options.flexUseReservationServices) {
-                deviatedRouteGraphModifier.createForwardHops(options);
-            }
-            flagStopGraphModifier.createBackwardHops(options);
-            if (options.flexUseReservationServices) {
-                deviatedRouteGraphModifier.createBackwardHops(options);
-            }
-        }
-
         long searchBeginTime = System.currentTimeMillis();
         LOG.debug("BEGIN SEARCH");
         List<GraphPath> paths = Lists.newArrayList();
@@ -219,7 +205,9 @@ public class GraphPathFinder {
             double timeout = searchBeginTime + (router.timeouts[timeoutIndex] * 1000);
             timeout -= System.currentTimeMillis(); // Convert from absolute to relative time
             timeout /= 1000; // Convert milliseconds to seconds
-            if (timeout <= 0) {
+            //TODO fix for RTD Flex
+            boolean shouldAbort = false;
+            if (timeout <= 0 && shouldAbort) {
                 // Catch the case where advancing to the next (lower) timeout value means the search is timed out
                 // before it even begins. Passing a negative relative timeout in the SPT call would mean "no timeout".
                 options.rctx.aborted = true;

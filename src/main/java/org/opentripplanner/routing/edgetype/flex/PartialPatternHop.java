@@ -196,7 +196,7 @@ public class PartialPatternHop extends FlexPatternHop {
             return true;
         }
         //TODO fix this for RTD
-        return false;
+        return false;  //return length + 50 >= parentLength;
     }
 
     /**

@@ -264,11 +264,6 @@ public abstract class GtfsFlexGraphModifier {
         Vertex initVertex = rr.arriveBy ? rr.rctx.toVertex : rr.rctx.fromVertex;
         ShortestPathTree spt = gd.getShortestPathTree(new State(initVertex, rr));
 
-        //TODO remove this
-        if(spt != null) {
-            int i = 0;
-        }
-
         return patternHopStateMap.entrySet()
                 .stream()
                 .map(e -> new Pair<>(e.getValue(), e.getKey()))

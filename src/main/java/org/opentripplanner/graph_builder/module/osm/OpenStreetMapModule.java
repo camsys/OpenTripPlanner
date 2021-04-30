@@ -637,6 +637,11 @@ public class OpenStreetMapModule implements GraphBuilderModule {
                             || osmEndNode.isBollard()) {
                         segmentCoordinates.add(getCoordinate(osmEndNode));
 
+                        //TODO remove this rtd flex
+                        if(osmEndNode.getId() == 204275748 || osmEndNode.getId() == 204314732){
+                            int greg =0;
+                        }
+
                         geometry = GeometryUtils.getGeometryFactory().createLineString(
                                 segmentCoordinates.toArray(new Coordinate[0]));
                         segmentCoordinates.clear();

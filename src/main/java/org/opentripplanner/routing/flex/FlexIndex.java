@@ -58,9 +58,9 @@ public class FlexIndex {
         LOG.info("Finding corresponding street edges for trip patterns...");
         for (TripPattern pattern : graph.index.patternForId.values()) {
             //TODO remove this for RTD Flex
-            if (pattern.route.getShortName().contains("FX")) {
-                int j = 0;
-            }
+//            if (pattern.route.getShortName().contains("FX")) {
+//                int j = 0;
+//            }
 
             if (pattern.hasFlexService()) {
                 LOG.debug("Matching {}", pattern);
