@@ -353,14 +353,16 @@ public abstract class GraphPathToTripPlanConverter {
     }
 
     private static List<StopTimesInPattern> getStopTimesForStopOrParent(Graph graph, FeedScopedId stopId, ServiceDate serviceDate) {
-        Stop stop = graph.index.stopForId.get(stopId);
-        List<StopTimesInPattern> stopTimes;
-        if (stop.getParentStation() != null) {
-            stopTimes = graph.index.getStopTimesForStop(stop, serviceDate, false);
-            stopTimes.addAll(graph.index.getStopTimesForStop(stop, serviceDate.next(), false));
-        } else {
-            stopTimes = graph.index.getStopTimesForStop(stop, serviceDate, false);
-            stopTimes.addAll(graph.index.getStopTimesForStop(stop, serviceDate.next(), false));
+        List<StopTimesInPattern> stopTimes = new ArrayList<StopTimesInPattern>();
+        if(graph.index != null && graph.index.stopForId.get(stopId) != null) {
+            Stop stop = graph.index.stopForId.get(stopId);
+            if (stop.getParentStation() != null) {
+                stopTimes = graph.index.getStopTimesForStop(stop, serviceDate, false);
+                stopTimes.addAll(graph.index.getStopTimesForStop(stop, serviceDate.next(), false));
+            } else {
+                stopTimes = graph.index.getStopTimesForStop(stop, serviceDate, false);
+                stopTimes.addAll(graph.index.getStopTimesForStop(stop, serviceDate.next(), false));
+            }
         }
         return stopTimes;
     }
@@ -443,8 +445,13 @@ public abstract class GraphPathToTripPlanConverter {
         TripTimeShort example = stip.times.get(0);
         Trip newTrip = graph.index.tripForId.get(example.tripId);
 
-        return legTrip.getRoute().getId().equals(newTrip.getRoute().getId())
-                && legTrip.getDirectionId().equals(newTrip.getDirectionId());
+        boolean matches = legTrip.getRoute().getId().equals(newTrip.getRoute().getId());
+
+        if(legTrip.getDirectionId() != null && newTrip.getDirectionId() != null){
+            matches = matches && legTrip.getDirectionId().equals(newTrip.getDirectionId());
+        }
+
+        return matches;
     }
 
     private static void addFrequencyFields(State[] states, Leg leg) {
