@@ -96,7 +96,7 @@ public class StreetTransitLink extends Edge {
 
         // Do not re-enter the street network following a transfer.
         //RTD Flex was a transfer Edge
-        if (s0.backEdge instanceof SimpleTransfer) {
+        if (s0.backEdge instanceof TransferEdge) {
             return null;
         }
 
@@ -172,7 +172,7 @@ public class StreetTransitLink extends Edge {
         s1.incrementWeight(STL_TRAVERSE_COST + transitStop.getStreetToStopTime());
         s1.setBackMode(TraverseMode.LEG_SWITCH);
         //RTD Flex watch this for transfer issues
-        s1.setTransferNotPermissible();
+//        s1.setTransferNotPermissible();
         return s1.makeState();
     }
 

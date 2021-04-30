@@ -18,6 +18,7 @@ import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.core.StateEditor;
 import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.graph.Edge;
+import org.opentripplanner.routing.vertextype.TransitStationStop;
 import org.opentripplanner.routing.vertextype.TransitStop;
 
 import com.vividsolutions.jts.geom.LineString;
@@ -31,7 +32,7 @@ import java.util.Locale;
  * TODO these should really have a set of valid modes in case bike vs. walk transfers are different
  */
 //RTD Flex extends transfer Edge in RTD
-public class SimpleTransfer extends Edge {
+public class SimpleTransfer extends TransferEdge {
     private static final long serialVersionUID = 20140408L;
 
     private double distance;
@@ -41,8 +42,8 @@ public class SimpleTransfer extends Edge {
 
     private boolean wheelchairAccessible = true;
 
-    public SimpleTransfer(TransitStop from, TransitStop to, double distance, LineString geometry, List<Edge> edges) {
-        super(from, to);
+    public SimpleTransfer(TransitStationStop from, TransitStationStop to, double distance, LineString geometry, List<Edge> edges) {
+        super(from, to, distance);
         this.distance = distance;
         this.geometry = geometry;
         this.edges = edges;
@@ -94,7 +95,7 @@ public class SimpleTransfer extends Edge {
         return this.getName();
     }
 
-//    @Override
+    @Override
     public double weightLowerBound(RoutingRequest rr) {
         int time = (int) (distance / rr.walkSpeed); 
         return (time * rr.walkReluctance);
@@ -122,13 +123,13 @@ public class SimpleTransfer extends Edge {
         return "SimpleTransfer " + getName();
     }
 
-    public void setWheelchairAccessible(boolean wheelchairAccessible) {
-        this.wheelchairAccessible = wheelchairAccessible;
-    }
-
-    public boolean isWheelchairAccessible() {
-        return wheelchairAccessible;
-    }
+//    public void setWheelchairAccessible(boolean wheelchairAccessible) {
+//        this.wheelchairAccessible = wheelchairAccessible;
+//    }
+//
+//    public boolean isWheelchairAccessible() {
+//        return wheelchairAccessible;
+//    }
 
 
 }
