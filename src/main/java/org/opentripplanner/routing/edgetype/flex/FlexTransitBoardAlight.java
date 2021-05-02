@@ -44,6 +44,12 @@ public class FlexTransitBoardAlight extends TransitBoardAlight {
 
     @Override
     public State traverse(State s0) {
+
+        //TODO Remove RTD Flex but will need to clean it up more
+        if (!s0.getOptions().useEligibilityServices && !s0.getOptions().useReservationServices && s0.getVertex().getLabel().contains("FX")){
+            return null;
+        }
+
         // do not board call-n-ride if it is not a temporary stop and we aren't doing a fixed route-C&R transfer
         if (!s0.getOptions().arriveBy && boarding && hop.isDeviatedRouteBoard()
             && !((TransitStopDepart) getFromVertex()).getStopVertex().checkCallAndRideBoardAlightOk(s0)) {

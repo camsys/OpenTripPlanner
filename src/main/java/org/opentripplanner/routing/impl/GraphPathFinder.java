@@ -180,8 +180,6 @@ public class GraphPathFinder {
             FlagStopGraphModifier svc1 = new FlagStopGraphModifier(router.graph);
             DeviatedRouteGraphModifier svc2 = new DeviatedRouteGraphModifier(router.graph);
 
-            //TODO remove this RTD FLEX
-            options.useReservationServices = false;
             if (options.useReservationServices) {
                 svc1.createForwardHops(options);
                 svc1.createBackwardHops(options);

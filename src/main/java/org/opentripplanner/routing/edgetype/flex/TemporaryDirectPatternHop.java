@@ -80,6 +80,12 @@ public class TemporaryDirectPatternHop extends TemporaryPartialPatternHop implem
     public State traverse(State s0) {
         StateEditor s1 = s0.edit(this);
         s1.incrementCallAndRideTime(directTime);
+
+        //TODO Remove RTD Flex but will need to clean it up more
+        if (!s0.getOptions().useEligibilityServices && !s0.getOptions().useReservationServices && s0.getVertex().getLabel().contains("FX")){
+            return null;
+        }
+
         if (s1.getCallAndRideTime() >= s0.getOptions().maxCallAndRideSeconds) {
             return null;
         }
