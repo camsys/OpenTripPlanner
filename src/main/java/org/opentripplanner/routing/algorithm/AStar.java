@@ -199,6 +199,7 @@ public class AStar {
             if(edge.getClass() == PatternHop.class && edge.getClass().getName().contains("FX") ) {
                 boolean tool = edge.getClass() == PatternHop.class;
                 int i =0;
+                continue;
             }
 
             // Iterate over traversal results. When an edge leads nowhere (as indicated by
