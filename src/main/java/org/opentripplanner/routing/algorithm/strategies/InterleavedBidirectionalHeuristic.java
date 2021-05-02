@@ -330,6 +330,7 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
             rr.preTransitKissAndRide = true;
             rr.postTransitKissAndRide = false;
         }
+
         // Create a map that returns Infinity when it does not contain a vertex.
         TObjectDoubleMap<Vertex> vertices = new TObjectDoubleHashMap<>(100, 0.5f, Double.POSITIVE_INFINITY);
         ShortestPathTree spt = new DominanceFunction.MinimumWeight().getNewShortestPathTree(rr);
