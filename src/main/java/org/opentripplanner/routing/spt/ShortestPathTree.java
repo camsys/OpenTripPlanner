@@ -134,6 +134,17 @@ public class ShortestPathTree {
             states.add(newState);
             return true;
         }
+        Iterator<State> iter = states.iterator();
+
+        //TODO Remove RTD Flex
+        boolean hasArapahoe = false;
+        while(iter.hasNext()){
+            State s = iter.next();
+            hasArapahoe = doesBackEdgeContainArapahoe(s);
+            if(hasArapahoe) {
+                int h = 1;
+            }
+        }
 
         // if the vertex has any states that dominate the new state, don't add the state
         // if the new state dominates any old states, remove them
@@ -142,23 +153,52 @@ public class ShortestPathTree {
             State oldState = it.next();
             // order is important, because in the case of a tie
             // we want to reject the new state
-            if (dominanceFunction.betterOrEqualAndComparable(oldState, newState))
-                return false;
-//            if (dominanceFunction.betterOrEqualAndComparable(newState, oldState)){
-//                //TODO RTD Flex remove this
-//                if(oldState.backEdge != null ) {
-//                    int i = 0;
-//                    dominanceFunction.betterOrEqualAndComparable(newState, oldState);
-//                }
-//                //RTD Flex remove done
-////                it.remove();
-//            }
-        }
+            if (dominanceFunction.betterOrEqualAndComparable(oldState, newState)) {
+                //TODO remove RTD Flex
+                boolean oldHasArapahoe = doesBackEdgeContainArapahoe(oldState);
+                if(hasArapahoe) {
 
+                    if(!oldHasArapahoe && hasArapahoe){
+                        //Why is arapaho not as good?
+                        dominanceFunction.betterOrEqualAndComparable(oldState, newState);
+                    }
+                    if(oldHasArapahoe && hasArapahoe) {
+                        //I may care later
+                        dominanceFunction.betterOrEqualAndComparable(oldState, newState);
+                    }
+                }
+                return false;
+            }
+            if (dominanceFunction.betterOrEqualAndComparable(newState, oldState)){
+                //TODO remove RTD Flex
+                boolean oldHasArapahoe = doesBackEdgeContainArapahoe(oldState);
+//                if(hasArapahoe) {
+                    if(oldHasArapahoe){
+                        //Why is arapaho not as good?
+                        dominanceFunction.betterOrEqualAndComparable(newState, oldState);
+                    }
+//                }
+                it.remove();
+            }
+        }
 
         // any states remaining are co-dominant with the new state
         states.add(newState);
         return true;
+    }
+
+    //TODO remove this RTD Flex
+    private boolean doesBackEdgeContainArapahoe(State s) {
+        boolean hasArapahoe = false;
+
+        if(s.getBackEdge() != null) {
+            if(s.getBackEdge().getName() != null && s.getBackEdge().getName().contains("Arapaho") && s.getBackEdge().getName().contains("P+R")) {
+                return true;
+            } else {
+                hasArapahoe = doesBackEdgeContainArapahoe(s.getBackState());
+            }
+        }
+        return hasArapahoe;
     }
 
     /**
