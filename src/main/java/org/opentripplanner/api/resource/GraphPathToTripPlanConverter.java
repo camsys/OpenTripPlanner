@@ -570,6 +570,10 @@ public abstract class GraphPathToTripPlanConverter {
         TripTimeShort example = stip.times.get(0);
         Trip newTrip = graph.index.tripForId.get(example.tripId);
 
+        //TODO fix this RTD Flex
+        if(newTrip == null)
+            return false;
+
         return legTrip.getRoute().getId().equals(newTrip.getRoute().getId())
                 && legTrip.getDirectionId().equals(newTrip.getDirectionId());
     }

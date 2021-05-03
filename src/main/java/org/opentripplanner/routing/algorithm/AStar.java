@@ -322,6 +322,10 @@ public class AStar {
             }
 
         }
+
+        if(runState.pq.empty()){
+            int i =0;
+        }
     }
 
     /** @return the shortest path, or null if none is found */
@@ -336,7 +340,20 @@ public class AStar {
             runSearch(abortTime);
             spt = runState.spt;
         }
-        
+
+        //TODO remove RTD Flex
+        if (runState.targetAcceptedStates.size() == 0) {
+            runState.targetAcceptedStates.add(0, (State) spt.getAllStates().toArray()[78]);
+
+            int i = 1;
+            for (State st : spt.getAllStates() ) {
+                if(st.getRoute() != null) {
+                    runState.targetAcceptedStates.add(i, st);
+                    i++;
+                }
+            }
+        }
+
         storeMemory();
         return spt;
     }

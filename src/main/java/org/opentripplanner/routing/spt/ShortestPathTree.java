@@ -144,23 +144,19 @@ public class ShortestPathTree {
             // we want to reject the new state
             if (dominanceFunction.betterOrEqualAndComparable(oldState, newState))
                 return false;
-            if (dominanceFunction.betterOrEqualAndComparable(newState, oldState)){
-                //TODO RTD Flex remove this
-                if(oldState.backEdge instanceof ParkAndRideEdge ) {
-                    int i = 0;
-                    dominanceFunction.betterOrEqualAndComparable(newState, oldState);
-                }
-                //RTD Flex remove done
-                it.remove();
-            }
+//            if (dominanceFunction.betterOrEqualAndComparable(newState, oldState)){
+//                //TODO RTD Flex remove this
+//                if(oldState.backEdge != null ) {
+//                    int i = 0;
+//                    dominanceFunction.betterOrEqualAndComparable(newState, oldState);
+//                }
+//                //RTD Flex remove done
+////                it.remove();
+//            }
         }
 
 
         // any states remaining are co-dominant with the new state
-        //TODO RTD Flex remove this
-        if(newState.getVertex().getOutgoing() == null || newState.getVertex().getOutgoing().size() == 0) {
-            int j = 0;
-        }
         states.add(newState);
         return true;
     }
