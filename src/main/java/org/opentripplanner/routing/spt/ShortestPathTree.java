@@ -18,6 +18,7 @@ import com.google.common.collect.Multiset;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.edgetype.ParkAndRideEdge;
+import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -138,12 +139,9 @@ public class ShortestPathTree {
 
         //TODO Remove RTD Flex
         boolean hasArapahoe = false;
-        while(iter.hasNext()){
-            State s = iter.next();
-            hasArapahoe = doesBackEdgeContainArapahoe(s);
-            if(hasArapahoe) {
-                int h = 1;
-            }
+        hasArapahoe = doesBackEdgeContainArapahoe(newState);
+        if(hasArapahoe) {
+            int h = 1;
         }
 
         // if the vertex has any states that dominate the new state, don't add the state
@@ -183,6 +181,9 @@ public class ShortestPathTree {
         }
 
         // any states remaining are co-dominant with the new state
+        if(hasArapahoe) {
+            int g =0;
+        }
         states.add(newState);
         return true;
     }
@@ -191,11 +192,16 @@ public class ShortestPathTree {
     private boolean doesBackEdgeContainArapahoe(State s) {
         boolean hasArapahoe = false;
 
-        if(s.getBackEdge() != null) {
-            if(s.getBackEdge().getName() != null && s.getBackEdge().getName().contains("Arapaho") && s.getBackEdge().getName().contains("P+R")) {
+        if(s.getVertex() != null) {
+            if(s.getVertex().getName() != null && s.getVertex().getName().contains("Arapaho") && s.getVertex().getName().contains("Station")) {
                 return true;
             } else {
-                hasArapahoe = doesBackEdgeContainArapahoe(s.getBackState());
+                Collection<Edge> outgoing = s.getVertex().getOutgoing();
+                for (Edge out : outgoing) {
+                    if( out != null && out.getName() != null && (out.getName().contains("Arapaho") && out.getName().contains("Station")) ) {
+                        int i = 0;
+                    }
+                }
             }
         }
         return hasArapahoe;
