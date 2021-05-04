@@ -363,9 +363,7 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
         boolean foundOverrideStop = routingRequest.kissAndRideOverrides.isEmpty();
 
         while ( ! pq.empty()) {
-            //TODO RTD Flex remove
-            boolean shouldAbort = false;
-            if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime && shouldAbort) {
+            if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime) {
                 return null;
             }
             State s = pq.extract_min();
@@ -401,41 +399,14 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
             }
             for (Edge e : rr.arriveBy ? v.getIncoming() : v.getOutgoing()) {
                 // arriveBy has been set to match actual directional behavior in this subsearch.
-                if(e.traverse(s) != null && e.traverse(s).getVertex() != null && e.traverse(s).getVertex() instanceof TransitStop) {
-                    TransitStop t = (TransitStop) e.traverse(s).getVertex();
-                    if(t.getStop().getId().getId().equals("26190")){
-                        int i = 32;
-                    }
-                }
-                State s1 = e.traverse(s);
-                if(s1 != null){
-
+                for (State s1 = e.traverse(s); s1 != null; s1 = s1.getNextResult()) {
                     if (searchShouldTerminate(rr, s1, foundOverrideStop, kissAndRide)) {
                         continue;
                     }
                     if (spt.add(s1)) {
                         pq.insert(s1, s1.getWeight());
                     }
-
-                    while (s1.getNextResult() != null) {
-                        s1 = s1.getNextResult();
-
-                        if (searchShouldTerminate(rr, s1, foundOverrideStop, kissAndRide)) {
-                            continue;
-                        }
-                        if (spt.add(s1)) {
-                            pq.insert(s1, s1.getWeight());
-                        }
-                    }
                 }
-//                for (State s1 = e.traverse(s); s1 != null; s1 = s1.getNextResult()) {
-//                    if (searchShouldTerminate(rr, s1, foundOverrideStop, kissAndRide)) {
-//                        continue;
-//                    }
-//                    if (spt.add(s1)) {
-//                        pq.insert(s1, s1.getWeight());
-//                    }
-//                }
             }
         }
         LOG.debug("Heuristic street search hit {} vertices.", vertices.size());
