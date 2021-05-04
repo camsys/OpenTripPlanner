@@ -343,11 +343,12 @@ public class AStar {
 
         //TODO remove RTD Flex
         if (runState.targetAcceptedStates.size() == 0) {
-            runState.targetAcceptedStates.add(0, (State) spt.getAllStates().toArray()[78]);
+//            runState.targetAcceptedStates.add(0, (State) spt.getAllStates().toArray()[78]);
 
             int i = 1;
             for (State st : spt.getAllStates() ) {
-                if(st.getRoute() != null) {
+
+                if(hasParkAndRide(st)) {
                     runState.targetAcceptedStates.add(i, st);
                     i++;
                 }
@@ -357,7 +358,25 @@ public class AStar {
         storeMemory();
         return spt;
     }
-    
+
+    //TODO remove RTD Park and Ride
+    private boolean hasParkAndRide(State st) {
+        boolean has_park_and_ride = false;
+
+        if(st == null || st.getBackEdge() == null) {
+            return has_park_and_ride;
+        }
+        Vertex v  = st.getVertex();
+        if(v != null && v.getName() != null && v.getName().contains("Arapaho") && v.getName().contains("Village Center") && v.getName().contains("Station")) {
+            return true;
+        }else {
+            has_park_and_ride = hasParkAndRide(st.getBackState());
+        }
+
+        return has_park_and_ride;
+
+    }
+
     /** Get an SPT, starting from a collection of states */
     public ShortestPathTree getShortestPathTree(RoutingRequest options, double relTimeoutSeconds,
             SearchTerminationStrategy terminationStrategy, Collection<State> initialStates) {

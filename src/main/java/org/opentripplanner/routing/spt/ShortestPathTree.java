@@ -130,6 +130,10 @@ public class ShortestPathTree {
 
         // if the vertex has no states, add one and return
         if (states == null) {
+            boolean hasArapahoe = doesBackEdgeContainArapahoe(newState);
+            if(hasArapahoe) {
+                int h = 1;
+            }
             states = new ArrayList<>();
             stateSets.put(vertex, states);
             states.add(newState);
@@ -191,17 +195,21 @@ public class ShortestPathTree {
     //TODO remove this RTD Flex
     private boolean doesBackEdgeContainArapahoe(State s) {
         boolean hasArapahoe = false;
-
-        if(s.getVertex() != null) {
-            if(s.getVertex().getName() != null && s.getVertex().getName().contains("Arapaho") && s.getVertex().getName().contains("Station")) {
-                return true;
-            } else {
-                Collection<Edge> outgoing = s.getVertex().getOutgoing();
-                for (Edge out : outgoing) {
-                    if( out != null && out.getName() != null && (out.getName().contains("Arapaho") && out.getName().contains("Station")) ) {
-                        int i = 0;
+        if (s.getVertex() != null) {
+            Vertex v = s.getVertex();
+            if(v.getOutgoing() != null){
+                Collection<Edge> edges = v.getOutgoing();
+                for (Edge e: edges) {
+                    if(e.getName() != null && e.getName().contains("Village Center")) {
+                        int i = 5;
+                    }
+                    if(e.getName() != null && e.getName().contains("Union Station")) {
+                        int union  = 0;
                     }
                 }
+            }
+            if(v.getName().contains("Arapah") && v.getName().contains("Village Center") && v.getName().contains("Station") ) {
+                return true;
             }
         }
         return hasArapahoe;
