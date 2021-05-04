@@ -31,16 +31,11 @@ import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.location.StreetLocation;
 import org.opentripplanner.routing.spt.DominanceFunction;
 import org.opentripplanner.routing.spt.ShortestPathTree;
-import org.opentripplanner.routing.vertextype.StreetVertex;
-import org.opentripplanner.routing.vertextype.TransitStop;
+import org.opentripplanner.routing.vertextype.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * This the goal direction heuristic used for transit searches.
@@ -72,6 +67,9 @@ import java.util.Set;
  * ratio of N:1 iterations.
  */
 public class InterleavedBidirectionalHeuristic implements RemainingWeightHeuristic {
+
+    //TODO Remove RTD Flex
+    private int instanceNumber;
 
     private static final long serialVersionUID = 20160215L;
 
@@ -140,6 +138,9 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
         // set softWalkLimiting = false and maxWalkDistance = Infinity. Now, we use a cloned version of the
         // request instead.
         Vertex target = request.rctx.target;
+
+        instanceNumber = (int) (Math.random() * 100000);
+
         List<Vertex> targets = request.rctx.targets;
         if ((target != null && target == this.target || (targets != null && targets == this.targets))) {
             if (request.postTransitKissAndRide != this.postTransitKissAndRide) {
@@ -255,6 +256,9 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
                 break;
             }
             int uWeight = (int) transitQueue.peek_min_key();
+            if(uWeight < 0) {
+                int ghjfg =0;
+            }
             Vertex u = transitQueue.extract_min();
             // The weight of the queue head is uniformly increasing.
             // This is the highest weight ever seen for a closed vertex.
@@ -264,6 +268,12 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
             double uWeightOld = postBoardingWeights.get(u);
             if (uWeight < uWeightOld) {
                 // Including when uWeightOld is infinite because the vertex is not yet closed.
+                //TODO RTD Flex remove
+                String patternLinkPartOfSolution = hasSolutionPatternLinksVertext(u);
+//                if(!patternLinkPartOfSolution.equals("") || uWeight < 0) {
+                if(uWeight < 0) {
+                    int ghjfg =0;
+                }
                 postBoardingWeights.put(u, uWeight);
             } else {
                 // The vertex was already closed. This time it necessarily has a higher weight, so skip it.
@@ -286,11 +296,84 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
                 double vWeight = uWeight + edgeWeight;
                 double vWeightOld = postBoardingWeights.get(v);
                 if (vWeight < vWeightOld) {
+                    //TODO RTD Flex remove
+                    String patternLinkPartOfSolution = hasSolutionPatternLinksVertext(v);
+//                    if(!patternLinkPartOfSolution.equals("") || uWeight < 0) {
+                    if(vWeight < 0) {
+                        int ghjfg =0;
+                        e.weightLowerBound(routingRequest);
+                    }
+
+
                     // Should only happen when vWeightOld is infinite because it is not yet closed.
                     transitQueue.insert(v, vWeight);
                 }
             }
         }
+    }
+
+    private String hasSolutionPatternLinksVertext(Vertex v) {
+        if(v instanceof TransitStop) {
+            TransitStop transitStop = (TransitStop) v;
+            if( //(transitStop.getStopId().getId().equals("34008") || transitStop.getStop().getName().contains("Arapahoe at Village Center")) ||
+                    (transitStop.getStopId().getId().equals("25430") || transitStop.getStop().getName().contains("Union Station Track 11"))){
+                int transitTop = 0;
+                return transitStop.getStop().getName();
+            }
+        }
+        if(v instanceof PatternDepartVertex) {
+            PatternDepartVertex pdv = (PatternDepartVertex) v;
+            String l = pdv.getLabel();
+//            if(l.contains("101E:02") && (l.contains("07") || l.contains("09") || l.contains("08") || l.contains("20"))) {
+//                int onRoute = 0;
+//                return l;
+//            }
+        }
+        if(v instanceof PatternArriveVertex) {
+            PatternArriveVertex pav = (PatternArriveVertex) v;
+        }
+        if(v instanceof TransitStopArrive) {
+            TransitStopArrive tsa = (TransitStopArrive) v;
+            if(tsa.getStop().getName().contains("Union Station Track 11")) {
+                int onRoute = 0;
+                return tsa.getStop().getName();
+            }
+        }
+        return "";
+    }
+
+    //TODO remove RTD Flex
+    private String hasSolutionPatternLinks(State st) {
+        if(st.getVertex() == null)
+            return "";
+        Vertex v = st.getVertex();
+        if(v instanceof TransitStop) {
+            TransitStop transitStop = (TransitStop) v;
+            if((transitStop.getStopId().getId().equals("34008") || transitStop.getStop().getName().contains("Arapahoe at Village Center")) ||
+                    (transitStop.getStopId().getId().equals("25430") || transitStop.getStop().getName().contains("Union Station Track 11"))){
+                int transitTop = 0;
+                return transitStop.getStop().getName();
+            }
+        }
+        if(v instanceof PatternDepartVertex) {
+            PatternDepartVertex pdv = (PatternDepartVertex) v;
+            String l = pdv.getLabel();
+            if(l.contains("101E:02") && (l.contains("07") || l.contains("09") || l.contains("08") || l.contains("20"))) {
+                int onRoute = 0;
+                return l;
+            }
+        }
+        if(v instanceof PatternArriveVertex) {
+            PatternArriveVertex pav = (PatternArriveVertex) v;
+        }
+        if(v instanceof TransitStopArrive) {
+            TransitStopArrive tsa = (TransitStopArrive) v;
+            if(tsa.getStop().getName().contains("Union Station")) {
+                int onRoute = 0;
+                return tsa.getStop().getName();
+            }
+        }
+        return "";
     }
 
     /**
@@ -363,7 +446,9 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
         boolean foundOverrideStop = routingRequest.kissAndRideOverrides.isEmpty();
 
         while ( ! pq.empty()) {
-            if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime) {
+            //TODO RTD Flex remove
+            boolean shouldAbort = false;
+            if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime && shouldAbort) {
                 return null;
             }
             State s = pq.extract_min();
@@ -379,12 +464,27 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
                 }
                 if (fromTarget) {
                     double weight = s.getWeight();
+                    //TODO RTD Flex remove
+                    String patternLinkPartOfSolution = hasSolutionPatternLinks(s);
+                    if(weight < 0) {
+                        int dfsg =0;
+                    }
                     transitQueue.insert(v, weight);
                     if (weight > maxWeightSeen) {
                         maxWeightSeen = weight;
                     }
+                    //TODO RTD Flex remove
+                    if(!patternLinkPartOfSolution.equals("")) {
+                        int dfsg =0;
+                    }
                     postTransitStopByDistance.insert(tstop, s.getWalkDistance());
                 } else {
+                    //TODO RTD Flex remove
+                    String patternLinkPartOfSolution = hasSolutionPatternLinks(s);
+                    if(!patternLinkPartOfSolution.equals("")) {
+                        int qwsi =0;
+                    }
+
                     preTransitStopsByDistance.insert(tstop, s.getWalkDistance());
                 }
                 String feedId = tstop.getStopId().getAgencyId();

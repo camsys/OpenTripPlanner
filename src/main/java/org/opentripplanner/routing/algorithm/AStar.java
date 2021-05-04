@@ -29,6 +29,10 @@ import org.opentripplanner.routing.edgetype.PatternHop;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.spt.*;
+import org.opentripplanner.routing.vertextype.PatternArriveVertex;
+import org.opentripplanner.routing.vertextype.PatternDepartVertex;
+import org.opentripplanner.routing.vertextype.TransitStop;
+import org.opentripplanner.routing.vertextype.TransitStopArrive;
 import org.opentripplanner.util.DateUtils;
 import org.opentripplanner.util.monitoring.MonitoringStore;
 import org.opentripplanner.util.monitoring.MonitoringStoreFactory;
@@ -195,19 +199,20 @@ public class AStar {
         Collection<Edge> edges = runState.options.arriveBy ? runState.u_vertex.getIncoming() : runState.u_vertex.getOutgoing();
         for (Edge edge : edges) {
 
-            //TODO RTD Flex remove
-            if(edge.getClass() == PatternHop.class && edge.getClass().getName().contains("FX") ) {
-                boolean tool = edge.getClass() == PatternHop.class;
-                int i =0;
-                continue;
-            }
-
             // Iterate over traversal results. When an edge leads nowhere (as indicated by
             // returning NULL), the iteration is over. TODO Use this to board multiple trips.
             for (State v = edge.traverse(runState.u); v != null; v = v.getNextResult()) {
-                // Could be: for (State v : traverseEdge...)
+                //TODO RTD Flex remove
+                String patternLinkPartOfSolution = hasSolutionPatternLinks(v);
+                if(!patternLinkPartOfSolution.equals("")) {
+                    int i =0;
+                }
 
                 if (traverseVisitor != null) {
+                    //TODO remove RTD Flex
+                    if(!patternLinkPartOfSolution.equals("")) {
+                        int i =0;
+                    }
                     traverseVisitor.visitEdge(edge, v);
                 }
 
@@ -216,6 +221,10 @@ public class AStar {
 //                LOG.info("{} {}", v, remaining_w);
 
                 if (remaining_w < 0 || Double.isInfinite(remaining_w) ) {
+                    //TODO remove RTD Flex
+                    if(!patternLinkPartOfSolution.equals("")) {
+                        int i =0;
+                    }
                     continue;
                 }
                 double estimate = v.getWeight() + remaining_w;
@@ -229,18 +238,31 @@ public class AStar {
 
                 // avoid enqueuing useless branches 
                 if (estimate > runState.options.maxWeight) {
+                    //TODO remove RTD Flex
+                    if(!patternLinkPartOfSolution.equals("")) {
+                        int i =0;
+                    }
                     // too expensive to get here
                     if (verbose)
                         System.out.println("         too expensive to reach, not enqueued. estimated weight = " + estimate);
                     continue;
                 }
                 if (isWorstTimeExceeded(v, runState.options)) {
+                    //TODO remove RTD Flex
+                    if(!patternLinkPartOfSolution.equals("")) {
+                        int i =0;
+                    }
                     // too much time to get here
                     if (verbose)
                         System.out.println("         too much time to reach, not enqueued. time = " + v.getTimeSeconds());
                     continue;
                 }
-                
+
+                //TODO remove RTD Flex
+                if(!patternLinkPartOfSolution.equals("")) {
+                    int i =0;
+                }
+
                 // spt.add returns true if the state is hopeful; enqueue state if it's hopeful
                 if (runState.spt.add(v)) {
                     // report to the visitor if there is one
@@ -254,7 +276,41 @@ public class AStar {
         
         return true;
     }
-    
+
+    //TODO remove RTD Flex
+    private String hasSolutionPatternLinks(State st) {
+        if(st.getVertex() == null)
+            return "";
+        Vertex v = st.getVertex();
+        if(v instanceof TransitStop) {
+            TransitStop transitStop = (TransitStop) v;
+            if((transitStop.getStopId().getId().equals("34008") || transitStop.getStop().getName().contains("Arapahoe at Village Center")) ||
+                    (transitStop.getStopId().getId().equals("25430") || transitStop.getStop().getName().contains("Union Station Track 11"))){
+                int transitTop = 0;
+                return transitStop.getStop().getName();
+            }
+        }
+        if(v instanceof PatternDepartVertex) {
+            PatternDepartVertex pdv = (PatternDepartVertex) v;
+            String l = pdv.getLabel();
+            if(l.contains("101E:02") && (l.contains("07") || l.contains("09") || l.contains("08") || l.contains("20"))) {
+                int onRoute = 0;
+                return l;
+            }
+        }
+        if(v instanceof PatternArriveVertex) {
+            PatternArriveVertex pav = (PatternArriveVertex) v;
+        }
+        if(v instanceof TransitStopArrive) {
+            TransitStopArrive tsa = (TransitStopArrive) v;
+            if(tsa.getStop().getName().contains("Union Station")) {
+                int onRoute = 0;
+                return tsa.getStop().getName();
+            }
+        }
+        return "";
+    }
+
     void runSearch(long abortTime){
         /* the core of the A* algorithm */
         while (!runState.pq.empty()) { // Until the priority queue is empty:

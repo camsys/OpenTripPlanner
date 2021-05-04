@@ -363,7 +363,11 @@ public class TripTimes implements Serializable, Comparable<TripTimes>, Cloneable
     /** @return the amount of time in seconds that the vehicle takes to reach the following stop. */
     public int getRunningTime(final int stop) {
         // timeShift is not relevant since this involves updated times and is relative.
-        return getArrivalTime(stop + 1) - getDepartureTime(stop);
+        int time = getArrivalTime(stop + 1) - getDepartureTime(stop);
+        if(time < 0) {
+            time = (getArrivalTime(stop) * 2) - getDepartureTime(stop);
+        }
+        return time;
     }
 
     /** @return the difference between the scheduled and actual arrival times at this stop. */
