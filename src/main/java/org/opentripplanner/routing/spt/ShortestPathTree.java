@@ -130,23 +130,12 @@ public class ShortestPathTree {
 
         // if the vertex has no states, add one and return
         if (states == null) {
-            boolean hasArapahoe = doesBackEdgeContainArapahoe(newState);
-            if(hasArapahoe) {
-                int h = 1;
-            }
             states = new ArrayList<>();
             stateSets.put(vertex, states);
             states.add(newState);
             return true;
         }
         Iterator<State> iter = states.iterator();
-
-        //TODO Remove RTD Flex
-        boolean hasArapahoe = false;
-        hasArapahoe = doesBackEdgeContainArapahoe(newState);
-        if(hasArapahoe) {
-            int h = 1;
-        }
 
         // if the vertex has any states that dominate the new state, don't add the state
         // if the new state dominates any old states, remove them
@@ -156,63 +145,16 @@ public class ShortestPathTree {
             // order is important, because in the case of a tie
             // we want to reject the new state
             if (dominanceFunction.betterOrEqualAndComparable(oldState, newState)) {
-                //TODO remove RTD Flex
-                boolean oldHasArapahoe = doesBackEdgeContainArapahoe(oldState);
-                if(hasArapahoe) {
-
-                    if(!oldHasArapahoe && hasArapahoe){
-                        //Why is arapaho not as good?
-                        dominanceFunction.betterOrEqualAndComparable(oldState, newState);
-                    }
-                    if(oldHasArapahoe && hasArapahoe) {
-                        //I may care later
-                        dominanceFunction.betterOrEqualAndComparable(oldState, newState);
-                    }
-                }
                 return false;
             }
             if (dominanceFunction.betterOrEqualAndComparable(newState, oldState)){
-                //TODO remove RTD Flex
-                boolean oldHasArapahoe = doesBackEdgeContainArapahoe(oldState);
-//                if(hasArapahoe) {
-                    if(oldHasArapahoe){
-                        //Why is arapaho not as good?
-                        dominanceFunction.betterOrEqualAndComparable(newState, oldState);
-                    }
-//                }
                 it.remove();
             }
         }
 
         // any states remaining are co-dominant with the new state
-        if(hasArapahoe) {
-            int g =0;
-        }
         states.add(newState);
         return true;
-    }
-
-    //TODO remove this RTD Flex
-    private boolean doesBackEdgeContainArapahoe(State s) {
-        boolean hasArapahoe = false;
-        if (s.getVertex() != null) {
-            Vertex v = s.getVertex();
-            if(v.getOutgoing() != null){
-                Collection<Edge> edges = v.getOutgoing();
-                for (Edge e: edges) {
-                    if(e.getName() != null && e.getName().contains("Village Center")) {
-                        int i = 5;
-                    }
-                    if(e.getName() != null && e.getName().contains("Union Station")) {
-                        int union  = 0;
-                    }
-                }
-            }
-            if(v.getName().contains("Arapah") && v.getName().contains("Village Center") && v.getName().contains("Station") ) {
-                return true;
-            }
-        }
-        return hasArapahoe;
     }
 
     /**

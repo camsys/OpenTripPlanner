@@ -143,13 +143,6 @@ public class PatternHop extends TablePatternEdge implements OnboardEdge, HopEdge
                 return null;
             }
         }
-        //TODO Remove RTD Flex but will need to clean it up more
-        if (!options.useEligibilityServices && !options.useReservationServices && ((hasFlexService() || hasFlagStopService()) || getName().contains("FX")) ){
-            if(hasFlagStopService() && hasFlagStopService()) {
-                int g = 0;
-            }
-            return null;
-        }
 
         int runningTime = getRunningTime(s0);
 

@@ -127,9 +127,7 @@ public class AStar {
         // the streets around the origin and destination.
         runState.heuristic.initialize(runState.options, abortTime);
 
-        //TODO RTD Flex remove
-        boolean shouldAbort = false;
-        if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime && shouldAbort) {
+        if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime) {
             LOG.warn("Timeout during initialization of goal direction heuristic.");
             options.rctx.debugOutput.timedOut = true;
             runState = null; // Search timed out
@@ -202,17 +200,8 @@ public class AStar {
             // Iterate over traversal results. When an edge leads nowhere (as indicated by
             // returning NULL), the iteration is over. TODO Use this to board multiple trips.
             for (State v = edge.traverse(runState.u); v != null; v = v.getNextResult()) {
-                //TODO RTD Flex remove
-                String patternLinkPartOfSolution = hasSolutionPatternLinks(v);
-                if(!patternLinkPartOfSolution.equals("")) {
-                    int i =0;
-                }
 
                 if (traverseVisitor != null) {
-                    //TODO remove RTD Flex
-                    if(!patternLinkPartOfSolution.equals("")) {
-                        int i =0;
-                    }
                     traverseVisitor.visitEdge(edge, v);
                 }
 
@@ -221,10 +210,6 @@ public class AStar {
 //                LOG.info("{} {}", v, remaining_w);
 
                 if (remaining_w < 0 || Double.isInfinite(remaining_w) ) {
-                    //TODO remove RTD Flex
-                    if(!patternLinkPartOfSolution.equals("")) {
-                        int i =0;
-                    }
                     continue;
                 }
                 double estimate = v.getWeight() + remaining_w;
@@ -238,29 +223,16 @@ public class AStar {
 
                 // avoid enqueuing useless branches 
                 if (estimate > runState.options.maxWeight) {
-                    //TODO remove RTD Flex
-                    if(!patternLinkPartOfSolution.equals("")) {
-                        int i =0;
-                    }
                     // too expensive to get here
                     if (verbose)
                         System.out.println("         too expensive to reach, not enqueued. estimated weight = " + estimate);
                     continue;
                 }
                 if (isWorstTimeExceeded(v, runState.options)) {
-                    //TODO remove RTD Flex
-                    if(!patternLinkPartOfSolution.equals("")) {
-                        int i =0;
-                    }
                     // too much time to get here
                     if (verbose)
                         System.out.println("         too much time to reach, not enqueued. time = " + v.getTimeSeconds());
                     continue;
-                }
-
-                //TODO remove RTD Flex
-                if(!patternLinkPartOfSolution.equals("")) {
-                    int i =0;
                 }
 
                 // spt.add returns true if the state is hopeful; enqueue state if it's hopeful
@@ -277,49 +249,13 @@ public class AStar {
         return true;
     }
 
-    //TODO remove RTD Flex
-    private String hasSolutionPatternLinks(State st) {
-        if(st.getVertex() == null)
-            return "";
-        Vertex v = st.getVertex();
-        if(v instanceof TransitStop) {
-            TransitStop transitStop = (TransitStop) v;
-            if((transitStop.getStopId().getId().equals("34008") || transitStop.getStop().getName().contains("Arapahoe at Village Center")) ||
-                    (transitStop.getStopId().getId().equals("25430") || transitStop.getStop().getName().contains("Union Station Track 11"))){
-                int transitTop = 0;
-                return transitStop.getStop().getName();
-            }
-        }
-        if(v instanceof PatternDepartVertex) {
-            PatternDepartVertex pdv = (PatternDepartVertex) v;
-            String l = pdv.getLabel();
-            if(l.contains("101E:02") && (l.contains("07") || l.contains("09") || l.contains("08") || l.contains("20"))) {
-                int onRoute = 0;
-                return l;
-            }
-        }
-        if(v instanceof PatternArriveVertex) {
-            PatternArriveVertex pav = (PatternArriveVertex) v;
-        }
-        if(v instanceof TransitStopArrive) {
-            TransitStopArrive tsa = (TransitStopArrive) v;
-            if(tsa.getStop().getName().contains("Union Station")) {
-                int onRoute = 0;
-                return tsa.getStop().getName();
-            }
-        }
-        return "";
-    }
-
     void runSearch(long abortTime){
         /* the core of the A* algorithm */
         while (!runState.pq.empty()) { // Until the priority queue is empty:
             /*
              * Terminate based on timeout?
              */
-            //TODO RTD Flex remove
-            boolean shouldAbort = false;
-            if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime && shouldAbort) {
+            if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime) {
                 LOG.warn("Search timeout. origin={} target={}", runState.rctx.origin, runState.rctx.target);
                 // Rather than returning null to indicate that the search was aborted/timed out,
                 // we instead set a flag in the routing context and return the SPT anyway. This
@@ -395,20 +331,6 @@ public class AStar {
         if (runState != null) {
             runSearch(abortTime);
             spt = runState.spt;
-        }
-
-        //TODO remove RTD Flex
-        if (runState.targetAcceptedStates.size() == 0) {
-//            runState.targetAcceptedStates.add(0, (State) spt.getAllStates().toArray()[78]);
-
-            int i = 1;
-            for (State st : spt.getAllStates() ) {
-
-                if(hasParkAndRide(st)) {
-                    runState.targetAcceptedStates.add(i, st);
-                    i++;
-                }
-            }
         }
 
         storeMemory();

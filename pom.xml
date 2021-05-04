@@ -17,7 +17,6 @@
             <url>https://www.gnu.org/licenses/lgpl-3.0.txt</url>
         </license>
     </licenses>
-<!--TODO RTD Flex there may be complications here-->
     <!-- Developer entries are provided only for Steering Committee members.
        For other contributors, see https://github.com/opentripplanner/OpenTripPlanner/graphs/contributors -->
     <developers>

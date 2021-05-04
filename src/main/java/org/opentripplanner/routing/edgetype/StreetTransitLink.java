@@ -89,11 +89,6 @@ public class StreetTransitLink extends Edge {
 
     public State traverse(State s0) {
 
-        //TODO remove this rtd flex
-        if(s0.getBackMode() == TraverseMode.CAR && isLeavingTransitNetwork(s0.getOptions()) ) {
-            int i =0;
-        }
-
         // Forbid taking shortcuts composed of two street-transit links in a row. Also avoids spurious leg transitions.
         if (s0.backEdge instanceof StreetTransitLink) {
             return null;
@@ -176,8 +171,7 @@ public class StreetTransitLink extends Edge {
         s1.incrementTimeInSeconds(transitStop.getStreetToStopTime() + STL_TRAVERSE_COST);
         s1.incrementWeight(STL_TRAVERSE_COST + transitStop.getStreetToStopTime());
         s1.setBackMode(TraverseMode.LEG_SWITCH);
-        //RTD Flex watch this for transfer issues
-//        s1.setTransferNotPermissible();
+        s1.setTransferNotPermissible();
         return s1.makeState();
     }
 

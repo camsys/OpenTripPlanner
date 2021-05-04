@@ -112,8 +112,7 @@ public class TransferEdge extends Edge {
         se.incrementTimeInSeconds(time);
         se.incrementWeight(weight);
         se.incrementWalkDistance(distance);
-        //TODO Fix the RTD Flex
-//        se.setTransferNotPermissible();
+        se.setTransferNotPermissible();
         return se.makeState();
     }
 
