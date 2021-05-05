@@ -57,6 +57,7 @@ public class VehiclePositionsUpdateHandler extends AbstractUpdateHandler {
 			String tripId = vehiclePosition.getTrip().getTripId();
 			AlertPatch patch = new AlertPatch();
 			patch.setTrip(new AgencyAndId(feedId, tripId));
+			patch.setFeedId(feedId);
 			ServiceDate sd;
 			// time period should be the service day for which the trip is active
 			if (vehiclePosition.getTrip().hasStartDate()) {

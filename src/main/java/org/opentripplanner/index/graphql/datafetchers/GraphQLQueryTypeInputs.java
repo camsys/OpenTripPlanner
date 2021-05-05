@@ -7,14 +7,6 @@ import org.opentripplanner.index.graphql.generated.GraphQLTypes.*;
 @SuppressWarnings("unchecked")
 public class GraphQLQueryTypeInputs {
 
-	public static class GraphQLQueryTypeFeedByFeedIdArgsInput extends GraphQLQueryTypeFeedByFeedIdArgs {
-	    public GraphQLQueryTypeFeedByFeedIdArgsInput(Map<String, Object> args) {
-	        if (args != null) {
-	        	this.setGraphQLFeedId((String)args.get("feedId"));
-	        }
-	    }
-	}	
-
 	public static class GraphQLQueryTypeAgencyArgsInput extends GraphQLQueryTypeAgencyArgs {
 	    public GraphQLQueryTypeAgencyArgsInput(Map<String, Object> args) {
 	        if (args != null) {
@@ -57,7 +49,23 @@ public class GraphQLQueryTypeInputs {
 	        }
 	    }
 	}	
+
+	public static class GraphQLQueryTypeTripsArgsInput extends GraphQLQueryTypeTripsArgs {
+		public GraphQLQueryTypeTripsArgsInput(Map<String, Object> args) {
+	        if (args != null) {
+	        	this.setGraphQLFeeds( (Iterable<String>)args.get("feeds"));
+	        }
+	    }
+	}	
 	
+	public static class GraphQLQueryTypeTripArgsInput extends GraphQLQueryTypeTripArgs {
+	    public GraphQLQueryTypeTripArgsInput(Map<String, Object> args) {
+	        if (args != null) {
+	        	this.setGraphQLGtfsId((String)args.get("gtfsId"));
+	        }
+	    }
+	}	
+
 	public static class GraphQLQueryTypeStopAccessibilityArgsInput extends GraphQLQueryTypeStopAccessibilityArgs {
 	    public GraphQLQueryTypeStopAccessibilityArgsInput(Map<String, Object> args) {
 	        if (args != null) {

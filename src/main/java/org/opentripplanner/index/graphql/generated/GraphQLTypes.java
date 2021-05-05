@@ -76,14 +76,6 @@ public class GraphQLTypes {
   }
   
   
-  public static class GraphQLQueryTypeFeedByFeedIdArgs {
-    private String feedId;
-  
-    public GraphQLQueryTypeFeedByFeedIdArgs() {}
-  
-    public String getGraphQLFeedId() { return this.feedId; }
-    public void setGraphQLFeedId(String feedId) { this.feedId = feedId; }
-  }
   public static class GraphQLQueryTypeAgencyArgs {
     private String id;
   
@@ -129,6 +121,22 @@ public class GraphQLTypes {
     private String gtfsId;
   
     public GraphQLQueryTypeRouteArgs() {}
+  
+    public String getGraphQLGtfsId() { return this.gtfsId; }
+    public void setGraphQLGtfsId(String gtfsId) { this.gtfsId = gtfsId; }
+  }
+  public static class GraphQLQueryTypeTripsArgs {
+    private Iterable<String> feeds;
+  
+    public GraphQLQueryTypeTripsArgs() {}
+  
+    public Iterable<String> getGraphQLFeeds() { return this.feeds; }
+    public void setGraphQLFeeds(Iterable<String> feeds) { this.feeds = feeds; }
+  }
+  public static class GraphQLQueryTypeTripArgs {
+    private String gtfsId;
+  
+    public GraphQLQueryTypeTripArgs() {}
   
     public String getGraphQLGtfsId() { return this.gtfsId; }
     public void setGraphQLGtfsId(String gtfsId) { this.gtfsId = gtfsId; }

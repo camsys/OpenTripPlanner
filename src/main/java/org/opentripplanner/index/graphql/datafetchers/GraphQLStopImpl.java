@@ -185,7 +185,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	    	Stop e = environment.getSource();
 
 			return getRouter(environment).graph.getAlertPatches()
-					.filter(s -> s.getStop().equals(e.getId()))
+					.filter(s -> s.getStop() != null ? s.getStop().equals(e.getId()) : false)
 					.collect(Collectors.toList());
 		};
 	}

@@ -24,6 +24,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<String> feed();
     public DataFetcher<Object> agency();
     public DataFetcher<Object> route();
+    public DataFetcher<Object> trip();
     public DataFetcher<Object> stop();
     public DataFetcher<String> alertHeaderText();
     public DataFetcher<String> alertHeaderTextTranslations();
@@ -50,8 +51,6 @@ public class GraphQLDataFetchers {
     public DataFetcher<String> feedId();
     public DataFetcher<String> feedVersion();
     public DataFetcher<Iterable<Object>> agencies();
-    public DataFetcher<Iterable<Object>> routes();
-    public DataFetcher<Iterable<Object>> trips();
   }
   
   public interface GraphQLPairwiseAccessibleResult {
@@ -64,13 +63,14 @@ public class GraphQLDataFetchers {
   
   public interface GraphQLQueryType {
     public DataFetcher<Iterable<Object>> feeds();
-    public DataFetcher<Object> feedByFeedId();
     public DataFetcher<Iterable<Object>> agencies();
     public DataFetcher<Object> agency();
     public DataFetcher<Iterable<Object>> stops();
     public DataFetcher<Iterable<Object>> alerts();
     public DataFetcher<Iterable<Object>> routes();
     public DataFetcher<Object> route();
+    public DataFetcher<Iterable<Object>> trips();
+    public DataFetcher<Object> trip();
     public DataFetcher<Iterable<Object>> stopAccessibility();
   }
   
@@ -148,6 +148,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<String> blockId();
     public DataFetcher<String> shapeId();
     public DataFetcher<Iterable<Object>> stoptimes();
+    public DataFetcher<Iterable<Object>> alerts();
   }
   
 }

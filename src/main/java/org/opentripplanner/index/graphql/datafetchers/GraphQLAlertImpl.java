@@ -48,6 +48,14 @@ public class GraphQLAlertImpl implements GraphQLDataFetchers.GraphQLAlert {
 	}
 
 	@Override
+	public DataFetcher<Object> trip() {
+		 return environment -> {
+			AlertPatch e = environment.getSource();
+		    return getGraphIndex(environment).tripForId.get(e.getTrip());
+		 };
+	}
+	
+	@Override
 	public DataFetcher<Object> stop() {
 		 return environment -> {
 			AlertPatch e = environment.getSource();

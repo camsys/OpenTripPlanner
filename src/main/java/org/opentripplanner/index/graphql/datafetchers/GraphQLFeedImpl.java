@@ -1,12 +1,8 @@
 package org.opentripplanner.index.graphql.datafetchers;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.stream.Collectors;
 
-import org.onebusaway.gtfs.model.Agency;
 import org.onebusaway.gtfs.model.FeedInfo;
-import org.onebusaway.gtfs.model.Trip;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
 import org.opentripplanner.routing.graph.GraphIndex;
@@ -38,43 +34,6 @@ public class GraphQLFeedImpl implements GraphQLDataFetchers.GraphQLFeed {
 	    return environment -> {
 	    	FeedInfo e = environment.getSource();
 	    	return getGraphIndex(environment).feedInfoForId.get(e.getId()).getVersion();
-	    };
-	}
-
-	@Override
-	public DataFetcher<Iterable<Object>> routes() {
-	    return environment -> {
-	    	FeedInfo e = environment.getSource();
-
-	    	Collection<Agency> agenciesToInclude = 
-	    			getGraphIndex(environment).agenciesForFeedId.get(e.getId()).values();
-	    	
-	    	return getGraphIndex(environment).routeForId.values()
-	    			.stream()
-	    			.filter(it -> agenciesToInclude.contains(it.getAgency()))
-	    			.distinct()
-	    			.collect(Collectors.toList());
-	    };
-	}
-	
-	@Override
-	public DataFetcher<Iterable<Object>> trips() {
-	    return environment -> {
-	    	FeedInfo f = environment.getSource();
-
-	    	ArrayList<String> agencyIdsToInclude = new ArrayList<String>();
-	    	
-	    	agencyIdsToInclude.addAll(getGraphIndex(environment).agenciesForFeedId.get(f.getId()).keySet());
-
-	    	// feed and agency ID are used interchangably (a bug) by clients, 
-	    	// so add the feedID to the list of agency IDs to look for
-	    	agencyIdsToInclude.add(f.getId());
-	    	
-	    	return getGraphIndex(environment).tripForId.values()
-	    			.stream()
-	    			.filter(it -> agencyIdsToInclude.contains(it.getId().getAgencyId()))
-	    			.distinct()
-	    			.collect(Collectors.toList());
 	    };
 	}
 

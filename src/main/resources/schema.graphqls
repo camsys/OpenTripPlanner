@@ -20,12 +20,6 @@ type Feed {
     """List of agencies which provide data to this feed"""
     agencies: [Agency]
 
-    """List of routes included in this feed"""
-    routes: [Route]
-
-    """List of trips included in this feed"""
-    trips: [Trip]
-
 }
 
 
@@ -47,6 +41,9 @@ type Alert {
     """Route affected by the disruption"""
     route: Route
 
+   	"""Trip affected by the disruption"""
+    trip: Trip
+    
     """Stop affected by the disruption"""
     stop: Stop
 
@@ -424,6 +421,11 @@ type Trip {
 
     """List of times when this trip arrives to or departs from a stop"""
     stoptimes: [Stoptime]
+    
+    """
+    List of alerts which have an effect on all operations of the agency
+    """
+    alerts: [Alert]
 
 }
 
@@ -522,13 +524,10 @@ type QueryType {
     """Get all feeds"""
     feeds: [Feed]
 
-    """Get feed by ID"""
-    feedByFeedId(
-       feedId: String
-    ): Feed
 
     """Get all agencies"""
     agencies: [Agency]
+
 
     """
     Get a single agency based on agency ID, i.e. value of field `gtfsId` (ID format is `FeedId_StopId`)
@@ -584,6 +583,17 @@ type QueryType {
     """
     route(gtfsId: String!): Route
 
+    """Get all trips"""
+    trips(
+        """Only return trips with these feedIds"""
+        feeds: [String]
+    ): [Trip]
+
+    """
+    Get a single trip based on its ID, i.e. value of field `gtfsId` (format is `FeedId:TripId`)
+    """
+    trip(gtfsId: String!): Trip
+    
 
 	""" 
 	Shows all accessible stop pairs for the given stop/station/complex

@@ -1,15 +1,19 @@
 package org.opentripplanner.index.graphql.datafetchers;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import org.onebusaway.gtfs.model.Agency;
 import org.onebusaway.gtfs.model.AgencyAndId;
+import org.onebusaway.gtfs.model.FeedInfo;
 import org.opentripplanner.api.model.PairwiseAccessibilityShort;
 import org.opentripplanner.api.resource.AccessibilityResource;
+import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLQueryTypeInputs.*;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
@@ -28,10 +32,11 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 				new GraphQLQueryTypeAlertsArgsInput(environment.getArguments());
 		
 			if(input.getGraphQLFeeds() != null) {
-				Stream<String> inputStream = StreamSupport.stream(input.getGraphQLFeeds().spliterator(), false);
+				List<String> ids = StreamSupport.stream(input.getGraphQLFeeds().spliterator(), false)
+					.collect(Collectors.toList());
 
 				return getRouter(environment).graph.getAlertPatches()
-						.filter(c -> inputStream.anyMatch(inputItem -> inputItem.equals(c.getId())))
+						.filter(c -> ids.stream().anyMatch(inputItem -> inputItem.equals(c.getFeedId())))
 						.collect(Collectors.toList());			
 
 			} else {			
@@ -48,16 +53,6 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 	    		.collect(Collectors.toList());
 	}
 
-	@Override
-	public DataFetcher<Object> feedByFeedId() {
-		return environment -> {
-			GraphQLQueryTypeFeedByFeedIdArgsInput input = 
-					new GraphQLQueryTypeFeedByFeedIdArgsInput(environment.getArguments());
-			
-		    return getGraphIndex(environment).feedInfoForId.get(input.getGraphQLFeedId());
-		};
-	}
-	
 	@Override
 	public DataFetcher<Object> agency() {
 	    return environment -> getGraphIndex(environment)
@@ -81,14 +76,18 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 				if(records == null)
 					throw new Exception("Station ID was not found.");
 				
-				List<String> ids = new ArrayList<String>();
+				List<AgencyAndId> ids = new ArrayList<AgencyAndId>();
 				for(HashMap<String, String> record : records) {
-					ids.add(record.get("GTFS Stop ID"));
+					ids.addAll(getGraphIndex(environment).stopsForParentStation
+							.get(new AgencyAndId("MTASBWY", record.get("GTFS Stop ID")))
+							.stream()
+							.map(it -> { return it.getId(); })
+							.collect(Collectors.toList()));
 				}
 				
 				return getGraphIndex(environment)
 						.stopForId.values().stream()
-						.filter(c -> ids.stream().anyMatch(inputItem -> c.getId().getId().startsWith(inputItem)))
+						.filter(c -> ids.stream().anyMatch(inputItem -> c.getId().equals(inputItem)))
 						.distinct()
 						.collect(Collectors.toList());				
 			
@@ -97,22 +96,33 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 				if(records == null)
 					throw new Exception("Complex ID was not found.");
 
-				List<String> ids = new ArrayList<String>();
+				List<AgencyAndId> ids = new ArrayList<AgencyAndId>();
 				for(HashMap<String, String> record : records) {
-					ids.add(record.get("GTFS Stop ID"));
+					ids.addAll(getGraphIndex(environment).stopsForParentStation
+							.get(new AgencyAndId("MTASBWY", record.get("GTFS Stop ID")))
+							.stream()
+							.map(it -> { return it.getId(); })
+							.collect(Collectors.toList()));
 				}
 
 				return getGraphIndex(environment)
 						.stopForId.values().stream()
-						.filter(c -> ids.stream().anyMatch(inputItem -> c.getId().getId().startsWith(inputItem)))
+						.filter(c -> ids.stream().anyMatch(inputItem -> c.getId().equals(inputItem)))
 						.distinct()
 						.collect(Collectors.toList());				
 				
 			} else {			
-				AgencyAndId gtfsAgencyAndId = AgencyAndId.convertFromString(input.getGraphQLGtfsId());
+				AgencyAndId gtfsAgencyAndId = GtfsLibrary.convertIdFromString(input.getGraphQLGtfsId());
 
+				List<AgencyAndId> ids = new ArrayList<AgencyAndId>();
+				ids.addAll(getGraphIndex(environment).stopsForParentStation
+						.get(gtfsAgencyAndId)
+						.stream()
+						.map(it -> { return it.getId(); })
+						.collect(Collectors.toList()));
+				
 			    return getGraphIndex(environment).stopForId.values().stream()
-						.filter(c -> c.getId().getId().startsWith(gtfsAgencyAndId.getId()))
+						.filter(c -> ids.stream().anyMatch(inputItem -> c.getId().equals(inputItem)))
 						.distinct()
 						.collect(Collectors.toList());			
 			}	
@@ -154,7 +164,7 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 	public DataFetcher<Object> route() {
 	    return environment -> {
 			return getGraphIndex(environment)
-					.routeForId.get(AgencyAndId.convertFromString(
+					.routeForId.get(GtfsLibrary.convertIdFromString(
 							new GraphQLQueryTypeRouteArgsInput(environment.getArguments()).getGraphQLGtfsId()));
 	    };
 	}
@@ -173,12 +183,16 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 
 				List<String> ids = new ArrayList<String>();
 				for(HashMap<String, String> record : records) {
-					ids.add(record.get("GTFS Stop ID"));
+					ids.addAll(getGraphIndex(environment).stopsForParentStation
+							.get(new AgencyAndId("MTASBWY", record.get("GTFS Stop ID")))
+							.stream()
+							.map(it -> { return AgencyAndId.convertToString(it.getId()); })
+							.collect(Collectors.toList()));
 				}
 
 				queries = getGraphIndex(environment)
 						.stopForId.keySet().stream()
-						.filter(c -> ids.stream().anyMatch(inputItem -> c.getId().startsWith(inputItem)))
+						.filter(c -> ids.stream().anyMatch(inputItem -> c.getId().equals(inputItem)))
 						.collect(Collectors.toList());				
 				
 			} else	if(input.getGraphQLMtaStationId() != null) {
@@ -188,16 +202,20 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 				
 				List<String> ids = new ArrayList<String>();
 				for(HashMap<String, String> record : records) {
-					ids.add(record.get("GTFS Stop ID"));
+					ids.addAll(getGraphIndex(environment).stopsForParentStation
+							.get(new AgencyAndId("MTASBWY", record.get("GTFS Stop ID")))
+							.stream()
+							.map(it -> { return AgencyAndId.convertToString(it.getId()); })
+							.collect(Collectors.toList()));
 				}
 				
 				queries = getGraphIndex(environment)
 						.stopForId.keySet().stream()
-						.filter(c -> ids.stream().anyMatch(inputItem -> c.getId().startsWith(inputItem)))
+						.filter(c -> ids.stream().anyMatch(inputItem -> c.getId().equals(inputItem)))
 						.collect(Collectors.toList());						
 			} else {
 				queries = getGraphIndex(environment).stopForId.keySet().stream()
-						.filter(c -> c.getId().startsWith(AgencyAndId.convertFromString(input.getGraphQLGtfsId()).getId()))
+						.filter(c -> c.getId().startsWith(GtfsLibrary.convertIdFromString(input.getGraphQLGtfsId()).getId()))
 						.collect(Collectors.toList());			
 			}
 		
@@ -210,6 +228,36 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 		};
 	}
 
+	@Override
+	public DataFetcher<Iterable<Object>> trips() {
+	    return environment -> {
+	    	FeedInfo f = environment.getSource();
+
+	    	ArrayList<String> agencyIdsToInclude = new ArrayList<String>();
+	    	
+	    	agencyIdsToInclude.addAll(getGraphIndex(environment).agenciesForFeedId.get(f.getId()).keySet());
+
+	    	// feed and agency ID are used interchangably (a bug) by clients, 
+	    	// so add the feedID to the list of agency IDs to look for
+	    	agencyIdsToInclude.add(f.getId());
+	    	
+	    	return getGraphIndex(environment).tripForId.values()
+	    			.stream()
+	    			.filter(it -> agencyIdsToInclude.contains(it.getId().getAgencyId()))
+	    			.distinct()
+	    			.collect(Collectors.toList());
+	    };
+	}
+
+	@Override
+	public DataFetcher<Object> trip() {
+	    return environment -> {
+			return getGraphIndex(environment)
+					.tripForId.get(GtfsLibrary.convertIdFromString(
+							new GraphQLQueryTypeTripArgsInput(environment.getArguments()).getGraphQLGtfsId()));
+	    };
+	}
+
 	private Router getRouter(DataFetchingEnvironment environment) {
 		return environment.<GraphQLRequestContext>getContext().getRouter();
 	}
@@ -217,5 +265,4 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 	private GraphIndex getGraphIndex(DataFetchingEnvironment environment) {
 		return environment.<GraphQLRequestContext>getContext().getIndex();
 	}
-
 }

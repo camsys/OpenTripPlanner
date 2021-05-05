@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.FeedInfo;
 import org.onebusaway.gtfs.model.Route;
+import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.Trip;
 import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
@@ -13,6 +14,7 @@ import org.opentripplanner.index.graphql.generated.GraphQLTypes.GraphQLBikesAllo
 import org.opentripplanner.index.graphql.generated.GraphQLTypes.GraphQLWheelchairBoarding;
 import org.opentripplanner.index.model.TripTimeShort;
 import org.opentripplanner.routing.graph.GraphIndex;
+import org.opentripplanner.standalone.Router;
 
 import graphql.relay.Relay.ResolvedGlobalId;
 import graphql.schema.DataFetcher;
@@ -121,9 +123,23 @@ public class GraphQLTripImpl implements GraphQLDataFetchers.GraphQLTrip {
 	    };
 	}
 	
+	@Override
+	public DataFetcher<Iterable<Object>> alerts() {
+		return environment -> {
+	    	Trip t = environment.getSource();
+
+			return getRouter(environment).graph.getAlertPatches()
+					.filter(s -> s.getTrip() != null ? s.getTrip().equals(t.getId()) : false)
+					.collect(Collectors.toList());
+		};	
+	}
+	
+	private Router getRouter(DataFetchingEnvironment environment) {
+		return environment.<GraphQLRequestContext>getContext().getRouter();
+	}
+	
 	private GraphIndex getGraphIndex(DataFetchingEnvironment environment) {
 		return environment.<GraphQLRequestContext>getContext().getIndex();
 	}
-
 
 }
