@@ -224,13 +224,14 @@ public class PathwayEdge extends Edge {
 			s1.setExtension("exitingTransit", true);
 
         if(s1.getExtension("exitingTransit") != null && (Boolean)s1.getExtension("exitingTransit") == true) {
-			boolean forward = s0.getVertex() == s0.getBackEdge().getFromVertex();
-			Vertex toVertex = forward ? s0.getBackEdge().getToVertex() : s0.getBackEdge().getFromVertex();			
-	
-			if(toVertex instanceof TransitStop 
-					&& !((TransitStop)toVertex).isExtendedLocationType()) {		
-				return null;
-			}        
+        	if(s0.getBackEdge() != null) {
+				Vertex toVertex = s0.getOptions().reverseOptimizing ? s0.getBackEdge().getToVertex() : s0.getBackEdge().getFromVertex();			
+		
+				if(toVertex instanceof TransitStop 
+						&& !((TransitStop)toVertex).isExtendedLocationType()) {		
+					return null;
+				}        
+        	}
         }
 		
         int time = this.traversalTime;
