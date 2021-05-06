@@ -627,9 +627,14 @@ type RouteDestinationGroupStopTime {
     peakOffpeak: Int
 
 	"""
-	VehicleInfo for trip (if in realtime)
+	VehicleInfo for trip (if in realtime). Note: this is a JSON blob because the format can change based on MTA extensions, so assume the same format over time with caution. 
  	"""
     vehicleInfo: JSON
+
+	"""
+	Onward stops on this trip which this vehicle will make. 	
+	"""
+    stopsForTrip: [Stop]
 
 	"""
 	Realtime sign text, if given in data

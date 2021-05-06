@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.onebusaway.gtfs.model.Agency;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Stop;
+import org.onebusaway.gtfs.model.Trip;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
 import org.opentripplanner.index.model.EquipmentShort;
@@ -147,7 +148,21 @@ public class GraphQLRouteDestinationGroupStopTimeImpl implements GraphQLDataFetc
 		    };
 	}
 
+	@Override
+	public DataFetcher<Iterable<Object>> stopsForTrip() {
+		 return environment -> {
+			TripTimeShort e = environment.getSource();
+			Trip t = getGraphIndex(environment).tripForId.get(e.tripId);
+		    return getGraphIndex(environment).patternForTrip.get(t)
+		    			.getStops()
+		    			.stream()
+		    			.skip(e.stopIndex)
+						.collect(Collectors.toList());
+		 }; 
+	}
+	
 	private GraphIndex getGraphIndex(DataFetchingEnvironment environment) {
 		return environment.<GraphQLRequestContext>getContext().getIndex();
 	}
+
 }
