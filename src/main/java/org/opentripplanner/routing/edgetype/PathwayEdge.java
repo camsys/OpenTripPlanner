@@ -217,18 +217,22 @@ public class PathwayEdge extends Edge {
     public State traverse(State s0) {
         verbose = false;
 
-        // once we've paid our fare, don't re-enter the transit system after reaching an exit
-        if(s0.isEverBoarded()) {
-        	if(s0.getVertex() instanceof TransitStop && ((TransitStop)s0.getVertex()).isEntrance()) {
-        		if(s0.getBackEdge() != null) {
-        			if(s0.getBackEdge().getToVertex() instanceof TransitStop 
-        					&& !((TransitStop)s0.getBackEdge().getToVertex()).isExtendedLocationType()) {		
-        				return null;
-        			}        
-        		}
-        	}        		
+        StateEditor s1 = s0.edit(this);
+
+        // once we've gone through an exit, we must continue to exit the system 
+		if(s0.getVertex() instanceof TransitStop && ((TransitStop)s0.getVertex()).isEntrance())
+			s1.setExtension("exitingTransit", true);
+
+        if(s1.getExtension("exitingTransit") != null && (Boolean)s1.getExtension("exitingTransit") == true) {
+			boolean forward = s0.getVertex() == s0.getBackEdge().getFromVertex();
+			Vertex toVertex = forward ? s0.getBackEdge().getToVertex() : s0.getBackEdge().getFromVertex();			
+	
+			if(toVertex instanceof TransitStop 
+					&& !((TransitStop)toVertex).isExtendedLocationType()) {		
+				return null;
+			}        
         }
-        	
+		
         int time = this.traversalTime;
         if (s0.getOptions().wheelchairAccessible) {
             time = this.wheelchairTraversalTime;
@@ -244,7 +248,6 @@ public class PathwayEdge extends Edge {
             }
         }
         
-        StateEditor s1 = s0.edit(this);
         // Allow transfers to the street if the PathwayEdge is proceeded by a TransferEdge
         if (s0.backEdge instanceof TransferEdge) {
             s1.setTransferPermissible();
