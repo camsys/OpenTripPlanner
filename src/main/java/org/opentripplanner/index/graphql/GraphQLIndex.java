@@ -6,7 +6,10 @@ import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.GraphQLError;
+import graphql.Scalars;
 import graphql.analysis.MaxQueryComplexityInstrumentation;
+import graphql.scalars.ExtendedScalars;
+import graphql.schema.GraphQLScalarType;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
@@ -21,9 +24,12 @@ import org.opentripplanner.index.graphql.datafetchers.GraphQLAgencyImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLAlertImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLEquipmentImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLFeedImpl;
+import org.opentripplanner.index.graphql.datafetchers.GraphQLNearbyStopResultImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLPairwiseAccessibleResultImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLQueryTypeImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLQueryTypeInputs;
+import org.opentripplanner.index.graphql.datafetchers.GraphQLRouteDestinationGroupImpl;
+import org.opentripplanner.index.graphql.datafetchers.GraphQLRouteDestinationGroupStopTimeImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLRouteImpl;
 import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.standalone.Router;
@@ -59,13 +65,19 @@ class GraphQLIndex {
       TypeDefinitionRegistry typeRegistry = new SchemaParser().parse(sdl);
       RuntimeWiring runtimeWiring = RuntimeWiring
           .newRuntimeWiring()
+          .scalar(ExtendedScalars.DateTime)
+          .scalar(ExtendedScalars.Json)
+          .scalar(Scalars.GraphQLLong)
           .type(IntrospectionTypeWiring.build(GraphQLAgencyImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLAlertImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLEquipmentImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLFeedImpl.class))
+          .type(IntrospectionTypeWiring.build(GraphQLNearbyStopResultImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLPairwiseAccessibleResultImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLQueryTypeImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLQueryTypeInputs.class))
+          .type(IntrospectionTypeWiring.build(GraphQLRouteDestinationGroupImpl.class))
+          .type(IntrospectionTypeWiring.build(GraphQLRouteDestinationGroupStopTimeImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLRouteImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLStopImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLStoptimeImpl.class))

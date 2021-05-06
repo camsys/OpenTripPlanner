@@ -13,6 +13,7 @@ import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.FeedInfo;
 import org.opentripplanner.api.model.PairwiseAccessibilityShort;
 import org.opentripplanner.api.resource.AccessibilityResource;
+import org.opentripplanner.api.resource.NearbySchedulesResource;
 import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLQueryTypeInputs.*;
@@ -258,6 +259,44 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 	    };
 	}
 
+	@Override
+	public DataFetcher<Iterable<Object>> nearby() {
+		return environment -> {
+			GraphQLQueryTypeNearbyArgsInput input = 
+					new GraphQLQueryTypeNearbyArgsInput(environment.getArguments());
+
+			NearbySchedulesResource nsr = new NearbySchedulesResource(getRouter(environment));
+			nsr.date = input.getGraphQLDate();
+			nsr.time = input.getGraphQLTime();
+
+			nsr.stopsStr = input.getGraphQLGtfsStopIdList();
+			nsr.routesStr = input.getGraphQLRoutesList();
+			nsr.stoppingAt = input.getGraphQLStoppingAtGtfsStopId();
+
+			nsr.lat = (Double)input.getGraphQLLatitude();
+			nsr.lon = (Double)input.getGraphQLLongitude();
+			nsr.radius = (Double)input.getGraphQLRadius();
+
+			nsr.maxStops = input.getGraphQLMaxStops();
+			nsr.minStops = input.getGraphQLMinStops();
+			
+			nsr.numberOfDepartures = input.getGraphQLNumberOfDepartures();
+			nsr.timeRange = input.getGraphQLTimeRange();
+
+			nsr.omitNonPickups = input.getGraphQLOmitNonPickups();
+			nsr.showCancelledTrips = input.getGraphQLShowCancelledTrips();
+			nsr.trackIds = input.getGraphQLTracksList();
+
+			nsr.tripHeadsign = input.getGraphQLTripHeadsign();
+			nsr.direction = input.getGraphQLDirection();			
+			nsr.groupByParent = input.getGraphQLGroupByParent();
+			nsr.includeStopsForTrip = input.getGraphQLIncludeStopsForTrip();
+			nsr.signMode = input.getGraphQLSignMode();
+			
+			return nsr.getNearbySchedules().stream().collect(Collectors.toList());
+		};
+	}
+
 	private Router getRouter(DataFetchingEnvironment environment) {
 		return environment.<GraphQLRequestContext>getContext().getRouter();
 	}
@@ -265,4 +304,5 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 	private GraphIndex getGraphIndex(DataFetchingEnvironment environment) {
 		return environment.<GraphQLRequestContext>getContext().getIndex();
 	}
+
 }

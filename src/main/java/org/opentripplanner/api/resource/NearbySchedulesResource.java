@@ -67,123 +67,123 @@ public class NearbySchedulesResource {
      * latitude of origin of search. Either origin, list of stops, or both must be supplied.
      */
     @QueryParam("lat")
-    private Double lat;
+    public Double lat;
 
     /**
      * longitude of origin of search.
      */
     @QueryParam("lon")
-    private Double lon;
+    public Double lon;
 
     /**
      * Maximum walking distance, in meters, that the search will use to find stops.
      */
     @QueryParam("radius")
-    private Double radius;
+    public Double radius;
 
     /**
      * list of stops of interest. Should be a comma-separated list in the format MTA:101001,MNR:1, etc. Ignored
      * if lat, lon, and radius are given; required otherwise.
      */
     @QueryParam("stops")
-    private String stopsStr;
+    public String stopsStr;
 
     /**
      * maximum number of stops to return if lat, lon, and radius are given; Ignored if stops are given;
      */
     @QueryParam("maxStops")
     @DefaultValue("100")
-    private Integer maxStops;
+    public Integer maxStops;
 
     /**
      * Minimum number of stops to return if lat, lon, and radius are given. Will search past radius to find stops.
      */
     @QueryParam("minStops")
     @DefaultValue("1")
-    private Integer minStops;
+    public Integer minStops;
 
     /**
      * Timeout for graph search, in seconds. In the future, this value may be overridden by a system maximum.
      */
     @QueryParam("timeout")
     @DefaultValue("1.0")
-    private Double timeout;
+    public Double timeout;
 
     /**
      * list of routes of interest. Should be in the format MTASBWY__A,MNR__1, etc. Optional.
      */
     @QueryParam("routes")
-    private String routesStr;
+    public String routesStr;
 
     /**
      * direction of interest. Optional. Use GTFS direction_id (1 or 0).
      */
     @QueryParam("direction")
-    private Integer direction;
+    public Integer direction;
 
     /**
      * date to return arrival/departure times for. Will default to the current date.
      */
     @QueryParam("date")
-    private String date;
+    public String date;
 
     /**
      * time to return arrival/departure times for. Will default to the current time.
      */
     @QueryParam("time")
-    private String time;
+    public String time;
 
     /**
      * Range, in seconds, from given time, in which to return arrival/departure results.
      */
     @QueryParam("timeRange")
     @DefaultValue("1800")
-    private int timeRange;
+    public int timeRange;
 
     /**
      * Maximum number of departures to return per TripPattern, per stop
      */
     @QueryParam("numberOfDepartures")
     @DefaultValue("3")
-    private int numberOfDepartures;
+    public int numberOfDepartures;
 
     /**
      * If true, omit non-pickups, i.e. arrival/departures where the vehicle does not pick up passengers
      */
     @QueryParam("omitNonPickups")
     @DefaultValue("false")
-    private boolean omitNonPickups;
+    public boolean omitNonPickups;
 
     /**
      * if given, tripHeadsign to return arrival/departure time for.
      */
     @QueryParam("tripHeadsign")
-    private String tripHeadsign;
+    public String tripHeadsign;
 
     /**
      * if given, only include trips that visit this stop
      */
     @QueryParam("stoppingAt")
-    private String stoppingAt;
+    public String stoppingAt;
 
     /**
      * If true, group arrivals/departures by parent stop (station), instead of by stop.
      */
     @QueryParam("groupByParent")
     @DefaultValue("true")
-    private boolean groupByParent;
+    public boolean groupByParent;
 
     /**
      * List of agencies that are excluded from the stopTime results
      */
     @QueryParam("bannedAgencies")
-    private String bannedAgencies;
+    public String bannedAgencies;
 
     /**
      * List of route types that are excluded from the stopTime results
      */
     @QueryParam("bannedRouteTypes")
-    private String bannedRouteTypes;
+    public String bannedRouteTypes;
 
     /** The set of modes that a user is willing to use, with qualifiers stating whether vehicles should be parked, rented, etc.
      * Allowable values (order of modes in set is not significant):
@@ -205,34 +205,34 @@ public class NearbySchedulesResource {
      * SUBWAY, RAIL, BUS, FERRY, CABLE_CAR, GONDOLA, FUNICULAR, AIRPLANE
      */
     @QueryParam("mode")
-    private String mode;
+    public String mode;
 
     /**
      * Include cancelled trips in the output
      */
     @QueryParam("showCancelledTrips")
     @DefaultValue("false")
-    private boolean showCancelledTrips;
+    public boolean showCancelledTrips;
 
     /**
      * Add all stops for a given trip to the output
      */
     @QueryParam("includeStopsForTrip")
     @DefaultValue("false")
-    private boolean includeStopsForTrip;
+    public boolean includeStopsForTrip;
 
     /**
      * A list of tracks for which to display arrivals, e.g. "1" or "1,2". Default to all tracks.
      */
     @QueryParam("tracks")
-    private String trackIds = null;
+    public String trackIds = null;
 
     /**
      * Sets API to a mode for digital signage features. This removes results that are not in realtime.
      */
     @QueryParam("signMode")
     @DefaultValue("false")
-    private boolean signMode;
+    public boolean signMode;
 
     private GraphIndex index;
 
@@ -242,6 +242,12 @@ public class NearbySchedulesResource {
 
     public NearbySchedulesResource(@Context OTPServer otpServer, @PathParam("routerId") String routerId) {
         Router router = otpServer.getRouter(routerId);
+        this.router = router;
+        index = router.graph.index;
+        streetIndex = router.graph.streetIndex;
+    }
+
+    public NearbySchedulesResource(Router router) {
         this.router = router;
         index = router.graph.index;
         streetIndex = router.graph.streetIndex;

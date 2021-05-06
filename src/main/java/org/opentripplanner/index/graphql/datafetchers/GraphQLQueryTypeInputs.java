@@ -77,6 +77,48 @@ public class GraphQLQueryTypeInputs {
 	        }
 	    }
 	}	
-		
-	
+
+	public static class GraphQLQueryTypeNearbyArgsInput extends GraphQLQueryTypeNearbyArgs {
+	    public GraphQLQueryTypeNearbyArgsInput(Map<String, Object> args) {
+	        if (args != null) {
+	        	this.setGraphQLLatitude((Double)args.get("latitude"));
+	        	this.setGraphQLLongitude((Double)args.get("longitude"));
+	        	this.setGraphQLRadius((Double)args.get("radius"));
+
+	        	this.setGraphQLGtfsStopIdList((String)args.get("gtfsStopIdList"));
+
+	        	this.setGraphQLMaxStops((Integer)args.get("maxStops"));
+	        	this.setGraphQLMinStops((Integer)args.get("minStops"));
+
+	        	this.setGraphQLRoutesList((String)args.get("routesList"));
+
+	        	this.setGraphQLDirection((Integer)args.get("direction"));
+
+	        	this.setGraphQLDate((String)args.get("date"));
+	        	
+	        	this.setGraphQLTime((String)args.get("time"));
+
+	        	this.setGraphQLTimeRange((Integer)args.get("timeRange"));
+
+	        	this.setGraphQLNumberOfDepartures((Integer)args.get("numberOfDepartures"));
+
+	        	this.setGraphQLOmitNonPickups((Boolean)args.get("omitNonPickups"));
+
+	        	this.setGraphQLTripHeadsign((String)args.get("tripHeadsign"));
+
+	        	this.setGraphQLStoppingAtGtfsStopId((String)args.get("stoppingAtGtfsStopId"));
+
+	        	this.setGraphQLGroupByParent((Boolean)args.get("groupByParent"));
+
+	        	this.setGraphQLShowCancelledTrips((Boolean)args.get("showCancelledTrips"));
+
+	        	this.setGraphQLIncludeStopsForTrip((Boolean)args.get("includeStopsForTrip"));
+
+	        	this.setGraphQLTracksList((String)args.get("tracksList"));
+
+	        	this.setGraphQLSignMode((Boolean)args.get("signMode"));
+	        }
+	    }
+	}	
+
 }

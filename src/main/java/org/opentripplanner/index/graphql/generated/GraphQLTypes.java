@@ -58,11 +58,15 @@ public class GraphQLTypes {
   
   
   
+  
+  
   /** Identifies whether this stop represents a stop or station. */
   public enum GraphQLLocationType {
     STOP,
     STATION,
-    ENTRANCE
+    ENTRANCE_EXIT,
+    GENERIC_NODE,
+    BOARDING_AREA
     
   }
   
@@ -74,6 +78,7 @@ public class GraphQLTypes {
     PARTLY_ACCESSIBLE
     
   }
+  
   
   
   public static class GraphQLQueryTypeAgencyArgs {
@@ -161,6 +166,73 @@ public class GraphQLTypes {
     public void setGraphQLMtaComplexId(String mtaComplexId) { this.mtaComplexId = mtaComplexId; }
     public void setGraphQLMtaStationId(String mtaStationId) { this.mtaStationId = mtaStationId; }
   }
+  public static class GraphQLQueryTypeNearbyArgs {
+    private Double latitude;
+    private Double longitude;
+    private Double radius;
+    private String gtfsStopIdList;
+    private Integer maxStops;
+    private Integer minStops;
+    private String routesList;
+    private Integer direction;
+    private String date;
+    private String time;
+    private Integer timeRange;
+    private Integer numberOfDepartures;
+    private Boolean omitNonPickups;
+    private String tripHeadsign;
+    private String stoppingAtGtfsStopId;
+    private Boolean groupByParent;
+    private Boolean showCancelledTrips;
+    private Boolean includeStopsForTrip;
+    private String tracksList;
+    private Boolean signMode;
+  
+    public GraphQLQueryTypeNearbyArgs() {}
+  
+    public Double getGraphQLLatitude() { return this.latitude; }
+    public Double getGraphQLLongitude() { return this.longitude; }
+    public Double getGraphQLRadius() { return this.radius; }
+    public String getGraphQLGtfsStopIdList() { return this.gtfsStopIdList; }
+    public Integer getGraphQLMaxStops() { return this.maxStops; }
+    public Integer getGraphQLMinStops() { return this.minStops; }
+    public String getGraphQLRoutesList() { return this.routesList; }
+    public Integer getGraphQLDirection() { return this.direction; }
+    public String getGraphQLDate() { return this.date; }
+    public String getGraphQLTime() { return this.time; }
+    public Integer getGraphQLTimeRange() { return this.timeRange; }
+    public Integer getGraphQLNumberOfDepartures() { return this.numberOfDepartures; }
+    public Boolean getGraphQLOmitNonPickups() { return this.omitNonPickups; }
+    public String getGraphQLTripHeadsign() { return this.tripHeadsign; }
+    public String getGraphQLStoppingAtGtfsStopId() { return this.stoppingAtGtfsStopId; }
+    public Boolean getGraphQLGroupByParent() { return this.groupByParent; }
+    public Boolean getGraphQLShowCancelledTrips() { return this.showCancelledTrips; }
+    public Boolean getGraphQLIncludeStopsForTrip() { return this.includeStopsForTrip; }
+    public String getGraphQLTracksList() { return this.tracksList; }
+    public Boolean getGraphQLSignMode() { return this.signMode; }
+    public void setGraphQLLatitude(Double latitude) { this.latitude = latitude; }
+    public void setGraphQLLongitude(Double longitude) { this.longitude = longitude; }
+    public void setGraphQLRadius(Double radius) { this.radius = radius; }
+    public void setGraphQLGtfsStopIdList(String gtfsStopIdList) { this.gtfsStopIdList = gtfsStopIdList; }
+    public void setGraphQLMaxStops(Integer maxStops) { this.maxStops = maxStops; }
+    public void setGraphQLMinStops(Integer minStops) { this.minStops = minStops; }
+    public void setGraphQLRoutesList(String routesList) { this.routesList = routesList; }
+    public void setGraphQLDirection(Integer direction) { this.direction = direction; }
+    public void setGraphQLDate(String date) { this.date = date; }
+    public void setGraphQLTime(String time) { this.time = time; }
+    public void setGraphQLTimeRange(Integer timeRange) { this.timeRange = timeRange; }
+    public void setGraphQLNumberOfDepartures(Integer numberOfDepartures) { this.numberOfDepartures = numberOfDepartures; }
+    public void setGraphQLOmitNonPickups(Boolean omitNonPickups) { this.omitNonPickups = omitNonPickups; }
+    public void setGraphQLTripHeadsign(String tripHeadsign) { this.tripHeadsign = tripHeadsign; }
+    public void setGraphQLStoppingAtGtfsStopId(String stoppingAtGtfsStopId) { this.stoppingAtGtfsStopId = stoppingAtGtfsStopId; }
+    public void setGraphQLGroupByParent(Boolean groupByParent) { this.groupByParent = groupByParent; }
+    public void setGraphQLShowCancelledTrips(Boolean showCancelledTrips) { this.showCancelledTrips = showCancelledTrips; }
+    public void setGraphQLIncludeStopsForTrip(Boolean includeStopsForTrip) { this.includeStopsForTrip = includeStopsForTrip; }
+    public void setGraphQLTracksList(String tracksList) { this.tracksList = tracksList; }
+    public void setGraphQLSignMode(Boolean signMode) { this.signMode = signMode; }
+  }
+  
+  
   
   
   

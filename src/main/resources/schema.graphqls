@@ -5,6 +5,9 @@ schema {
 """Long type"""
 scalar Long
 
+"""JSON type"""
+scalar JSON
+
 
 """
 A feed provides routing data (stops, routes, timetables, etc.) from one or more public transport agencies.
@@ -278,8 +281,14 @@ enum LocationType {
     """A physical structure or area that contains one or more stops."""
     STATION
 
-    """A station entrance"""    
-    ENTRANCE
+    """A station entrance/exit"""    
+    ENTRANCE_EXIT
+
+    """A generic node"""    
+    GENERIC_NODE
+
+    """A boarding area"""    
+    BOARDING_AREA
 }
 
 enum BikesAllowed {
@@ -519,6 +528,126 @@ type PairwiseAccessibleResult {
 
 }
     
+type NearbyStopResult {
+
+	""" 
+	The stop data in this group is for. You'll get more than one "stop" (platform) if you provide a station.
+	"""
+	stop: [Stop]
+
+    """
+    Stop times grouped by route and destination (headsign)
+    """
+    routeDestinations: [RouteDestinationGroup]
+}
+    
+type RouteDestinationGroup {
+
+	""" 
+	The route data in this group is for.
+	"""
+	route: Route
+    
+	""" 
+	The headsign for vehicles serving trips that serve this group.
+	"""
+	headsign: String
+    
+    """ 
+    Stop time containing scheduled and realtime data for vehicles serving trips serving this stop.
+    """
+    stopTimes: [RouteDestinationGroupStopTime]
+}       
+    
+type RouteDestinationGroupStopTime {
+
+    """
+    Index of this stop in the trip
+    """
+    stopIndex: Int
+    
+    """
+	Total number of stops in the trip
+    """
+    stopCount: Int
+
+    """
+	Scheduled arrival time
+    """
+    scheduledArrival: Long
+
+    """
+	Scheduled departure time
+    """
+    scheduledDeparture: Long
+
+    """
+	Realtime arrival time, if realtime=true
+    """
+    realtimeArrival: Long
+
+    """
+	Realtime departure time, if realtime=true
+    """
+    realtimeDeparture: Long
+
+    """
+	Realtime arrival delay on the trip, in seconds, if realtime=true
+    """
+    arrivalDelay: Int
+
+    """
+	Realtime departure delay on the trip, in seconds, if realtime=true
+    """
+    departureDelay: Int
+
+	"""
+	Whether this stop is marked as a timepoint in GTFS
+	"""
+    timepoint: Boolean
+
+	"""
+	true if there is realtime data for this arrival/departure; otherwise false.
+	"""
+    realtime: Boolean 
+
+	"""
+ 	Trip of arrival/departure
+ 	"""
+    tripId: String
+
+	"""
+	Track number, if available
+ 	"""
+    track: String
+
+	"""
+	Peak/off-peak status
+ 	"""
+    peakOffpeak: Int
+
+	"""
+	VehicleInfo for trip (if in realtime)
+ 	"""
+    vehicleInfo: JSON
+
+	"""
+	Realtime sign text, if given in data
+ 	"""
+    realtimeSignText: String
+
+}
+    
+    
+type KeyValueMap {
+    data: [KeyValueEntry]
+}
+
+type KeyValueEntry {
+    key: String
+    value: String
+}    
+    
 type QueryType {
 
     """Get all feeds"""
@@ -626,5 +755,109 @@ type QueryType {
         mtaStationId: String
         
 	): [PairwiseAccessibleResult]
+	
+	nearby(
+	
+    	"""
+    	Latitude of origin of search. Either origin, list of stops, or both must be supplied.
+		"""
+	    latitude: Float
+	    
+		"""
+    	Longitude of origin of search. Either origin, list of stops, or both must be supplied.
+		"""
+		longitude: Float
+
+    	"""
+     	Maximum walking distance, in meters, that the search will use to find stops.
+		"""
+		radius: Float
+
+    	"""
+        List of stops of interest. Should be a comma-separated list in the format MTA:101001,MNR:1, etc. Ignored if lat, lon, and radius are given; required otherwise.
+        """
+	    gtfsStopIdList: String
+
+     	"""
+     	Maximum number of stops to return if lat, lon, and radius are given; Ignored if stops are given
+     	"""
+		maxStops: Int = 100
+
+    	"""
+     	Minimum number of stops to return if lat, lon, and radius are given. Will search past radius to find stops.
+ 		"""
+ 		minStops: Int = 1
+
+		"""
+     	List of routes of interest. Should be in the format MTASBWY__A,MNR__1, etc. Optional.
+     	"""
+     	routesList: String
+
+		"""
+     	Direction of interest. Optional. Use GTFS direction_id (1 or 0).
+     	"""
+     	direction: Int
+
+		"""
+     	Date to return arrival/departure times for. Will default to the current date.
+     	"""
+     	date: String
+
+		"""
+     	Time to return arrival/departure times for. Will default to the current time.
+     	"""
+     	time: String
+
+		"""	
+     	Range, in seconds, from given time, in which to return arrival/departure results. Defaults to 1800.
+     	"""
+		timeRange: Int = 1800
+
+		"""	
+		Maximum number of departures to return per TripPattern, per stop. Defaults to 3.     	
+		"""
+		numberOfDepartures: Int = 3
+
+		"""	
+		If true, omit non-pickups, i.e. arrival/departures where the vehicle does not pick up passengers. Defaults to false.
+		"""
+		omitNonPickups: Boolean = false
+
+		"""	
+		If given, tripHeadsign to return arrival/departure time for.
+		"""
+		tripHeadsign: String
+
+		"""	
+		If given, only include trips that visit this stop
+		"""
+		stoppingAtGtfsStopId: String
+
+		"""	
+		If true, group arrivals/departures by parent stop (station), instead of by stop. Defaults to true.
+		"""
+		groupByParent: Boolean = true
+
+		"""	
+		Include cancelled trips in the output. Defaults to false.
+		"""
+		showCancelledTrips: Boolean = false
+
+		"""	
+		Add all stops for a given trip to the output. Defaults to false.
+		"""
+		includeStopsForTrip: Boolean = false
+
+		"""	
+		A list of tracks for which to display arrivals, e.g. "1" or "1,2". Default to all tracks.
+		"""
+		tracksList: String
+		
+		"""	
+		Sets API to a mode for digital signage features. This removes results that are not in real-time. Defaults to false.
+		"""
+		signMode: Boolean = false	
+	
+	): [NearbyStopResult]
             
  }

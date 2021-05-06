@@ -53,6 +53,20 @@ public class GraphQLDataFetchers {
     public DataFetcher<Iterable<Object>> agencies();
   }
   
+  public interface GraphQLKeyValueEntry {
+    public DataFetcher<String> key();
+    public DataFetcher<String> value();
+  }
+  
+  public interface GraphQLKeyValueMap {
+    public DataFetcher<Iterable<Object>> data();
+  }
+  
+  public interface GraphQLNearbyStopResult {
+    public DataFetcher<Iterable<Object>> stop();
+    public DataFetcher<Iterable<Object>> routeDestinations();
+  }
+  
   public interface GraphQLPairwiseAccessibleResult {
     public DataFetcher<Object> from();
     public DataFetcher<Object> to();
@@ -72,6 +86,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<Iterable<Object>> trips();
     public DataFetcher<Object> trip();
     public DataFetcher<Iterable<Object>> stopAccessibility();
+    public DataFetcher<Iterable<Object>> nearby();
   }
   
   /**
@@ -94,6 +109,30 @@ public class GraphQLDataFetchers {
     public DataFetcher<Iterable<Object>> stops();
     public DataFetcher<Iterable<Object>> trips();
     public DataFetcher<Iterable<Object>> alerts();
+  }
+  
+  public interface GraphQLRouteDestinationGroup {
+    public DataFetcher<Object> route();
+    public DataFetcher<String> headsign();
+    public DataFetcher<Iterable<Object>> stopTimes();
+  }
+  
+  public interface GraphQLRouteDestinationGroupStopTime {
+    public DataFetcher<Integer> stopIndex();
+    public DataFetcher<Integer> stopCount();
+    public DataFetcher<Object> scheduledArrival();
+    public DataFetcher<Object> scheduledDeparture();
+    public DataFetcher<Object> realtimeArrival();
+    public DataFetcher<Object> realtimeDeparture();
+    public DataFetcher<Integer> arrivalDelay();
+    public DataFetcher<Integer> departureDelay();
+    public DataFetcher<Boolean> timepoint();
+    public DataFetcher<Boolean> realtime();
+    public DataFetcher<String> tripId();
+    public DataFetcher<String> track();
+    public DataFetcher<Integer> peakOffpeak();
+    public DataFetcher<Object> vehicleInfo();
+    public DataFetcher<String> realtimeSignText();
   }
   
   /**
