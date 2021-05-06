@@ -22,6 +22,7 @@ import org.opentripplanner.routing.core.StateEditor;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.Vertex;
+import org.opentripplanner.routing.vertextype.TransitStop;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.routing.core.TraverseMode;
@@ -215,7 +216,19 @@ public class PathwayEdge extends Edge {
 
     public State traverse(State s0) {
         verbose = false;
-        
+
+        // once we've paid our fare, don't re-enter the transit system after reaching an exit
+        if(s0.isEverBoarded()) {
+        	if(s0.getVertex() instanceof TransitStop && ((TransitStop)s0.getVertex()).isEntrance()) {
+        		if(s0.getBackEdge() != null) {
+        			if(s0.getBackEdge().getToVertex() instanceof TransitStop 
+        					&& !((TransitStop)s0.getBackEdge().getToVertex()).isExtendedLocationType()) {		
+        				return null;
+        			}        
+        		}
+        	}        		
+        }
+        	
         int time = this.traversalTime;
         if (s0.getOptions().wheelchairAccessible) {
             time = this.wheelchairTraversalTime;
