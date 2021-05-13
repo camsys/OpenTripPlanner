@@ -323,7 +323,7 @@ public class StreetEdge extends Edge implements Cloneable {
                 return editor.makeState(); // return only the "parked" walking state
             }
         }
-        //RTD Flex returns null may cause trouble
+        //RTD Flex returns null
         return null;
     }
 

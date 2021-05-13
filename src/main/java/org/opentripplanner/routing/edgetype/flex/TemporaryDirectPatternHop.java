@@ -80,6 +80,7 @@ public class TemporaryDirectPatternHop extends TemporaryPartialPatternHop implem
     public State traverse(State s0) {
         StateEditor s1 = s0.edit(this);
         s1.incrementCallAndRideTime(directTime);
+
         if (s1.getCallAndRideTime() >= s0.getOptions().maxCallAndRideSeconds) {
             return null;
         }

@@ -2,6 +2,7 @@ package org.opentripplanner.routing.spt;
 
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.State;
+import org.opentripplanner.routing.edgetype.SimpleTransfer;
 import org.opentripplanner.routing.edgetype.StreetEdge;
 import org.opentripplanner.routing.edgetype.TimedTransferEdge;
 import org.opentripplanner.routing.edgetype.TransferEdge;
@@ -49,7 +50,7 @@ public abstract class DominanceFunction implements Serializable {
 
         // The result of a TransferEdge must not block alighting normally from transit. States that are results of
         // TransferEdge are incomparable with states that are not the result of TransferEdge.
-        if ((a.backEdge instanceof TransferEdge) != (b.backEdge instanceof TransferEdge)) {
+        if ( ((a.backEdge instanceof TransferEdge) != (b.backEdge instanceof TransferEdge)) || ((a.backEdge instanceof SimpleTransfer) != (b.backEdge instanceof SimpleTransfer))) {
             return false;
         }
 

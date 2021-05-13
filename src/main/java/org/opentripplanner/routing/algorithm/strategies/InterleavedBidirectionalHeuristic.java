@@ -31,16 +31,11 @@ import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.location.StreetLocation;
 import org.opentripplanner.routing.spt.DominanceFunction;
 import org.opentripplanner.routing.spt.ShortestPathTree;
-import org.opentripplanner.routing.vertextype.StreetVertex;
-import org.opentripplanner.routing.vertextype.TransitStop;
+import org.opentripplanner.routing.vertextype.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * This the goal direction heuristic used for transit searches.
@@ -140,6 +135,7 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
         // set softWalkLimiting = false and maxWalkDistance = Infinity. Now, we use a cloned version of the
         // request instead.
         Vertex target = request.rctx.target;
+
         List<Vertex> targets = request.rctx.targets;
         if ((target != null && target == this.target || (targets != null && targets == this.targets))) {
             if (request.postTransitKissAndRide != this.postTransitKissAndRide) {
@@ -255,6 +251,9 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
                 break;
             }
             int uWeight = (int) transitQueue.peek_min_key();
+            if(uWeight < 0) {
+                int ghjfg =0;
+            }
             Vertex u = transitQueue.extract_min();
             // The weight of the queue head is uniformly increasing.
             // This is the highest weight ever seen for a closed vertex.
@@ -291,6 +290,36 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
                 }
             }
         }
+    }
+
+    private String hasSolutionPatternLinksVertext(Vertex v) {
+        if(v instanceof TransitStop) {
+            TransitStop transitStop = (TransitStop) v;
+            if( //(transitStop.getStopId().getId().equals("34008") || transitStop.getStop().getName().contains("Arapahoe at Village Center")) ||
+                    (transitStop.getStopId().getId().equals("25430") || transitStop.getStop().getName().contains("Union Station Track 11"))){
+                int transitTop = 0;
+                return transitStop.getStop().getName();
+            }
+        }
+        if(v instanceof PatternDepartVertex) {
+            PatternDepartVertex pdv = (PatternDepartVertex) v;
+            String l = pdv.getLabel();
+//            if(l.contains("101E:02") && (l.contains("07") || l.contains("09") || l.contains("08") || l.contains("20"))) {
+//                int onRoute = 0;
+//                return l;
+//            }
+        }
+        if(v instanceof PatternArriveVertex) {
+            PatternArriveVertex pav = (PatternArriveVertex) v;
+        }
+        if(v instanceof TransitStopArrive) {
+            TransitStopArrive tsa = (TransitStopArrive) v;
+            if(tsa.getStop().getName().contains("Union Station Track 11")) {
+                int onRoute = 0;
+                return tsa.getStop().getName();
+            }
+        }
+        return "";
     }
 
     /**
@@ -330,6 +359,7 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
             rr.preTransitKissAndRide = true;
             rr.postTransitKissAndRide = false;
         }
+
         // Create a map that returns Infinity when it does not contain a vertex.
         TObjectDoubleMap<Vertex> vertices = new TObjectDoubleHashMap<>(100, 0.5f, Double.POSITIVE_INFINITY);
         ShortestPathTree spt = new DominanceFunction.MinimumWeight().getNewShortestPathTree(rr);
@@ -378,10 +408,12 @@ public class InterleavedBidirectionalHeuristic implements RemainingWeightHeurist
                 }
                 if (fromTarget) {
                     double weight = s.getWeight();
+
                     transitQueue.insert(v, weight);
                     if (weight > maxWeightSeen) {
                         maxWeightSeen = weight;
                     }
+
                     postTransitStopByDistance.insert(tstop, s.getWalkDistance());
                 } else {
                     preTransitStopsByDistance.insert(tstop, s.getWalkDistance());

@@ -44,6 +44,7 @@ public class FlexTransitBoardAlight extends TransitBoardAlight {
 
     @Override
     public State traverse(State s0) {
+
         // do not board call-n-ride if it is not a temporary stop and we aren't doing a fixed route-C&R transfer
         if (!s0.getOptions().arriveBy && boarding && hop.isDeviatedRouteBoard()
             && !((TransitStopDepart) getFromVertex()).getStopVertex().checkCallAndRideBoardAlightOk(s0)) {

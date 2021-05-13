@@ -637,6 +637,20 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     public boolean farEndpointsException = false;
 
+    /**
+     * Control the size of flag-stop buffer returned in API response. This parameter only applies
+     * to GTFS-Flex routing, which must be explicitly turned on via the useFlexService parameter in
+     * router-config.json.
+     *
+     * This allows the UI to specify the length in meters of a segment around flag stops it wants
+     * to display, as an indication to the user that the vehicle may be flagged down anywhere on
+     * the segment. The backend will supply such a cropped geometry in its response
+     * (`Place.flagStopArea`). The segment will be up to flexFlagStopBufferSize meters ahead or
+     * behind the board/alight location. The actual length may be less if the board/alight location
+     * is near the beginning or end of a route.
+     */
+    public double flexFlagStopBufferSize;
+
     /* CONSTRUCTORS */
 
     /** Constructor for options; modes defaults to walk and transit */

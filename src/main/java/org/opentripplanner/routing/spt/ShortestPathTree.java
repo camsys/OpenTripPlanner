@@ -17,6 +17,8 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.State;
+import org.opentripplanner.routing.edgetype.ParkAndRideEdge;
+import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -133,6 +135,7 @@ public class ShortestPathTree {
             states.add(newState);
             return true;
         }
+        Iterator<State> iter = states.iterator();
 
         // if the vertex has any states that dominate the new state, don't add the state
         // if the new state dominates any old states, remove them
@@ -141,10 +144,12 @@ public class ShortestPathTree {
             State oldState = it.next();
             // order is important, because in the case of a tie
             // we want to reject the new state
-            if (dominanceFunction.betterOrEqualAndComparable(oldState, newState))
+            if (dominanceFunction.betterOrEqualAndComparable(oldState, newState)) {
                 return false;
-            if (dominanceFunction.betterOrEqualAndComparable(newState, oldState))
+            }
+            if (dominanceFunction.betterOrEqualAndComparable(newState, oldState)){
                 it.remove();
+            }
         }
 
         // any states remaining are co-dominant with the new state

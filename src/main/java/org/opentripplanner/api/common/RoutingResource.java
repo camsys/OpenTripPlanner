@@ -496,6 +496,39 @@ public abstract class RoutingResource {
     @QueryParam("disableRemainingWeightHeuristic")
     protected Boolean disableRemainingWeightHeuristic;
 
+    /*
+     * Control the size of flag-stop buffer returned in API response. This parameter only applies
+     * to GTFS-Flex routing, which must be explicitly turned on via the useFlexService parameter in
+     * router-config.json.
+     */
+    @QueryParam("flexFlagStopBufferSize")
+    protected Double flexFlagStopBufferSize;
+
+    /**
+     * Whether to use reservation-based services
+     */
+    @QueryParam("flexUseReservationServices")
+    protected Boolean flexUseReservationServices = true;
+
+    /**
+     * Whether to use eligibility-based services
+     */
+    @QueryParam("flexUseEligibilityServices")
+    protected Boolean flexUseEligibilityServices = true;
+
+    /**
+     * Whether to ignore DRT time limits.
+     *
+     * According to the GTFS-flex spec, demand-response transit (DRT) service must be reserved
+     * at least `drt_advance_book_min` minutes in advance. OTP not allow DRT service to be used
+     * inside that time window, unless this parameter is set to true.
+     */
+    @QueryParam("flexIgnoreDrtAdvanceBookMin")
+    protected Boolean flexIgnoreDrtAdvanceBookMin;
+
+    @QueryParam("maxHours")
+    private Double maxHours;
+
     /**
      * An additional penalty added for flag stop boarding/alighting. The value is in OTP's
      * internal weight units, which are roughly equivalent to seconds.  Set this to a high
@@ -533,13 +566,13 @@ public abstract class RoutingResource {
     /**
      * Whether to use reservation-based services
      */
-    @QueryParam("useReservationServices")
+    @QueryParam("flexUseReservationServices")
     protected Boolean useReservationServices = true;
 
     /**
      * Whether to use eligibility-based services
      */
-    @QueryParam("useEligibilityServices")
+    @QueryParam("flexUseEligibilityServices")
     protected Boolean useEligibilityServices = true;
 
     /**
@@ -551,11 +584,6 @@ public abstract class RoutingResource {
      */
     @QueryParam("ignoreDrtAdvanceBookMin")
     protected Boolean ignoreDrtAdvanceBookMin;
-
-    /** The maximum duration of a returned itinerary, in hours. Default to unlimited. */
-    @Ignore
-    @QueryParam("maxHours")
-    private Double maxHours;
 
     /** Whether maxHours limit should consider wait/idle time between the itinerary and the requested arrive/depart time. Defaults to false. */
     @Ignore
@@ -624,6 +652,8 @@ public abstract class RoutingResource {
      */
     @QueryParam("geoidElevation")
     private Boolean geoidElevation;
+
+
 
     /*
      * somewhat ugly bug fix: the graphService is only needed here for fetching per-graph time zones.
@@ -953,6 +983,9 @@ public abstract class RoutingResource {
 
         if (disableRemainingWeightHeuristic != null)
             request.disableRemainingWeightHeuristic = disableRemainingWeightHeuristic;
+
+        if (maxHours != null)
+            request.maxHours = maxHours;
 
         if (flagStopExtraPenalty != null)
             request.flagStopExtraPenalty = flagStopExtraPenalty;

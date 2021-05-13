@@ -25,9 +25,14 @@ import org.opentripplanner.routing.algorithm.strategies.TrivialRemainingWeightHe
 import org.opentripplanner.routing.core.RoutingContext;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.State;
+import org.opentripplanner.routing.edgetype.PatternHop;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.spt.*;
+import org.opentripplanner.routing.vertextype.PatternArriveVertex;
+import org.opentripplanner.routing.vertextype.PatternDepartVertex;
+import org.opentripplanner.routing.vertextype.TransitStop;
+import org.opentripplanner.routing.vertextype.TransitStopArrive;
 import org.opentripplanner.util.DateUtils;
 import org.opentripplanner.util.monitoring.MonitoringStore;
 import org.opentripplanner.util.monitoring.MonitoringStoreFactory;
@@ -121,6 +126,7 @@ public class AStar {
         // Initializing the bidirectional heuristic is a pretty complicated operation that involves searching through
         // the streets around the origin and destination.
         runState.heuristic.initialize(runState.options, abortTime);
+
         if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime) {
             LOG.warn("Timeout during initialization of goal direction heuristic.");
             options.rctx.debugOutput.timedOut = true;
@@ -194,7 +200,6 @@ public class AStar {
             // Iterate over traversal results. When an edge leads nowhere (as indicated by
             // returning NULL), the iteration is over. TODO Use this to board multiple trips.
             for (State v = edge.traverse(runState.u); v != null; v = v.getNextResult()) {
-                // Could be: for (State v : traverseEdge...)
 
                 if (traverseVisitor != null) {
                     traverseVisitor.visitEdge(edge, v);
@@ -229,7 +234,7 @@ public class AStar {
                         System.out.println("         too much time to reach, not enqueued. time = " + v.getTimeSeconds());
                     continue;
                 }
-                
+
                 // spt.add returns true if the state is hopeful; enqueue state if it's hopeful
                 if (runState.spt.add(v)) {
                     // report to the visitor if there is one
@@ -243,7 +248,7 @@ public class AStar {
         
         return true;
     }
-    
+
     void runSearch(long abortTime){
         /* the core of the A* algorithm */
         while (!runState.pq.empty()) { // Until the priority queue is empty:
@@ -309,6 +314,10 @@ public class AStar {
             }
 
         }
+
+        if(runState.pq.empty()){
+            int i =0;
+        }
     }
 
     /** @return the shortest path, or null if none is found */
@@ -323,11 +332,29 @@ public class AStar {
             runSearch(abortTime);
             spt = runState.spt;
         }
-        
+
         storeMemory();
         return spt;
     }
-    
+
+    //TODO remove RTD Park and Ride
+    private boolean hasParkAndRide(State st) {
+        boolean has_park_and_ride = false;
+
+        if(st == null || st.getBackEdge() == null) {
+            return has_park_and_ride;
+        }
+        Vertex v  = st.getVertex();
+        if(v != null && v.getName() != null && v.getName().contains("Arapaho") && v.getName().contains("Village Center") && v.getName().contains("Station")) {
+            return true;
+        }else {
+            has_park_and_ride = hasParkAndRide(st.getBackState());
+        }
+
+        return has_park_and_ride;
+
+    }
+
     /** Get an SPT, starting from a collection of states */
     public ShortestPathTree getShortestPathTree(RoutingRequest options, double relTimeoutSeconds,
             SearchTerminationStrategy terminationStrategy, Collection<State> initialStates) {
