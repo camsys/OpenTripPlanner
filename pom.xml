@@ -252,12 +252,12 @@
                 <version>1.5</version>
                 <executions>
                     <execution>
-                        <id>sign-artifacts</id>
-                        <!-- We sign in the verify phase, which means it will happen for install and deploy but not package. -->
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
+<!--                        <id>sign-artifacts</id>-->
+<!--                        &lt;!&ndash; We sign in the verify phase, which means it will happen for install and deploy but not package. &ndash;&gt;-->
+<!--                        <phase>verify</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>sign</goal>-->
+<!--                        </goals>-->
                     </execution>
                 </executions>
             </plugin>
