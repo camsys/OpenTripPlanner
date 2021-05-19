@@ -121,6 +121,7 @@ public class TripTimeShort {
         serviceAreaRadius  = tt.getServiceAreaRadius(i);
         serviceArea        = tt.getServiceArea(i);
         tripHeadsign       = tt.trip.getTripHeadsign();
+        tripId             = tt.trip.getId();
         stopHeadsign       = tt.hasStopHeadsigns() ? tt.getHeadsign(i) : null;
         track              = tt.getTrack(i);
         peakOffpeak        = tt.trip.getPeakOffpeak();
@@ -135,7 +136,6 @@ public class TripTimeShort {
 
     public TripTimeShort(TripPattern tripPattern, TripTimes tt, int i, Stop stop, ServiceDay sd, TimeZone tz) {
         this(tripPattern, tt, i, stop);
-        tripId = tt.trip.getId();
         serviceDay = sd.time(0);
         if (realtimeArrival != TripTimes.UNAVAILABLE)
             arrivalFmt = formatDateIso(serviceDay + realtimeArrival, tz);
