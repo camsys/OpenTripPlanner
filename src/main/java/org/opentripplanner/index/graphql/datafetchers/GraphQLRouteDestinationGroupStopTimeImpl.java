@@ -1,10 +1,12 @@
 package org.opentripplanner.index.graphql.datafetchers;
 
+import graphql.execution.DataFetcherResult;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -149,15 +151,22 @@ public class GraphQLRouteDestinationGroupStopTimeImpl implements GraphQLDataFetc
 	}
 
 	@Override
-	public DataFetcher<Iterable<Object>> stopsForTrip() {
+	public DataFetcher stopsForTrip() {
 		 return environment -> {
 			TripTimeShort e = environment.getSource();
 			Trip t = getGraphIndex(environment).tripForId.get(e.tripId);
-		    return getGraphIndex(environment).patternForTrip.get(t)
-		    			.getStops()
-		    			.stream()
-		    			.skip(e.stopIndex)
-						.collect(Collectors.toList());
+
+			List<Stop> data = 
+					getGraphIndex(environment).patternForTrip.get(t)
+	    			.getStops()
+	    			.stream()
+	    			.skip(e.stopIndex)
+					.collect(Collectors.toList());
+
+			return DataFetcherResult.newResult()
+					.data(data)
+					.localContext(t)
+					.build();
 		 }; 
 	}
 	

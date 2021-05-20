@@ -164,6 +164,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<String> platformCode();
     public DataFetcher<Iterable<Object>> stops();
     public DataFetcher<Iterable<Object>> routes();
+    public DataFetcher<Iterable<Object>> preferredTransfers();
     public DataFetcher<Iterable<Object>> alerts();
   }
   

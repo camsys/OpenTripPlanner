@@ -53,6 +53,10 @@ public class StopTransfer implements Serializable {
     public StopTransfer() {
     }
     
+    public List<SpecificTransfer> getSpecificTransfers() {
+    	return specificTransfers;
+    }
+    
     /**
      * Add a specific transfer to this transfer.
      * @param specificTransfer is the specific transfer; is not allowed to be null

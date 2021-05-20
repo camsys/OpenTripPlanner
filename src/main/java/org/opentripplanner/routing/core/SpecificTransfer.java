@@ -160,7 +160,7 @@ public class SpecificTransfer implements Serializable {
         return match;
     }
 
-    private boolean matchesFrom(Trip trip) {
+    public boolean matchesFrom(Trip trip) {
         checkNotNull(trip);
 
         boolean match = false;
@@ -179,6 +179,14 @@ public class SpecificTransfer implements Serializable {
             }
         }
         return match;
+    }
+    
+    public AgencyAndId getToTripId() {
+    	return toTripId;
+    }
+
+    public boolean isPreferred() {
+    	return transferTime == StopTransfer.PREFERRED_TRANSFER;
     }
 
     private boolean matchesTo(Trip trip) {

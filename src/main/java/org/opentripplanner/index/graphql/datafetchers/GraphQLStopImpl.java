@@ -1,15 +1,18 @@
 package org.opentripplanner.index.graphql.datafetchers;
 
+import graphql.execution.ExecutionStepInfo;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.onebusaway.gtfs.model.Stop;
-
+import org.onebusaway.gtfs.model.Trip;
 import org.onebusaway.gtfs.model.AgencyAndId;
+import org.opentripplanner.common.model.P2;
 import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
@@ -19,6 +22,7 @@ import org.opentripplanner.index.graphql.generated.GraphQLTypes.GraphQLWheelchai
 import org.opentripplanner.index.model.EquipmentShort;
 import org.opentripplanner.routing.alertpatch.Alert;
 import org.opentripplanner.routing.alertpatch.AlertPatch;
+import org.opentripplanner.routing.core.TransferTable;
 import org.opentripplanner.routing.edgetype.PathwayEdge;
 import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.standalone.Router;
@@ -274,7 +278,35 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	    };	
 	}
 	
-	
+	@Override
+	public DataFetcher<Iterable<Object>> preferredTransfers() {
+	    return environment -> {
+	    	Stop e = environment.getSource();
+    		Trip tripContext = environment.getLocalContext(); // the trip the user is on to determine transfers
+    		
+    		TransferTable tt = getRouter(environment).graph.getTransferTable();
+    		
+    		// this agency hasn't set preferred transfers
+	        if(tt.hasFeedTransfers(e.getId().getAgencyId(), e.getId().getAgencyId())) {
+	        	if(tripContext != null) {
+	        		List<AgencyAndId> tripIds = tt.getPreferredTransfers(e.getId(), e.getId(), tripContext);
+
+	        		return getGraphIndex(environment).tripForId.values()
+	    	    			.stream()
+	    	    			.filter(it -> tripIds.contains(it.getId()))
+	    	    			.map(it -> it.getRoute())
+	    	    			.distinct()
+	    	    			.collect(Collectors.toList());
+	        	}
+	    	
+	    		return List.of();
+	        }
+	        
+	    	return null;
+	    };
+	}
+
+
 	private Router getRouter(DataFetchingEnvironment environment) {
 		return environment.<GraphQLRequestContext>getContext().getRouter();
 	}

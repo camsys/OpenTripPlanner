@@ -19,7 +19,10 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.Set;
 
 import org.onebusaway.gtfs.model.AgencyAndId;
@@ -60,7 +63,7 @@ public class TransferTable implements Serializable {
     public boolean hasPreferredTransfers() {
         return preferredTransfers;
     }
-    
+       
     /**
      * Get the transfer time that should be used when transferring from a trip to another trip.
      * Note that this function does not check whether another specific transfer exists with the
@@ -187,6 +190,25 @@ public class TransferTable implements Serializable {
         }
         return transferDetail;
     }
+
+    // returns "toTrip" given fromTrip (and from/to stop)
+    public List<AgencyAndId> getPreferredTransfers(AgencyAndId fromStopId, AgencyAndId toStopId, Trip fromTrip) {
+        checkNotNull(fromStopId);
+        checkNotNull(toStopId);
+
+        StopTransfer stopTransfer = table.get(new P2(fromStopId, toStopId));
+												
+        if(stopTransfer == null)
+        	return List.of();
+        
+        return stopTransfer.getSpecificTransfers()
+								        		.stream()
+								        		.filter(e -> { return e.isPreferred(); })
+								        		.filter(e -> { return e.matchesFrom(fromTrip); })
+								        		.map(e -> e.getToTripId())
+								        		.filter(e -> { return e != null; })
+								        		.collect(Collectors.toList());
+    }        
     
     /**
      * Add a transfer time to the transfer table.
