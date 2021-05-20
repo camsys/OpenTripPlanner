@@ -189,6 +189,10 @@ public class SpecificTransfer implements Serializable {
     	return transferTime == StopTransfer.PREFERRED_TRANSFER;
     }
 
+    public boolean isTimedTransfer() {
+    	return transferTime == StopTransfer.TIMED_TRANSFER;
+    }
+
     private boolean matchesTo(Trip trip) {
         checkNotNull(trip);
 

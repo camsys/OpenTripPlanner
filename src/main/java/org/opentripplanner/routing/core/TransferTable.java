@@ -204,10 +204,9 @@ public class TransferTable implements Serializable {
 
         return stopTransfer.getSpecificTransfers()
 								        		.stream()
-								        		.filter(e -> { return (requiredStop == null) ? true : 
-								        			(e.getRequiredStop() == null) ? false : 
+								        		.filter(e -> { return (e.getRequiredStop() == null) ? true : 
 								        				requiredStop.getId().equals(e.getRequiredStop().getId()); })
-								        		.filter(e -> { return e.isPreferred(); })
+								        		.filter(e -> { return e.isPreferred() || e.isTimedTransfer(); })
 								        		.filter(e -> { return e.matchesFrom(fromTrip); })
 								        		.map(e -> e.getToTripId())
 								        		.filter(e -> { return e != null; })
