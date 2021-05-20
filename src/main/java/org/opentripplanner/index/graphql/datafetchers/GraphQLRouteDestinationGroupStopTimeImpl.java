@@ -5,8 +5,10 @@ import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -153,9 +155,16 @@ public class GraphQLRouteDestinationGroupStopTimeImpl implements GraphQLDataFetc
 	@Override
 	public DataFetcher stopsForTrip() {
 		 return environment -> {
-			TripTimeShort e = environment.getSource();
-			Trip t = getGraphIndex(environment).tripForId.get(e.tripId);
+			Map<String, Object> localContext = new HashMap<String, Object>();
 
+			TripTimeShort e = environment.getSource();
+			
+			Trip t = getGraphIndex(environment).tripForId.get(e.tripId);
+			Stop s = getGraphIndex(environment).patternForTrip.get(t).getStops().get(e.stopIndex);
+
+			localContext.put("stop", s);
+			localContext.put("trip", t);
+			
 			List<Stop> data = 
 					getGraphIndex(environment).patternForTrip.get(t)
 	    			.getStops()
@@ -165,7 +174,7 @@ public class GraphQLRouteDestinationGroupStopTimeImpl implements GraphQLDataFetc
 
 			return DataFetcherResult.newResult()
 					.data(data)
-					.localContext(t)
+					.localContext(localContext)
 					.build();
 		 }; 
 	}

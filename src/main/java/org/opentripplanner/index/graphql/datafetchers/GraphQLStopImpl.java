@@ -4,6 +4,7 @@ import graphql.execution.ExecutionStepInfo;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -282,14 +283,17 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	public DataFetcher<Iterable<Object>> preferredTransfers() {
 	    return environment -> {
 	    	Stop e = environment.getSource();
-    		Trip tripContext = environment.getLocalContext(); // the trip the user is on to determine transfers
+	    	HashMap<String, Object> localContext = environment.getLocalContext();
+
+	    	Trip tripContext = (Trip)localContext.get("trip"); // the trip the user is on to determine transfers
+	    	Stop requiredStop = (Stop)localContext.get("stop"); // the stop the user boarded at (LIRR only)
     		
     		TransferTable tt = getRouter(environment).graph.getTransferTable();
     		
     		// this agency hasn't set preferred transfers
 	        if(tt.hasFeedTransfers(e.getId().getAgencyId(), e.getId().getAgencyId())) {
 	        	if(tripContext != null) {
-	        		List<AgencyAndId> tripIds = tt.getPreferredTransfers(e.getId(), e.getId(), tripContext);
+	        		List<AgencyAndId> tripIds = tt.getPreferredTransfers(e.getId(), e.getId(), tripContext, requiredStop);
 
 	        		return getGraphIndex(environment).tripForId.values()
 	    	    			.stream()

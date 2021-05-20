@@ -384,7 +384,7 @@ type Stop {
     """Routes which pass through this stop"""
     routes: [Route!]
 
-    """Routes which pass through this stop, filtered to only include connections the MTA publishes as transfers. Note 1: null implies that no preferred transfers are available, while an an empty list means no published transfers are at the stop. Note 2: transfers do *not* take into account LIRR's 'required stop' transfer rules. """
+    """Routes which pass through this stop, filtered to only include connections the MTA publishes as transfers. Note 1: null implies that no preferred transfers are available, while an an empty list means no published transfers are at the stop. Note 2: For LIRR: the stop used to query nearby is used as the 'required stop' for determining transfer preference. """
     preferredTransfers: [Route!]
 
     """List of alerts which have an effect on this stop"""

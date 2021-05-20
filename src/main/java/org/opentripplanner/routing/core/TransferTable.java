@@ -192,7 +192,8 @@ public class TransferTable implements Serializable {
     }
 
     // returns "toTrip" given fromTrip (and from/to stop)
-    public List<AgencyAndId> getPreferredTransfers(AgencyAndId fromStopId, AgencyAndId toStopId, Trip fromTrip) {
+    public List<AgencyAndId> getPreferredTransfers(AgencyAndId fromStopId, 
+    		AgencyAndId toStopId, Trip fromTrip, Stop requiredStop) {
         checkNotNull(fromStopId);
         checkNotNull(toStopId);
 
@@ -200,9 +201,12 @@ public class TransferTable implements Serializable {
 												
         if(stopTransfer == null)
         	return List.of();
-        
+
         return stopTransfer.getSpecificTransfers()
 								        		.stream()
+								        		.filter(e -> { return (requiredStop == null) ? true : 
+								        			(e.getRequiredStop() == null) ? false : 
+								        				requiredStop.getId().equals(e.getRequiredStop().getId()); })
 								        		.filter(e -> { return e.isPreferred(); })
 								        		.filter(e -> { return e.matchesFrom(fromTrip); })
 								        		.map(e -> e.getToTripId())
