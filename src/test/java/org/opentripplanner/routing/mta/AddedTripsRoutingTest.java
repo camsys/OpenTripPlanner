@@ -79,7 +79,7 @@ public class AddedTripsRoutingTest extends MTAGraphTest {
     // B20171105WKD_105450_J..N22R is cancelled on 3/14, but not 3/15
     @Test
     public void testCancelledTripFutureDay() {
-        GraphPath path = search("J23S", "G05S", "2018-03-15", "5:58pm");
+        GraphPath path = search("J23N", "G05N", "2018-03-15", "6:07pm");
 
         String hash = path.getRoutePatternHash();
         LOG.info("found path: {} from {} to {}", hash, new Date(path.getStartTime() * 1000), new Date(path.getEndTime() * 1000));
