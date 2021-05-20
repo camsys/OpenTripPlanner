@@ -219,16 +219,16 @@ public class PathwayEdge extends Edge {
 
         StateEditor s1 = s0.edit(this);
 
-        // once we've gone through an exit, we must continue to exit the system 
-		if(s0.getVertex() instanceof TransitStop && ((TransitStop)s0.getVertex()).isEntrance())
+        // once we've gone through an exit after riding transit, we must continue to exit the system 
+		if(s0.isEverBoarded() && s0.getVertex() instanceof TransitStop && ((TransitStop)s0.getVertex()).isEntrance())
 			s1.setExtension("exitingTransit", true);
 
         if(s1.getExtension("exitingTransit") != null && (Boolean)s1.getExtension("exitingTransit") == true) {
         	if(s0.getBackEdge() != null) {
 				Vertex toVertex = s0.getOptions().reverseOptimizing ? s0.getBackEdge().getToVertex() : s0.getBackEdge().getFromVertex();			
 		
-				if(toVertex instanceof TransitStop 
-						&& !((TransitStop)toVertex).isExtendedLocationType()) {		
+				if(toVertex instanceof TransitStop && 
+						!((TransitStop)toVertex).isExtendedLocationType()) {		
 					return null;
 				}        
         	}

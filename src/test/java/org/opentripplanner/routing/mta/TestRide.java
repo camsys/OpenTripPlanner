@@ -96,6 +96,8 @@ public class TestRide {
     public static List<TestRide> createRides(GraphPath path) {
         List<TestRide> rides = new ArrayList<>();
         TestRide ride = null;
+        if(path == null)
+        	return rides;
         for (State state : path.states) {
             Edge edge = state.getBackEdge();
             if(edge != null)
