@@ -1,3 +1,14 @@
+## Branches in use at CS
+
+* dev-2.x: Latest OTP 2 branch with Flex work (MA DOT)
+* mta-master: Latest OTP 1.4x branch with work for NY MTA
+* rtd-master: Maybe in use? 
+* ocny-master: Maybe in use? 
+* vtrans-master: Maybe in use? 
+* translink*: Maybe in use? 
+* master: DO NOT USE. Unclear what this is. 
+
+
 ## Overview
 
 OpenTripPlanner (OTP) is an open source multi-modal trip planner. It depends on open data in open standard file formats (GTFS and OpenStreetMap), and includes a REST API for journey planning as well as a map-based Javascript client. OpenTripPlanner can also create travel time contour visualizations and compute accessibility indicators for planning and research applications. For more information, see the project website: http://opentripplanner.org
