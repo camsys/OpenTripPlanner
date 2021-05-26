@@ -6,7 +6,7 @@
 * ocny-master: Maybe in use? 
 * vtrans-master: Maybe in use? 
 * translink*: Maybe in use? 
-* master: DO NOT USE. Unclear what this is. 
+* master: DO NOT USE. Unclear what is in here.
 
 
 ## Overview
