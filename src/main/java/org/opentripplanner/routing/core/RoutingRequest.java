@@ -297,8 +297,8 @@ public class RoutingRequest implements Cloneable, Serializable {
     public RouteMatcher preferredRoutes = RouteMatcher.emptyMatcher();
     
     /** Set of preferred agencies by user. */
-    public HashSet<String> preferredAgencies = new HashSet<String>();
-
+    public HashSet<String> preferredAgencies = new HashSet<String>(Arrays.asList("MTA NYCT", "MTABC", "SUB", "MTA", "MTASBWY", "LI", "MNR"));
+    
     public HashSet<Integer> preferredRouteTypes = new HashSet<>();
 
     public HashSet<Integer> bannedRouteTypes = new HashSet<>();
