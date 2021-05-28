@@ -137,9 +137,9 @@ public class TripTimeShort {
     public TripTimeShort(TripPattern tripPattern, TripTimes tt, int i, Stop stop, ServiceDay sd, TimeZone tz) {
         this(tripPattern, tt, i, stop);
         serviceDay = sd.time(0);
-        if (realtimeArrival != TripTimes.UNAVAILABLE)
+        if (realtimeArrival != TripTimes.UNAVAILABLE && tz != null)
             arrivalFmt = formatDateIso(serviceDay + realtimeArrival, tz);
-        if (realtimeDeparture != TripTimes.UNAVAILABLE)
+        if (realtimeDeparture != TripTimes.UNAVAILABLE&& tz != null)
             departureFmt = formatDateIso(serviceDay + realtimeDeparture, tz);
     }
 

@@ -500,7 +500,7 @@ public class GraphIndex {
                             if (t.getDepartureTime(sidx) != -1 &&
                                     t.getDepartureTime(sidx) >= secondsSinceMidnight) {
                                 //RTD Flex TripTimesShort has pattern included now it is not TripTimeShort(pattern, t, sidx, stop, sd, graph.getTimeZone()));
-                                pq.insertWithOverflow(new TripTimeShort(pattern, t, sidx, stop));
+                                pq.insertWithOverflow(new TripTimeShort(pattern, t, sidx, stop, sd, null));
                             }
                         }
 
@@ -514,7 +514,7 @@ public class GraphIndex {
                             int i = 0;
                             while (departureTime <= lastDeparture && i < numberOfDepartures) {
                                 //RTD Flex TripTimesShort has pattern included now it is not TripTimeShort(pattern, freq.materialize(sidx, departureTime, true), sidx, stop, sd, graph.getTimeZone()));
-                                pq.insertWithOverflow(new TripTimeShort(pattern, freq.materialize(sidx, departureTime, true), sidx, stop));
+                                pq.insertWithOverflow(new TripTimeShort(pattern, freq.materialize(sidx, departureTime, true), sidx, stop, sd, null));
                                 departureTime += freq.headway;
                                 i++;
                             }
@@ -590,7 +590,7 @@ public class GraphIndex {
                     for (TripTimes t : tt.tripTimes) {
                         if (!sd.serviceRunning(t.serviceCode)) continue;
                         //RTD Flex TripTimesShort has pattern included now it is not TripTimeShort(pattern, t, sidx, stop, sd, graph.getTimeZone()))
-                        stopTimes.times.add(new TripTimeShort(pattern, t, sidx, stop));
+                        stopTimes.times.add(new TripTimeShort(pattern, t, sidx, stop, sd, null));
                     }
                 }
                 sidx++;

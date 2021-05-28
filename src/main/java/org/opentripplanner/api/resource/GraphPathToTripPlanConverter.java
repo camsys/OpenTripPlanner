@@ -59,6 +59,7 @@ import java.util.*;
 public abstract class GraphPathToTripPlanConverter {
 
     private static final Logger LOG = LoggerFactory.getLogger(GraphPathToTripPlanConverter.class);
+
     private static final double MAX_ZAG_DISTANCE = 30; // TODO add documentation, what is a "zag"?
 
     /**
@@ -225,8 +226,8 @@ public abstract class GraphPathToTripPlanConverter {
         fixupLegs(itinerary.legs, legsStates);
 
         itinerary.duration = lastState.getElapsedTimeSeconds();
-        itinerary.startTime = makeCalendar(states[0]);
-        itinerary.endTime = makeCalendar(lastState);
+        itinerary.setStartTime(makeCalendar(states[0]));
+        itinerary.setEndTime(makeCalendar(lastState));
 
         calculateTimes(itinerary, states);
 
@@ -428,8 +429,8 @@ public abstract class GraphPathToTripPlanConverter {
 
         Edge[] edges = new Edge[states.length - 1];
 
-        leg.startTime = makeCalendar(states[0]);
-        leg.endTime = makeCalendar(states[states.length - 1]);
+        leg.setStartTime(makeCalendar(states[0]));
+        leg.setEndTime(makeCalendar(states[states.length - 1]));
 
         // Calculate leg distance and fill array of edges
         leg.distance = 0.0;
@@ -506,7 +507,7 @@ public abstract class GraphPathToTripPlanConverter {
 
                 if (shortTimeCounter < sortedStopTimes.size() && shortTimeCounter >= 0) {
                     int nextTripCounter = shortTimeCounter;
-                    while (nextTripCounter < sortedStopTimes.size() && nextTripCounter >= 0) {
+                    while (nextTripCounter < sortedStopTimes.size() && nextTripCounter >= 0 ) {
                         nextTrip = sortedStopTimes.get(nextTripCounter);
 
                         if (hasSameEndStop(nextTrip.tripId, destSortedStopTimes)) {
