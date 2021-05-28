@@ -193,7 +193,7 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 
 				queries = getGraphIndex(environment)
 						.stopForId.keySet().stream()
-						.filter(c -> ids.stream().anyMatch(inputItem -> c.getId().equals(inputItem)))
+						.filter(c -> ids.stream().anyMatch(inputItem -> AgencyAndId.convertToString(c).equals(inputItem)))
 						.collect(Collectors.toList());				
 				
 			} else	if(input.getGraphQLMtaStationId() != null) {
@@ -212,7 +212,7 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 				
 				queries = getGraphIndex(environment)
 						.stopForId.keySet().stream()
-						.filter(c -> ids.stream().anyMatch(inputItem -> c.getId().equals(inputItem)))
+						.filter(c -> ids.stream().anyMatch(inputItem -> AgencyAndId.convertToString(c).equals(inputItem)))
 						.collect(Collectors.toList());						
 			} else {
 				queries = getGraphIndex(environment).stopForId.keySet().stream()
