@@ -462,9 +462,18 @@
             <url>https://maven.conveyal.com/</url>
         </repository>
         <repository>
-            <id>onebusaway-releases</id>
-            <name>Onebusaway Release Repo</name>
-            <url>http://nexus.onebusaway.org/content/repositories/releases/</url>
+            <id>repo.camsys-apps.com</id>
+            <url>https://repo.camsys-apps.com/third-party/</url>
+        </repository>
+        <repository>
+            <id>releases-camsys-public-repo</id>
+            <url>https://repo.camsys-apps.com/releases/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
     </repositories>
 
