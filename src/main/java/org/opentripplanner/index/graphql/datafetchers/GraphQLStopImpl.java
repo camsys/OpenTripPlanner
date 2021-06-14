@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.Trip;
@@ -222,7 +223,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	public DataFetcher<Iterable<Object>> mtaEquipment() {
 		return environment -> {
 	    	Stop e = environment.getSource();
-	    	String gtfsId = e.getParentStation() != null ? e.getParentStation() : e.getId().getId();
+	    	AgencyAndId gtfsId = e.getParentStation() != null ? new AgencyAndId(e.getId().getAgencyId(), e.getParentStation()) : e.getId();
 
 	    	Set<PathwayEdge> equipmentHere = getGraphIndex(environment).equipmentEdgesForStationId.get(gtfsId);
 
@@ -238,7 +239,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
     	    	
 	    	    	Set<Alert> alerts = new HashSet<Alert>();
 	        	   	for (AlertPatch alert : getRouter(environment).graph.getAlertPatches(equipmentEdge)) {
-	        	   		if(alert.getStop().equals(new AgencyAndId("MTASBWY", gtfsId)) 
+	        	   		if(alert.getStop().equals(gtfsId) 
 	        	   				&& alert.getElevatorId().equals(equipmentId)) {
 	        	   			alerts.add(alert.getAlert());
 	
@@ -250,7 +251,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	    	    	result.add(resultItem);
 	    		} 
 	    		
-	    		return (Iterable<Object>)result.iterator();
+	    		return result.stream().collect(Collectors.toList());
 	    	}
 	    	
 	    	return null;

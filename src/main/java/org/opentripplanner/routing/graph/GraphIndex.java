@@ -36,6 +36,7 @@ import org.opentripplanner.common.geometry.HashGridSpatialIndex;
 import org.opentripplanner.common.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.common.model.P2;
+import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.index.IndexGraphQLSchema;
 import org.opentripplanner.index.model.StopTimesInPattern;
 import org.opentripplanner.index.model.TripTimeShort;
@@ -101,7 +102,7 @@ public class GraphIndex {
     public final Map<Stop, StopCluster> stopClusterForStop = Maps.newHashMap();
     public final Map<String, StopCluster> stopClusterForId = Maps.newHashMap();
     public final Multimap<String, PathwayEdge> pathwayForElevator = ArrayListMultimap.create();
-    public final Map<String, HashSet<PathwayEdge>> equipmentEdgesForStationId = new HashMap<String, HashSet<PathwayEdge>>();
+    public final Map<AgencyAndId, HashSet<PathwayEdge>> equipmentEdgesForStationId = new HashMap<AgencyAndId, HashSet<PathwayEdge>>();
 	public final Map<String, HashSet<Vertex>> connectionsFromMap = new HashMap<String, HashSet<Vertex>>();    	
 
 	public final RemoteCSVBackedHashMap mtaSubwayStationsByStationId = new RemoteCSVBackedHashMap("http://web.mta.info/developers/data/nyct/subway/Stations.csv", "Station ID");
@@ -234,11 +235,12 @@ public class GraphIndex {
 //        	System.out.println("Starting pathway walk from " + v.getLabel());
 
         	HashSet<Vertex> connectionsFromHere = new HashSet<Vertex>();
+        	HashSet<PathwayEdge> equipmentAccessFromHere = new HashSet<PathwayEdge>();
         	HashSet<Vertex> visitedList = new HashSet<Vertex>();
 
         	boolean initialState = graph.stopAccessibilityStrategy.transitStopEvaluateGTFSAccessibilityFlag(tss.getStop());
         	
-        	Boolean hasAtLeastOneAccessiblePath = walkPathwayEdges(v, connectionsFromHere, visitedList, initialState, 0);       
+        	Boolean hasAtLeastOneAccessiblePath = walkPathwayEdges(v, connectionsFromHere, equipmentAccessFromHere, visitedList, initialState, 0);       
         	if(hasAtLeastOneAccessiblePath != null && v instanceof TransitStop) {
             	TransitStop ts = (TransitStop)v;
         		ts.setWheelchairEntrance(hasAtLeastOneAccessiblePath);
@@ -246,13 +248,24 @@ public class GraphIndex {
         	
         	// change from the two AgencyAndId formats used in this codebase (sigh...)
         	connectionsFromMap.put(v.getLabel().replace(":", "_"), connectionsFromHere);
+
+        	// update equipment index
+        	Stop thisStop = this.stopForId.get(GtfsLibrary.convertIdFromString(v.getLabel()));
+        	
+        	if(thisStop != null) {
+	        	AgencyAndId parentStopId = (thisStop.getParentStation() != null) 
+	        			? new AgencyAndId(thisStop.getId().getAgencyId(), thisStop.getParentStation()) 
+	        			: thisStop.getId();
+	        	
+	        	equipmentEdgesForStationId.put(parentStopId, equipmentAccessFromHere);
+        	}
         }
         
         LOG.info("done");
     }
 
-	private Boolean walkPathwayEdges(Vertex v, HashSet<Vertex> connectionsFromHere, HashSet<Vertex> visitedList,
-			Boolean accessibleToHere, int depth) {    	
+	private Boolean walkPathwayEdges(Vertex v, HashSet<Vertex> connectionsFromHere, HashSet<PathwayEdge> equipmentAccessFromHere, 
+			HashSet<Vertex> visitedList, Boolean accessibleToHere, int depth) {    	
     	
         // stop if we've been here before
         if(visitedList.contains(v))
@@ -281,10 +294,6 @@ public class GraphIndex {
         if(s.getLocationType() == Stop.LOCATION_TYPE_ENTRANCE_EXIT)
         	return accessibleToHere;
 
-		HashSet<PathwayEdge> equipmentHere = equipmentEdgesForStationId.get(v.getLabel().replace(":", "_"));
-		if(equipmentHere == null) 
-			equipmentHere = new HashSet<PathwayEdge>();
-		
     	Boolean hasAtLeastOneAccessiblePath = false;
     	for(Edge e : v.getOutgoing()) {
         	// only follow pathways
@@ -297,7 +306,7 @@ public class GraphIndex {
     		boolean newAccessibleToHere = accessibleToHere;
 
     		if(pe.getElevatorId() != null) {
-    			equipmentHere.add(pe);
+    			equipmentAccessFromHere.add(pe);
     		}
     		
     		// "generic nodes" in GTFS don't have lat/longs, so use the station's coordinate
@@ -312,14 +321,11 @@ public class GraphIndex {
     			newAccessibleToHere = e.isWheelchairAccessible();
     		
     		// true is sticky here
-    		if(walkPathwayEdges(e.getToVertex(), connectionsFromHere, visitedList, newAccessibleToHere, newDepth) 
+    		if(walkPathwayEdges(e.getToVertex(), connectionsFromHere, equipmentAccessFromHere, visitedList, newAccessibleToHere, newDepth) 
     			&& !hasAtLeastOneAccessiblePath)
     			hasAtLeastOneAccessiblePath = true;
     	}
 
-    	// update equipment index
-    	equipmentEdgesForStationId.put(v.getLabel().replace(":", "_"), equipmentHere);
-    	
     	return hasAtLeastOneAccessiblePath;
     }
 
