@@ -71,6 +71,43 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 		return environment -> {
 			GraphQLQueryTypeStopsArgsInput input = 
 					new GraphQLQueryTypeStopsArgsInput(environment.getArguments());
+					
+			if(input.getGraphQLGtfsIds() != null) {
+				Stream<String> inputStream = StreamSupport.stream(input.getGraphQLGtfsIds().spliterator(), false);
+				
+				List<AgencyAndId> ids = new ArrayList<AgencyAndId>();
+
+				// case: input is a GTFS platform/stop
+				input.getGraphQLGtfsIds().forEach(id -> {
+					ids.add(AgencyAndId.convertFromString(id));
+				});
+				
+				// case: input is a GTFS parent station
+				inputStream.forEach(it -> {
+					AgencyAndId aid = AgencyAndId.convertFromString(it);
+					ids.addAll(getGraphIndex(environment).stopsForParentStation.get(aid)
+							.stream()
+							.map(stop -> { return stop.getId(); } )
+							.collect(Collectors.toList()));					
+				});
+				
+			    return getGraphIndex(environment).stopForId.values().stream()
+			    		.filter(c -> ids.stream().anyMatch(inputItem -> c.getId().equals(inputItem)))
+						.distinct()
+						.collect(Collectors.toList());			
+			} else {
+			    return getGraphIndex(environment).stopForId.values().stream()
+						.distinct()
+						.collect(Collectors.toList());			
+			}
+		};
+	}
+	
+	@Override
+	public DataFetcher<Object> stop() {
+		return environment -> {
+			GraphQLQueryTypeStopArgsInput input = 
+					new GraphQLQueryTypeStopArgsInput(environment.getArguments());
 			
 			if(input.getGraphQLMtaStationId() != null) {
 				ArrayList<HashMap<String, String>> records = getGraphIndex(environment).mtaSubwayStationsByStationId.get(input.getGraphQLMtaStationId());						
@@ -113,9 +150,13 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 						.collect(Collectors.toList());				
 				
 			} else {			
+				if(input.getGraphQLGtfsId() == null)
+					throw new Exception("Station ID, Complex ID or GTFS ID must be given.");
+				
 				AgencyAndId gtfsAgencyAndId = GtfsLibrary.convertIdFromString(input.getGraphQLGtfsId());
 
 				List<AgencyAndId> ids = new ArrayList<AgencyAndId>();
+				ids.add(gtfsAgencyAndId);				
 				ids.addAll(getGraphIndex(environment).stopsForParentStation
 						.get(gtfsAgencyAndId)
 						.stream()

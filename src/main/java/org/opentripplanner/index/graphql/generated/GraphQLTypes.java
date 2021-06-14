@@ -89,12 +89,12 @@ public class GraphQLTypes {
     public String getGraphQLId() { return this.id; }
     public void setGraphQLId(String id) { this.id = id; }
   }
-  public static class GraphQLQueryTypeStopsArgs {
+  public static class GraphQLQueryTypeStopArgs {
     private String gtfsId;
     private String mtaComplexId;
     private String mtaStationId;
   
-    public GraphQLQueryTypeStopsArgs() {}
+    public GraphQLQueryTypeStopArgs() {}
   
     public String getGraphQLGtfsId() { return this.gtfsId; }
     public String getGraphQLMtaComplexId() { return this.mtaComplexId; }
@@ -102,6 +102,14 @@ public class GraphQLTypes {
     public void setGraphQLGtfsId(String gtfsId) { this.gtfsId = gtfsId; }
     public void setGraphQLMtaComplexId(String mtaComplexId) { this.mtaComplexId = mtaComplexId; }
     public void setGraphQLMtaStationId(String mtaStationId) { this.mtaStationId = mtaStationId; }
+  }
+  public static class GraphQLQueryTypeStopsArgs {
+    private Iterable<String> gtfsIds;
+  
+    public GraphQLQueryTypeStopsArgs() {}
+  
+    public Iterable<String> getGraphQLGtfsIds() { return this.gtfsIds; }
+    public void setGraphQLGtfsIds(Iterable<String> gtfsIds) { this.gtfsIds = gtfsIds; }
   }
   public static class GraphQLQueryTypeAlertsArgs {
     private Iterable<String> feeds;

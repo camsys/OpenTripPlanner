@@ -18,13 +18,21 @@ public class GraphQLQueryTypeInputs {
 	public static class GraphQLQueryTypeStopsArgsInput extends GraphQLQueryTypeStopsArgs {
 	    public GraphQLQueryTypeStopsArgsInput(Map<String, Object> args) {
 	        if (args != null) {
+	        	this.setGraphQLGtfsIds((Iterable<String>)args.get("gtfsIds"));
+	        }
+	    }
+	}
+
+	public static class GraphQLQueryTypeStopArgsInput extends GraphQLQueryTypeStopArgs {
+	    public GraphQLQueryTypeStopArgsInput(Map<String, Object> args) {
+	        if (args != null) {
 	        	this.setGraphQLGtfsId((String)args.get("gtfsId"));
 	        	this.setGraphQLMtaComplexId((String)args.get("mtaComplexId"));
 	        	this.setGraphQLMtaStationId((String)args.get("mtaStationId"));
 	        }
 	    }
 	}
-	
+
 	public static class GraphQLQueryTypeAlertsArgsInput extends GraphQLQueryTypeAlertsArgs {
 	    public GraphQLQueryTypeAlertsArgsInput(Map<String, Object> args) {
 	        if (args != null) {

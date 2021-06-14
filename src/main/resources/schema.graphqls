@@ -438,7 +438,6 @@ type Trip {
     List of alerts which have an effect on all operations of the agency
     """
     alerts: [Alert]
-
 }
 
 
@@ -646,7 +645,6 @@ type RouteDestinationGroupStopTime {
 
 }
     
-    
 type KeyValueMap {
     data: [KeyValueEntry]
 }
@@ -675,7 +673,7 @@ type QueryType {
     """
     Get a stop based on its GTFS ID (format: `FeedId_StopId`), station or complex ID.
     """
-    stops(
+    stop(
         """
         GTFS Stop ID (format: `FeedId_StopId`)
         """
@@ -691,8 +689,18 @@ type QueryType {
         """
         mtaStationId: String
     
-    ): [Stop]
+    ): Stop
 
+    """
+    Get a stop based on its GTFS ID (format: `FeedId_StopId`), station or complex ID.
+    """
+    stops(
+        """
+        Only return stops with these ids. (format: `FeedId_StopId`)
+        """
+        gtfsIds: [String]
+    
+    ): [Stop]
     
     """Get all active alerts"""
     alerts(
@@ -719,6 +727,7 @@ type QueryType {
     Get a single route based on its ID, i.e. value of field `gtfsId` (format is `FeedId_RouteId`)
     """
     route(gtfsId: String!): Route
+    
 
     """Get all trips"""
     trips(
