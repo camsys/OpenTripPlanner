@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import org.onebusaway.gtfs.model.Agency;
 import org.onebusaway.gtfs.model.AgencyAndId;
+import org.onebusaway.gtfs.model.Stop;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
 import org.opentripplanner.index.model.EquipmentShort;
@@ -105,9 +106,13 @@ public class GraphQLAgencyImpl implements GraphQLDataFetchers.GraphQLAgency {
 	    		
 	    		if(!tss.getStopId().getAgencyId().equals(e.getId()))
 	    			continue;
+
+	    		AgencyAndId parentStationId = tss.getStopId();	    		
+	    		if(tss.getStop().getParentStation() != null)
+	    			parentStationId = new AgencyAndId(tss.getStopId().getAgencyId(), tss.getStop().getParentStation());
 	    		
 	        	Set<PathwayEdge> equipmentHere = 
-	        			getGraphIndex(environment).equipmentEdgesForStationId.get(AgencyAndId.convertToString(tss.getStopId()));
+	        			getGraphIndex(environment).equipmentEdgesForStationId.get(parentStationId);
 
 	        	if(equipmentHere == null || equipmentHere.isEmpty())
 	        		continue;
@@ -135,6 +140,7 @@ public class GraphQLAgencyImpl implements GraphQLDataFetchers.GraphQLAgency {
 	    	    	result.add(resultItem);
 	    	    } 
 	    	}        	
+	    
 
 	    	return result.stream().collect(Collectors.toList());
 	    };
