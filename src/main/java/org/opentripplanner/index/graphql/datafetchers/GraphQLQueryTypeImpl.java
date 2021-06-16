@@ -109,65 +109,36 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 			GraphQLQueryTypeStopArgsInput input = 
 					new GraphQLQueryTypeStopArgsInput(environment.getArguments());
 			
+			AgencyAndId theStop = null;
 			if(input.getGraphQLMtaStationId() != null) {
 				ArrayList<HashMap<String, String>> records = getGraphIndex(environment).mtaSubwayStationsByStationId.get(input.getGraphQLMtaStationId());						
-				if(records == null)
+				if(records == null || records.isEmpty())
 					throw new Exception("Station ID was not found.");
+				if(records.size() > 1)
+					throw new Exception("The requested stop ID must be or resolve to a GTFS stop or platform. e.g. MTASBWY:R14S, not MTASBWY:R14");
 				
-				List<AgencyAndId> ids = new ArrayList<AgencyAndId>();
-				for(HashMap<String, String> record : records) {
-					ids.addAll(getGraphIndex(environment).stopsForParentStation
-							.get(new AgencyAndId("MTASBWY", record.get("GTFS Stop ID")))
-							.stream()
-							.map(it -> { return it.getId(); })
-							.collect(Collectors.toList()));
-				}
-				
-				return getGraphIndex(environment)
-						.stopForId.values().stream()
-						.filter(c -> ids.stream().anyMatch(inputItem -> c.getId().equals(inputItem)))
-						.distinct()
-						.collect(Collectors.toList());				
+				theStop = new AgencyAndId("MTASBWY", records.get(0).get("GTFS Stop ID"));				
 			
 			} else if(input.getGraphQLMtaComplexId() != null) {
 				ArrayList<HashMap<String, String>> records = getGraphIndex(environment).mtaSubwayStationsByComplexId.get(input.getGraphQLMtaComplexId());
-				if(records == null)
-					throw new Exception("Complex ID was not found.");
-
-				List<AgencyAndId> ids = new ArrayList<AgencyAndId>();
-				for(HashMap<String, String> record : records) {
-					ids.addAll(getGraphIndex(environment).stopsForParentStation
-							.get(new AgencyAndId("MTASBWY", record.get("GTFS Stop ID")))
-							.stream()
-							.map(it -> { return it.getId(); })
-							.collect(Collectors.toList()));
-				}
-
-				return getGraphIndex(environment)
-						.stopForId.values().stream()
-						.filter(c -> ids.stream().anyMatch(inputItem -> c.getId().equals(inputItem)))
-						.distinct()
-						.collect(Collectors.toList());				
+				if(records == null || records.isEmpty())
+					throw new Exception("Station ID was not found.");
+				if(records.size() > 1)
+					throw new Exception("The requested stop ID must be or resolve to a GTFS stop or platform. e.g. MTASBWY:R14S, not MTASBWY:R14");
+				
+				theStop = new AgencyAndId("MTASBWY", records.get(0).get("GTFS Stop ID"));				
 				
 			} else {			
 				if(input.getGraphQLGtfsId() == null)
 					throw new Exception("Station ID, Complex ID or GTFS ID must be given.");
 				
-				AgencyAndId gtfsAgencyAndId = GtfsLibrary.convertIdFromString(input.getGraphQLGtfsId());
-
-				List<AgencyAndId> ids = new ArrayList<AgencyAndId>();
-				ids.add(gtfsAgencyAndId);				
-				ids.addAll(getGraphIndex(environment).stopsForParentStation
-						.get(gtfsAgencyAndId)
-						.stream()
-						.map(it -> { return it.getId(); })
-						.collect(Collectors.toList()));
-				
-			    return getGraphIndex(environment).stopForId.values().stream()
-						.filter(c -> ids.stream().anyMatch(inputItem -> c.getId().equals(inputItem)))
-						.distinct()
-						.collect(Collectors.toList());			
+				theStop = GtfsLibrary.convertIdFromString(input.getGraphQLGtfsId());
 			}	
+
+			if(!getGraphIndex(environment).stopForId.containsKey(theStop))
+				throw new Exception("The requested stop ID must be or resolve to a GTFS stop or platform. e.g. MTASBWY:R14S, not MTASBWY:R14");
+			
+			return getGraphIndex(environment).stopForId.get(theStop);				
 		};
 	}
 
