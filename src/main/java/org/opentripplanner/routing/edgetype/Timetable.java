@@ -145,17 +145,15 @@ public class Timetable implements Serializable {
      * trip matches both the time and other criteria.
      */
     public TripTimes getNextTrip(State s0, ServiceDay serviceDay, int stopIndex, boolean boarding) {
-    	return getNextPreferredTrip(s0, serviceDay, stopIndex, boarding, null, null, null, null, null, null);
+    	return getNextPreferredTrip(s0, serviceDay, stopIndex, boarding, null, null, null);
     }
    
-    public TripTimes getNextPreferredTrip(State s0, ServiceDay serviceDay, int stopIndex, boolean boarding, RoutingContext rc, 
-    		Stop fromStop, Stop toStop, Stop givenRequiredStop, Trip _fromTrip, Trip _toTrip) {
+    public TripTimes getNextPreferredTrip(State s0, ServiceDay serviceDay, int stopIndex, boolean boarding, 
+    		Stop fromStop, Stop toStop, Trip fromTrip) {
 
-    	if(verbose)
-    		System.out.println("Start search givenRequiredStop=" + givenRequiredStop + " From=" + fromStop + " To=" + toStop + " fromTrip=" + _fromTrip + " toTrip=" + _toTrip);  
-    	
         /* Search at the state's time, but relative to midnight on the given service day. */
         int time = serviceDay.secondsSinceMidnight(s0.getTimeSeconds());
+
         // NOTE the time is sometimes negative here. That is fine, we search for the first trip of the day.
         // Adjust for possible boarding time TODO: This should be included in the trip and based on GTFS
         if (boarding) {
@@ -163,9 +161,11 @@ public class Timetable implements Serializable {
         } else {
             time -= s0.getOptions().getAlightTime(this.pattern.mode);
         }
+        
         TripTimes bestTrip = null;
         TripTimes bestPreferredTrip = null;
         Stop currentStop = pattern.getStop(stopIndex);
+        
         // Linear search through the timetable looking for the best departure.
         // We no longer use a binary search on Timetables because:
         // 1. we allow combining trips from different service IDs on the same tripPattern.
@@ -173,7 +173,9 @@ public class Timetable implements Serializable {
         // 3. Stoptimes may change with realtime updates, and we cannot count on them being sorted.
         //    The complexity of keeping sorted indexes up to date does not appear to be worth the
         //    apparently minor speed improvement.
-        int bestTime = boarding ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+
+        // WARNING: /2 so when we add the nonpreferredTransferPenalty later, we don't overflow
+        int bestTime = boarding ? Integer.MAX_VALUE / 2 : Integer.MIN_VALUE / 2; 
 
         // Hoping JVM JIT will distribute the loop over the if clauses as needed.
         // We could invert this and skip some service days based on schedule overlap as in RRRR.
@@ -181,45 +183,29 @@ public class Timetable implements Serializable {
         // Only compute transfer once, if possible - it's expensive.
         int exampleAdjustedTime = -1;
         boolean recomputeTime = transferDependsOnTrip(s0, currentStop, boarding);
+        
         if (!recomputeTime && tripTimes.size() > 0) {
             exampleAdjustedTime = adjustTimeForTransfer(s0, currentStop, getTripTimes(0).trip, boarding, serviceDay, time);
         }
         
         for (TripTimes tt : tripTimes) {
-        	if(verbose)
-        		System.out.println("   Considering=" + tt.trip);     
-
         	boolean isPreferred = false;
+        	Trip toTrip = tt.trip;
 
-        	Trip toTrip = _toTrip;
-        	if(toTrip == null)
-        		toTrip = tt.trip;
-        	
-        	Trip fromTrip = _fromTrip;
-        	if(fromTrip == null)
-        		fromTrip = tt.trip;
-        	
-        	if(rc != null && toStop != null && givenRequiredStop != null) {
-	        	TransferTable transferTable = rc.transferTable;
-	        	TransferDetail transferDetail = transferTable.getTransferTime(fromStop,
-	                               toStop, fromTrip, toTrip, boarding);
+        	if(s0.getOptions().getRoutingContext() != null && fromStop != null) {
+        		TransferTable transferTable = s0.getOptions().getRoutingContext().transferTable;
+	        	TransferDetail transferDetail = transferTable.getTransferTime(fromStop, toStop, fromTrip, toTrip, !s0.getReverseOptimizing());
 	            Stop requiredStop = transferDetail.getRequiredStop();	            
 	            
 	            // don't ban trips that are "preferred"--if a required stop is given, make sure it matches before we 
 	            // deactivate banning
 	        	if((transferDetail.getTransferTime() == StopTransfer.PREFERRED_TRANSFER 
-	        			|| transferDetail.getTransferTime() == StopTransfer.TIMED_TRANSFER)
-	        			&& 
-	        			(requiredStop == null || requiredStop.getId().equals(givenRequiredStop.getId()))) {
+	        			|| transferDetail.getTransferTime() == StopTransfer.TIMED_TRANSFER)) {	        		
 	        		isPreferred = true;
 	        	}
 
 	        	if(verbose) {
-	        		String lookingFor = "   Considering=<Trip LI_GO604_20_2768> requiredStop=null From=<Stop LI_118> To=<Stop LI_118> fromTrip=<Trip LI_GO604_20_50> toTrip=<Trip LI_GO604_20_2768> tTime=-2";
-	        		String have="   Considering=" + tt.trip + " requiredStop=" + requiredStop + " From=" + fromStop + " To=" + toStop + " fromTrip=" + fromTrip + " toTrip=" + toTrip + " tTime=" + transferDetail.getTransferTime();
-	        		//if(have.equals(lookingFor))
-	        		//	System.out.println("HERE");	        		
-	        		System.out.println(have);  
+	        		LOG.debug("   Considering=" + tt.trip + " requiredStop=" + requiredStop + " From=" + fromStop + " To=" + toStop + " fromTrip=" + fromTrip + " toTrip=" + toTrip + " tTime=" + transferDetail.getTransferTime() + " reverse=" + s0.getReverseOptimizing());
 	        	}
         	}
 
@@ -231,15 +217,16 @@ public class Timetable implements Serializable {
             if (boarding) {
                 int depTime = tt.getDepartureTime(stopIndex);
 
-            	if(verbose)
-            		System.out.println("   Our time=" + depTime + " bestTime=" + bestTime);       	
+	        	if(verbose)
+            		LOG.debug("   Our time=" + depTime + " bestTime=" + bestTime);       	
 
                 if (depTime < 0) continue; // negative values were previously used for canceled trips/passed stops/skipped stops, but
                                            // now its not sure if this check should be still in place because there is a boolean field
                                            // for canceled trips
+                
                 if (depTime >= adjustedTime && depTime < bestTime) {
-                    if (isTripTimesOk(tt, serviceDay, s0, stopIndex, true)) {
-                    	if(isPreferred && depTime <= bestTime + rc.opt.nonpreferredTransferPenalty) {
+                    if (isTripTimesOk(tt, serviceDay, s0, stopIndex, false)) {
+                    	if(isPreferred && depTime <= bestTime + s0.getOptions().getRoutingContext().opt.nonpreferredTransferPenalty) {
                     		bestPreferredTrip = tt;
                     	}
                     	
@@ -251,8 +238,8 @@ public class Timetable implements Serializable {
                 int arvTime = tt.getArrivalTime(stopIndex);
                 if (arvTime < 0) continue;
                 if (arvTime <= adjustedTime && arvTime > bestTime) {
-                    if (isTripTimesOk(tt, serviceDay, s0, stopIndex, true)) {
-                    	if(isPreferred && arvTime >= bestTime - rc.opt.nonpreferredTransferPenalty) {
+                    if (isTripTimesOk(tt, serviceDay, s0, stopIndex, false)) {
+                    	if(isPreferred && arvTime >= bestTime - s0.getOptions().getRoutingContext().opt.nonpreferredTransferPenalty) {
                     		bestPreferredTrip = tt;
                     	} 
 
@@ -297,8 +284,8 @@ public class Timetable implements Serializable {
         }       
 
     	if(verbose) {
-    		if(bestPreferredTrip != null) System.out.println("End with preferredWinner=" + bestPreferredTrip.trip);
-    		if(bestTrip != null) System.out.println("End with nonPreferred=" + bestTrip.trip);        
+    		if(bestPreferredTrip != null) LOG.debug("End with preferredWinner=" + bestPreferredTrip.trip);
+    		if(bestTrip != null) LOG.debug("End with nonPreferred=" + bestTrip.trip);        
     	}
     	
         if(bestPreferredTrip != null)

@@ -406,7 +406,7 @@ public class RoutingRequest implements Cloneable, Serializable {
     /**
      * When true, do a full reversed search to compact the legs of the GraphPath.
      */
-    public boolean compactLegsByReversedSearch = true;
+    public boolean compactLegsByReversedSearch = false;
 
     /**
      * If true, cost turns as they would be in a country where driving occurs on the right; otherwise, cost them as they would be in a country where
