@@ -30,7 +30,6 @@ import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.Trip;
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.opentripplanner.common.MavenVersion;
-import org.opentripplanner.routing.core.RoutingContext;
 import org.opentripplanner.routing.core.ServiceDay;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.core.StopTransfer;
@@ -57,8 +56,6 @@ public class Timetable implements Serializable {
 
     private static final Logger LOG = LoggerFactory.getLogger(Timetable.class);
     private static final long serialVersionUID = MavenVersion.VERSION.getUID();
-
-    private static final boolean verbose = false;
     
     /**
      * A circular reference between TripPatterns and their scheduled (non-updated) timetables.
@@ -195,17 +192,10 @@ public class Timetable implements Serializable {
         	if(s0.getOptions().getRoutingContext() != null && fromStop != null) {
         		TransferTable transferTable = s0.getOptions().getRoutingContext().transferTable;
 	        	TransferDetail transferDetail = transferTable.getTransferTime(fromStop, toStop, fromTrip, toTrip, !s0.getReverseOptimizing());
-	            Stop requiredStop = transferDetail.getRequiredStop();	            
 	            
-	            // don't ban trips that are "preferred"--if a required stop is given, make sure it matches before we 
-	            // deactivate banning
 	        	if((transferDetail.getTransferTime() == StopTransfer.PREFERRED_TRANSFER 
 	        			|| transferDetail.getTransferTime() == StopTransfer.TIMED_TRANSFER)) {	        		
 	        		isPreferred = true;
-	        	}
-
-	        	if(verbose) {
-	        		LOG.debug("   Considering=" + tt.trip + " requiredStop=" + requiredStop + " From=" + fromStop + " To=" + toStop + " fromTrip=" + fromTrip + " toTrip=" + toTrip + " tTime=" + transferDetail.getTransferTime() + " reverse=" + s0.getReverseOptimizing());
 	        	}
         	}
 
@@ -216,10 +206,6 @@ public class Timetable implements Serializable {
             adjustedTime += tt.getDepartureBuffer(stopIndex);
             if (boarding) {
                 int depTime = tt.getDepartureTime(stopIndex);
-
-	        	if(verbose)
-            		LOG.debug("   Our time=" + depTime + " bestTime=" + bestTime);       	
-
                 if (depTime < 0) continue; // negative values were previously used for canceled trips/passed stops/skipped stops, but
                                            // now its not sure if this check should be still in place because there is a boolean field
                                            // for canceled trips
@@ -282,11 +268,6 @@ public class Timetable implements Serializable {
             // Materialize that FrequencyEntry entry at the given time.
             bestTrip = bestFreq.tripTimes.timeShift(stopIndex, bestTime, boarding, bestFreq);
         }       
-
-    	if(verbose) {
-    		if(bestPreferredTrip != null) LOG.debug("End with preferredWinner=" + bestPreferredTrip.trip);
-    		if(bestTrip != null) LOG.debug("End with nonPreferred=" + bestTrip.trip);        
-    	}
     	
         if(bestPreferredTrip != null)
         	return bestPreferredTrip;

@@ -522,7 +522,7 @@ public class RoutingRequest implements Cloneable, Serializable {
     public boolean hardPathBanning = true;
 
     /** What agencies to apply hard path banning to */
-    public HashSet<String> hardPathBanningAgencies = new HashSet<>();
+    public HashSet<String> hardPathBanningAgencies = new HashSet<>(Arrays.asList("LI"));
 
     /** Whether to try to link endpoints to stops with the same location */
     public boolean stopLinking = false;

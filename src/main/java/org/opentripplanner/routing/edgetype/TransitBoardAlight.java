@@ -303,20 +303,20 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
             Trip fromTrip = s0.getPreviousTrip();
             
             Stop givenRequiredStop = null;
-	            State prevState = s0.getBackState();
-				while(prevState != null) {
-				 	Edge e = prevState.getBackEdge();
-				 					 	
-				 	if(e instanceof TransitBoardAlight) {
-				 		TransitBoardAlight tba = (TransitBoardAlight)e;
-				 		if(tba.getStop() != getStop() && tba.boarding == true) {
-				 			givenRequiredStop = tba.getStop();
-				 			break;
-				 		}
-				 	}
-				 	prevState = prevState.getBackState(); 
-				}
-           
+            State prevState = s0.getBackState();
+			while(prevState != null) {
+			 	Edge e = prevState.getBackEdge();
+			 					 	
+			 	if(e instanceof TransitBoardAlight) {
+			 		TransitBoardAlight tba = (TransitBoardAlight)e;
+			 		if(tba.getStop() != getStop() && tba.boarding == true) {
+			 			givenRequiredStop = tba.getStop();
+			 			break;
+			 		}
+			 	}
+			 	prevState = prevState.getBackState(); 
+			}
+           				
 			LOG.debug("Parameters for TBA: toStop=" + toStop + " fromStop=" + fromStop + " fromTrip=" + fromTrip + " givenRequiredStop=" + givenRequiredStop + " boarding=" + boarding + " numBoardings=" + s0.getNumBoardings() + " reverse=" + s0.getReverseOptimizing());
 			
             for (ServiceDay sd : rctx.serviceDays) {
@@ -379,7 +379,7 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
                 }
             }
             
-//            LOG.debug("*** Selected trip=" + trip + " TTime=" + transferTime + " penalty=" + transferPenalty + " boardingCount=" + s0.getNumBoardings() + " boarding=" + boarding + " reverse=" + s0.getReverseOptimizing());
+            LOG.debug("*** Selected trip=" + trip + " TTime=" + transferTime + " penalty=" + transferPenalty + " boardingCount=" + s0.getNumBoardings() + " boarding=" + boarding + " reverse=" + s0.getReverseOptimizing());
 
             /* Found a trip to board. Now make the child state. */
             StateEditor s1 = s0.edit(this);
@@ -428,11 +428,15 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
             if (options.reverseOptimizeOnTheFly && 
                !options.reverseOptimizing && 
                 s0.isEverBoarded() && 
+                preferredTransfer == false && 
                 s0.getLastNextArrivalDelta() <= bestWait &&
                 s0.getLastNextArrivalDelta() > -1) {
                 // it is re-reversed by optimize, so this still yields a forward tree
                 State optimized = s1.makeState().optimizeOrReverse(true, true);
                 if (optimized == null) LOG.error("Null optimized state. This shouldn't happen.");
+
+            	tripId = optimized.getTripId();
+
                 return optimized;
             }
             
