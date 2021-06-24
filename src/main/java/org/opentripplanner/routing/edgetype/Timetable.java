@@ -211,7 +211,7 @@ public class Timetable implements Serializable {
                                            // for canceled trips
                 
                 if (depTime >= adjustedTime && depTime < bestTime) {
-                    if (isTripTimesOk(tt, serviceDay, s0, stopIndex, false)) {
+                    if (isTripTimesOk(tt, serviceDay, s0, stopIndex, true)) {
                     	if(isPreferred && depTime <= bestTime + s0.getOptions().getRoutingContext().opt.nonpreferredTransferPenalty) {
                     		bestPreferredTrip = tt;
                     	}
@@ -224,7 +224,7 @@ public class Timetable implements Serializable {
                 int arvTime = tt.getArrivalTime(stopIndex);
                 if (arvTime < 0) continue;
                 if (arvTime <= adjustedTime && arvTime > bestTime) {
-                    if (isTripTimesOk(tt, serviceDay, s0, stopIndex, false)) {
+                    if (isTripTimesOk(tt, serviceDay, s0, stopIndex, true)) {
                     	if(isPreferred && arvTime >= bestTime - s0.getOptions().getRoutingContext().opt.nonpreferredTransferPenalty) {
                     		bestPreferredTrip = tt;
                     	} 
