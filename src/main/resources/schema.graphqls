@@ -754,10 +754,10 @@ type QueryType {
 	""" 
 	Shows all accessible stop pairs for the given stop/station/complex
 	"""
-	stopAccessibility(
+	accessibility(
 
         """
-        Date of departure or arrival in format YYYY-MM-DD. Default value: current date
+        Date of schedule in format YYYY-MM-DD. Default value: current date
         """
         date: String
 

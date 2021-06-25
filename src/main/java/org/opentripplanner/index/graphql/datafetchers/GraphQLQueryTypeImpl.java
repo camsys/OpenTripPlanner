@@ -213,7 +213,7 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 	}
 	
 	@Override
-	public DataFetcher<Object> stopAccessibility() {
+	public DataFetcher<Object> accessibility() {
 		return environment -> {
 			GraphQLQueryTypeStopAccessibilityArgsInput input = 
 					new GraphQLQueryTypeStopAccessibilityArgsInput(environment.getArguments());

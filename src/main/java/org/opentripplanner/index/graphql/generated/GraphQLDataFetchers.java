@@ -92,7 +92,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<Object> route();
     public DataFetcher<Iterable<Object>> trips();
     public DataFetcher<Object> trip();
-    public DataFetcher<Object> stopAccessibility();
+    public DataFetcher<Object> accessibility();
     public DataFetcher<Iterable<Object>> nearby();
   }
   

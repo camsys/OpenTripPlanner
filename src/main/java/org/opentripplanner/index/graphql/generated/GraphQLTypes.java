@@ -154,14 +154,14 @@ public class GraphQLTypes {
     public String getGraphQLGtfsId() { return this.gtfsId; }
     public void setGraphQLGtfsId(String gtfsId) { this.gtfsId = gtfsId; }
   }
-  public static class GraphQLQueryTypeStopAccessibilityArgs {
+  public static class GraphQLQueryTypeAccessibilityArgs {
     private String date;
     private Boolean includeRealtime;
     private String gtfsId;
     private String mtaComplexId;
     private String mtaStationId;
   
-    public GraphQLQueryTypeStopAccessibilityArgs() {}
+    public GraphQLQueryTypeAccessibilityArgs() {}
   
     public String getGraphQLDate() { return this.date; }
     public Boolean getGraphQLIncludeRealtime() { return this.includeRealtime; }

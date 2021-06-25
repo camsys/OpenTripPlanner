@@ -74,7 +74,7 @@ public class GraphQLQueryTypeInputs {
 	    }
 	}	
 
-	public static class GraphQLQueryTypeStopAccessibilityArgsInput extends GraphQLQueryTypeStopAccessibilityArgs {
+	public static class GraphQLQueryTypeStopAccessibilityArgsInput extends GraphQLQueryTypeAccessibilityArgs {
 	    public GraphQLQueryTypeStopAccessibilityArgsInput(Map<String, Object> args) {
 	        if (args != null) {
 	        	this.setGraphQLDate((String)args.get("date"));
