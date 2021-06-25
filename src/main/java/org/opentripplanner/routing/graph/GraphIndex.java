@@ -105,10 +105,10 @@ public class GraphIndex {
     public final Map<AgencyAndId, HashSet<PathwayEdge>> equipmentEdgesForStationId = new HashMap<AgencyAndId, HashSet<PathwayEdge>>();
 	public final Map<String, HashSet<Vertex>> connectionsFromMap = new HashMap<String, HashSet<Vertex>>();    	
 
-	public final RemoteCSVBackedHashMap mtaSubwayStationsByStationId = new RemoteCSVBackedHashMap("http://web.mta.info/developers/data/nyct/subway/Stations.csv", "Station ID");
-	public final RemoteCSVBackedHashMap mtaSubwayStationsByComplexId = new RemoteCSVBackedHashMap("http://web.mta.info/developers/data/nyct/subway/Stations.csv", "Complex ID");
-	public final RemoteCSVBackedHashMap mtaSubwayStationsByGtfsId = new RemoteCSVBackedHashMap("http://web.mta.info/developers/data/nyct/subway/Stations.csv", "GTFS Stop ID");
-	
+	public final RemoteCSVBackedHashMap mtaSubwayStations = new RemoteCSVBackedHashMap("http://web.mta.info/developers/data/nyct/subway/Stations.csv", "MTASBWY");
+
+	public final RemoteCSVBackedHashMap mtaSubwayComplexes = new RemoteCSVBackedHashMap("http://web.mta.info/developers/data/nyct/subway/StationComplexes.csv", "MTASBWY");
+
     /* Should eventually be replaced with new serviceId indexes. */
     private final CalendarService calendarService;
     private final Map<AgencyAndId,Integer> serviceCodes;

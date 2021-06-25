@@ -8,6 +8,8 @@ import java.util.Map;
 public class GraphQLTypes {
   
   
+  
+  
   /** Cause of a alert */
   public enum GraphQLAlertCauseType {
     UNKNOWN_CAUSE,
@@ -72,13 +74,11 @@ public class GraphQLTypes {
   
   /** Enhanced accessibility information set by NY MTA's Accessibility Group. */
   public enum GraphQLNyMtaAdaFlag {
-    UNKNOWN,
     NOT_ACCESSIBLE,
     ACCESSIBLE,
     PARTLY_ACCESSIBLE
     
   }
-  
   
   
   public static class GraphQLQueryTypeAgencyArgs {
@@ -91,25 +91,25 @@ public class GraphQLTypes {
   }
   public static class GraphQLQueryTypeStopArgs {
     private String gtfsId;
-    private String mtaComplexId;
-    private String mtaStationId;
   
     public GraphQLQueryTypeStopArgs() {}
   
     public String getGraphQLGtfsId() { return this.gtfsId; }
-    public String getGraphQLMtaComplexId() { return this.mtaComplexId; }
-    public String getGraphQLMtaStationId() { return this.mtaStationId; }
     public void setGraphQLGtfsId(String gtfsId) { this.gtfsId = gtfsId; }
-    public void setGraphQLMtaComplexId(String mtaComplexId) { this.mtaComplexId = mtaComplexId; }
-    public void setGraphQLMtaStationId(String mtaStationId) { this.mtaStationId = mtaStationId; }
   }
   public static class GraphQLQueryTypeStopsArgs {
     private Iterable<String> gtfsIds;
+    private String mtaComplexId;
+    private String mtaStationId;
   
     public GraphQLQueryTypeStopsArgs() {}
   
     public Iterable<String> getGraphQLGtfsIds() { return this.gtfsIds; }
+    public String getGraphQLMtaComplexId() { return this.mtaComplexId; }
+    public String getGraphQLMtaStationId() { return this.mtaStationId; }
     public void setGraphQLGtfsIds(Iterable<String> gtfsIds) { this.gtfsIds = gtfsIds; }
+    public void setGraphQLMtaComplexId(String mtaComplexId) { this.mtaComplexId = mtaComplexId; }
+    public void setGraphQLMtaStationId(String mtaStationId) { this.mtaStationId = mtaStationId; }
   }
   public static class GraphQLQueryTypeAlertsArgs {
     private Iterable<String> feeds;

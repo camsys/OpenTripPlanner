@@ -1,6 +1,7 @@
 package org.opentripplanner.index.graphql;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.opentripplanner.routing.graph.GraphIndex;
@@ -60,6 +61,8 @@ public class GraphQLAPI {
         providers.getContextResolver(ObjectMapper.class, MediaType.APPLICATION_JSON_TYPE);
     ObjectMapper mapper = resolver.getContext(ObjectMapper.class);
     mapper.setDefaultPropertyInclusion(JsonInclude.Include.ALWAYS);
+    mapper.setSerializationInclusion(Include.ALWAYS);
+
   }
 
   @POST

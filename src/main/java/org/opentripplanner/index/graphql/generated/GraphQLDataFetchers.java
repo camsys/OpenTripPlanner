@@ -4,6 +4,20 @@ package org.opentripplanner.index.graphql.generated;
 import graphql.schema.DataFetcher;
 
 public class GraphQLDataFetchers {
+  public interface GraphQLAccessibleResult {
+    public DataFetcher<Iterable<Object>> pairs();
+    public DataFetcher<String> mtaAdaAccessible();
+    public DataFetcher<String> mtaAdaAccessibleNotes();
+  }
+  
+  public interface GraphQLAccessibleResultPair {
+    public DataFetcher<Object> from();
+    public DataFetcher<Object> to();
+    public DataFetcher<Iterable<String>> dependsOnEquipment();
+    public DataFetcher<Boolean> isCurrentlyAccessible();
+    public DataFetcher<Iterable<Object>> alerts();
+  }
+  
   /** A public transport agency */
   public interface GraphQLAgency {
     public DataFetcher<String> gtfsId();
@@ -67,14 +81,6 @@ public class GraphQLDataFetchers {
     public DataFetcher<Iterable<Object>> routeDestinations();
   }
   
-  public interface GraphQLPairwiseAccessibleResult {
-    public DataFetcher<Object> from();
-    public DataFetcher<Object> to();
-    public DataFetcher<Iterable<String>> dependsOnEquipment();
-    public DataFetcher<Boolean> isCurrentlyAccessible();
-    public DataFetcher<Iterable<Object>> alerts();
-  }
-  
   public interface GraphQLQueryType {
     public DataFetcher<Iterable<Object>> feeds();
     public DataFetcher<Iterable<Object>> agencies();
@@ -86,7 +92,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<Object> route();
     public DataFetcher<Iterable<Object>> trips();
     public DataFetcher<Object> trip();
-    public DataFetcher<Iterable<Object>> stopAccessibility();
+    public DataFetcher<Object> stopAccessibility();
     public DataFetcher<Iterable<Object>> nearby();
   }
   

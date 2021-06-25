@@ -1,16 +1,17 @@
 package org.opentripplanner.index.graphql.datafetchers;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import org.onebusaway.gtfs.model.Agency;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.FeedInfo;
+import org.onebusaway.gtfs.model.Stop;
+import org.onebusaway.gtfs.model.Trip;
 import org.opentripplanner.api.model.PairwiseAccessibilityShort;
 import org.opentripplanner.api.resource.AccessibilityResource;
 import org.opentripplanner.api.resource.NearbySchedulesResource;
@@ -18,9 +19,12 @@ import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLQueryTypeInputs.*;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
+import org.opentripplanner.index.graphql.generated.GraphQLTypes.GraphQLNyMtaAdaFlag;
+import org.opentripplanner.index.model.TripTimeShort;
 import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.standalone.Router;
 
+import graphql.execution.DataFetcherResult;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 
@@ -72,7 +76,52 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 			GraphQLQueryTypeStopsArgsInput input = 
 					new GraphQLQueryTypeStopsArgsInput(environment.getArguments());
 					
-			if(input.getGraphQLGtfsIds() != null) {
+			if(input.getGraphQLMtaStationId() != null) {
+				ArrayList<HashMap<String, String>> records = getGraphIndex(environment).mtaSubwayStations.get("Station ID").get(new AgencyAndId("MTASBWY", input.getGraphQLMtaStationId()));
+				if(records == null || records.isEmpty())
+					throw new Exception("Station ID was not found.");
+				
+				List<AgencyAndId> ids = new ArrayList<AgencyAndId>();
+
+				records
+					.stream()
+					.map(record ->
+						new AgencyAndId("MTASBWY", record.get("GTFS Stop ID"))
+					).forEach(it -> {
+						ids.addAll(getGraphIndex(environment).stopsForParentStation.get(it)
+								.stream()
+								.map(stop -> { return stop.getId(); } )
+								.collect(Collectors.toList()));					
+					});
+				
+			    return getGraphIndex(environment).stopForId.values().stream()
+			    		.filter(c -> ids.stream().anyMatch(inputItem -> c.getId().equals(inputItem)))
+						.distinct()
+						.collect(Collectors.toList());	
+				
+			} else if(input.getGraphQLMtaComplexId() != null) {
+				ArrayList<HashMap<String, String>> records = getGraphIndex(environment).mtaSubwayStations.get("Complex ID").get(new AgencyAndId("MTASBWY", input.getGraphQLMtaComplexId()));
+				if(records == null || records.isEmpty())
+					throw new Exception("Station ID was not found.");
+				
+				List<AgencyAndId> ids = new ArrayList<AgencyAndId>();
+				records
+					.stream()
+					.map(record ->
+						new AgencyAndId("MTASBWY", record.get("GTFS Stop ID"))
+					).forEach(it -> {
+						ids.addAll(getGraphIndex(environment).stopsForParentStation.get(it)
+								.stream()
+								.map(stop -> { return stop.getId(); } )
+								.collect(Collectors.toList()));					
+					});
+
+			    return getGraphIndex(environment).stopForId.values().stream()
+			    		.filter(c -> ids.stream().anyMatch(inputItem -> c.getId().equals(inputItem)))
+						.distinct()
+						.collect(Collectors.toList());		
+				
+			} else if(input.getGraphQLGtfsIds() != null) {
 				Stream<String> inputStream = StreamSupport.stream(input.getGraphQLGtfsIds().spliterator(), false);
 				
 				List<AgencyAndId> ids = new ArrayList<AgencyAndId>();
@@ -95,7 +144,9 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 			    		.filter(c -> ids.stream().anyMatch(inputItem -> c.getId().equals(inputItem)))
 						.distinct()
 						.collect(Collectors.toList());			
+
 			} else {
+				
 			    return getGraphIndex(environment).stopForId.values().stream()
 						.distinct()
 						.collect(Collectors.toList());			
@@ -109,33 +160,10 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 			GraphQLQueryTypeStopArgsInput input = 
 					new GraphQLQueryTypeStopArgsInput(environment.getArguments());
 			
-			AgencyAndId theStop = null;
-			if(input.getGraphQLMtaStationId() != null) {
-				ArrayList<HashMap<String, String>> records = getGraphIndex(environment).mtaSubwayStationsByStationId.get(input.getGraphQLMtaStationId());						
-				if(records == null || records.isEmpty())
-					throw new Exception("Station ID was not found.");
-
-				if(records.size() > 1)
-					throw new Exception("The requested stop ID must resolve to a GTFS stop or platform. e.g. MTASBWY_R14S, not a station e.g. MTASBWY_R14");
+			if(input.getGraphQLGtfsId() == null)
+				throw new Exception("GTFS ID must be given.");
 				
-				theStop = new AgencyAndId("MTASBWY", records.get(0).get("GTFS Stop ID"));				
-			
-			} else if(input.getGraphQLMtaComplexId() != null) {
-				ArrayList<HashMap<String, String>> records = getGraphIndex(environment).mtaSubwayStationsByComplexId.get(input.getGraphQLMtaComplexId());
-				if(records == null || records.isEmpty())
-					throw new Exception("Station ID was not found.");
-				
-				if(records.size() > 1)
-					throw new Exception("The requested stop ID must resolve to a GTFS stop or platform. e.g. MTASBWY_R14S, not a station e.g. MTASBWY_R14");
-				
-				theStop = new AgencyAndId("MTASBWY", records.get(0).get("GTFS Stop ID"));				
-				
-			} else {			
-				if(input.getGraphQLGtfsId() == null)
-					throw new Exception("Station ID, Complex ID or GTFS ID must be given.");
-				
-				theStop = AgencyAndId.convertFromString(input.getGraphQLGtfsId());
-			}	
+			AgencyAndId theStop = AgencyAndId.convertFromString(input.getGraphQLGtfsId());
 
 			if(!getGraphIndex(environment).stopForId.containsKey(theStop))
 				throw new Exception("The requested stop ID must be or resolve to a GTFS stop or platform. e.g. MTASBWY_R14S, not a station e.g. MTASBWY_R14");
@@ -185,17 +213,26 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 	}
 	
 	@Override
-	public DataFetcher<Iterable<Object>> stopAccessibility() {
+	public DataFetcher<Object> stopAccessibility() {
 		return environment -> {
 			GraphQLQueryTypeStopAccessibilityArgsInput input = 
 					new GraphQLQueryTypeStopAccessibilityArgsInput(environment.getArguments());
 
+			String mtaAdaAccessible = null;
+			String mtaAdaNotes = null;
 			List<AgencyAndId> queries = null;			
 			if(input.getGraphQLMtaComplexId() != null) {
-				ArrayList<HashMap<String, String>> records = getGraphIndex(environment).mtaSubwayStationsByComplexId.get(input.getGraphQLMtaComplexId());
-				if(records == null)
+				ArrayList<HashMap<String, String>> records = getGraphIndex(environment).mtaSubwayComplexes.get("Complex ID").get(new AgencyAndId("MTASBWY", input.getGraphQLMtaComplexId()));
+				if(records == null || records.size() != 1)
 					throw new Exception("Complex ID was not found.");
 
+				mtaAdaAccessible = GraphQLNyMtaAdaFlag.values()[Integer.parseInt(records.get(0).get("ADA"))].name();
+				mtaAdaNotes = records.get(0).get("ADA Notes");
+
+				records = getGraphIndex(environment).mtaSubwayStations.get("Complex ID").get(new AgencyAndId("MTASBWY", input.getGraphQLMtaComplexId()));
+				if(records == null)
+					throw new Exception("Complex ID was not found.");
+				
 				List<String> ids = new ArrayList<String>();
 				for(HashMap<String, String> record : records) {
 					ids.addAll(getGraphIndex(environment).stopsForParentStation
@@ -211,10 +248,13 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 						.collect(Collectors.toList());				
 				
 			} else	if(input.getGraphQLMtaStationId() != null) {
-				ArrayList<HashMap<String, String>> records = getGraphIndex(environment).mtaSubwayStationsByStationId.get(input.getGraphQLMtaStationId());
-				if(records == null)
+				ArrayList<HashMap<String, String>> records = getGraphIndex(environment).mtaSubwayStations.get("Station ID").get(new AgencyAndId("MTASBWY", input.getGraphQLMtaStationId()));
+				if(records == null || records.size() != 1)
 					throw new Exception("Station ID was not found.");
-				
+
+				mtaAdaAccessible = GraphQLNyMtaAdaFlag.values()[Integer.parseInt(records.get(0).get("ADA"))].name();
+				mtaAdaNotes = records.get(0).get("ADA Notes");
+
 				List<String> ids = new ArrayList<String>();
 				for(HashMap<String, String> record : records) {
 					ids.addAll(getGraphIndex(environment).stopsForParentStation
@@ -229,8 +269,27 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 						.filter(c -> ids.stream().anyMatch(inputItem -> AgencyAndId.convertToString(c).equals(inputItem)))
 						.collect(Collectors.toList());						
 			} else {
+				List<AgencyAndId> ids = new ArrayList<AgencyAndId>();
+				
+				AgencyAndId aid = AgencyAndId.convertFromString(input.getGraphQLGtfsId());
+				ids.addAll(getGraphIndex(environment).stopsForParentStation.get(aid)
+							.stream()
+							.map(stop -> { return stop.getId(); } )
+							.collect(Collectors.toList()));									
+
+				if(ids.isEmpty())
+					throw new Exception("GTFS Station ID not found.");
+
+				ArrayList<HashMap<String, String>> records = 
+						getGraphIndex(environment).mtaSubwayStations.get("GTFS Stop ID").get(aid);
+				if(records == null || records.size() != 1)
+					throw new Exception("GTFS Station ID not found (2).");
+
+				mtaAdaAccessible = GraphQLNyMtaAdaFlag.values()[Integer.parseInt(records.get(0).get("ADA"))].name();
+				mtaAdaNotes = records.get(0).get("ADA Notes");
+
 				queries = getGraphIndex(environment).stopForId.keySet().stream()
-						.filter(c -> c.getId().startsWith(GtfsLibrary.convertIdFromString(input.getGraphQLGtfsId()).getId()))
+						.filter(c -> ids.stream().anyMatch(inputItem -> c.equals(inputItem)))
 						.collect(Collectors.toList());			
 			}
 		
@@ -238,8 +297,11 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 			ar.date = input.getGraphQLDate();
 			ar.ignoreRealtimeUpdates = input.getGraphQLIncludeRealtime() != null ? !input.getGraphQLIncludeRealtime() : false;
 			
-			ArrayList<PairwiseAccessibilityShort> response = ar.getPairwiseAccessibility(queries);					
-			return response.stream().collect(Collectors.toList());
+			HashMap<String, Object> result = new HashMap<String, Object>();
+			result.put("pairs", ar.getPairwiseAccessibility(queries));
+			result.put("mtaAdaAccessible", mtaAdaAccessible);			
+			result.put("mtaAdaAccessibleNotes", mtaAdaNotes);			
+			return result;
 		};
 	}
 

@@ -35,7 +35,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	public DataFetcher<String> gtfsId() {
 	    return environment -> {
 	    	Stop e = environment.getSource();
-	    	return GtfsLibrary.convertIdToString(e.getId());
+	    	return AgencyAndId.convertToString(e.getId());
 	    };
 	}
 
@@ -200,10 +200,14 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	public DataFetcher<String> mtaComplexId() {
 		return environment -> {
 	    	Stop e = environment.getSource();
-	    	String gtfsId = e.getParentStation() != null ? e.getParentStation() : e.getId().getId();
-	    	
-	    	return getGraphIndex(environment).mtaSubwayStationsByGtfsId
-	    			.get(gtfsId).get(0).get("Complex ID");
+	    	AgencyAndId gtfsId = e.getParentStation() != null ? new AgencyAndId(e.getId().getAgencyId(), e.getParentStation()) : e.getId();
+
+	    	return getGraphIndex(environment)
+	    			.mtaSubwayStations
+	    			.get("GTFS Stop ID")
+	    			.get(gtfsId)
+	    			.get(0)
+	    			.get("Complex ID");
 	    };	
 	}
 
@@ -211,10 +215,14 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	public DataFetcher<String> mtaStationId() {
 		return environment -> {
 	    	Stop e = environment.getSource();
-	    	String gtfsId = e.getParentStation() != null ? e.getParentStation() : e.getId().getId();
+	    	AgencyAndId gtfsId = e.getParentStation() != null ? new AgencyAndId(e.getId().getAgencyId(), e.getParentStation()) : e.getId();
 	    	
-	    	return getGraphIndex(environment).mtaSubwayStationsByGtfsId
-	    			.get(gtfsId).get(0).get("Station ID");
+	    	return getGraphIndex(environment)
+	    			.mtaSubwayStations
+	    			.get("GTFS Stop ID")
+	    			.get(gtfsId)
+	    			.get(0)
+	    			.get("Station ID");
 	    };	
 	}
 
@@ -262,10 +270,14 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	public DataFetcher<String> mtaAdaAccessible() {
 		return environment -> {
 	    	Stop e = environment.getSource();
-	    	String gtfsId = e.getParentStation() != null ? e.getParentStation() : e.getId().getId();
+	    	AgencyAndId gtfsId = e.getParentStation() != null ? new AgencyAndId(e.getId().getAgencyId(), e.getParentStation()) : e.getId();
 	    	
-	    	return GraphQLNyMtaAdaFlag.values()[Integer.parseInt(getGraphIndex(environment).mtaSubwayStationsByGtfsId
-	    			.get(gtfsId).get(0).get("ADA"))].name();
+	    	return GraphQLNyMtaAdaFlag.values()[Integer.parseInt(getGraphIndex(environment)
+	    			.mtaSubwayStations
+	    			.get("GTFS Stop ID")
+	    			.get(gtfsId)
+	    			.get(0)
+	    			.get("ADA"))].name();
 	    };	
 	}
 
@@ -273,11 +285,15 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	public DataFetcher<String> mtaAdaAccessibleNotes() {
 		return environment -> {
 	    	Stop e = environment.getSource();
-	    	String gtfsId = e.getParentStation() != null ? e.getParentStation() : e.getId().getId();
-	    	
-	    	return getGraphIndex(environment).mtaSubwayStationsByGtfsId
-	    			.get(gtfsId).get(0).get("ADA Notes");
-	    };	
+	    	AgencyAndId gtfsId = e.getParentStation() != null ? new AgencyAndId(e.getId().getAgencyId(), e.getParentStation()) : e.getId();
+
+	    	return getGraphIndex(environment)
+	    			.mtaSubwayStations
+	    			.get("GTFS Stop ID")
+	    			.get(gtfsId)
+	    			.get(0)
+	    			.get("ADA Notes");
+		};
 	}
 	
 	@Override

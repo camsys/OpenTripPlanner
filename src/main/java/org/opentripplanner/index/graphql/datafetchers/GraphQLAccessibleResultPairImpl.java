@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 import org.opentripplanner.api.model.PairwiseAccessibilityShort;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
 
-public class GraphQLPairwiseAccessibleResultImpl implements GraphQLDataFetchers.GraphQLPairwiseAccessibleResult {
+public class GraphQLAccessibleResultPairImpl implements GraphQLDataFetchers.GraphQLAccessibleResultPair {
 
 	@Override
 	public DataFetcher<Object> to() {
@@ -47,5 +47,4 @@ public class GraphQLPairwiseAccessibleResultImpl implements GraphQLDataFetchers.
 	    	return e.alerts.parallelStream().collect(Collectors.toList());
 	    };
 	}
-	
 }

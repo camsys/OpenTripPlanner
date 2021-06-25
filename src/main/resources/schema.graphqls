@@ -259,10 +259,7 @@ enum WheelchairBoarding {
 }
 
 """Enhanced accessibility information set by NY MTA's Accessibility Group."""
-enum NYMtaADAFlag {
-    """There is no accessibility information for the stop."""
-	UNKNOWN
-	
+enum NYMtaADAFlag {	
 	"""Wheelchair boarding is not possible at this stop."""
 	NOT_ACCESSIBLE
 
@@ -513,7 +510,7 @@ type Agency {
 
 }
 
-type PairwiseAccessibleResult {
+type AccessibleResultPair {
 	
 	from: Stop
 
@@ -527,7 +524,18 @@ type PairwiseAccessibleResult {
     List of alerts which have an effect on all operations of the agency
     """
     alerts: [Alert]
+}
 
+type AccessibleResult {
+	
+	pairs: [AccessibleResultPair]
+	
+    """NY MTA's ADA Accessibility Status Flag"""
+    mtaAdaAccessible: String!
+
+    """NY MTA's ADA Accessibility Description"""
+    mtaAdaAccessibleNotes: String
+    
 }
     
 type NearbyStopResult {
@@ -678,7 +686,19 @@ type QueryType {
         GTFS Stop ID (format: `FeedId_StopId`)
         """
         gtfsId: String
+            
+    ): Stop
 
+    """
+    Get a stop based on its GTFS ID (format: `FeedId_StopId`), station or complex ID.
+    """
+    stops(
+    
+        """
+        Only return stops with these ids. (format: `FeedId_StopId`)
+        """
+        gtfsIds: [String]
+    
         """
         MTA Complex ID
         """
@@ -687,20 +707,10 @@ type QueryType {
         """
         MTA Station ID
         """
-        mtaStationId: String
-    
-    ): Stop
-
-    """
-    Get a stop based on its GTFS ID (format: `FeedId_StopId`), station or complex ID.
-    """
-    stops(
-        """
-        Only return stops with these ids. (format: `FeedId_StopId`)
-        """
-        gtfsIds: [String]
-    
+        mtaStationId: String   
+         
     ): [Stop]
+    
     
     """Get all active alerts"""
     alerts(
@@ -756,7 +766,7 @@ type QueryType {
         """
         includeRealtime: Boolean
         
-         """
+        """
         GTFS Stop ID (format: `FeedId_StopId`)
         """
         gtfsId: String
@@ -771,7 +781,8 @@ type QueryType {
         """
         mtaStationId: String
         
-	): [PairwiseAccessibleResult]
+	): AccessibleResult
+	
 	
 	nearby(
 	

@@ -19,6 +19,8 @@ public class GraphQLQueryTypeInputs {
 	    public GraphQLQueryTypeStopsArgsInput(Map<String, Object> args) {
 	        if (args != null) {
 	        	this.setGraphQLGtfsIds((Iterable<String>)args.get("gtfsIds"));
+	        	this.setGraphQLMtaComplexId((String)args.get("mtaComplexId"));
+	        	this.setGraphQLMtaStationId((String)args.get("mtaStationId"));
 	        }
 	    }
 	}
@@ -27,8 +29,6 @@ public class GraphQLQueryTypeInputs {
 	    public GraphQLQueryTypeStopArgsInput(Map<String, Object> args) {
 	        if (args != null) {
 	        	this.setGraphQLGtfsId((String)args.get("gtfsId"));
-	        	this.setGraphQLMtaComplexId((String)args.get("mtaComplexId"));
-	        	this.setGraphQLMtaStationId((String)args.get("mtaStationId"));
 	        }
 	    }
 	}

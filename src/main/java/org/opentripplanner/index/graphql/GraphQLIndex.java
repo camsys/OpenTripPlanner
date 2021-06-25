@@ -25,7 +25,7 @@ import org.opentripplanner.index.graphql.datafetchers.GraphQLAlertImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLEquipmentImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLFeedImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLNearbyStopResultImpl;
-import org.opentripplanner.index.graphql.datafetchers.GraphQLPairwiseAccessibleResultImpl;
+import org.opentripplanner.index.graphql.datafetchers.GraphQLAccessibleResultPairImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLQueryTypeImpl;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLQueryTypeInputs;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLRouteDestinationGroupImpl;
@@ -73,7 +73,7 @@ class GraphQLIndex {
           .type(IntrospectionTypeWiring.build(GraphQLEquipmentImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLFeedImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLNearbyStopResultImpl.class))
-          .type(IntrospectionTypeWiring.build(GraphQLPairwiseAccessibleResultImpl.class))
+          .type(IntrospectionTypeWiring.build(GraphQLAccessibleResultPairImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLQueryTypeImpl.class))
           .type(IntrospectionTypeWiring.build(GraphQLQueryTypeInputs.class))
           .type(IntrospectionTypeWiring.build(GraphQLRouteDestinationGroupImpl.class))

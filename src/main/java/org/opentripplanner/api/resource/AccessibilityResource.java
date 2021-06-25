@@ -40,6 +40,7 @@ import org.opentripplanner.routing.spt.DominanceFunction;
 import org.opentripplanner.routing.spt.GraphPath;
 import org.opentripplanner.routing.spt.ShortestPathTree;
 import org.opentripplanner.routing.vertextype.TransitStationStop;
+import org.opentripplanner.routing.vertextype.TransitStop;
 import org.opentripplanner.standalone.OTPServer;
 import org.opentripplanner.standalone.Router;
 import org.slf4j.Logger;
@@ -117,15 +118,15 @@ public class AccessibilityResource {
        	
     	Stop fromGTFSStop = index.stopForId.get(AgencyAndId.convertFromString(fromStopIdString));
 
-    	TransitStationStop fromStop = 
-   				(TransitStationStop)index.stopVertexForStop.get(fromGTFSStop);
+    	TransitStop fromStop = 
+   				(TransitStop)index.stopVertexForStop.get(fromGTFSStop);
 
         Set<Vertex> connectionsTo = index.connectionsFromMap.get(fromStopIdString);
 
         for(Vertex connectionTo : connectionsTo) {
-       		TransitStationStop toStop = (TransitStationStop)connectionTo;
+       		TransitStop toStop = (TransitStop)connectionTo;
 
-    		if(toStop.getStopId().equals(fromStop.getStopId()))
+    		if(toStop.getStopId().equals(fromStop.getStopId()) || toStop.isEntrance() && fromStop.isEntrance())
    				continue;
     		
         	result.addAll(getStopAccessibility(fromStop.getStop(), toStop.getStop()));
@@ -148,6 +149,10 @@ public class AccessibilityResource {
 
         		Stop toStop = 
            				index.stopForId.get(to);
+
+        		if(toStop.getId().equals(fromStop.getId()) || 
+        				toStop.getLocationType() == Stop.LOCATION_TYPE_ENTRANCE_EXIT && fromStop.getLocationType() == Stop.LOCATION_TYPE_ENTRANCE_EXIT)
+       				continue;
 
             	result.addAll(getStopAccessibility(fromStop, toStop));
             	
