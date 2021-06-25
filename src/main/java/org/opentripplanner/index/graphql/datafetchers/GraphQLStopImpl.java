@@ -202,12 +202,19 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	    	Stop e = environment.getSource();
 	    	AgencyAndId gtfsId = e.getParentStation() != null ? new AgencyAndId(e.getId().getAgencyId(), e.getParentStation()) : e.getId();
 
-	    	return getGraphIndex(environment)
+	    	String candidateComplexID = getGraphIndex(environment)
 	    			.mtaSubwayStations
 	    			.get("GTFS Stop ID")
 	    			.get(gtfsId)
 	    			.get(0)
 	    			.get("Complex ID");
+	    	
+	    	boolean complexIdExists = getGraphIndex(environment)
+	    			.mtaSubwayComplexes
+	    			.get("Complex ID")
+	    			.get(new AgencyAndId(e.getId().getAgencyId(), candidateComplexID)) != null;
+	    	
+	    	return complexIdExists ? candidateComplexID : null;
 	    };	
 	}
 

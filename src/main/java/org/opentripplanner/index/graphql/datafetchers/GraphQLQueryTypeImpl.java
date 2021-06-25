@@ -75,7 +75,7 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 		return environment -> {
 			GraphQLQueryTypeStopsArgsInput input = 
 					new GraphQLQueryTypeStopsArgsInput(environment.getArguments());
-					
+
 			if(input.getGraphQLMtaStationId() != null) {
 				ArrayList<HashMap<String, String>> records = getGraphIndex(environment).mtaSubwayStations.get("Station ID").get(new AgencyAndId("MTASBWY", input.getGraphQLMtaStationId()));
 				if(records == null || records.isEmpty())
@@ -100,9 +100,16 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 						.collect(Collectors.toList());	
 				
 			} else if(input.getGraphQLMtaComplexId() != null) {
-				ArrayList<HashMap<String, String>> records = getGraphIndex(environment).mtaSubwayStations.get("Complex ID").get(new AgencyAndId("MTASBWY", input.getGraphQLMtaComplexId()));
+				// this extra check is here because there are some Complex IDs in the Stations file that we should not respond to,
+				// yet the Stations file is the one that maps the IDs to GTFS IDs
+				ArrayList<HashMap<String, String>> records = getGraphIndex(environment).mtaSubwayComplexes.get("Complex ID").get(new AgencyAndId("MTASBWY", input.getGraphQLMtaComplexId()));
 				if(records == null || records.isEmpty())
-					throw new Exception("Station ID was not found.");
+					throw new Exception("Complex ID was not found.");
+
+				// now map the valid Complex ID to GTFS IDs
+				records = getGraphIndex(environment).mtaSubwayStations.get("Complex ID").get(new AgencyAndId("MTASBWY", input.getGraphQLMtaComplexId()));
+				if(records == null || records.isEmpty())
+					throw new Exception("Complex ID was not found (2).");
 				
 				List<AgencyAndId> ids = new ArrayList<AgencyAndId>();
 				records
@@ -125,13 +132,10 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 				Stream<String> inputStream = StreamSupport.stream(input.getGraphQLGtfsIds().spliterator(), false);
 				
 				List<AgencyAndId> ids = new ArrayList<AgencyAndId>();
-
-				// case: input is a GTFS platform/stop
 				input.getGraphQLGtfsIds().forEach(id -> {
 					ids.add(AgencyAndId.convertFromString(id));
 				});
 				
-				// case: input is a GTFS parent station
 				inputStream.forEach(it -> {
 					AgencyAndId aid = AgencyAndId.convertFromString(it);
 					ids.addAll(getGraphIndex(environment).stopsForParentStation.get(aid)
@@ -146,7 +150,6 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 						.collect(Collectors.toList());			
 
 			} else {
-				
 			    return getGraphIndex(environment).stopForId.values().stream()
 						.distinct()
 						.collect(Collectors.toList());			
@@ -161,12 +164,12 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 					new GraphQLQueryTypeStopArgsInput(environment.getArguments());
 			
 			if(input.getGraphQLGtfsId() == null)
-				throw new Exception("GTFS ID must be given.");
+				throw new Exception("GTFS ID must be given. Use stops() if you want to provide a complex or station.");
 				
 			AgencyAndId theStop = AgencyAndId.convertFromString(input.getGraphQLGtfsId());
 
 			if(!getGraphIndex(environment).stopForId.containsKey(theStop))
-				throw new Exception("The requested stop ID must be or resolve to a GTFS stop or platform. e.g. MTASBWY_R14S, not a station e.g. MTASBWY_R14");
+				throw new Exception("The requested stop ID must be or resolve to a GTFS platform. e.g. MTASBWY_R14S, not a station e.g. MTASBWY_R14");
 			
 			return getGraphIndex(environment).stopForId.get(theStop);				
 		};
@@ -231,7 +234,7 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 
 				records = getGraphIndex(environment).mtaSubwayStations.get("Complex ID").get(new AgencyAndId("MTASBWY", input.getGraphQLMtaComplexId()));
 				if(records == null)
-					throw new Exception("Complex ID was not found.");
+					throw new Exception("Complex ID was not found (2).");
 				
 				List<String> ids = new ArrayList<String>();
 				for(HashMap<String, String> record : records) {
