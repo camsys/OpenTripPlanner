@@ -51,7 +51,7 @@ public class GraphQLAlertImpl implements GraphQLDataFetchers.GraphQLAlert {
 	public DataFetcher<Object> trip() {
 		 return environment -> {
 			AlertPatch e = environment.getSource();
-		    return getGraphIndex(environment).tripForId.get(e.getTrip());
+		    return getGraphIndex(environment).getTripForId(e.getTrip());
 		 };
 	}
 	
