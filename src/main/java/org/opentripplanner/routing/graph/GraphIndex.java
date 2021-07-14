@@ -230,14 +230,22 @@ public class GraphIndex {
         	if(!(v instanceof TransitStop) && !(v instanceof TransitStationStop))
         		continue;
 
-        	TransitStationStop tss = (TransitStationStop)v;
-        	
 //        	System.out.println("Starting pathway walk from " + v.getLabel());
 
-        	HashSet<Vertex> connectionsFromHere = new HashSet<Vertex>();
-        	HashSet<PathwayEdge> equipmentAccessFromHere = new HashSet<PathwayEdge>();
-        	HashSet<Vertex> visitedList = new HashSet<Vertex>();
+        	TransitStationStop tss = (TransitStationStop)v;
+        	
+        	Stop thisStop = this.stopForId.get(GtfsLibrary.convertIdFromString(v.getLabel()));
+        	
+        	AgencyAndId parentStopId = (thisStop.getParentStation() != null) 
+        			? new AgencyAndId(thisStop.getId().getAgencyId(), thisStop.getParentStation()) 
+        			: thisStop.getId();
 
+        	HashSet<PathwayEdge> equipmentAccessFromHere = equipmentEdgesForStationId.get(parentStopId);
+        	if(equipmentAccessFromHere == null)
+        		equipmentAccessFromHere = new HashSet<PathwayEdge>();
+
+        	HashSet<Vertex> connectionsFromHere = new HashSet<Vertex>();
+        	HashSet<Vertex> visitedList = new HashSet<Vertex>();
         	boolean initialState = graph.stopAccessibilityStrategy.transitStopEvaluateGTFSAccessibilityFlag(tss.getStop());
         	
         	Boolean hasAtLeastOneAccessiblePath = walkPathwayEdges(v, connectionsFromHere, equipmentAccessFromHere, visitedList, initialState, 0);       
@@ -250,15 +258,8 @@ public class GraphIndex {
         	connectionsFromMap.put(v.getLabel().replace(":", "_"), connectionsFromHere);
 
         	// update equipment index
-        	Stop thisStop = this.stopForId.get(GtfsLibrary.convertIdFromString(v.getLabel()));
-        	
-        	if(thisStop != null) {
-	        	AgencyAndId parentStopId = (thisStop.getParentStation() != null) 
-	        			? new AgencyAndId(thisStop.getId().getAgencyId(), thisStop.getParentStation()) 
-	        			: thisStop.getId();
-	        	
+        	if(thisStop != null)
 	        	equipmentEdgesForStationId.put(parentStopId, equipmentAccessFromHere);
-        	}
         }
         
         LOG.info("done");
@@ -266,8 +267,8 @@ public class GraphIndex {
 
 	private Boolean walkPathwayEdges(Vertex v, HashSet<Vertex> connectionsFromHere, HashSet<PathwayEdge> equipmentAccessFromHere, 
 			HashSet<Vertex> visitedList, Boolean accessibleToHere, int depth) {    	
-    	
-        // stop if we've been here before
+
+		// stop if we've been here before
         if(visitedList.contains(v))
         	return accessibleToHere;
         visitedList.add(v);
