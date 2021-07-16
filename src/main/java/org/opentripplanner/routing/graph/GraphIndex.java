@@ -234,9 +234,15 @@ public class GraphIndex {
 
         	TransitStationStop tss = (TransitStationStop)v;
         	
-        	Stop thisStop = this.stopForId.get(GtfsLibrary.convertIdFromString(v.getLabel()));
+        	if(v.getLabel() == null || v.getLabel().isEmpty())
+        		continue;
         	
-        	AgencyAndId parentStopId = (thisStop.getParentStation() != null) 
+        	Stop thisStop = this.stopForId.get(GtfsLibrary.convertIdFromString(v.getLabel()));
+
+        	if(thisStop == null)
+          		continue;
+  
+          	AgencyAndId parentStopId = (thisStop.getParentStation() != null) 
         			? new AgencyAndId(thisStop.getId().getAgencyId(), thisStop.getParentStation()) 
         			: thisStop.getId();
 
