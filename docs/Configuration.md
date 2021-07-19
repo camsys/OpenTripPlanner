@@ -218,6 +218,7 @@ config key | description | value type | value default | notes
 `transitServiceEnd` | Limit the import of transit services to the given *end* date. *Inclusive*. Use an absolute date or a period relative to the day the graph is build. | date or period | P3Y | _2022&#8209;12&#8209;31, P1Y6M10D, P12W_
 `useTransfersTxt` | Create direct transfer edges from transfers.txt in GTFS, instead of based on distance | boolean | false |
 `writeCachedElevations` | If true, writes the calculated elevation data. | boolean | false | see [Elevation Data Calculation Optimizations](#elevation-data-calculation-optimizations)
+`maxAreaNodes` | Visibility calculations for an area will not be done if there are more nodes than this limit | integer | 500 |
 
 This list of parameters in defined in the [BuildConfig.java](https://github.com/opentripplanner/OpenTripPlanner/blob/v2.0.0/src/main/java/org/opentripplanner/standalone/config/BuildConfig.java).
 
@@ -690,6 +691,8 @@ config key | description | value type | value default
 `minSafeTransferTimeFactor` | Add an additional cost for short transfers on long transit itineraries. See javaDoc on `AddMinSafeTransferCostFilter` details. | double | `0.0`
 `transitGeneralizedCostLimit` | A relative maximum limit for the generalized cost for transit itineraries. The limit is a linear function of the minimum generalized-cost. The function is used to calculate a max-limit. The max-limit is then used to to filter by generalized-cost. Transit itineraries with a cost higher than the max-limit is dropped from the result set. None transit itineraries is excluded from the filter. To set a filter to be _1 hour plus 2 times the best cost_ use: `3600 + 2.0 x`. To set an absolute value(3000s) use: `3000 + 0x`  | linear function | `3600 + 2.0 x`
 `nonTransitGeneralizedCostLimit` | A relative maximum limit for the generalized cost for non-transit itineraries. The max limit is calculated using ALL itineraries, but only non-transit itineraries will be filtered out. The limit is a linear function of the minimum generalized-cost. The function is used to calculate a max-limit. The max-limit is then used to to filter by generalized-cost. Non-transit itineraries with a cost higher than the max-limit is dropped from the result set. To set a filter to be _1 hour plus 2 times the best cost_ use: `3600 + 2.0 x`. To set an absolute value(3000s) use: `3000 + 0x`  | linear function | `3600 + 2.0 x`
+`bikeRentalDistanceRatio` | For routes that consist only of bike rental and walking what is the minimum fraction of _distance_ of the bike rental leg. This filters out results that consist of a long walk plus a relatively short bike rental leg. A value of `0.3` means that a minimum of 30% of the total distance must be spent on the bike in order for the result to be included. | double | `0.0`
+`parkAndRideDurationRatio` | For P+R routes that consist only of driving and walking what is the minimum fraction of _time_ of the driving leg. This filters out results that consist of driving plus a very long walk leg at the end. A value of `0.3` means that a minimum of 30% of the total time must be spent in the car in order for the result to be included. However, if there is only a single result, it is never filtered. | double | `0.0`
 
 
 #### Group by similarity filters
@@ -813,6 +816,7 @@ config key | description | value type | value default
 `searchThreadPoolSize` | Split a travel search in smaller jobs and run them in parallel to improve performance. Use this parameter to set the total number of executable threads available across all searches. Multiple searches can run in parallel - this parameter have no effect with regard to that. If 0, no extra threads are started and the search is done in one thread. | int | `0`
 `dynamicSearchWindow` | The dynamic search window coefficients used to calculate the EDT(earliest-departure-time), LAT(latest-arrival-time) and SW(raptor-search-window) using heuristics. | object | `null`
 `stopTransferCost` | Use this to set a stop transfer cost for the given [TransferPriority](https://github.com/opentripplanner/OpenTripPlanner/blob/v2.0.0/src/main/java/org/opentripplanner/model/TransferPriority.java). The cost is applied to boarding and alighting at all stops. All stops have a transfer cost priority set, the default is `ALLOWED`. The `stopTransferCost` parameter is optional, but if listed all values must be set. | enum map | `null`
+`transferCacheMaxSize` | The maximum number of distinct transfers parameters (`RoutingRequest`s) to cache pre-calculated transfers for. If too low, requests may be slower. If too high, more memory may be used then required. | int | `25`
 
 ### Tuning transit routing - Dynamic search window
 Nested inside `transit : { dynamicSearchWindow : { ... } }` in `router-config.json`.

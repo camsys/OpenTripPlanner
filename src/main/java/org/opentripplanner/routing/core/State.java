@@ -10,6 +10,7 @@ import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.edgetype.StreetEdge;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
+import org.opentripplanner.routing.vertextype.BikeRentalStationVertex;
 
 public class State implements Cloneable {
     /* Data which is likely to change at most traversals */
@@ -49,7 +50,7 @@ public class State implements Cloneable {
     public static Collection<State> getInitialStates(RoutingRequest request) {
         Collection<State> states = new ArrayList<>();
         for (Vertex vertex : request.rctx.fromVertices) {
-            /* carPickup searches may end in two states (see isFinal()): IN_CAR and WALK_FROM_DROP_OFF/WALK_TO_PICKUP
+            /* carPickup searches may end in two distinct states: IN_CAR and WALK_FROM_DROP_OFF/WALK_TO_PICKUP
                for forward/reverse searches to be symmetric both initial states need to be created. */
             if (request.carPickup) {
                 states.add(
@@ -284,6 +285,10 @@ public class State implements Cloneable {
         return stateData.bikeRentalState == BikeRentalState.RENTING_FROM_STATION;
     }
 
+    public boolean isBikeRentingFloating() {
+        return stateData.bikeRentalState == BikeRentalState.RENTING_FLOATING;
+    }
+
     public boolean isBikeRenting() {
         return stateData.bikeRentalState == BikeRentalState.RENTING_FROM_STATION
             || stateData.bikeRentalState == BikeRentalState.RENTING_FLOATING;
@@ -325,21 +330,16 @@ public class State implements Cloneable {
         boolean bikeRentingOk;
         boolean bikeParkAndRideOk;
         boolean carParkAndRideOk;
-        boolean pickedUpByCar;
         if (stateData.opt.arriveBy) {
             bikeRentingOk = !stateData.opt.bikeRental || !isBikeRenting();
             bikeParkAndRideOk = !bikeParkAndRide || !isBikeParked();
             carParkAndRideOk = !parkAndRide || !isCarParked();
-            // Checks that taxi has actually been used
-            pickedUpByCar = getCarPickupState() != CarPickupState.WALK_FROM_DROP_OFF;
         } else {
             bikeRentingOk = !stateData.opt.bikeRental || (bikeRentalNotStarted() || bikeRentalIsFinished());
             bikeParkAndRideOk = !bikeParkAndRide || isBikeParked();
             carParkAndRideOk = !parkAndRide || isCarParked();
-            // Checks that taxi has actually been used
-            pickedUpByCar = getCarPickupState() != CarPickupState.WALK_TO_PICKUP;
         }
-        return bikeRentingOk && bikeParkAndRideOk && carParkAndRideOk && pickedUpByCar;
+        return bikeRentingOk && bikeParkAndRideOk && carParkAndRideOk;
     }
 
     public double getWalkDistance() {
@@ -568,6 +568,32 @@ public class State implements Cloneable {
             // propagate the modes through to the reversed edge
             editor.setBackMode(orig.getBackMode());
 
+            if (orig.isBikeRenting() && !orig.getBackState().isBikeRenting()) {
+                var stationVertex = ((BikeRentalStationVertex) orig.vertex);
+                editor.dropOffRentedVehicleAtStation(
+                        stationVertex.getVehicleMode(),
+                        stationVertex.getStation().networks,
+                        false
+                );
+            }
+            else if (!orig.isBikeRenting() && orig.getBackState().isBikeRenting()) {
+                var stationVertex = ((BikeRentalStationVertex) orig.vertex);
+                if (orig.getBackState().isBikeRentingFromStation()) {
+                    editor.beginVehicleRentingAtStation(
+                            stationVertex.getVehicleMode(),
+                            stationVertex.getStation().networks,
+                            orig.backState.mayKeepRentedBicycleAtDestination(),
+                            false
+                    );
+                }
+                else if (orig.getBackState().isBikeRentingFloating()) {
+                    editor.beginFloatingVehicleRenting(
+                            stationVertex.getVehicleMode(),
+                            stationVertex.getStation().networks,
+                            false
+                    );
+                }
+            }
             if (orig.isCarParked() != orig.getBackState().isCarParked()) {
                 editor.setCarParked(!orig.isCarParked());
             }
@@ -590,12 +616,8 @@ public class State implements Cloneable {
         return reverse();
     }
 
-    boolean hasEnteredMotorVehicleNoThruTrafficArea() {
-        return stateData.enteredMotorVehicleNoThroughTrafficArea;
-    }
-
-    public boolean hasEnteredBicycleNoThruTrafficArea() {
-        return stateData.enteredBicycleNoThroughTrafficArea;
+    public boolean hasEnteredNoThruTrafficArea() {
+        return stateData.enteredNoThroughTrafficArea;
     }
 
     public boolean mayKeepRentedBicycleAtDestination() {

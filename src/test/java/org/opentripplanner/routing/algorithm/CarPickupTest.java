@@ -77,7 +77,7 @@ public class CarPickupTest extends GraphRoutingTest {
     public void testCarPickupFromEntranceThenCar() {
         assertPath(
                 S1, C,
-                "null - WALK_TO_PICKUP - null, WALK - WALK_TO_PICKUP - S1, CAR - IN_CAR - BC street"
+                "null - WALK_TO_PICKUP - null, null - WALK_TO_PICKUP - S1, CAR - IN_CAR - BC street"
         );
     }
 
@@ -85,7 +85,7 @@ public class CarPickupTest extends GraphRoutingTest {
     public void testCarPickupWalkFromEntranceThenCarThenWalk() {
         assertPath(
                 S1, D,
-                "null - WALK_TO_PICKUP - null, WALK - WALK_TO_PICKUP - S1, CAR - IN_CAR - BC street, WALK - WALK_FROM_DROP_OFF - CD street"
+                "null - WALK_TO_PICKUP - null, null - WALK_TO_PICKUP - S1, CAR - IN_CAR - BC street, WALK - WALK_FROM_DROP_OFF - CD street"
         );
     }
 
@@ -93,7 +93,7 @@ public class CarPickupTest extends GraphRoutingTest {
     public void testCarPickupCarThenWalkToStop() {
         assertPath(
                 B, E1,
-                "null - IN_CAR - null, CAR - IN_CAR - BC street, WALK - WALK_FROM_DROP_OFF - E1"
+                "null - IN_CAR - null, CAR - IN_CAR - BC street, null - WALK_FROM_DROP_OFF - E1"
         );
     }
 
@@ -101,7 +101,7 @@ public class CarPickupTest extends GraphRoutingTest {
     public void testCarPickupWalkFromEntranceThenCarThenWalkToStop() {
         assertPath(
                 S1, E1,
-                "null - WALK_TO_PICKUP - null, WALK - WALK_TO_PICKUP - S1, CAR - IN_CAR - BC street, WALK - WALK_FROM_DROP_OFF - E1"
+                "null - WALK_TO_PICKUP - null, null - WALK_TO_PICKUP - S1, CAR - IN_CAR - BC street, null - WALK_FROM_DROP_OFF - E1"
         );
     }
 
@@ -121,8 +121,8 @@ public class CarPickupTest extends GraphRoutingTest {
         // and the path can't be traversed by car.
         assertPath(
                 A, B,
-                "null - IN_CAR - null, WALK - WALK_FROM_DROP_OFF - AB street",
-                "null - WALK_TO_PICKUP - null, WALK - WALK_TO_PICKUP - AB street"
+                "null - WALK_TO_PICKUP - null, WALK - WALK_TO_PICKUP - AB street",
+                "null - WALK_FROM_DROP_OFF - null, WALK - WALK_FROM_DROP_OFF - AB street"
         );
     }
 
@@ -174,7 +174,6 @@ public class CarPickupTest extends GraphRoutingTest {
     ) {
         var options = new RoutingRequest();
         options.arriveBy = arriveBy;
-        options.worstTime = arriveBy ? Long.MIN_VALUE : Long.MAX_VALUE;
 
         var carPickupOptions = options.getStreetSearchRequest(StreetMode.CAR_PICKUP);
         carPickupOptions.setRoutingContext(graph, fromVertex, toVertex);

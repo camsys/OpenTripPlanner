@@ -169,11 +169,18 @@ public class Leg {
 
    public String alightRule;
 
-   public BookingInfo bookingInfo = null;
+   public BookingInfo dropOffBookingInfo = null;
+
+   public BookingInfo pickupBookingInfo = null;
 
     public Transfer transferFromPrevLeg = null;
 
     public Transfer transferToNextLeg = null;
+
+    /**
+     * Is this leg walking with a bike?
+     */
+    public Boolean walkingBike;
 
     public Boolean rentedBike;
 
@@ -333,6 +340,7 @@ public class Leg {
                 .addCol("transitAlerts", transitAlerts)
                 .addStr("boardRule", boardRule)
                 .addStr("alightRule", alightRule)
+                .addBool("walkingBike", walkingBike)
                 .addBool("rentedBike", rentedBike)
                 .addCol("bikeRentalNetworks", bikeRentalNetworks)
                 .toString();

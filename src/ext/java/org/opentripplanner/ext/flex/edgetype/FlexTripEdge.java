@@ -50,26 +50,6 @@ public class FlexTripEdge extends Edge {
 	StateEditor editor = s0.edit(this);
     editor.setBackMode(TraverseMode.BUS);
 
-    // wait time
-    TimeZone tz = s0.getOptions().getRoutingContext().graph.getTimeZone();    
-	long serviceDateAsEpoch = flexTemplate.serviceDate.getAsEpochSeconds(tz);
-	long pickupTime = (s0.getTimeInMillis()/1000) - serviceDateAsEpoch;
-	
-	if(pickupTime < 0 || pickupTime > 60 * 60 * 24)
-		return null; // current time isn't in this service day
-		
-	int earliestPickupTime = flexTemplate.getFlexTrip().earliestDepartureTime((int)pickupTime, 
-    		flexTemplate.fromStopIndex, flexTemplate.toStopIndex);
-
-	if(earliestPickupTime < 0)
-		return null; // trip occurs outside the planning window
-	
-	long initialWaitTimeSeconds = earliestPickupTime - pickupTime;
-	if(initialWaitTimeSeconds < 0)
-		return null; // we missed this trip
-		
-	editor.incrementWeight((int)initialWaitTimeSeconds);
-	
 	// travel time
     editor.incrementTimeInSeconds(getTripTimeInSeconds());
     editor.incrementWeight(getTripTimeInSeconds());
