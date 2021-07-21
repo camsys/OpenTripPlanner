@@ -13,7 +13,6 @@ public class FlexAccessEgressAdapter extends AccessEgress {
   ) {
     super(
         stopIndex.indexByStop.get(flexAccessEgress.stop),
-        flexAccessEgress.getSafeTotalTime(),
         isEgress ? flexAccessEgress.lastState.reverse() : flexAccessEgress.lastState
     );
 

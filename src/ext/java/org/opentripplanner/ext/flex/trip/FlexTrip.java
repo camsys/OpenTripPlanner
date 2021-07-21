@@ -42,7 +42,7 @@ public abstract class FlexTrip extends TransitEntity {
   // need more certainty about the arrival/departure time.
   public abstract int getSafeTotalTime(FlexPath streetPath, int fromStopIndex, int toStopIndex);
 
-  // The "usual" for travel time on this trip. Use this for display and other things that 
+  // The "usual" travel time on this trip. Use this for display and other things that 
   // are supposed to be more the norm vs. the "worst case" scenario.
   public abstract int getMeanTotalTime(FlexPath streetPath, int fromStopIndex, int toStopIndex);
 

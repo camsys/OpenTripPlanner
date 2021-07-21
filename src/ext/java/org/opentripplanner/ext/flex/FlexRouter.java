@@ -19,12 +19,13 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -96,7 +97,7 @@ public class FlexRouter {
     Multimap<StopLocation, NearbyStop> streetEgressByStop = HashMultimap.create();
     streetEgresses.forEach(it -> streetEgressByStop.put(it.stop, it));
 
-    Collection<Itinerary> itineraries = new ArrayList<>();
+    Set<Itinerary> itineraries = new HashSet<>();
 
     for (FlexAccessTemplate template : this.flexAccessTemplates) {
       StopLocation transferStop = template.getTransferStop();
@@ -109,7 +110,7 @@ public class FlexRouter {
         }
       }
     }
-
+    
     return itineraries;
   }
 
@@ -147,7 +148,7 @@ public class FlexRouter {
                 t2.first,
                 date,
                 accessFlexPathCalculator
-            )))
+            ).distinct()))
         .collect(Collectors.toList());
   }
 
@@ -165,8 +166,8 @@ public class FlexRouter {
                 t2.first, 
                 date,
                 egressFlexPathCalculator
-            )))
-        .collect(Collectors.toList());;
+            ).distinct()))
+        .collect(Collectors.toList());
   }
 
   private Stream<T2<NearbyStop, FlexTrip>> getClosestFlexTrips(Collection<NearbyStop> nearbyStops, boolean pickup) {
