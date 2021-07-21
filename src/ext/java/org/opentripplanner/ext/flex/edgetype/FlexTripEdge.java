@@ -13,7 +13,6 @@ import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
 import java.util.Locale;
-import java.util.TimeZone;
 
 public class FlexTripEdge extends Edge {
 
@@ -25,12 +24,12 @@ public class FlexTripEdge extends Edge {
   public FlexAccessEgressTemplate flexTemplate;
   public FlexPath flexPath;
 
+  @SuppressWarnings("serial")
   public FlexTripEdge(
       Vertex v1, Vertex v2, StopLocation s1, StopLocation s2,
       FlexAccessEgressTemplate flexTemplate, FlexPathCalculator calculator
   ) {
-    // Why is this code so dirty? Because we don't want this edge to be added to the edge lists.
-    // The first parameter in Vertex constructor is graph. If it is null, the vertex isn't added to it.
+    // null graph because we don't want this edge to be added to the edge lists.
     super(new Vertex(null, null, 0.0, 0.0) {}, new Vertex(null, null, 0.0, 0.0) {});
     
     this.s1 = s1;
@@ -49,12 +48,10 @@ public class FlexTripEdge extends Edge {
 	  
 	StateEditor editor = s0.edit(this);
     editor.setBackMode(TraverseMode.BUS);
-
-	// travel time
     editor.incrementTimeInSeconds(getTripTimeInSeconds());
-    editor.incrementWeight(getTripTimeInSeconds());
-
-    editor.resetEnteredMotorVerhicleNoThroughTrafficArea();
+    
+    editor.setEnteredNoThroughTrafficArea();
+    
     return editor.makeState();
   }
 
