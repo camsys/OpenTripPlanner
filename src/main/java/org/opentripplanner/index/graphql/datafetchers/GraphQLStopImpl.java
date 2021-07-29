@@ -4,16 +4,20 @@ import graphql.execution.ExecutionStepInfo;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.Trip;
 import org.onebusaway.gtfs.model.AgencyAndId;
+import org.onebusaway.gtfs.model.Route;
 import org.opentripplanner.common.model.P2;
 import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
@@ -172,6 +176,48 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	}
 
 	@Override
+	public DataFetcher<Iterable<Object>> stopsForMtaComplex() {
+		 return environment -> {
+		    	Stop e = environment.getSource();
+		    	AgencyAndId gtfsId = e.getParentStation() != null ? new AgencyAndId(e.getId().getAgencyId(), e.getParentStation()) : e.getId();
+
+		    	AgencyAndId complexId = new AgencyAndId(gtfsId.getAgencyId(), getGraphIndex(environment)
+		    			.mtaSubwayStations
+		    			.get("GTFS Stop ID")
+		    			.get(gtfsId)
+		    			.get(0)
+		    			.get("Complex ID"));
+		    	
+		    	List<HashMap<String, String>> complexRecord = getGraphIndex(environment)
+		    			.mtaSubwayStations
+		    			.get("Complex ID")
+		    			.get(complexId);
+		    	
+		    	if(complexRecord != null) {		    	
+		    		List<AgencyAndId> gtfsIds = 
+		    			complexRecord.stream().map(r -> { 
+		    				return new AgencyAndId(e.getId().getAgencyId(), r.get("GTFS Stop ID"));
+		    			})
+		    			.collect(Collectors.toList());
+		    			
+		    		ArrayList<Stop> r = new ArrayList<Stop>();
+		    		for(AgencyAndId stopId : gtfsIds) {
+		    			Stop stop = getGraphIndex(environment).stopForId.get(stopId);
+		    			if(stop != null)
+			    			r.add(stop);
+
+		    			Collection<Stop> stops = getGraphIndex(environment).stopsForParentStation.get(stopId);
+		    			if(!stops.isEmpty())
+				    		r.addAll(stops);		    			
+		    		}
+		    		return r.stream().collect(Collectors.toList());
+		    	}
+		    	
+		    	return null;
+ 		 };
+	}
+
+	@Override
 	public DataFetcher<Iterable<Object>> routes() {
 	    return environment -> {
 	    	Stop e = environment.getSource();
@@ -183,6 +229,25 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	    	else
 	    		return null;
 	    };
+	}
+	
+	@Override
+	public DataFetcher<Iterable<Object>> routesForMtaComplex() {
+		 return environment -> {
+		    	Stop e = environment.getSource();
+		    	if(e.getLocationType() == Stop.LOCATION_TYPE_STATION || e.getLocationType() == Stop.LOCATION_TYPE_STOP) {
+		    		Set<Route> routes = new HashSet<Route>();
+		    		for(Object _stop : stopsForMtaComplex().get(environment)) {
+		    			Stop stop = (Stop)_stop;
+		    			
+		    			routes.addAll(getGraphIndex(environment).routesForStop(stop).stream()
+		    				.distinct()
+		    				.collect(Collectors.toList()));
+		    		}
+		    		return routes.stream().collect(Collectors.toList());
+		    	} else
+		    		return null;		 
+ 		 };
 	}
 
 	@Override
@@ -232,7 +297,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	    			.get("Station ID");
 	    };	
 	}
-
+	
 	@SuppressWarnings("unchecked")
 	@Override
 	public DataFetcher<Iterable<Object>> mtaEquipment() {
@@ -303,6 +368,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 		};
 	}
 	
+	
 	@Override
 	public DataFetcher<Iterable<Object>> preferredTransfers() {
 	    return environment -> {
@@ -322,7 +388,6 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	        		return getGraphIndex(environment).tripForId.values()
 	    	    			.stream()
 	    	    			.filter(it -> tripIds.contains(it.getId()))
-	    	    			.map(it -> it.getRoute())
 	    	    			.distinct()
 	    	    			.collect(Collectors.toList());
 	        	}
@@ -334,7 +399,6 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	    };
 	}
 
-
 	private Router getRouter(DataFetchingEnvironment environment) {
 		return environment.<GraphQLRequestContext>getContext().getRouter();
 	}
@@ -342,6 +406,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	private GraphIndex getGraphIndex(DataFetchingEnvironment environment) {
 		return environment.<GraphQLRequestContext>getContext().getIndex();
 	}
+
 
 
 }

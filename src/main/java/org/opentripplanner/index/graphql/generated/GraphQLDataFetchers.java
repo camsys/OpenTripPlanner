@@ -170,7 +170,9 @@ public class GraphQLDataFetchers {
     public DataFetcher<Integer> vehicleType();
     public DataFetcher<String> platformCode();
     public DataFetcher<Iterable<Object>> stops();
+    public DataFetcher<Iterable<Object>> stopsForMtaComplex();
     public DataFetcher<Iterable<Object>> routes();
+    public DataFetcher<Iterable<Object>> routesForMtaComplex();
     public DataFetcher<Iterable<Object>> preferredTransfers();
     public DataFetcher<Iterable<Object>> alerts();
   }

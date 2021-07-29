@@ -374,15 +374,23 @@ type Stop {
     platformCode: String
 
     """
-    Returns all stops that are children of this station (Only applicable for stations)
+    Returns all stops that are children of this station (Only applicable for stations, and only returns GTFS children. See also: stopsForMtaComplex)
     """
     stops: [Stop]
+
+    """
+    Returns all stops that are children of this complex
+    """
+	stopsForMtaComplex: [Stop]
 
     """Routes which pass through this stop"""
     routes: [Route!]
 
-    """Routes which pass through this stop, filtered to only include connections the MTA publishes as transfers. Note 1: null implies that no preferred transfers are available, while an an empty list means no published transfers are at the stop. Note 2: For LIRR: the stop used to query nearby is used as the 'required stop' for determining transfer preference. """
-    preferredTransfers: [Route!]
+    """Routes which pass through this MTA complex"""
+    routesForMtaComplex: [Route!]
+
+    """Trips which pass through this stop, filtered to only include connections the MTA publishes as transfers. Note 1: null implies that no preferred transfers are available, while an an empty list means no published transfers are at the stop. Note 2: For LIRR: the stop used to query nearby is used as the 'required stop' for determining transfer preference. """
+    preferredTransfers: [Trip!]
 
     """List of alerts which have an effect on this stop"""
     alerts: [Alert]
