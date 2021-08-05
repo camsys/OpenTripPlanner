@@ -31,11 +31,11 @@ public abstract class FlexTrip extends TransitEntity {
   }
 
   public abstract Stream<FlexAccessTemplate> getFlexAccessTemplates(
-      NearbyStop access, FlexServiceDate servicedate, FlexPathCalculator calculator
+      NearbyStop access, FlexServiceDate servicedate, FlexPathCalculator calculator, int time
   );
 
   public abstract Stream<FlexEgressTemplate> getFlexEgressTemplates(
-      NearbyStop egress, FlexServiceDate servicedate, FlexPathCalculator calculator
+      NearbyStop egress, FlexServiceDate servicedate, FlexPathCalculator calculator, int time
   );
 
   // The 95% CI for travel time on this trip. Use this for connections and other things that 
@@ -62,7 +62,7 @@ public abstract class FlexTrip extends TransitEntity {
 
   public abstract BookingInfo getPickupBookingInfo(int i);
 
-  public abstract boolean isBoardingPossible(NearbyStop stop);
+  public abstract boolean isBoardingPossible(NearbyStop stop, int time);
 
-  public abstract boolean isAlightingPossible(NearbyStop stop);
+  public abstract boolean isAlightingPossible(NearbyStop stop, int time);
 }

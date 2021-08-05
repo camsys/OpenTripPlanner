@@ -72,17 +72,18 @@ public class UnscheduledTrip extends FlexTrip {
 
   @Override
   public Stream<FlexAccessTemplate> getFlexAccessTemplates(
-      NearbyStop access, FlexServiceDate serviceDate, FlexPathCalculator calculator
+      NearbyStop access, FlexServiceDate serviceDate, FlexPathCalculator calculator, int time
   ) {
-    int fromIndex = getFromIndex(access);
+	List<Integer> fromIndices = getFromIndex(access, time);
 
-    if (fromIndex != 0) { return Stream.empty(); }
+    if (fromIndices.isEmpty()) { return Stream.empty(); }
     if (stopTimes[1].dropOffType == PICKDROP_NONE) { return Stream.empty(); }
 
     ArrayList<FlexAccessTemplate> res = new ArrayList<>();
 
     for (StopLocation stop : expandStops(stopTimes[1].stop)) {
-      res.add(new FlexAccessTemplate(access, this, fromIndex, 1, stop, serviceDate, calculator));
+    	for(Integer fromIndex : fromIndices) 
+    		res.add(new FlexAccessTemplate(access, this, fromIndex, 1, stop, serviceDate, calculator));
     }
 
     return res.stream();
@@ -90,55 +91,32 @@ public class UnscheduledTrip extends FlexTrip {
 
   @Override
   public Stream<FlexEgressTemplate> getFlexEgressTemplates(
-      NearbyStop egress, FlexServiceDate serviceDate, FlexPathCalculator calculator
+      NearbyStop egress, FlexServiceDate serviceDate, FlexPathCalculator calculator, int time
   ) {
-    int toIndex = getToIndex(egress);
+    List<Integer> toIndices = getToIndex(egress, time);
 
-    if (toIndex != 1) { return Stream.empty(); }
+    if (toIndices.isEmpty()) { return Stream.empty(); }
     if (stopTimes[0].pickupType == PICKDROP_NONE) { return Stream.empty(); }
 
     ArrayList<FlexEgressTemplate> res = new ArrayList<>();
 
     for (StopLocation stop : expandStops(stopTimes[0].stop)) {
-      res.add(new FlexEgressTemplate(egress, this, 0, toIndex, stop, serviceDate, calculator));
+    	for(Integer toIndex : toIndices) 
+    		res.add(new FlexEgressTemplate(egress, this, 0, toIndex, stop, serviceDate, calculator));
     }
 
     return res.stream();
   }
 
-  // Note: This method ignores the travel time in evaluation of the Flex window,
-  // assuming that onece you've boarded, the vehicle will finish its trip
-  // to drop you off, even if after the flexWindow.
-
-  // Note 2: departureTime is in seconds after midnight/service date
   @Override
-  public int earliestDepartureTime(
-      int departureTime, int fromStopIndex, int toStopIndex
-  ) {
+  public int earliestDepartureTime(int departureTime, int fromStopIndex, int toStopIndex) {
     UnscheduledStopTime fromStopTime = stopTimes[fromStopIndex];
-    UnscheduledStopTime toStopTime = stopTimes[toStopIndex];
-    if (fromStopTime.flexWindowEnd < departureTime 
-    		|| toStopTime.flexWindowEnd < departureTime) {
-      return -1;
-    }
-
     return Math.max(departureTime, fromStopTime.flexWindowStart);
   }
 
-  // Note: This method ignores the travel time in evaluation of the Flex window,
-  // assuming that onece you've boarded, the vehicle will finish its trip
-  // to drop you off, even if after the flexWindow
-
-  // Note 2: departureTime is in seconds after midnight/service date
   @Override
   public int latestArrivalTime(int arrivalTime, int fromStopIndex, int toStopIndex) {
-	UnscheduledStopTime fromStopTime = stopTimes[fromStopIndex];
     UnscheduledStopTime toStopTime = stopTimes[toStopIndex];
-    if (toStopTime.flexWindowStart > arrivalTime 
-    		|| fromStopTime.flexWindowStart > arrivalTime) {
-      return -1;
-    }
-
     return Math.min(arrivalTime, toStopTime.flexWindowEnd);
   }
 
@@ -161,13 +139,13 @@ public class UnscheduledTrip extends FlexTrip {
   }
 
   @Override
-  public boolean isBoardingPossible(NearbyStop stop) {
-    return getFromIndex(stop) != -1;
+  public boolean isBoardingPossible(NearbyStop stop, int time) {
+    return !getFromIndex(stop, time).isEmpty();
   }
 
   @Override
-  public boolean isAlightingPossible(NearbyStop stop) {
-    return getToIndex(stop) != -1;
+  public boolean isAlightingPossible(NearbyStop stop, int time) {
+    return !getToIndex(stop, time).isEmpty();
   }
 
   private Collection<StopLocation> expandStops(StopLocation stop) {
@@ -176,40 +154,40 @@ public class UnscheduledTrip extends FlexTrip {
         : Collections.singleton(stop);
   }
 
-  private int getFromIndex(NearbyStop accessEgress) {
+  private List<Integer> getFromIndex(NearbyStop accessEgress, int departureTime) {
+	ArrayList<Integer> r = new ArrayList<Integer>();
     for (int i = 0; i < stopTimes.length; i++) {
       if (stopTimes[i].pickupType == PICKDROP_NONE) continue;
+      if (!(departureTime >= stopTimes[i].flexWindowStart)) continue; // Pickup/dropoff window check
+
       StopLocation stop = stopTimes[i].stop;
       if (stop instanceof FlexLocationGroup) {
-        if (((FlexLocationGroup) stop).getLocations().contains(accessEgress.stop)) {
-          return i;
-        }
-      }
-      else {
-        if (stop.equals(accessEgress.stop)) {
-          return i;
-        }
+        if (((FlexLocationGroup) stop).getLocations().contains(accessEgress.stop))
+          r.add(i);
+      } else {
+        if (stop.equals(accessEgress.stop))
+          r.add(i);
       }
     }
-    return -1;
+	return r;
   }
 
-  private int getToIndex(NearbyStop accessEgress) {
-    for (int i = stopTimes.length - 1; i >= 0; i--) {
+  private List<Integer> getToIndex(NearbyStop accessEgress, int arrivalTime) {
+	ArrayList<Integer> r = new ArrayList<Integer>();
+	for (int i = stopTimes.length - 1; i >= 0; i--) {
       if (stopTimes[i].dropOffType == PICKDROP_NONE) continue;
+      if (!(arrivalTime <= stopTimes[i].flexWindowEnd)) continue; // Pickup/dropoff window check
+
       StopLocation stop = stopTimes[i].stop;
       if (stop instanceof FlexLocationGroup) {
-        if (((FlexLocationGroup) stop).getLocations().contains(accessEgress.stop)) {
-          return i;
-        }
-      }
-      else {
-        if (stop.equals(accessEgress.stop)) {
-          return i;
-        }
+        if (((FlexLocationGroup) stop).getLocations().contains(accessEgress.stop))
+          r.add(i);
+      } else {
+        if (stop.equals(accessEgress.stop))
+          r.add(i);
       }
     }
-    return -1;
+	return r;
   }
 
   @Override
@@ -252,6 +230,7 @@ public class UnscheduledTrip extends FlexTrip {
 
     private final int flexWindowStart;
     private final int flexWindowEnd;
+    
     private final int pickupType;
     private final int dropOffType;
 

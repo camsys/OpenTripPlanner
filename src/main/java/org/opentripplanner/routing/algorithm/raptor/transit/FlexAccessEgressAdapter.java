@@ -1,11 +1,16 @@
 package org.opentripplanner.routing.algorithm.raptor.transit;
 
 import org.opentripplanner.ext.flex.FlexAccessEgress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class is used to adapt the FlexAccessEgress into a time-dependent multi-leg AccessEgress.
  */
 public class FlexAccessEgressAdapter extends AccessEgress {
+  
+  private static final Logger LOG = LoggerFactory.getLogger(FlexAccessEgressAdapter.class);
+
   private final FlexAccessEgress flexAccessEgress;
 
   public FlexAccessEgressAdapter(
@@ -17,6 +22,10 @@ public class FlexAccessEgressAdapter extends AccessEgress {
     );
 
     this.flexAccessEgress = flexAccessEgress;
+    
+    LOG.debug("RAPTOR Routing - Trip: " + this.flexAccessEgress.trip + 
+    		" From:" + this.flexAccessEgress.trip.getStops().toArray()[this.flexAccessEgress.fromStopIndex] + 
+    		" To:" + this.flexAccessEgress.trip.getStops().toArray()[this.flexAccessEgress.toStopIndex]);
   }
 
   @Override

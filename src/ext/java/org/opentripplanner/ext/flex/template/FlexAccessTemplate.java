@@ -15,6 +15,8 @@ import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.routing.spt.GraphPath;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.ZonedDateTime;
 import java.util.Calendar;
@@ -22,8 +24,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
 
 public class FlexAccessTemplate extends FlexAccessEgressTemplate {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(FlexAccessTemplate.class);
+
 	public FlexAccessTemplate(NearbyStop accessEgress, FlexTrip trip, int fromStopTime, int toStopTime,
 			StopLocation transferStop, FlexServiceDate serviceDate, FlexPathCalculator calculator) {
 		super(accessEgress, trip, fromStopTime, toStopTime, transferStop, serviceDate, calculator);
@@ -32,19 +38,21 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 	public Itinerary createDirectItinerary(NearbyStop egress, boolean arriveBy, int departureTime,
 			ZonedDateTime departureServiceDate) {
 
+	    LOG.debug("Trip: " + this.getFlexTrip() + 
+	    		" From: " + this.getFlexTrip().getStops().toArray()[this.fromStopIndex] + 
+	    		" To:" + this.getFlexTrip().getStops().toArray()[this.toStopIndex]);
+
 		List<Edge> egressEdges = egress.edges;
 
 		Vertex flexToVertex = egress.state.getVertex();
 		FlexTripEdge flexEdge = getFlexEdge(flexToVertex, egress.stop);
 
 		State state = flexEdge.traverse(accessEgress.state);
-		if (state == null)
-			return null;
+	    if(state == null) return null;
 
-		for (Edge e : egressEdges) {
+	    for (Edge e : egressEdges) {
 			state = e.traverse(state);
-			if (state == null)
-				return null;
+		    if(state == null) return null;
 		}
 
 		// There's no way to model wait time in a state as returned from edge traversal,
@@ -57,28 +65,25 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 		int postFlexTime = flexTimes[2];
 
 		Integer timeShift = null;
-		
-		if (arriveBy) {
-			int lastStopArrivalTime = departureTime - postFlexTime;
-			int latestArrivalTime = trip.latestArrivalTime(lastStopArrivalTime, fromStopIndex, toStopIndex);
-			if (latestArrivalTime == -1) {
-				return null;
-			}
 
-			// Shift from departing at departureTime to arriving at departureTime
+		if (arriveBy) {
+			int latestArrivalTime = trip.latestArrivalTime(departureTime - postFlexTime, fromStopIndex, toStopIndex);
+//			if (latestArrivalTime == -1) {
+//				return null;
+//			}
+
 			timeShift = latestArrivalTime - flexTime - preFlexTime;
 		} else {
-			int firstStopDepartureTime = departureTime + preFlexTime;
-			int earliestDepartureTime = trip.earliestDepartureTime(firstStopDepartureTime, fromStopIndex, toStopIndex);
-			if (earliestDepartureTime == -1) {
-				return null;
-			}
+			int earliestDepartureTime = trip.earliestDepartureTime(departureTime + preFlexTime, fromStopIndex, toStopIndex);
+//			if (earliestDepartureTime == -1) {
+//				return null;
+//			}
 
 			timeShift =  earliestDepartureTime - preFlexTime;
 		}
 
 		Itinerary itinerary = GraphPathToItineraryMapper.generateItinerary(new GraphPath(state), Locale.ENGLISH);
-
+		
 		ZonedDateTime zdt = departureServiceDate.plusSeconds(timeShift);
 		Calendar c = Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone()));
 		c.setTimeInMillis(zdt.toInstant().toEpochMilli());

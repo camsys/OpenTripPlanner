@@ -29,6 +29,7 @@ public class FlexTripEdge extends Edge {
       Vertex v1, Vertex v2, StopLocation s1, StopLocation s2,
       FlexAccessEgressTemplate flexTemplate, FlexPathCalculator calculator
   ) {
+	  
     // null graph because we don't want this edge to be added to the edge lists.
     super(new Vertex(null, null, 0.0, 0.0) {}, new Vertex(null, null, 0.0, 0.0) {});
     
@@ -44,19 +45,18 @@ public class FlexTripEdge extends Edge {
   @Override
   public State traverse(State s0) {
 	if(this.flexPath == null)
-		return null; // not routable
+		return null; // = not routable
 	  
 	StateEditor editor = s0.edit(this);
     editor.setBackMode(TraverseMode.BUS);
     editor.incrementTimeInSeconds(getTripTimeInSeconds());
-    
-    editor.setEnteredNoThroughTrafficArea();
+    editor.resetEnteredNoThroughTrafficArea();
     
     return editor.makeState();
   }
 
-  // This method uses the "mean" time from flex v2 to best reflect the typical travel scenario
-  // in user-facing interfaces.
+  // This method uses the "mean" time from Flex v2 to best reflect the typical travel scenario
+  // in user-facing interfaces vs. using the worst case scenario re: timing
   public int getTripTimeInSeconds() {
     return getFlexTrip().getMeanTotalTime(flexPath, flexTemplate.fromStopIndex, flexTemplate.toStopIndex);
   }

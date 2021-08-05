@@ -10,9 +10,9 @@ public class FlexAccessEgress {
   public final Stop stop;
   public final int preFlexTime;
   public final int postFlexTime;
-  private final int fromStopIndex;
-  private final int toStopIndex;
-  private final FlexTrip trip;
+  public final int fromStopIndex;
+  public final int toStopIndex;
+  public final FlexTrip trip;
   public final State lastState;
   public final boolean directToStop;
 
