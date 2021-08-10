@@ -297,7 +297,7 @@ public class RoutingRequest implements Cloneable, Serializable {
     public RouteMatcher preferredRoutes = RouteMatcher.emptyMatcher();
     
     /** Set of preferred agencies by user. */
-    public HashSet<String> preferredAgencies = new HashSet<String>(Arrays.asList("MTA NYCT", "MTABC", "SUB", "MTA", "MTASBWY", "LI", "MNR"));
+    public HashSet<String> preferredAgencies = new HashSet<>();
     
     public HashSet<Integer> preferredRouteTypes = new HashSet<>();
 
@@ -321,7 +321,7 @@ public class RoutingRequest implements Cloneable, Serializable {
     public RouteMatcher preferredEndRoutes = RouteMatcher.emptyMatcher();
     
     /** Set of unpreferred agencies for given user. */
-    public HashSet<String> unpreferredAgencies = new HashSet<String>();
+    public HashSet<String> unpreferredAgencies = new HashSet<>(Arrays.asList("AMK"));
 
     /**
      * Penalty added for using every unpreferred route. We return number of seconds that we are willing to wait for preferred route.

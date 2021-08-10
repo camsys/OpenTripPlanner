@@ -213,5 +213,9 @@ public class SpecificTransfer implements Serializable {
         }
         return match;
     }
+    
+    public String toString() {
+    	return "SpecificTransfer(" + fromTripId + "->" + toTripId + " requiredStop=" + requiredStop + ")";
+    }
 
 }
