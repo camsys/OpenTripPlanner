@@ -35,7 +35,7 @@ public class FlexFilter implements ItineraryFilter {
 	  HashMap<String, Itinerary> itinerariesByRoutePath = new HashMap<>();
 
 	  for(Itinerary itin : itineraries) {
-		  String routeKey = String.join(",",itin.legs.stream()
+/*		  String routeKey = String.join(",",itin.legs.stream()
 				  .map(it -> it.getRoute() != null ? it.getRoute().getId().toString() : null)
 				  .filter(it -> it != null)
 				  .collect(Collectors.toList())
@@ -45,14 +45,14 @@ public class FlexFilter implements ItineraryFilter {
 				  .filter(it -> it.flexibleTrip == true)
 				  .findFirst()
 				  .orElse(null);
-	
-		  if(flexLeg != null) {
-			  itinerariesByRoutePath.put(routeKey, itin);
+	*/
+//		  if(flexLeg != null) {
+//			  itinerariesByRoutePath.put(routeKey, itin);
 
 		  // no flex leg, so just pass through
-		  } else {
+//		  } else {
 			  newList.add(itin);
-		  }
+//		  }
 	  }
 	  
 	  newList.addAll(itinerariesByRoutePath.values());
