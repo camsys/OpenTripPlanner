@@ -3,7 +3,6 @@ package org.opentripplanner.standalone.config;
 import org.opentripplanner.model.TransitMode;
 import org.opentripplanner.routing.api.request.RequestModes;
 import org.opentripplanner.routing.api.request.RoutingRequest;
-import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.api.request.TransferOptimizationRequest;
 import org.opentripplanner.routing.core.TraverseMode;
 import org.slf4j.Logger;
@@ -48,7 +47,6 @@ public class RoutingRequestMapper {
         request.keepingRentedBicycleAtDestinationCost = c.asDouble("keepingRentedBicycleAtDestinationCost", dft.keepingRentedBicycleAtDestinationCost);
         request.boardSlack = c.asInt("boardSlack", dft.boardSlack);
         request.boardSlackForMode = c.asEnumMap("boardSlackForMode", TraverseMode.class, NodeAdapter::asInt);
-        request.maxAccessEgressDurationSecondsForMode = c.asEnumMap("maxAccessEgressDurationSecondsForMode", StreetMode.class, NodeAdapter::asDouble);
         request.carAccelerationSpeed = c.asDouble("carAccelerationSpeed", dft.carAccelerationSpeed);
         request.carDecelerationSpeed = c.asDouble("carDecelerationSpeed", dft.carDecelerationSpeed);
         request.carDropoffTime = c.asInt("carDropoffTime", dft.carDropoffTime);
@@ -74,7 +72,7 @@ public class RoutingRequestMapper {
         request.nonpreferredTransferCost = c.asInt("nonpreferredTransferPenalty", dft.nonpreferredTransferCost);
         request.numItineraries = c.asInt("numItineraries", dft.numItineraries);
         request.onlyTransitTrips = c.asBoolean("onlyTransitTrips", dft.onlyTransitTrips);
-        request.bicycleOptimizeType = c.asEnum("optimize", dft.bicycleOptimizeType);
+        request.optimize = c.asEnum("optimize", dft.optimize);
         request.otherThanPreferredRoutesPenalty = c.asInt("otherThanPreferredRoutesPenalty", dft.otherThanPreferredRoutesPenalty);
         request.parkAndRide = c.asBoolean("parkAndRide", dft.parkAndRide);
         request.pathComparator = c.asText("pathComparator", dft.pathComparator);
@@ -103,8 +101,9 @@ public class RoutingRequestMapper {
     }
 
     private static void mapTransferOptimization(TransferOptimizationRequest p, NodeAdapter c) {
-        p.optimizeTransferWaitTime = c.asBoolean(
-                "optimizeTransferWaitTime", p.optimizeTransferWaitTime
+        p.useOptimizeTransferCostFunction = c.asBoolean(
+            "adjustGeneralizedCost",
+            p.useOptimizeTransferCostFunction
         );
         p.minSafeWaitTimeFactor = c.asDouble("minSafeWaitTimeFactor", p.minSafeWaitTimeFactor);
         p.inverseWaitReluctance = c.asDouble("inverseWaitReluctance", p.inverseWaitReluctance);

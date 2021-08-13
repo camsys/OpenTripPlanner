@@ -34,5 +34,3 @@ node_modules/
 target/
 /graphs
 
-# for local dev only
-src/ext/resources/reportapi/report.csv

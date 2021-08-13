@@ -1,4 +1,4 @@
-package org.opentripplanner.routing.algorithm.transferoptimization.model;
+package org.opentripplanner.routing.algorithm.transferoptimization.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.transit.raptor._data.stoparrival.BasicPathTestCase.COST_CALCULATOR;

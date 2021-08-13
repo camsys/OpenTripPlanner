@@ -34,7 +34,7 @@ public class LegacyGraphQLPatternImpl implements LegacyGraphQLDataFetchers.Legac
 
   @Override
   public DataFetcher<Route> route() {
-    return environment -> getSource(environment).getRoute();
+    return environment -> getSource(environment).route;
   }
 
   @Override
@@ -44,7 +44,7 @@ public class LegacyGraphQLPatternImpl implements LegacyGraphQLDataFetchers.Legac
 
   @Override
   public DataFetcher<String> name() {
-    return environment -> getSource(environment).getName();
+    return environment -> getSource(environment).name;
   }
 
   @Override
@@ -71,10 +71,10 @@ public class LegacyGraphQLPatternImpl implements LegacyGraphQLDataFetchers.Legac
         BitSet services = getRoutingService(environment).getServicesRunningForDate(
             ServiceDate.parseString(servicaDate)
         );
-        return getSource(environment).getScheduledTimetable().getTripTimes()
+        return getSource(environment).scheduledTimetable.tripTimes
             .stream()
-            .filter(times -> services.get(times.getServiceCode()))
-            .map(times -> times.getTrip())
+            .filter(times -> services.get(times.serviceCode))
+            .map(times -> times.trip)
             .collect(Collectors.toList());
       } catch (ParseException e) {
         return null; // Invalid date format

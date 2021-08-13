@@ -199,10 +199,10 @@ public class TripQuery {
             .description(
                 "The set of characteristics that the user wants to optimise for during bicycle "
                 + "searches -- defaults to "
-                + enumValAsString(EnumTypes.BICYCLE_OPTIMISATION_METHOD, routing.request.bicycleOptimizeType)
+                + enumValAsString(EnumTypes.BICYCLE_OPTIMISATION_METHOD, routing.request.optimize)
             )
             .type(EnumTypes.BICYCLE_OPTIMISATION_METHOD)
-            .defaultValue(routing.request.bicycleOptimizeType)
+            .defaultValue(routing.request.optimize)
             .build()
         )
         .argument(GraphQLArgument.newArgument()

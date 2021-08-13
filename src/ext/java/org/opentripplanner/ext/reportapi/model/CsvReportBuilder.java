@@ -9,18 +9,11 @@ import org.opentripplanner.util.time.TimeUtils;
  * This class helps formatting common types like time, duration and enums.
  */
 class CsvReportBuilder {
-    private final String sep;
+    private static final String SEP = ";";
     public static final char NEW_LINE = '\n';
 
 
     private final StringBuilder buf = new StringBuilder();
-
-    CsvReportBuilder() {
-        this(";");
-    }
-    CsvReportBuilder(String separator) {
-        sep = separator;
-    }
 
     void addEnum(Enum<?> enumValue) {
         buf.append(enumValue);
@@ -51,16 +44,7 @@ class CsvReportBuilder {
     void addText(String text) {
         buf.append(text);
         sep();
-    }
 
-    void addNumber(Number num) {
-        buf.append(num.toString());
-        sep();
-    }
-
-    void addBoolean(Boolean b) {
-        buf.append(b.toString());
-        sep();
     }
 
     void addOptText(boolean addIt, String text) {
@@ -69,7 +53,7 @@ class CsvReportBuilder {
     }
 
     void sep() {
-        buf.append(sep);
+        buf.append(SEP);
     }
 
     void newLine() {

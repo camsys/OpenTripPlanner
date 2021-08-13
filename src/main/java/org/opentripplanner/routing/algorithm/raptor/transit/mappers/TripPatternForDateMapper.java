@@ -62,7 +62,7 @@ public class TripPatternForDateMapper {
 
         TIntSet serviceCodesRunning = serviceCodesRunningForDate.get(serviceDate);
 
-        TripPattern oldTripPattern = timetable.getPattern();
+        TripPattern oldTripPattern = timetable.pattern;
 
         List<TripTimes> times = new ArrayList<>();
 
@@ -78,7 +78,7 @@ public class TripPatternForDateMapper {
         );
 
         for (TripTimes tripTimes : sortedTripTimes) {
-            if (!serviceCodesRunning.contains(tripTimes.getServiceCode())) {
+            if (!serviceCodesRunning.contains(tripTimes.serviceCode)) {
                 continue;
             }
             if (tripTimes.getRealTimeState() == RealTimeState.CANCELED) {
@@ -89,10 +89,10 @@ public class TripPatternForDateMapper {
         }
 
         if (times.isEmpty()) {
-            if (timetable.getServiceDate() == serviceDate) {
+            if (timetable.serviceDate == serviceDate) {
                 LOG.debug(
                         "Tried to update TripPattern {}, but no service codes are valid for date {}",
-                        timetable.getPattern().getId(),
+                        timetable.pattern.getId(),
                         serviceDate
                 );
             }

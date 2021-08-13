@@ -42,8 +42,8 @@ public class TripPatternMapper {
     private static <T extends ApiPatternShort> T mapToApiShort(TripPattern domain, Supplier<T> create) {
         T api = create.get();
         api.id = FeedScopedIdMapper.mapToApi(domain.getId());
-        api.desc = domain.getName();
-        api.routeId = FeedScopedIdMapper.mapIdToApi(domain.getRoute());
+        api.desc = domain.name;
+        api.routeId = FeedScopedIdMapper.mapIdToApi(domain.route);
         return api;
     }
 }

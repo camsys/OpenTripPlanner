@@ -54,7 +54,7 @@ public class TripPatternCache {
             tripPattern.setServiceCodes(graph.getServiceCodes());
             
             // Finish scheduled time table
-            tripPattern.getScheduledTimetable().finish();
+            tripPattern.scheduledTimetable.finish();
 
             TripPattern originalTripPattern = graph.index.getPatternForTrip().get(trip);
 

@@ -10,7 +10,7 @@ import org.opentripplanner.model.Timetable;
 import org.opentripplanner.model.TimetableSnapshot;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.model.TripPattern;
-import org.opentripplanner.model.TripTimeOnDate;
+import org.opentripplanner.model.TripTimeShort;
 import org.opentripplanner.model.calendar.ServiceDate;
 import org.opentripplanner.routing.algorithm.RoutingWorker;
 import org.opentripplanner.routing.api.request.RoutingRequest;
@@ -18,8 +18,6 @@ import org.opentripplanner.routing.api.response.RoutingResponse;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.routing.graphfinder.GraphFinder;
-import org.opentripplanner.routing.stoptimes.ArrivalDeparture;
-import org.opentripplanner.routing.stoptimes.StopTimesHelper;
 import org.opentripplanner.standalone.server.Router;
 
 /**
@@ -68,11 +66,11 @@ public class RoutingService {
      * @param startTime             Start time for the search. Seconds from UNIX epoch
      * @param timeRange             Searches forward for timeRange seconds from startTime
      * @param numberOfDepartures    Number of departures to fetch per pattern
-     * @param arrivalDeparture      Filter by arrivals, departures, or both
+     * @param omitNonPickups        If true, do not include vehicles that will not pick up passengers.
      * @param includeCancelledTrips If true, cancelled trips will also be included in result.
      */
     public List<StopTimesInPattern> stopTimesForStop(
-            Stop stop, long startTime, int timeRange, int numberOfDepartures, ArrivalDeparture arrivalDeparture, boolean includeCancelledTrips
+            Stop stop, long startTime, int timeRange, int numberOfDepartures, boolean omitNonPickups, boolean includeCancelledTrips
     ) {
         return StopTimesHelper.stopTimesForStop(
                 this,
@@ -81,7 +79,7 @@ public class RoutingService {
                 startTime,
                 timeRange,
                 numberOfDepartures,
-                arrivalDeparture,
+                omitNonPickups,
                 includeCancelledTrips
         );
     }
@@ -94,9 +92,9 @@ public class RoutingService {
      * @param serviceDate Return all departures for the specified date
      */
     public List<StopTimesInPattern> getStopTimesForStop(
-            Stop stop, ServiceDate serviceDate, ArrivalDeparture arrivalDeparture
+            Stop stop, ServiceDate serviceDate, boolean omitNonPickups
     ) {
-        return StopTimesHelper.stopTimesForStop(this, stop, serviceDate, arrivalDeparture);
+        return StopTimesHelper.stopTimesForStop(this, stop, serviceDate, omitNonPickups);
     }
 
 
@@ -113,10 +111,10 @@ public class RoutingService {
      * @param startTime          Start time for the search. Seconds from UNIX epoch
      * @param timeRange          Searches forward for timeRange seconds from startTime
      * @param numberOfDepartures Number of departures to fetch per pattern
-     * @param arrivalDeparture   Filter by arrivals, departures, or both
+     * @param omitNonPickups     If true, do not include vehicles that will not pick up passengers.
      */
-    public List<TripTimeOnDate> stopTimesForPatternAtStop(
-            Stop stop, TripPattern pattern, long startTime, int timeRange, int numberOfDepartures, ArrivalDeparture arrivalDeparture
+    public List<TripTimeShort> stopTimesForPatternAtStop(
+            Stop stop, TripPattern pattern, long startTime, int timeRange, int numberOfDepartures, boolean omitNonPickups
     ) {
         return StopTimesHelper.stopTimesForPatternAtStop(
                 this,
@@ -126,7 +124,7 @@ public class RoutingService {
                 startTime,
                 timeRange,
                 numberOfDepartures,
-                arrivalDeparture
+                omitNonPickups
         );
     }
 
@@ -150,10 +148,10 @@ public class RoutingService {
         return timetableSnapshot != null ? timetableSnapshot.resolve(
                 tripPattern,
                 new ServiceDate(Calendar.getInstance().getTime())
-        ) : tripPattern.getScheduledTimetable();
+        ) : tripPattern.scheduledTimetable;
     }
 
-    public List<TripTimeOnDate> getTripTimesShort(Trip trip, ServiceDate serviceDate) {
+    public List<TripTimeShort> getTripTimesShort(Trip trip, ServiceDate serviceDate) {
         return TripTimesShortHelper.getTripTimesShort(this, trip, serviceDate);
     }
 

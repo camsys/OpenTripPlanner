@@ -2,39 +2,23 @@ package org.opentripplanner.routing.algorithm.transferoptimization.model;
 
 import javax.annotation.Nullable;
 import org.opentripplanner.model.base.ToStringBuilder;
-import org.opentripplanner.model.transfer.Transfer;
 import org.opentripplanner.transit.raptor.api.transit.RaptorTransfer;
 import org.opentripplanner.transit.raptor.api.transit.RaptorTripSchedule;
 
-/**
- *
- * @param <T> The TripSchedule type defined by the user of the raptor API.
- */
 public class TripToTripTransfer<T extends RaptorTripSchedule> {
 
   private final TripStopTime<T> from;
   private final TripStopTime<T> to;
-  private final RaptorTransfer pathTransfer;
-  private final Transfer guaranteedTransfer;
+  private final RaptorTransfer transfer;
 
   public TripToTripTransfer(
       TripStopTime<T> from,
       TripStopTime<T> to,
-      RaptorTransfer pathTransfer,
-      Transfer guaranteedTransfer
+      RaptorTransfer transfer
   ) {
     this.from = from;
     this.to = to;
-    this.pathTransfer = pathTransfer;
-    this.guaranteedTransfer = guaranteedTransfer;
-  }
-
-  public TripToTripTransfer(
-          TripStopTime<T> from,
-          TripStopTime<T> to,
-          RaptorTransfer pathTransfer
-  ) {
-    this(from, to, pathTransfer, null);
+    this.transfer = transfer;
   }
 
   public TripStopTime<T> from() {
@@ -45,16 +29,12 @@ public class TripToTripTransfer<T extends RaptorTripSchedule> {
     return to;
   }
 
-  /**
-   * The time it takes to transfer between the given from and to stop.
-   * For a transfer at the same stop the time is zero.
-   */
   public int transferDuration() {
-    return sameStop() ? 0 : pathTransfer.durationInSeconds();
+    return sameStop() ? 0 : transfer.durationInSeconds();
   }
 
   public int generalizedCost() {
-    return sameStop() ? 0 : pathTransfer.generalizedCost();
+    return sameStop() ? 0 : transfer.generalizedCost();
   }
 
   public boolean sameStop() {
@@ -62,13 +42,8 @@ public class TripToTripTransfer<T extends RaptorTripSchedule> {
   }
 
   @Nullable
-  public RaptorTransfer getPathTransfer() {
-    return pathTransfer;
-  }
-
-  @Nullable
-  public Transfer guaranteedTransfer() {
-    return guaranteedTransfer;
+  public RaptorTransfer getTransfer() {
+    return transfer;
   }
 
   @Override
@@ -76,7 +51,7 @@ public class TripToTripTransfer<T extends RaptorTripSchedule> {
     return ToStringBuilder.of(TripToTripTransfer.class)
             .addObj("from", from)
             .addObj("to", to)
-            .addObj("transfer", pathTransfer)
+            .addObj("transfer", transfer)
             .toString();
   }
 }

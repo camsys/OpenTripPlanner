@@ -1,8 +1,9 @@
-package org.opentripplanner.routing.algorithm.transferoptimization.model;
+package org.opentripplanner.routing.algorithm.transferoptimization.services;
 
 import java.util.Collection;
 import java.util.function.ToIntFunction;
 import org.opentripplanner.transit.raptor.api.path.Path;
+import org.opentripplanner.transit.raptor.api.path.PathLeg;
 import org.opentripplanner.transit.raptor.api.path.TransitPathLeg;
 import org.opentripplanner.transit.raptor.api.transit.RaptorSlackProvider;
 import org.opentripplanner.transit.raptor.api.transit.RaptorTripSchedule;

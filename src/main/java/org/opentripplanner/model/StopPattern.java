@@ -37,20 +37,28 @@ public class StopPattern implements Serializable {
 
     private static final long serialVersionUID = 20140101L;
     
-    private final Stop[] stops;
-    private final PickDrop[]  pickups;
-    private final PickDrop[]  dropoffs;
+    /* Constants for the GTFS pick up / drop off type fields. */
+    // It would be nice to have an enum for these, but the equivalence with integers is important.
+    public static final int PICKDROP_SCHEDULED = 0;
+    public static final int PICKDROP_NONE = 1;
+    public static final int PICKDROP_CALL_AGENCY = 2;
+    public static final int PICKDROP_COORDINATE_WITH_DRIVER = 3;
+    
+    public final int size; // property could be derived from arrays
+    public final Stop[] stops;
+    public final int[]  pickups;
+    public final int[]  dropoffs;
 
     private StopPattern (int size) {
+        this.size = size;
         stops     = new Stop[size];
-        pickups   = new PickDrop[size];
-        dropoffs  = new PickDrop[size];
+        pickups   = new int[size];
+        dropoffs  = new int[size];
     }
 
     /** Assumes that stopTimes are already sorted by time. */
     public StopPattern (Collection<StopTime> stopTimes) {
         this (stopTimes.size());
-        int size = stopTimes.size();
         if (size == 0) return;
         Iterator<StopTime> stopTimeIterator = stopTimes.iterator();
 
@@ -70,8 +78,8 @@ public class StopPattern implements Serializable {
          * dropoffs at the initial stop and pickups at the final merges similar patterns while
          * having no effect on routing.
          */
-        dropoffs[0] = PickDrop.SCHEDULED;
-        pickups[size - 1] = PickDrop.SCHEDULED;
+        dropoffs[0] = 0;
+        pickups[size - 1] = 0;
     }
 
     /**
@@ -83,15 +91,11 @@ public class StopPattern implements Serializable {
         return false;
     }
 
-    public int getSize() {
-        return stops.length;
-    }
-
     public boolean equals(Object other) {
         if (other instanceof StopPattern) {
             StopPattern that = (StopPattern) other;
-            return Arrays.equals(this.stops, that.stops) &&
-                   Arrays.equals(this.pickups, that.pickups) &&
+            return Arrays.equals(this.stops,    that.stops) &&
+                   Arrays.equals(this.pickups,  that.pickups) &&
                    Arrays.equals(this.dropoffs, that.dropoffs);
         } else {
             return false;
@@ -99,7 +103,7 @@ public class StopPattern implements Serializable {
     }
 
     public int hashCode() {
-        int hash = stops.length;
+        int hash = size;
         hash += Arrays.hashCode(this.stops);
         hash *= 31;
         hash += Arrays.hashCode(this.pickups);
@@ -112,7 +116,7 @@ public class StopPattern implements Serializable {
         StringBuilder sb = new StringBuilder();
         sb.append("StopPattern: ");
         for (int i = 0, j = stops.length; i < j; ++i) {
-            sb.append(String.format("%s_%s%s ", stops[i].getCode(), pickups[i], dropoffs[i]));
+            sb.append(String.format("%s_%d%d ", stops[i].getCode(), pickups[i], dropoffs[i]));
         }
         return sb.toString();
     }
@@ -126,7 +130,6 @@ public class StopPattern implements Serializable {
      */
     public HashCode semanticHash(HashFunction hashFunction) {
         Hasher hasher = hashFunction.newHasher();
-        int size = stops.length;
         for (int s = 0; s < size; s++) {
             Stop stop = stops[s];
             // Truncate the lat and lon to 6 decimal places in case they move slightly between
@@ -137,25 +140,10 @@ public class StopPattern implements Serializable {
         // Use hops rather than stops because drop-off at stop 0 and pick-up at last stop are
         // not important and have changed between OTP versions.
         for (int hop = 0; hop < size - 1; hop++) {
-            hasher.putInt(pickups[hop].getGtfsCode());
-            hasher.putInt(dropoffs[hop + 1].getGtfsCode());
+            hasher.putInt(pickups[hop]);
+            hasher.putInt(dropoffs[hop + 1]);
         }
         return hasher.hash();
     }
 
-    public Stop[] getStops() {
-        return stops;
-    }
-
-    public Stop getStop(int i) {
-        return stops[i];
-    }
-
-    public PickDrop getPickup(int i) {
-        return pickups[i];
-    }
-
-    public PickDrop getDropoff(int i) {
-        return dropoffs[i];
-    }
 }

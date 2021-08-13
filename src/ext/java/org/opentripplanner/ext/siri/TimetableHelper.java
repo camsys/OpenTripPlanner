@@ -33,8 +33,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
 
-import static org.opentripplanner.model.PickDrop.NONE;
-import static org.opentripplanner.model.PickDrop.SCHEDULED;
+import static org.opentripplanner.model.StopPattern.PICKDROP_NONE;
+import static org.opentripplanner.model.StopPattern.PICKDROP_SCHEDULED;
 
 public class TimetableHelper {
 
@@ -70,7 +70,7 @@ public class TimetableHelper {
         TripTimes oldTimes = new TripTimes(existingTripTimes);
 
         if (journey.isCancellation() != null && journey.isCancellation()) {
-            oldTimes.cancelTrip();
+            oldTimes.cancel();
             return oldTimes;
         }
 
@@ -93,7 +93,7 @@ public class TimetableHelper {
 
         boolean stopPatternChanged = false;
 
-        Stop[] modifiedStops = timetable.getPattern().getStopPattern().getStops();
+        Stop[] modifiedStops = timetable.pattern.stopPattern.stops;
 
         Trip trip = getTrip(tripId, timetable);
 
@@ -104,7 +104,7 @@ public class TimetableHelper {
         TripTimes newTimes = new TripTimes(trip, modifiedStopTimes, graph.deduplicator);
 
         //Populate missing data from existing TripTimes
-        newTimes.setServiceCode(oldTimes.getServiceCode());
+        newTimes.serviceCode = oldTimes.serviceCode;
 
         ZoneId zoneId = graph.getTimeZone().toZoneId();
 
@@ -152,10 +152,12 @@ public class TimetableHelper {
                         }
                     }
 
-                    if (recordedCall.isCancellation() != null && recordedCall.isCancellation()) {
-                        modifiedStopTimes.get(callCounter).cancel();
-                        newTimes.setCancelled(callCounter);
+                    if (recordedCall.isCancellation() != null) {
+                        newTimes.setCancelledStop(callCounter, recordedCall.isCancellation());
                     }
+
+                    newTimes.setDropoffType(callCounter, timetable.pattern.stopPattern.dropoffs[callCounter]);
+                    newTimes.setPickupType(callCounter, timetable.pattern.stopPattern.pickups[callCounter]);
 
                     int arrivalTime = newTimes.getArrivalTime(callCounter);
                     int realtimeArrivalTime = arrivalTime;
@@ -223,9 +225,8 @@ public class TimetableHelper {
                             }
                         }
 
-                        if (estimatedCall.isCancellation() != null && estimatedCall.isCancellation()) {
-                            modifiedStopTimes.get(callCounter).cancel();
-                            newTimes.setCancelled(callCounter);
+                        if (estimatedCall.isCancellation() != null) {
+                            newTimes.setCancelledStop(callCounter, estimatedCall.isCancellation());
                         }
 
                         boolean isCallPredictionInaccurate = estimatedCall.isPredictionInaccurate() != null && estimatedCall.isPredictionInaccurate();
@@ -236,12 +237,12 @@ public class TimetableHelper {
                         // Update dropoff-/pickuptype only if status is cancelled
                         CallStatusEnumeration arrivalStatus = estimatedCall.getArrivalStatus();
                         if (arrivalStatus == CallStatusEnumeration.CANCELLED) {
-                            modifiedStopTimes.get(callCounter).cancelDropOff();
+                            newTimes.setDropoffType(callCounter, PICKDROP_NONE);
                         }
 
                         CallStatusEnumeration departureStatus = estimatedCall.getDepartureStatus();
                         if (departureStatus == CallStatusEnumeration.CANCELLED) {
-                            modifiedStopTimes.get(callCounter).cancelPickup();
+                            newTimes.setPickupType(callCounter, PICKDROP_NONE);
                         }
 
                         int arrivalTime = newTimes.getArrivalTime(callCounter);
@@ -284,8 +285,8 @@ public class TimetableHelper {
             }
             if (!foundMatch) {
 
-                if (timetable.getPattern().getStopPattern().getPickup(callCounter) == NONE &&
-                        timetable.getPattern().getStopPattern().getDropoff(callCounter) == NONE) {
+                if (timetable.pattern.stopPattern.pickups[callCounter] == PICKDROP_NONE &&
+                        timetable.pattern.stopPattern.dropoffs[callCounter] == PICKDROP_NONE) {
                     // When newTimes contains stops without pickup/dropoff - set both arrival/departure to previous stop's departure
                     // This necessary to accommodate the case when delay is reduced/eliminated between to stops with pickup/dropoff, and
                     // multiple non-pickup/dropoff stops are in between.
@@ -321,7 +322,7 @@ public class TimetableHelper {
 
         if (journey.isCancellation() != null && journey.isCancellation()) {
             LOG.debug("Trip is cancelled");
-            newTimes.cancelTrip();
+            newTimes.cancel();
         }
 
         if (!newTimes.timesIncreasing()) {
@@ -329,7 +330,7 @@ public class TimetableHelper {
             return null;
         }
 
-        if (newTimes.getNumStops() != timetable.getPattern().getStopPattern().getStops().length) {
+        if (newTimes.getNumStops() != timetable.pattern.stopPattern.stops.length) {
             return null;
         }
 
@@ -370,7 +371,7 @@ public class TimetableHelper {
         }
 
         //Get all scheduled stops
-        Stop[] stops = timetable.getPattern().getStopPattern().getStops();
+        Stop[] stops = timetable.pattern.stopPattern.stops;
 
         // Keeping track of visited stop-objects to allow multiple visits to a stop.
         List<Object> alreadyVisited = new ArrayList<>();
@@ -478,8 +479,8 @@ public class TimetableHelper {
             stopTime.setStop(stop);
             stopTime.setTrip(trip);
             stopTime.setStopSequence(i);
-            stopTime.setDropOffType(timetable.getPattern().getStopPattern().getDropoff(i));
-            stopTime.setPickupType(timetable.getPattern().getStopPattern().getPickup(i));
+            stopTime.setDropOffType(timetable.pattern.stopPattern.dropoffs[i]);
+            stopTime.setPickupType(timetable.pattern.stopPattern.pickups[i]);
             stopTime.setArrivalTime(oldTimes.getScheduledArrivalTime(i));
             stopTime.setDepartureTime(oldTimes.getScheduledDepartureTime(i));
             stopTime.setStopHeadsign(oldTimes.getHeadsign(i));
@@ -515,26 +516,26 @@ public class TimetableHelper {
 
                         CallStatusEnumeration arrivalStatus = estimatedCall.getArrivalStatus();
                         if (arrivalStatus == CallStatusEnumeration.CANCELLED) {
-                            stopTime.cancelDropOff();
+                            stopTime.setDropOffType(PICKDROP_NONE);
                         } else if (estimatedCall.getArrivalBoardingActivity() == ArrivalBoardingActivityEnumeration.ALIGHTING) {
-                            stopTime.setDropOffType(SCHEDULED);
+                            stopTime.setDropOffType(PICKDROP_SCHEDULED);
                         } else if (estimatedCall.getArrivalBoardingActivity() == ArrivalBoardingActivityEnumeration.NO_ALIGHTING) {
-                            stopTime.setDropOffType(NONE);
+                            stopTime.setDropOffType(PICKDROP_NONE);
                         } else if (estimatedCall.getArrivalBoardingActivity() == null && i == 0) {
                             //First stop - default no pickup
-                            stopTime.setDropOffType(NONE);
+                            stopTime.setDropOffType(PICKDROP_NONE);
                         }
 
                         CallStatusEnumeration departureStatus = estimatedCall.getDepartureStatus();
                         if (departureStatus == CallStatusEnumeration.CANCELLED) {
-                            stopTime.cancelPickup();
+                            stopTime.setPickupType(PICKDROP_NONE);
                         } else if (estimatedCall.getDepartureBoardingActivity() == DepartureBoardingActivityEnumeration.BOARDING) {
-                            stopTime.setPickupType(SCHEDULED);
+                            stopTime.setPickupType(PICKDROP_SCHEDULED);
                         } else if (estimatedCall.getDepartureBoardingActivity() == DepartureBoardingActivityEnumeration.NO_BOARDING) {
-                            stopTime.setPickupType(NONE);
+                            stopTime.setPickupType(PICKDROP_NONE);
                         } else if (estimatedCall.getDepartureBoardingActivity() == null && i == (stops.size()-1)) {
                             //Last stop - default no dropoff
-                            stopTime.setPickupType(NONE);
+                            stopTime.setPickupType(PICKDROP_NONE);
                         }
 
                         if (estimatedCall.getDestinationDisplaies() != null && !estimatedCall.getDestinationDisplaies().isEmpty()) {
@@ -594,7 +595,7 @@ public class TimetableHelper {
         if (update == null) {
             return null;
         }
-        final List<Stop> stops = timetable.getPattern().getStops();
+        final List<Stop> stops = timetable.pattern.getStops();
 
         VehicleActivityStructure.MonitoredVehicleJourney monitoredVehicleJourney = activity.getMonitoredVehicleJourney();
 
@@ -663,9 +664,9 @@ public class TimetableHelper {
      * @return the matching Trip in this particular Timetable
      */
     public static Trip getTrip(FeedScopedId tripId, Timetable timetable) {
-        for (TripTimes tt : timetable.getTripTimes()) {
-            if (tt.getTrip().getId().equals(tripId)) {
-                return tt.getTrip();
+        for (TripTimes tt : timetable.tripTimes) {
+            if (tt.trip.getId().equals(tripId)) {
+                return tt.trip;
             }
         }
         return null;

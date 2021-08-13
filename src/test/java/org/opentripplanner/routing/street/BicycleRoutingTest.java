@@ -9,7 +9,6 @@ import org.opentripplanner.ConstantsForTests;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.algorithm.mapping.GraphPathToItineraryMapper;
 import org.opentripplanner.routing.api.request.RoutingRequest;
-import org.opentripplanner.routing.core.BicycleOptimizeType;
 import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.core.TraverseModeSet;
 import org.opentripplanner.routing.graph.Graph;
@@ -36,7 +35,7 @@ public class BicycleRoutingTest {
         assertThatPolylinesAreEqual(polyline1, "_srgHutau@h@B|@Jf@BdAG?\\JT@jA?DSp@_@fFsAT{@DBpC");
 
         var polyline2 = computePolyline(herrenbergGraph, fritzLeharStr, mozartStr);
-        assertThatPolylinesAreEqual(polyline2, "{qrgH{aau@CqCz@ErAU^gFRq@?EAkAKUeACg@A_AM_AEDQF@H?");
+        assertThatPolylinesAreEqual(polyline2, "{qrgH{aau@CqCz@ErAU^gFRq@?EAkAKU?]eAFg@C}@Ki@C");
     }
 
     /**
@@ -60,7 +59,6 @@ public class BicycleRoutingTest {
         request.dateTime = dateTime;
         request.from = from;
         request.to = to;
-        request.bicycleOptimizeType = BicycleOptimizeType.QUICK;
 
         request.streetSubRequestModes = new TraverseModeSet(TraverseMode.BICYCLE);
         request.setRoutingContext(graph);

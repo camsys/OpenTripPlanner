@@ -57,7 +57,7 @@ public final class PatternGuaranteedTransferProvider
             int sourceStopIndex,
             int sourceArrivalTime
     ) {
-        final Trip sourceTrip = sourceTripSchedule.getOriginalTripTimes().getTrip();
+        final Trip sourceTrip = sourceTripSchedule.getOriginalTripTimes().trip;
         final int sourceStopPos = translator.findSourceStopPosition(
                 sourceTripSchedule, sourceArrivalTime, sourceStopIndex
         );
@@ -118,7 +118,7 @@ public final class PatternGuaranteedTransferProvider
                 int departureTime = it.departure(stopPos);
                 if(departureTime < sourceArrivalTime) { continue; }
                 if(departureTime > maxLimit) { return null; }
-                if(it.getOriginalTripTimes().getTrip() == trip) {
+                if(it.getOriginalTripTimes().trip == trip) {
                     return new Result(i, it, stopPos, departureTime);
                 }
             }
@@ -148,7 +148,7 @@ public final class PatternGuaranteedTransferProvider
                 int arrivalTime = it.arrival(stopPos);
                 if(arrivalTime < minLimit) { continue; }
                 if(arrivalTime > toDepartureTime) { return null; }
-                if(it.getOriginalTripTimes().getTrip() == trip) {
+                if(it.getOriginalTripTimes().trip == trip) {
                     return new Result(i, it, stopPos, arrivalTime);
                 }
             }

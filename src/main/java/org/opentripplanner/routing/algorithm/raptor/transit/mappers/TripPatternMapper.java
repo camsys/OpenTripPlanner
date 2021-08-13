@@ -23,7 +23,7 @@ public class TripPatternMapper {
 
         for (TripPattern oldTripPattern : oldTripPatterns) {
             TripPatternWithRaptorStopIndexes newTripPattern = new TripPatternWithRaptorStopIndexes(
-                    stopIndex.listStopIndexesForStops(oldTripPattern.getStopPattern().getStops()),
+                    stopIndex.listStopIndexesForStops(oldTripPattern.stopPattern.stops),
                     oldTripPattern
             );
             newTripPatternForOld.put(oldTripPattern, newTripPattern);

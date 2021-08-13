@@ -63,17 +63,8 @@ public class BikeRentalSnapshotTest
         });
     }
 
-    /**
-     * The next to two tests are an example where departAt and arriveBy searches return different
-     * (but still correct) results.
-     *
-     * It's probably down to the intersection traversal because when you use a constant cost
-     * they become the same route again.
-     *
-     * More discussion: https://github.com/opentripplanner/OpenTripPlanner/pull/3574
-     */
-    @DisplayName("Direct BIKE_RENTAL while keeping the bicycle at the destination with departAt")
-    @Test public void directBikeRentalArrivingAtDestinationWithDepartAt() {
+    @DisplayName("Direct BIKE_RENTAL while keeping the bicycle at the destination")
+    @Test public void directBikeRentalArrivingAtDestination() {
         RoutingRequest request = createTestRequest(2009, 9, 21, 16, 10, 0);
 
         request.modes = new RequestModes(null, null, null, StreetMode.BIKE_RENTAL, Set.of());
@@ -81,20 +72,15 @@ public class BikeRentalSnapshotTest
         request.from = p1;
         request.to = p2;
 
-        expectRequestResponseToMatchSnapshot(request);
-    }
+        expectArriveByToMatchDepartAtAndSnapshot(request, (departAt, arriveBy) -> {
+            /* The cost for switching between walking/biking is added the edge where switching occurs,
+             * because of this the times for departAt / arriveBy itineraries differ.
+             */
+            arriveBy.legs.get(1).endTime = departAt.legs.get(1).endTime;
+            arriveBy.legs.get(2).startTime = departAt.legs.get(2).startTime;
 
-    @DisplayName("Direct BIKE_RENTAL while keeping the bicycle at the destination with arriveBy")
-    @Test public void directBikeRentalArrivingAtDestinationWithArriveBy() {
-        RoutingRequest request = createTestRequest(2009, 9, 21, 16, 10, 0);
-
-        request.modes = new RequestModes(null, null, null, StreetMode.BIKE_RENTAL, Set.of());
-        request.allowKeepingRentedBicycleAtDestination = true;
-        request.from = p1;
-        request.to = p2;
-        request.arriveBy = true;
-
-        expectRequestResponseToMatchSnapshot(request);
+            handleGeneralizedCost(departAt, arriveBy);
+        });
     }
 
     @DisplayName("Access BIKE_RENTAL")

@@ -29,7 +29,6 @@ import java.util.stream.Stream;
 import static org.opentripplanner.model.StopPattern.PICKDROP_NONE;
 import static org.opentripplanner.model.StopTime.MISSING_VALUE;
 
-import static org.opentripplanner.model.PickDrop.NONE;
 
 /**
  * This type of FlexTrip is used when a taxi-type service is modeled, which operates in one or
@@ -53,7 +52,7 @@ public class UnscheduledTrip extends FlexTrip {
   public static boolean isUnscheduledTrip(List<StopTime> stopTimes) {
     Predicate<StopTime> noExplicitTimes = Predicate.not(st -> st.isArrivalTimeSet() || st.isDepartureTimeSet());
     Predicate<StopTime> notContinuousStop = stopTime ->
-        stopTime.getFlexContinuousDropOff() == NONE.getGtfsCode() && stopTime.getFlexContinuousPickup() == NONE.getGtfsCode();
+        stopTime.getFlexContinuousDropOff() == PICKDROP_NONE && stopTime.getFlexContinuousPickup() == PICKDROP_NONE;
     return stopTimes.size() == N_STOPS
         && stopTimes.stream().allMatch(noExplicitTimes)
         && stopTimes.stream().allMatch(notContinuousStop);
@@ -83,8 +82,8 @@ public class UnscheduledTrip extends FlexTrip {
   ) {
 	List<Integer> fromIndices = getFromIndex(access.stop, null);
 
-    if (fromIndex != 0) { return Stream.empty(); }
-    if (stopTimes[1].dropOffType == NONE.getGtfsCode()) { return Stream.empty(); }
+    if (fromIndices.isEmpty()) { return Stream.empty(); }
+    if (stopTimes[1].dropOffType == PICKDROP_NONE) { return Stream.empty(); }
 
     ArrayList<FlexAccessTemplate> res = new ArrayList<>();
 
@@ -102,8 +101,8 @@ public class UnscheduledTrip extends FlexTrip {
   ) {
     List<Integer> toIndices = getToIndex(egress.stop, null);
 
-    if (toIndex != 1) { return Stream.empty(); }
-    if (stopTimes[0].pickupType == NONE.getGtfsCode()) { return Stream.empty(); }
+    if (toIndices.isEmpty()) { return Stream.empty(); }
+    if (stopTimes[0].pickupType == PICKDROP_NONE) { return Stream.empty(); }
 
     ArrayList<FlexEgressTemplate> res = new ArrayList<>();
 
@@ -174,7 +173,7 @@ public class UnscheduledTrip extends FlexTrip {
   private List<Integer> getFromIndex(StopLocation accessEgress, Integer time) {
 	ArrayList<Integer> r = new ArrayList<Integer>();
     for (int i = 0; i < stopTimes.length; i++) {
-      if (stopTimes[i].pickupType == NONE.getGtfsCode()) continue;
+      if (stopTimes[i].pickupType == PICKDROP_NONE) continue;
       if(time != null) {
     	  if(!(time >= stopTimes[i].flexWindowStart && time <= stopTimes[i].flexWindowEnd))
     		  continue;
@@ -193,9 +192,9 @@ public class UnscheduledTrip extends FlexTrip {
   }
 
   private List<Integer> getToIndex(StopLocation accessEgress, Integer time) {
-    ArrayList<Integer> r = new ArrayList<Integer>();
-    for (int i = stopTimes.length - 1; i >= 0; i--) {
-      if (stopTimes[i].dropOffType == NONE.getGtfsCode()) continue;
+	ArrayList<Integer> r = new ArrayList<Integer>();
+	for (int i = stopTimes.length - 1; i >= 0; i--) {
+      if (stopTimes[i].dropOffType == PICKDROP_NONE) continue;
       if(time != null) {
     	  if(!(time >= stopTimes[i].flexWindowStart && time <= stopTimes[i].flexWindowEnd))
     		  continue;
@@ -269,8 +268,8 @@ public class UnscheduledTrip extends FlexTrip {
       this.flexWindowStart = st.getFlexWindowStart();
       this.flexWindowEnd = st.getFlexWindowEnd();
 
-      this.pickupType = st.getPickupType().getGtfsCode();
-      this.dropOffType = st.getDropOffType().getGtfsCode();
+      this.pickupType = st.getPickupType();
+      this.dropOffType = st.getDropOffType();
     }
   }
 }

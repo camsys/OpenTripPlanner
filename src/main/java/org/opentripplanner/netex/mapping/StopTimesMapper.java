@@ -1,5 +1,9 @@
 package org.opentripplanner.netex.mapping;
 
+import static org.opentripplanner.model.StopPattern.PICKDROP_COORDINATE_WITH_DRIVER;
+import static org.opentripplanner.model.StopPattern.PICKDROP_NONE;
+import static org.opentripplanner.model.StopPattern.PICKDROP_SCHEDULED;
+
 import java.math.BigInteger;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -30,10 +34,6 @@ import org.rutebanken.netex.model.StopPointInJourneyPattern;
 import org.rutebanken.netex.model.TimetabledPassingTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.opentripplanner.model.PickDrop.NONE;
-import static org.opentripplanner.model.PickDrop.COORDINATE_WITH_DRIVER;
-import static org.opentripplanner.model.PickDrop.SCHEDULED;
 
 /**
  * This maps a list of TimetabledPassingTimes to a list of StopTimes. It also makes sure the StopTime has a reference
@@ -179,19 +179,19 @@ class StopTimesMapper {
 
         if (stopPoint != null) {
             if (isFalse(stopPoint.isForAlighting())) {
-                stopTime.setDropOffType(NONE);
+                stopTime.setDropOffType(PICKDROP_NONE);
             } else if (Boolean.TRUE.equals(stopPoint.isRequestStop())) {
-                stopTime.setDropOffType(COORDINATE_WITH_DRIVER);
+                stopTime.setDropOffType(PICKDROP_COORDINATE_WITH_DRIVER);
             } else {
-                stopTime.setDropOffType(SCHEDULED);
+                stopTime.setDropOffType(PICKDROP_SCHEDULED);
             }
 
             if (isFalse(stopPoint.isForBoarding())) {
-                stopTime.setPickupType(NONE);
+                stopTime.setPickupType(PICKDROP_NONE);
             } else if (Boolean.TRUE.equals(stopPoint.isRequestStop())) {
-                stopTime.setPickupType(COORDINATE_WITH_DRIVER);
+                stopTime.setPickupType(PICKDROP_COORDINATE_WITH_DRIVER);
             } else {
-                stopTime.setPickupType(SCHEDULED);
+                stopTime.setPickupType(PICKDROP_SCHEDULED);
             }
 
             if (stopPoint.getDestinationDisplayRef() != null) {

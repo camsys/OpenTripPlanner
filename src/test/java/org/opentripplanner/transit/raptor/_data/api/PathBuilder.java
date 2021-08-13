@@ -188,7 +188,7 @@ public class PathBuilder {
       var durationInSeconds = toTime - fromTime;
       return new AccessPathLeg<>(
           TestTransfer.walk(toStop, durationInSeconds),
-          fromTime, toTime, next
+          toStop, fromTime, toTime, next
       );
     }
 
@@ -201,7 +201,7 @@ public class PathBuilder {
     TransferPathLeg<TestTripSchedule> transferLeg(PathLeg<TestTripSchedule> next) {
       var durationInSeconds = toTime - fromTime;
       return new TransferPathLeg<>(
-          fromStop, fromTime, toTime,
+          fromStop, fromTime, toStop, toTime,
           TestTransfer.walk(toStop, durationInSeconds),
           next
       );
@@ -211,7 +211,7 @@ public class PathBuilder {
       var durationInSeconds = toTime - fromTime;
       return new EgressPathLeg<>(
           TestTransfer.walk(toStop, durationInSeconds),
-          fromTime, toTime
+          fromStop, fromTime, toTime
       );
     }
 

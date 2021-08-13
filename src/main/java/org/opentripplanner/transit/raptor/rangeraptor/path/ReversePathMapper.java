@@ -64,6 +64,7 @@ public final class ReversePathMapper<T extends RaptorTripSchedule> implements Pa
 
         return new AccessPathLeg<>(
                 access,
+                prevArrival.stop(),
                 departureTime,
                 arrivalTime,
                 mapNextLeg(prevArrival, arrivalTime)
@@ -117,6 +118,7 @@ public final class ReversePathMapper<T extends RaptorTripSchedule> implements Pa
         return new TransferPathLeg<>(
                 fromStopArrival.stop(),
                 prevStopArrivalTime,
+                toStopArrival.stop(),
                 arrivalTime,
                 fromStopArrival.transferPath().transfer(),
                 mapNextLeg(toStopArrival, arrivalTime)
@@ -138,6 +140,7 @@ public final class ReversePathMapper<T extends RaptorTripSchedule> implements Pa
         // No need to time-shift the egress leg, this is done when stopArrival is created
         return new EgressPathLeg<>(
                 egress,
+                accessArrival.stop(),
                 targetFromTime,
                 targetToTime
         );

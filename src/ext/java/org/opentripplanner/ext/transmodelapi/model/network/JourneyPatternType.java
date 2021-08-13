@@ -37,7 +37,7 @@ public class JourneyPatternType {
         .field(GraphQLFieldDefinition.newFieldDefinition()
             .name("line")
             .type(new GraphQLNonNull(lineType))
-            .dataFetcher(environment -> ((TripPattern) environment.getSource()).getRoute())
+            .dataFetcher(environment -> ((TripPattern) environment.getSource()).route)
             .build())
         .field(GraphQLFieldDefinition.newFieldDefinition()
             .name("directionType")
@@ -47,7 +47,7 @@ public class JourneyPatternType {
         .field(GraphQLFieldDefinition.newFieldDefinition()
             .name("name")
             .type(Scalars.GraphQLString)
-            .dataFetcher(environment -> ((TripPattern) environment.getSource()).getName())
+            .dataFetcher(environment -> ((TripPattern) environment.getSource()).name)
             .build())
         .field(GraphQLFieldDefinition.newFieldDefinition()
             .name("serviceJourneys")
@@ -70,10 +70,10 @@ public class JourneyPatternType {
                           environment.getArgument("date")
                       )
                   );
-              return ((TripPattern) environment.getSource()).getScheduledTimetable().getTripTimes()
+              return ((TripPattern) environment.getSource()).scheduledTimetable.tripTimes
                   .stream()
-                  .filter(times -> services.get(times.getServiceCode()))
-                  .map(times -> times.getTrip())
+                  .filter(times -> services.get(times.serviceCode))
+                  .map(times -> times.trip)
                   .collect(Collectors.toList());
             })
             .build())

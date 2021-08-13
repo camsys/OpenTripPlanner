@@ -6,82 +6,57 @@ import org.opentripplanner.transit.raptor.api.path.Path;
 import org.opentripplanner.transit.raptor.api.path.PathLeg;
 import org.opentripplanner.transit.raptor.api.transit.RaptorTripSchedule;
 
-
-/**
- * An OptimizedPath decorates a path returned from Raptor with a transfer-priority-cost and
- * a wait-time-optimized-cost.
- *
- * @param <T> The TripSchedule type defined by the user of the raptor API.
- */
-public class OptimizedPath<T extends RaptorTripSchedule> extends Path<T>
-        implements TransferOptimized
-{
-
-
+public class OptimizedPath<T extends RaptorTripSchedule> extends Path<T> {
+    private static final int NOT_SET = -999_999;
     private final Path<T> originalPath;
-    private final Map<PathLeg<T>, Transfer> transfersTo;
-    private final int transferPriorityCost;
+
     private final int waitTimeOptimizedCost;
-    private final int breakTieCost;
+    private final Map<PathLeg<T>, Transfer> transfers;
 
-
-    public OptimizedPath(Path<T> originalPath) {
-        this(
-                originalPath,
-                originalPath,
-                Map.of(),
-                Transfer.NEUTRAL_PRIORITY_COST,
-                NEUTRAL_COST,
-                NEUTRAL_COST
-        );
+    public OptimizedPath(Path<T> original, Path<T> newPath) {
+        super(newPath);
+        this.originalPath = original;
+        this.transfers = Map.of();
+        this.waitTimeOptimizedCost = NOT_SET;
     }
 
-    public OptimizedPath(
-            Path<T> originalPath,
-            Path<T> path,
-            Map<PathLeg<T>, Transfer> transfersTo,
-            int transferPriorityCost,
-            int waitTimeOptimizedCost,
-            int breakTieCost
-    ) {
-        super(path);
-        this.originalPath = originalPath;
-        this.transfersTo = transfersTo;
-        this.transferPriorityCost = transferPriorityCost;
+    public OptimizedPath(OptimizedPath<T> original, Map<PathLeg<T>, Transfer> transfers) {
+        super(original);
+        this.originalPath = original.originalPath;
+        this.transfers = Map.copyOf(transfers);
+        this.waitTimeOptimizedCost = original.waitTimeOptimizedCost;
+    }
+
+    private OptimizedPath(OptimizedPath<T> original, int waitTimeOptimizedCost) {
+        super(original);
+        this.originalPath = original.originalPath;
+        this.transfers = original.transfers;
         this.waitTimeOptimizedCost = waitTimeOptimizedCost;
-        this.breakTieCost = breakTieCost;
     }
 
-    @Override
+    public OptimizedPath<T> withTransfers(Map<PathLeg<T>, Transfer> transfers) {
+        return new OptimizedPath<>(this, transfers);
+    }
+
+    public OptimizedPath<T> withWaitTimeCost(int newWaitTimeCost) {
+        return new OptimizedPath<>(this, newWaitTimeCost);
+    }
+
+
+    /** Return the total transfer priority cost. This have nothing to do with the
+     * generalized-cost. Return {@code 0}(zero) if cost is neutral/no "special"-transfers exist.
+     *
+     * @see Transfer#priorityCost(Transfer)
+     */
     public int transferPriorityCost() {
-        return transferPriorityCost;
+        return transfers.values().stream().mapToInt(Transfer::priorityCost).sum();
     }
 
-    @Override
-    public int waitTimeOptimizedCost() {
+    public int getWaitTimeOptimizedCost() {
         return waitTimeOptimizedCost;
     }
 
-    @Override
-    public int breakTieCost() {
-        return breakTieCost;
-    }
-
     public Transfer getTransferTo(PathLeg<?> leg) {
-        return transfersTo.get(leg);
-    }
-
-    public boolean isSameAsOriginal() {
-        PathLeg<T> originalLeg = originalPath.accessLeg();
-        PathLeg<T> newLeg = accessLeg();
-
-        while (!originalLeg.isEgressLeg() && !newLeg.isEgressLeg()) {
-            if(originalLeg.toStop() != newLeg.toStop()) {
-                return false;
-            }
-            originalLeg = originalLeg.nextLeg();
-            newLeg = newLeg.nextLeg();
-        }
-        return true;
+        return transfers.get(leg);
     }
 }

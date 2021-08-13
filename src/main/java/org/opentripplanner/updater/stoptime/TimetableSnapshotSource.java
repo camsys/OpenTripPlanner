@@ -36,9 +36,6 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static org.opentripplanner.model.PickDrop.NONE;
-import static org.opentripplanner.model.PickDrop.SCHEDULED;
-
 /**
  * This class should be used to create snapshots of lookup tables of realtime data. This is
  * necessary to provide planning threads a consistent constant view of a graph with realtime data at
@@ -331,7 +328,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
         cancelPreviouslyAddedTrip(new FeedScopedId(feedId, tripId), serviceDate);
 
         // Apply update on the *scheduled* time table and set the updated trip times in the buffer
-        final TripTimes updatedTripTimes = pattern.getScheduledTimetable().createUpdatedTripTimes(tripUpdate,
+        final TripTimes updatedTripTimes = pattern.scheduledTimetable.createUpdatedTripTimes(tripUpdate,
                 timeZone, serviceDate);
 
         if (updatedTripTimes == null) {
@@ -674,16 +671,16 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
                 // Set pickup type
                 // Set different pickup type for last stop
                 if (index == tripUpdate.getStopTimeUpdateCount() - 1) {
-                    stopTime.setPickupType(NONE); // No pickup available
+                    stopTime.setPickupType(1); // No pickup available
                 } else {
-                    stopTime.setPickupType(SCHEDULED); // Regularly scheduled pickup
+                    stopTime.setPickupType(0); // Regularly scheduled pickup
                 }
                 // Set drop off type
                 // Set different drop off type for first stop
                 if (index == 0) {
-                    stopTime.setDropOffType(NONE); // No drop off available
+                    stopTime.setDropOffType(1); // No drop off available
                 } else {
-                    stopTime.setDropOffType(SCHEDULED); // Regularly scheduled drop off
+                    stopTime.setDropOffType(0); // Regularly scheduled drop off
                 }
 
                 // Add stop time to list
@@ -718,7 +715,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
         }
 
         // Set service code of new trip times
-        newTripTimes.setServiceCode(serviceCode);
+        newTripTimes.serviceCode = serviceCode;
 
         // Make sure that updated trip times have the correct real time state
         newTripTimes.setRealTimeState(realTimeState);
@@ -742,13 +739,13 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
 
         if (pattern != null) {
             // Cancel scheduled trip times for this trip in this pattern
-            final Timetable timetable = pattern.getScheduledTimetable();
+            final Timetable timetable = pattern.scheduledTimetable;
             final int tripIndex = timetable.getTripIndex(tripId);
             if (tripIndex == -1) {
                 LOG.warn("Could not cancel scheduled trip {}", tripId);
             } else {
                 final TripTimes newTripTimes = new TripTimes(timetable.getTripTimes(tripIndex));
-                newTripTimes.cancelTrip();
+                newTripTimes.cancel();
                 buffer.update(pattern, newTripTimes, serviceDate);
                 success = true;
             }
@@ -780,7 +777,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
                 LOG.warn("Could not cancel previously added trip {}", tripId);
             } else {
                 final TripTimes newTripTimes = new TripTimes(timetable.getTripTimes(tripIndex));
-                newTripTimes.cancelTrip();
+                newTripTimes.cancel();
                 buffer.update(pattern, newTripTimes, serviceDate);
                 success = true;
             }
