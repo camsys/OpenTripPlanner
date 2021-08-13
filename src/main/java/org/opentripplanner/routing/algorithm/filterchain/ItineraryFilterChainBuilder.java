@@ -4,6 +4,7 @@ import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.routing.algorithm.filterchain.filters.AddMinSafeTransferCostFilter;
 import org.opentripplanner.routing.algorithm.filterchain.filters.DebugFilterWrapper;
 import org.opentripplanner.routing.algorithm.filterchain.filters.FilterChain;
+import org.opentripplanner.routing.algorithm.filterchain.filters.FlexFilter;
 import org.opentripplanner.routing.algorithm.filterchain.filters.GroupBySimilarLegsFilter;
 import org.opentripplanner.routing.algorithm.filterchain.filters.LatestDepartureTimeFilter;
 import org.opentripplanner.routing.algorithm.filterchain.filters.MaxLimitFilter;
@@ -19,6 +20,7 @@ import org.opentripplanner.routing.algorithm.filterchain.filters.TransitGenerali
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.DoubleFunction;
@@ -35,10 +37,12 @@ public class ItineraryFilterChainBuilder {
     private final List<GroupBySimilarity> groupBySimilarity = new ArrayList<>();
 
     private boolean debug = false;
+    private Date requestTime;
     private int maxNumberOfItineraries = NOT_SET;
     private boolean removeTransitWithHigherCostThanBestOnStreetOnly = true;
     private double minSafeTransferTimeFactor;
     private boolean removeWalkAllTheWayResults;
+    private boolean flexFilter = true;
     private DoubleFunction<Double> transitGeneralizedCostLimit;
     private double bikeRentalDistanceRatio;
     private double parkAndRideDurationRatio;
@@ -202,6 +206,12 @@ public class ItineraryFilterChainBuilder {
         return this;
     }
 
+    public ItineraryFilterChainBuilder withFlexFilter(boolean enable, Date requestTime) {
+        this.flexFilter = enable;
+        this.requestTime = requestTime;
+        return this;
+    }
+
     public ItineraryFilter build() {
         List<ItineraryFilter> filters = new ArrayList<>();
 
@@ -238,6 +248,10 @@ public class ItineraryFilterChainBuilder {
             filters.add(new NonTransitGeneralizedCostFilter(nonTransitGeneralizedCostLimit));
         }
 
+        if(flexFilter) {
+            filters.add(new FlexFilter(requestTime));
+        }
+
         // Apply all absolute filters AFTER the groupBy filters. Absolute filters are filters that
         // remove elements/ based on the given itinerary properties - not considering other
         // itineraries. This may remove itineraries in the "groupBy" filters that are considered
@@ -248,7 +262,7 @@ public class ItineraryFilterChainBuilder {
         // is worse). B is removed by the {@link LatestDepartureTimeFilter} below. This is exactly
         // what we want, since both itineraries are none optimal.
         {
-            if (removeTransitWithHigherCostThanBestOnStreetOnly) {
+        	if (removeTransitWithHigherCostThanBestOnStreetOnly) {
                 filters.add(new RemoveTransitIfStreetOnlyIsBetterFilter());
             }
 

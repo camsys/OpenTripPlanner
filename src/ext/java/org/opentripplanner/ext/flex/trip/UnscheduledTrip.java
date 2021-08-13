@@ -1,5 +1,6 @@
 package org.opentripplanner.ext.flex.trip;
 
+import org.opentripplanner.ext.flex.FlexRouter;
 import org.opentripplanner.ext.flex.FlexServiceDate;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPath;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
@@ -7,10 +8,13 @@ import org.opentripplanner.ext.flex.template.FlexAccessTemplate;
 import org.opentripplanner.ext.flex.template.FlexEgressTemplate;
 import org.opentripplanner.model.BookingInfo;
 import org.opentripplanner.model.FlexLocationGroup;
+import org.opentripplanner.model.FlexStopLocation;
 import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -34,6 +38,8 @@ import static org.opentripplanner.model.StopTime.MISSING_VALUE;
  */
 public class UnscheduledTrip extends FlexTrip {
 	
+  private static final Logger LOG = LoggerFactory.getLogger(UnscheduledTrip.class);
+
   private static final long serialVersionUID = -3994562856996189076L;
 
   private static final int N_STOPS = 2;
@@ -72,9 +78,9 @@ public class UnscheduledTrip extends FlexTrip {
 
   @Override
   public Stream<FlexAccessTemplate> getFlexAccessTemplates(
-      NearbyStop access, FlexServiceDate serviceDate, FlexPathCalculator calculator, int time
+      NearbyStop access, FlexServiceDate serviceDate, FlexPathCalculator calculator
   ) {
-	List<Integer> fromIndices = getFromIndex(access, time);
+	List<Integer> fromIndices = getFromIndex(access.stop, null);
 
     if (fromIndices.isEmpty()) { return Stream.empty(); }
     if (stopTimes[1].dropOffType == PICKDROP_NONE) { return Stream.empty(); }
@@ -91,9 +97,9 @@ public class UnscheduledTrip extends FlexTrip {
 
   @Override
   public Stream<FlexEgressTemplate> getFlexEgressTemplates(
-      NearbyStop egress, FlexServiceDate serviceDate, FlexPathCalculator calculator, int time
+      NearbyStop egress, FlexServiceDate serviceDate, FlexPathCalculator calculator
   ) {
-    List<Integer> toIndices = getToIndex(egress, time);
+    List<Integer> toIndices = getToIndex(egress.stop, null);
 
     if (toIndices.isEmpty()) { return Stream.empty(); }
     if (stopTimes[0].pickupType == PICKDROP_NONE) { return Stream.empty(); }
@@ -139,12 +145,22 @@ public class UnscheduledTrip extends FlexTrip {
   }
 
   @Override
-  public boolean isBoardingPossible(NearbyStop stop, int time) {
+  public boolean isBoardingPossible(StopLocation stop) {
+    return !getFromIndex(stop, null).isEmpty();
+  }
+
+  @Override
+  public boolean isAlightingPossible(StopLocation stop) {
+    return !getToIndex(stop, null).isEmpty();
+  }
+
+  @Override
+  public boolean isBoardingPossible(StopLocation stop, int time) {
     return !getFromIndex(stop, time).isEmpty();
   }
 
   @Override
-  public boolean isAlightingPossible(NearbyStop stop, int time) {
+  public boolean isAlightingPossible(StopLocation stop, int time) {
     return !getToIndex(stop, time).isEmpty();
   }
 
@@ -154,36 +170,42 @@ public class UnscheduledTrip extends FlexTrip {
         : Collections.singleton(stop);
   }
 
-  private List<Integer> getFromIndex(NearbyStop accessEgress, int departureTime) {
+  private List<Integer> getFromIndex(StopLocation accessEgress, Integer time) {
 	ArrayList<Integer> r = new ArrayList<Integer>();
     for (int i = 0; i < stopTimes.length; i++) {
       if (stopTimes[i].pickupType == PICKDROP_NONE) continue;
-      if (!(departureTime >= stopTimes[i].flexWindowStart)) continue; // Pickup/dropoff window check
+      if(time != null) {
+    	  if(!(time >= stopTimes[i].flexWindowStart && time <= stopTimes[i].flexWindowEnd))
+    		  continue;
+      }
 
       StopLocation stop = stopTimes[i].stop;
       if (stop instanceof FlexLocationGroup) {
-        if (((FlexLocationGroup) stop).getLocations().contains(accessEgress.stop))
+        if (((FlexLocationGroup) stop).getLocations().contains(accessEgress))
           r.add(i);
       } else {
-        if (stop.equals(accessEgress.stop))
+        if (stop.equals(accessEgress))
           r.add(i);
       }
     }
 	return r;
   }
 
-  private List<Integer> getToIndex(NearbyStop accessEgress, int arrivalTime) {
+  private List<Integer> getToIndex(StopLocation accessEgress, Integer time) {
 	ArrayList<Integer> r = new ArrayList<Integer>();
 	for (int i = stopTimes.length - 1; i >= 0; i--) {
       if (stopTimes[i].dropOffType == PICKDROP_NONE) continue;
-      if (!(arrivalTime <= stopTimes[i].flexWindowEnd)) continue; // Pickup/dropoff window check
+      if(time != null) {
+    	  if(!(time >= stopTimes[i].flexWindowStart && time <= stopTimes[i].flexWindowEnd))
+    		  continue;
+      }
 
       StopLocation stop = stopTimes[i].stop;
       if (stop instanceof FlexLocationGroup) {
-        if (((FlexLocationGroup) stop).getLocations().contains(accessEgress.stop))
+        if (((FlexLocationGroup) stop).getLocations().contains(accessEgress))
           r.add(i);
       } else {
-        if (stop.equals(accessEgress.stop))
+        if (stop.equals(accessEgress))
           r.add(i);
       }
     }

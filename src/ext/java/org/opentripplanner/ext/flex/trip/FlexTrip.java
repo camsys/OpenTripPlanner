@@ -6,6 +6,8 @@ import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
 import org.opentripplanner.ext.flex.template.FlexAccessTemplate;
 import org.opentripplanner.ext.flex.template.FlexEgressTemplate;
 import org.opentripplanner.model.BookingInfo;
+import org.opentripplanner.model.FlexStopLocation;
+import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.model.TransitEntity;
 import org.opentripplanner.model.Trip;
@@ -31,11 +33,11 @@ public abstract class FlexTrip extends TransitEntity {
   }
 
   public abstract Stream<FlexAccessTemplate> getFlexAccessTemplates(
-      NearbyStop access, FlexServiceDate servicedate, FlexPathCalculator calculator, int time
+      NearbyStop access, FlexServiceDate servicedate, FlexPathCalculator calculator
   );
 
   public abstract Stream<FlexEgressTemplate> getFlexEgressTemplates(
-      NearbyStop egress, FlexServiceDate servicedate, FlexPathCalculator calculator, int time
+      NearbyStop egress, FlexServiceDate servicedate, FlexPathCalculator calculator
   );
 
   // The 95% CI for travel time on this trip. Use this for connections and other things that 
@@ -62,7 +64,12 @@ public abstract class FlexTrip extends TransitEntity {
 
   public abstract BookingInfo getPickupBookingInfo(int i);
 
-  public abstract boolean isBoardingPossible(NearbyStop stop, int time);
+  public abstract boolean isBoardingPossible(StopLocation stop);
 
-  public abstract boolean isAlightingPossible(NearbyStop stop, int time);
+  public abstract boolean isAlightingPossible(StopLocation stop);
+
+  public abstract boolean isBoardingPossible(StopLocation stop, int time);
+
+  public abstract boolean isAlightingPossible(StopLocation stop, int time);
+
 }

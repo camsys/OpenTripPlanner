@@ -4,6 +4,7 @@ import org.opentripplanner.ext.flex.FlexServiceDate;
 import org.opentripplanner.ext.flex.edgetype.FlexTripEdge;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
+import org.opentripplanner.model.FlexStopLocation;
 import org.opentripplanner.model.SimpleTransfer;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopLocation;
@@ -67,19 +68,25 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 		Integer timeShift = null;
 
 		if (arriveBy) {
-			int latestArrivalTime = trip.latestArrivalTime(departureTime - postFlexTime, fromStopIndex, toStopIndex);
-//			if (latestArrivalTime == -1) {
-//				return null;
-//			}
+			int flexWindowEnd = trip.latestArrivalTime(departureTime - postFlexTime, fromStopIndex, toStopIndex);
 
-			timeShift = latestArrivalTime - flexTime - preFlexTime;
+			// check pickup/dropoff times against constraints
+			int arrivalTime = departureTime + preFlexTime + flexTime;			
+			if(!trip.isBoardingPossible((StopLocation)trip.getStops().toArray()[fromStopIndex], departureTime)
+				&& !trip.isAlightingPossible((StopLocation)trip.getStops().toArray()[toStopIndex], arrivalTime)) 
+				return null;
+
+			timeShift = flexWindowEnd - flexTime - preFlexTime;
 		} else {
-			int earliestDepartureTime = trip.earliestDepartureTime(departureTime + preFlexTime, fromStopIndex, toStopIndex);
-//			if (earliestDepartureTime == -1) {
-//				return null;
-//			}
+			int flexWindowStart = trip.earliestDepartureTime(departureTime + preFlexTime, fromStopIndex, toStopIndex);
 
-			timeShift =  earliestDepartureTime - preFlexTime;
+			// check pickup/dropoff times against constraints
+			int arrivalTime = departureTime + preFlexTime + flexTime;
+			if(!trip.isBoardingPossible((StopLocation)trip.getStops().toArray()[fromStopIndex], departureTime)
+				&& !trip.isAlightingPossible((StopLocation)trip.getStops().toArray()[toStopIndex], arrivalTime)) 
+				return null;
+					
+			timeShift =  flexWindowStart - preFlexTime;
 		}
 
 		Itinerary itinerary = GraphPathToItineraryMapper.generateItinerary(new GraphPath(state), Locale.ENGLISH);
