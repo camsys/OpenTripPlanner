@@ -9,6 +9,7 @@ import org.opentripplanner.model.SimpleTransfer;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.model.plan.Itinerary;
+import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.routing.algorithm.mapping.GraphPathToItineraryMapper;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.graph.Edge;
@@ -39,10 +40,6 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 	public Itinerary createDirectItinerary(NearbyStop egress, boolean arriveBy, int departureTime,
 			ZonedDateTime departureServiceDate) {
 
-	    LOG.debug("Trip: " + this.getFlexTrip() + 
-	    		" From: " + this.getFlexTrip().getStops().toArray()[this.fromStopIndex] + 
-	    		" To:" + this.getFlexTrip().getStops().toArray()[this.toStopIndex]);
-
 		List<Edge> egressEdges = egress.edges;
 
 		Vertex flexToVertex = egress.state.getVertex();
@@ -56,38 +53,33 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 		    if(state == null) return null;
 		}
 	    
-	    // check that we can make this trip re: pickup/dropoff time restrictions
-	    int timeAsOffsetSinceServiceDate = 
-	    		(int)(((arriveBy ? egress.state : accessEgress.state).getTimeInMillis() - this.serviceDate.serviceDate.getAsDate().getTime()) / 1000);
+		Itinerary itinerary = GraphPathToItineraryMapper.generateItinerary(new GraphPath(state), Locale.ENGLISH);
 
-//	    if(!this.getFlexTrip().isBoardingPossible(accessEgress.stop, timeAsOffsetSinceServiceDate))
-//	        return null;
-	    	
-//	    if(!this.getFlexTrip().isAlightingPossible(egress.stop, timeAsOffsetSinceServiceDate + flexEdge.getTripTimeInSeconds()))
-//			return null;	    
-	    
-	    int timeShift = 0;
-	    int[] flexTimes = getFlexTimes(flexEdge, state);
-	    
+	    int[] flexTimes = getFlexTimes(flexEdge, state);	    
 		if (arriveBy) {
 			int flexWindowEnd = trip.latestArrivalTime(departureTime - flexTimes[2], fromStopIndex, toStopIndex);
-			if(flexWindowEnd == -1) return null;
+			if (flexWindowEnd == -1) {
+				return null;
+			}
+				
+			int timeShift = departureTime - flexTimes[1] - flexTimes[0];
 
-			timeShift = flexWindowEnd - flexTimes[1] - flexTimes[0];
-		} else {
-			int flexWindowStart = trip.earliestDepartureTime(departureTime + flexTimes[0], fromStopIndex, toStopIndex);
-			if(flexWindowStart == -1) return null;
-			
-			timeShift =  flexWindowStart - flexTimes[0];
+			ZonedDateTime zdt = departureServiceDate.plusSeconds(timeShift);
+			Calendar c = Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone()));
+			c.setTimeInMillis(zdt.toInstant().toEpochMilli());
+			itinerary.timeShiftToStartAt(c);
 		}
 
-		Itinerary itinerary = GraphPathToItineraryMapper.generateItinerary(new GraphPath(state), Locale.ENGLISH);
+	    // check that we can make this trip re: pickup/dropoff time restrictions
+		long serviceDayInMillis = departureServiceDate.toInstant().toEpochMilli();
+		Leg flexLeg = itinerary.legs.stream().filter(it -> it.flexibleTrip).findFirst().orElse(null);
 		
-		ZonedDateTime zdt = departureServiceDate.plusSeconds(timeShift);
-		Calendar c = Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone()));
-		c.setTimeInMillis(zdt.toInstant().toEpochMilli());
-		itinerary.timeShiftToStartAt(c);
-	    
+		if(!this.getFlexTrip().isBoardingPossible(accessEgress.stop, (int)(flexLeg.startTime.getTimeInMillis()/1000 - serviceDayInMillis/1000)))
+			return null;
+    	
+		if(!this.getFlexTrip().isAlightingPossible(egress.stop, (int)(flexLeg.endTime.getTimeInMillis()/1000 - serviceDayInMillis/1000)))
+			return null;	    
+    	    
 		return itinerary;
 	}
 	  

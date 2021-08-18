@@ -206,7 +206,7 @@ public class FlexRouter {
         .stream()
         .flatMap(accessEgress -> flexIndex
             .getFlexTripsByStop(accessEgress.stop)
-            .filter(flexTrip -> pickup ? flexTrip.isBoardingPossible(accessEgress.stop) 
+            .filter(flexTrip -> pickup ? flexTrip.isBoardingPossible(accessEgress.stop, departureTime) 
             		: flexTrip.isAlightingPossible(accessEgress.stop))
             .map(flexTrip -> new T2<>(accessEgress, flexTrip)))
         .collect(Collectors.toList());
