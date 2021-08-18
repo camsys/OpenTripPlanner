@@ -47,7 +47,7 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 
 		Vertex flexToVertex = egress.state.getVertex();
 		FlexTripEdge flexEdge = getFlexEdge(flexToVertex, egress.stop);
-
+		
 		State state = flexEdge.traverse(accessEgress.state);
 	    if(state == null) return null;
 
@@ -55,38 +55,30 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 			state = e.traverse(state);
 		    if(state == null) return null;
 		}
+	    
+	    // check that we can make this trip re: pickup/dropoff time restrictions
+	    int timeAsOffsetSinceServiceDate = 
+	    		(int)(((arriveBy ? egress.state : accessEgress.state).getTimeInMillis() - this.serviceDate.serviceDate.getAsDate().getTime()) / 1000);
 
-		// There's no way to model wait time in a state as returned from edge traversal,
-		// so we need to shift times here so the itinerary object can model the proper start
-		// time of the trip.
-		int[] flexTimes = getFlexTimes(flexEdge, state);
-
-		int preFlexTime = flexTimes[0];
-		int flexTime = flexTimes[1];
-		int postFlexTime = flexTimes[2];
-
-		Integer timeShift = null;
-
+//	    if(!this.getFlexTrip().isBoardingPossible(accessEgress.stop, timeAsOffsetSinceServiceDate))
+//	        return null;
+	    	
+//	    if(!this.getFlexTrip().isAlightingPossible(egress.stop, timeAsOffsetSinceServiceDate + flexEdge.getTripTimeInSeconds()))
+//			return null;	    
+	    
+	    int timeShift = 0;
+	    int[] flexTimes = getFlexTimes(flexEdge, state);
+	    
 		if (arriveBy) {
-			int flexWindowEnd = trip.latestArrivalTime(departureTime - postFlexTime, fromStopIndex, toStopIndex);
+			int flexWindowEnd = trip.latestArrivalTime(departureTime - flexTimes[2], fromStopIndex, toStopIndex);
+			if(flexWindowEnd == -1) return null;
 
-			// check pickup/dropoff times against constraints
-			int arrivalTime = departureTime + preFlexTime + flexTime;			
-			if(!trip.isBoardingPossible((StopLocation)trip.getStops().toArray()[fromStopIndex], departureTime)
-				&& !trip.isAlightingPossible((StopLocation)trip.getStops().toArray()[toStopIndex], arrivalTime)) 
-				return null;
-
-			timeShift = flexWindowEnd - flexTime - preFlexTime;
+			timeShift = flexWindowEnd - flexTimes[1] - flexTimes[0];
 		} else {
-			int flexWindowStart = trip.earliestDepartureTime(departureTime + preFlexTime, fromStopIndex, toStopIndex);
-
-			// check pickup/dropoff times against constraints
-			int arrivalTime = departureTime + preFlexTime + flexTime;
-			if(!trip.isBoardingPossible((StopLocation)trip.getStops().toArray()[fromStopIndex], departureTime)
-				&& !trip.isAlightingPossible((StopLocation)trip.getStops().toArray()[toStopIndex], arrivalTime)) 
-				return null;
-					
-			timeShift =  flexWindowStart - preFlexTime;
+			int flexWindowStart = trip.earliestDepartureTime(departureTime + flexTimes[0], fromStopIndex, toStopIndex);
+			if(flexWindowStart == -1) return null;
+			
+			timeShift =  flexWindowStart - flexTimes[0];
 		}
 
 		Itinerary itinerary = GraphPathToItineraryMapper.generateItinerary(new GraphPath(state), Locale.ENGLISH);
@@ -95,10 +87,10 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 		Calendar c = Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone()));
 		c.setTimeInMillis(zdt.toInstant().toEpochMilli());
 		itinerary.timeShiftToStartAt(c);
-
+	    
 		return itinerary;
 	}
-
+	  
 	protected List<Edge> getTransferEdges(SimpleTransfer simpleTransfer) {
 		return simpleTransfer.getEdges();
 	}
@@ -121,7 +113,7 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 		int postFlexTime = (int) state.getElapsedTimeSeconds() - preFlexTime - edgeTimeInSeconds;
 		return new int[] { preFlexTime, edgeTimeInSeconds, postFlexTime };
 	}
-	  
+	
 	protected FlexTripEdge getFlexEdge(Vertex flexToVertex, StopLocation transferStop) {
 		return new FlexTripEdge(accessEgress.state.getVertex(), 
 				flexToVertex, 

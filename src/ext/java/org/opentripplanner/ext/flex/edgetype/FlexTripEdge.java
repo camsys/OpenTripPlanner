@@ -18,11 +18,11 @@ public class FlexTripEdge extends Edge {
 
   private static final long serialVersionUID = 1L;
 
-  public StopLocation s1;
-  public StopLocation s2;
+  public final StopLocation s1;
+  public final StopLocation s2;
   
-  public FlexAccessEgressTemplate flexTemplate;
-  public FlexPath flexPath;
+  public final FlexAccessEgressTemplate flexTemplate;
+  public final FlexPath flexPath;
 
   @SuppressWarnings("serial")
   public FlexTripEdge(
@@ -38,8 +38,7 @@ public class FlexTripEdge extends Edge {
     this.flexTemplate = flexTemplate;
     this.fromv = v1;
     this.tov = v2;
-    this.flexPath = calculator.calculateFlexPath(fromv, tov, s1, s2, 
-    		flexTemplate.fromStopIndex, flexTemplate.toStopIndex);
+    this.flexPath = calculator.calculateFlexPath(fromv, tov);
   }
 
   @Override
@@ -50,17 +49,18 @@ public class FlexTripEdge extends Edge {
 	StateEditor editor = s0.edit(this);
     editor.setBackMode(TraverseMode.BUS);
     editor.incrementTimeInSeconds(getTripTimeInSeconds());
-    editor.incrementWeight(getTripTimeInSeconds());
+    editor.incrementWeight(getTripTimeInSeconds()/100);
     
     editor.resetEnteredNoThroughTrafficArea();
     
     return editor.makeState();
   }
 
-  // This method uses the "mean" time from Flex v2 to best reflect the typical travel scenario
-  // in user-facing interfaces vs. using the worst case scenario re: timing
+  // This method uses the "mean" time from Flex v2 to best reflect the typical travel 
+  // scenario in user-facing interfaces vs. using the worst case scenario re: trip length
   public int getTripTimeInSeconds() {
-    return getFlexTrip().getMeanTotalTime(flexPath, flexTemplate.fromStopIndex, flexTemplate.toStopIndex);
+    return getFlexTrip().getMeanTotalTime(flexPath, flexTemplate.fromStopIndex, 
+    		flexTemplate.toStopIndex);
   }
 
   @Override

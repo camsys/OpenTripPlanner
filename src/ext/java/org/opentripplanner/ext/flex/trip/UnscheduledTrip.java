@@ -81,7 +81,6 @@ public class UnscheduledTrip extends FlexTrip {
       NearbyStop access, FlexServiceDate serviceDate, FlexPathCalculator calculator
   ) {
 	List<Integer> fromIndices = getFromIndex(access.stop, null);
-
     if (fromIndices.isEmpty()) { return Stream.empty(); }
     if (stopTimes[1].dropOffType == PICKDROP_NONE) { return Stream.empty(); }
 
@@ -100,7 +99,6 @@ public class UnscheduledTrip extends FlexTrip {
       NearbyStop egress, FlexServiceDate serviceDate, FlexPathCalculator calculator
   ) {
     List<Integer> toIndices = getToIndex(egress.stop, null);
-
     if (toIndices.isEmpty()) { return Stream.empty(); }
     if (stopTimes[0].pickupType == PICKDROP_NONE) { return Stream.empty(); }
 
@@ -116,13 +114,29 @@ public class UnscheduledTrip extends FlexTrip {
 
   @Override
   public int earliestDepartureTime(int departureTime, int fromStopIndex, int toStopIndex) {
-    UnscheduledStopTime fromStopTime = stopTimes[fromStopIndex];
+	UnscheduledStopTime fromStopTime = stopTimes[fromStopIndex];
+	UnscheduledStopTime toStopTime = stopTimes[toStopIndex];
+
+    if(fromStopTime.flexWindowStart == MISSING_VALUE)
+    	return -1;
+    
+    if (fromStopTime.flexWindowEnd < departureTime)
+        return -1;
+
     return Math.max(departureTime, fromStopTime.flexWindowStart);
   }
 
   @Override
   public int latestArrivalTime(int arrivalTime, int fromStopIndex, int toStopIndex) {
-    UnscheduledStopTime toStopTime = stopTimes[toStopIndex];
+	UnscheduledStopTime fromStopTime = stopTimes[fromStopIndex];
+	UnscheduledStopTime toStopTime = stopTimes[toStopIndex];
+	    
+    if(toStopTime.flexWindowEnd == MISSING_VALUE)
+    	return -1;
+    
+    if (toStopTime.flexWindowStart > arrivalTime)
+        return -1;
+
     return Math.min(arrivalTime, toStopTime.flexWindowEnd);
   }
 

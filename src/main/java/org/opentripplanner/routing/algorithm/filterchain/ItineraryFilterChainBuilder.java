@@ -298,7 +298,7 @@ public class ItineraryFilterChainBuilder {
         // Do the final itineraries sort
         filters.add(new OtpDefaultSortOrder(arriveBy));
         
-        if(debug) {
+        if(true) {
             filters = addDebugWrappers(filters);
         }
 

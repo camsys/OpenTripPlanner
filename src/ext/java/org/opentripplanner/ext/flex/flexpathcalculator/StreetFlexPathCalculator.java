@@ -45,8 +45,7 @@ public class StreetFlexPathCalculator implements FlexPathCalculator {
   }
 
   @Override
-  public FlexPath calculateFlexPath(Vertex fromv, Vertex tov, StopLocation s1, StopLocation s2, 
-		  int fromStopIndex, int toStopIndex) {
+  public FlexPath calculateFlexPath(Vertex fromv, Vertex tov) {
     // These are the origin and destination vertices from the perspective of the one-to-many search,
     // which may be reversed
     Vertex originVertex = reverseDirection ? tov : fromv;

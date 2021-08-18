@@ -248,11 +248,12 @@ public abstract class GraphPathToItineraryMapper {
         if (OTPFeature.FlexRouting.isOn()) {
             flexEdge = (FlexTripEdge) Stream
                 .of(states)
-                .skip(1)
+               	.skip(1)
                 .map(state -> state.backEdge)
                 .filter(edge -> edge instanceof FlexTripEdge)
                 .findFirst()
                 .orElse(null);
+            
             if (flexEdge != null) {
                 leg = new Leg(flexEdge.getTrip());
                 leg.flexibleTrip = true;
@@ -305,7 +306,7 @@ public abstract class GraphPathToItineraryMapper {
         addStreetNotes(graph, leg, states);
 
         if (flexEdge != null) {
-            FlexLegMapper.fixFlexTripLeg(leg, flexEdge);
+            FlexLegMapper.fixFlexTripLeg(leg, flexEdge, states);
         }
 
         return leg;
