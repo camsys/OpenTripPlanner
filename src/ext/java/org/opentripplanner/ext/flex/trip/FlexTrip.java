@@ -68,8 +68,8 @@ public abstract class FlexTrip extends TransitEntity {
 
   public abstract boolean isAlightingPossible(StopLocation stop);
 
-  public abstract boolean isBoardingPossible(StopLocation stop, int time);
+  public abstract boolean isBoardingPossible(StopLocation stop, Integer time);
 
-  public abstract boolean isAlightingPossible(StopLocation stop, int time);
+  public abstract boolean isAlightingPossible(StopLocation stop, Integer time);
 
 }

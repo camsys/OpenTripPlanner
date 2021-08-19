@@ -99,10 +99,10 @@ public class FlexRouter {
     calculateFlexAccessTemplates();
     calculateFlexEgressTemplates();
 
-    LOG.debug("Direct Routing - Accesses: " + this.flexAccessTemplates.stream()
+    LOG.info("Direct Routing - Accesses: " + this.flexAccessTemplates.stream()
     	.map(e -> e.getAccessEgressStop().getId() + "->" + e.getTransferStop().getId() + "\n")
     	.distinct().collect(Collectors.toList()));
-    LOG.debug("Direct Routing - Egresses: " + this.flexEgressTemplates.stream()
+    LOG.info("Direct Routing - Egresses: " + this.flexEgressTemplates.stream()
     	.map(e -> e.getAccessEgressStop().getId() + "->" + e.getTransferStop().getId() + "\n")
     	.distinct().collect(Collectors.toList()));
 
@@ -206,8 +206,8 @@ public class FlexRouter {
         .stream()
         .flatMap(accessEgress -> flexIndex
             .getFlexTripsByStop(accessEgress.stop)
-            .filter(flexTrip -> pickup ? flexTrip.isBoardingPossible(accessEgress.stop, departureTime) 
-            		: flexTrip.isAlightingPossible(accessEgress.stop))
+            .filter(flexTrip -> pickup ? flexTrip.isBoardingPossible(accessEgress.stop, arriveBy == false ? departureTime : null) 
+            		: flexTrip.isAlightingPossible(accessEgress.stop, arriveBy == false ? departureTime : null))
             .map(flexTrip -> new T2<>(accessEgress, flexTrip)))
         .collect(Collectors.toList());
 

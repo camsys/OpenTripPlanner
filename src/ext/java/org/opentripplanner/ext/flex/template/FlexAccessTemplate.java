@@ -59,7 +59,8 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 		if (arriveBy) {
 			int flexWindowEnd = trip.latestArrivalTime(departureTime - flexTimes[2], fromStopIndex, toStopIndex);
 			if (flexWindowEnd == -1) {
-				return null;
+				flexWindowEnd = departureTime;
+				//return null;
 			}
 				
 			int timeShift = departureTime - flexTimes[1] - flexTimes[0];

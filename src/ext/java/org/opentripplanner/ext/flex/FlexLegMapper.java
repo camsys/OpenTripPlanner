@@ -5,13 +5,16 @@ import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.model.plan.VertexType;
 import org.opentripplanner.routing.algorithm.mapping.GraphPathToItineraryMapper;
+import org.opentripplanner.routing.graph.Edge;
+
 import java.util.ArrayList;
+import java.util.Set;
 
 // TODO: Should flex be of its own type
 public class FlexLegMapper {
 
-  static public void fixFlexTripLeg(Leg leg, FlexTripEdge flexTripEdge) {
-      leg.from.stopId = flexTripEdge.s1.getId();
+  static public void fixFlexTripLeg(Leg leg, FlexTripEdge flexTripEdge) {	  
+	  leg.from.stopId = flexTripEdge.s1.getId();
 		
       leg.from.vertexType = flexTripEdge.s1 instanceof Stop ? VertexType.TRANSIT : VertexType.NORMAL;
       leg.from.stopIndex = flexTripEdge.flexTemplate.fromStopIndex;

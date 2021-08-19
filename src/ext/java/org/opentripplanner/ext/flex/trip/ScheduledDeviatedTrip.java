@@ -123,7 +123,6 @@ public class ScheduledDeviatedTrip extends FlexTrip {
     }
     if(stopDepartureTime == MISSING_VALUE)
     	return -1;
-    
     return stopDepartureTime >= departureTime ? stopDepartureTime : -1;
   }
 
@@ -135,7 +134,6 @@ public class ScheduledDeviatedTrip extends FlexTrip {
     }
     if(stopArrivalTime == MISSING_VALUE)
     	return -1;
-
     return stopArrivalTime <= arrivalTime ? stopArrivalTime : -1;
   }
 
@@ -168,12 +166,12 @@ public class ScheduledDeviatedTrip extends FlexTrip {
   }
 
   @Override
-  public boolean isBoardingPossible(StopLocation stop, int time) {
+  public boolean isBoardingPossible(StopLocation stop, Integer time) {
     return !getFromIndex(stop, time).isEmpty();
   }
 
   @Override
-  public boolean isAlightingPossible(StopLocation stop, int time) {
+  public boolean isAlightingPossible(StopLocation stop, Integer time) {
     return !getToIndex(stop, time).isEmpty();
   }
 

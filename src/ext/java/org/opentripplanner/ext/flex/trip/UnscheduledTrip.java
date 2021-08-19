@@ -169,12 +169,12 @@ public class UnscheduledTrip extends FlexTrip {
   }
 
   @Override
-  public boolean isBoardingPossible(StopLocation stop, int time) {
+  public boolean isBoardingPossible(StopLocation stop, Integer time) {
     return !getFromIndex(stop, time).isEmpty();
   }
 
   @Override
-  public boolean isAlightingPossible(StopLocation stop, int time) {
+  public boolean isAlightingPossible(StopLocation stop, Integer time) {
     return !getToIndex(stop, time).isEmpty();
   }
 
