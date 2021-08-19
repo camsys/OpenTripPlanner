@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
@@ -244,15 +245,14 @@ public abstract class GraphPathToItineraryMapper {
     private static Leg generateLeg(Graph graph, State[] states, Locale requestedLocale) {
         Leg leg = null;
         FlexTripEdge flexEdge = null;
-
         if (OTPFeature.FlexRouting.isOn()) {
-            flexEdge = (FlexTripEdge) Stream
+            flexEdge = (FlexTripEdge)Stream
                 .of(states)
-                .skip(1)
+               	.skip(1) // first state has no backEdge
                 .map(state -> state.backEdge)
                 .filter(edge -> edge instanceof FlexTripEdge)
-                .findFirst()
-                .orElse(null);
+                .findFirst().orElse(null);
+                
             if (flexEdge != null) {
                 leg = new Leg(flexEdge.getTrip());
                 leg.flexibleTrip = true;

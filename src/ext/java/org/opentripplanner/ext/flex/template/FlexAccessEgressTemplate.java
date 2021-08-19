@@ -17,6 +17,7 @@ import org.opentripplanner.routing.vertextype.TransitStopVertex;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -70,6 +71,10 @@ public abstract class FlexAccessEgressTemplate {
     return accessEgress.stop;
   }
 
+  public NearbyStop getAccessEgress() {
+	return this.accessEgress;
+  }
+
   public FlexTrip getFlexTrip() {
     return trip;
   }
@@ -110,9 +115,9 @@ public abstract class FlexAccessEgressTemplate {
     if (transferStop instanceof Stop) {
       TransitStopVertex flexVertex = graph.index.getStopVertexForStop().get(transferStop);
       return Stream.of(getFlexAccessEgress(new ArrayList<>(), flexVertex, (Stop) transferStop));
-    }
-    // transferStop is Location Area/Line
-    else {
+
+    } else {
+      // transferStop is Location Area/Line
       List<FlexAccessEgress> r = getTransfersFromTransferStop(graph)
           .stream()
           .filter(simpleTransfer -> getFinalStop(simpleTransfer) != null)
@@ -134,12 +139,12 @@ public abstract class FlexAccessEgressTemplate {
 
     State state = flexEdge.traverse(accessEgress.state);
     if(state == null) return null;
-  
+
     for (Edge e : transferEdges) {
       state = e.traverse(state);
       if(state == null) return null;
     }
-
+    
     return new FlexAccessEgress(
         stop,
         getFlexTimes(flexEdge, state),

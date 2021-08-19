@@ -9,6 +9,7 @@ import org.opentripplanner.model.SimpleTransfer;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.model.plan.Itinerary;
+import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.routing.algorithm.mapping.GraphPathToItineraryMapper;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.graph.Edge;
@@ -39,15 +40,11 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 	public Itinerary createDirectItinerary(NearbyStop egress, boolean arriveBy, int departureTime,
 			ZonedDateTime departureServiceDate) {
 
-	    LOG.debug("Trip: " + this.getFlexTrip() + 
-	    		" From: " + this.getFlexTrip().getStops().toArray()[this.fromStopIndex] + 
-	    		" To:" + this.getFlexTrip().getStops().toArray()[this.toStopIndex]);
-
 		List<Edge> egressEdges = egress.edges;
 
 		Vertex flexToVertex = egress.state.getVertex();
 		FlexTripEdge flexEdge = getFlexEdge(flexToVertex, egress.stop);
-
+		
 		State state = flexEdge.traverse(accessEgress.state);
 	    if(state == null) return null;
 
@@ -55,50 +52,32 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 			state = e.traverse(state);
 		    if(state == null) return null;
 		}
+	    
+		Itinerary itinerary = GraphPathToItineraryMapper.generateItinerary(new GraphPath(state), Locale.ENGLISH);
 
-		// There's no way to model wait time in a state as returned from edge traversal,
-		// so we need to shift times here so the itinerary object can model the proper start
-		// time of the trip.
-		int[] flexTimes = getFlexTimes(flexEdge, state);
-
-		int preFlexTime = flexTimes[0];
-		int flexTime = flexTimes[1];
-		int postFlexTime = flexTimes[2];
-
-		Integer timeShift = null;
-
+	    int[] flexTimes = getFlexTimes(flexEdge, state);	    
 		if (arriveBy) {
-			int flexWindowEnd = trip.latestArrivalTime(departureTime - postFlexTime, fromStopIndex, toStopIndex);
+			int timeShift = departureTime - flexTimes[1] - flexTimes[0];
 
-			// check pickup/dropoff times against constraints
-			int arrivalTime = departureTime + preFlexTime + flexTime;			
-			if(!trip.isBoardingPossible((StopLocation)trip.getStops().toArray()[fromStopIndex], departureTime)
-				&& !trip.isAlightingPossible((StopLocation)trip.getStops().toArray()[toStopIndex], arrivalTime)) 
-				return null;
-
-			timeShift = flexWindowEnd - flexTime - preFlexTime;
-		} else {
-			int flexWindowStart = trip.earliestDepartureTime(departureTime + preFlexTime, fromStopIndex, toStopIndex);
-
-			// check pickup/dropoff times against constraints
-			int arrivalTime = departureTime + preFlexTime + flexTime;
-			if(!trip.isBoardingPossible((StopLocation)trip.getStops().toArray()[fromStopIndex], departureTime)
-				&& !trip.isAlightingPossible((StopLocation)trip.getStops().toArray()[toStopIndex], arrivalTime)) 
-				return null;
-					
-			timeShift =  flexWindowStart - preFlexTime;
+			ZonedDateTime zdt = departureServiceDate.plusSeconds(timeShift);
+			Calendar c = Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone()));
+			c.setTimeInMillis(zdt.toInstant().toEpochMilli());
+			itinerary.timeShiftToStartAt(c);
 		}
 
-		Itinerary itinerary = GraphPathToItineraryMapper.generateItinerary(new GraphPath(state), Locale.ENGLISH);
+	    // check that we can make this trip re: pickup/dropoff time restrictions
+		long serviceDayInMillis = departureServiceDate.toInstant().toEpochMilli();
+		Leg flexLeg = itinerary.legs.stream().filter(it -> it.flexibleTrip).findFirst().orElse(null);
 		
-		ZonedDateTime zdt = departureServiceDate.plusSeconds(timeShift);
-		Calendar c = Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone()));
-		c.setTimeInMillis(zdt.toInstant().toEpochMilli());
-		itinerary.timeShiftToStartAt(c);
-
+		if(!this.getFlexTrip().isBoardingPossible(accessEgress.stop, (int)(flexLeg.startTime.getTimeInMillis()/1000 - serviceDayInMillis/1000)))
+			return null;
+    	
+		if(!this.getFlexTrip().isAlightingPossible(egress.stop, (int)(flexLeg.endTime.getTimeInMillis()/1000 - serviceDayInMillis/1000)))
+			return null;	    
+    	    
 		return itinerary;
 	}
-
+	  
 	protected List<Edge> getTransferEdges(SimpleTransfer simpleTransfer) {
 		return simpleTransfer.getEdges();
 	}
@@ -121,7 +100,7 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 		int postFlexTime = (int) state.getElapsedTimeSeconds() - preFlexTime - edgeTimeInSeconds;
 		return new int[] { preFlexTime, edgeTimeInSeconds, postFlexTime };
 	}
-	  
+	
 	protected FlexTripEdge getFlexEdge(Vertex flexToVertex, StopLocation transferStop) {
 		return new FlexTripEdge(accessEgress.state.getVertex(), 
 				flexToVertex, 

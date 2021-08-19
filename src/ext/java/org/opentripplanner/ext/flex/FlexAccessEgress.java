@@ -8,8 +8,7 @@ import org.opentripplanner.routing.graph.Edge;
 
 public class FlexAccessEgress {
   public final Stop stop;
-  public final int preFlexTime;
-  public final int postFlexTime;
+  public final int[] flexTimes; // pre, flex, post
   public final int fromStopIndex;
   public final int toStopIndex;
   public final FlexTrip trip;
@@ -17,17 +16,16 @@ public class FlexAccessEgress {
   public final boolean directToStop;
 
   public FlexAccessEgress(
-      Stop stop,
+      Stop stop, // used by AccessEgressAdapter
       int[] flexTimes, // pre, flex, post
       int fromStopIndex,
       int toStopIndex,
       FlexTrip trip,
       State lastState,
-      boolean directToStop
+      boolean directToStop // used by AccessEgressAdapter
   ) {
     this.stop = stop;
-    this.preFlexTime = flexTimes[0];
-    this.postFlexTime = flexTimes[2];
+    this.flexTimes = flexTimes;
     this.fromStopIndex = fromStopIndex;
     this.toStopIndex = toStopIndex;
     this.trip = trip;
@@ -46,26 +44,30 @@ public class FlexAccessEgress {
 	  return this.trip.getSafeTotalTime(((FlexTripEdge)e).flexPath, this.fromStopIndex, this.toStopIndex);
   }
   
+  public State getAccessEgressState() {
+	  return this.lastState;
+  }
+  
   public int earliestDepartureTime(int departureTime) {
-    int requestedTransitDepartureTime = departureTime + preFlexTime;  
+	int requestedTransitDepartureTime = departureTime + flexTimes[0]; 
     int earliestAvailableTransitDepartureTime = trip.earliestDepartureTime(
         requestedTransitDepartureTime,
         fromStopIndex,
         toStopIndex
     );
     if (earliestAvailableTransitDepartureTime == -1) { return -1; }
-    return earliestAvailableTransitDepartureTime - preFlexTime;
+    return earliestAvailableTransitDepartureTime - flexTimes[0]; 
   }
 
   public int latestArrivalTime(int arrivalTime) {
-    int requestedTransitArrivalTime = arrivalTime - postFlexTime;
+    int requestedTransitArrivalTime = arrivalTime - flexTimes[2];
     int latestAvailableTransitArrivalTime = trip.latestArrivalTime(
         requestedTransitArrivalTime,
         fromStopIndex,
         toStopIndex
     );
     if (latestAvailableTransitArrivalTime == -1) { return -1; }
-    return latestAvailableTransitArrivalTime + postFlexTime;
+    return latestAvailableTransitArrivalTime + flexTimes[2];
   }
   
 }

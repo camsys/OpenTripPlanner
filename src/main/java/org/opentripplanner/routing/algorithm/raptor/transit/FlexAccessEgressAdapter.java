@@ -1,13 +1,14 @@
 package org.opentripplanner.routing.algorithm.raptor.transit;
 
 import org.opentripplanner.ext.flex.FlexAccessEgress;
+import org.opentripplanner.transit.raptor.api.transit.RaptorTransfer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * This class is used to adapt the FlexAccessEgress into a time-dependent multi-leg AccessEgress.
  */
-public class FlexAccessEgressAdapter extends AccessEgress {
+public class FlexAccessEgressAdapter extends AccessEgress implements RaptorTransfer {
   
   private static final Logger LOG = LoggerFactory.getLogger(FlexAccessEgressAdapter.class);
 

@@ -47,8 +47,9 @@ public class ScheduledDeviatedTrip extends FlexTrip {
 
   public static boolean isScheduledFlexTrip(List<StopTime> stopTimes) {
     Predicate<StopTime> notStopType = Predicate.not(st -> st.getStop() instanceof Stop);
-    Predicate<StopTime> notContinuousStop = stopTime ->
-        stopTime.getFlexContinuousDropOff() == PICKDROP_NONE && stopTime.getFlexContinuousPickup() == PICKDROP_NONE;
+    Predicate<StopTime> notContinuousStop = stopTime -> 
+    	stopTime.getFlexContinuousDropOff() == PICKDROP_NONE && 
+    	stopTime.getFlexContinuousPickup() == PICKDROP_NONE;
     return stopTimes.stream().anyMatch(notStopType)
         && stopTimes.stream().allMatch(notContinuousStop);
   }
@@ -77,7 +78,6 @@ public class ScheduledDeviatedTrip extends FlexTrip {
       NearbyStop access, FlexServiceDate serviceDate, FlexPathCalculator calculator
   ) {
     List<Integer> fromIndices = getFromIndex(access.stop, null);
-    
     if (fromIndices.isEmpty()) { return Stream.empty(); }
 
     ArrayList<FlexAccessTemplate> res = new ArrayList<>();
@@ -99,7 +99,6 @@ public class ScheduledDeviatedTrip extends FlexTrip {
       NearbyStop egress, FlexServiceDate serviceDate, FlexPathCalculator calculator
   ) {
     List<Integer> toIndices = getToIndex(egress.stop, null);
-
     if (toIndices.isEmpty()) { return Stream.empty(); }
 
     ArrayList<FlexEgressTemplate> res = new ArrayList<>();
@@ -117,20 +116,14 @@ public class ScheduledDeviatedTrip extends FlexTrip {
   }
   
   @Override
-  public int earliestDepartureTime(
-      int departureTime, int fromStopIndex, int toStopIndex
-  ) {
-    int stopDepartureTime = MISSING_VALUE;
+  public int earliestDepartureTime(int departureTime, int fromStopIndex, int toStopIndex) {
+	int stopDepartureTime = MISSING_VALUE;
     for (int i = fromStopIndex; stopDepartureTime == MISSING_VALUE && i >= 0; i--) {
     	stopDepartureTime = stopTimes[i].pickupDropoffWindowStart;
     }
     if(stopDepartureTime == MISSING_VALUE)
     	return -1;
-    
-    // depart time | stop time
-    // 6             2     		=> 6 (wasn't at the stop before 6)
-    // 1             2     		=> 2 (need to wait until 2 before you can leave)
-    return Math.max(departureTime, stopDepartureTime);
+    return stopDepartureTime >= departureTime ? stopDepartureTime : -1;
   }
 
   @Override
@@ -141,11 +134,7 @@ public class ScheduledDeviatedTrip extends FlexTrip {
     }
     if(stopArrivalTime == MISSING_VALUE)
     	return -1;
-
-    // arrival time | stop time
-    // 6		      2     	=> 6 (wasn't at the stop before 6)
-    // 1      		  2     	=> 2 (can wait until end of window (2) to arrive if you want to)
-    return (arrivalTime > stopArrivalTime) ? Math.max(arrivalTime, stopArrivalTime) : Math.min(arrivalTime, stopArrivalTime);
+    return stopArrivalTime <= arrivalTime ? stopArrivalTime : -1;
   }
 
   @Override
@@ -177,12 +166,12 @@ public class ScheduledDeviatedTrip extends FlexTrip {
   }
 
   @Override
-  public boolean isBoardingPossible(StopLocation stop, int time) {
+  public boolean isBoardingPossible(StopLocation stop, Integer time) {
     return !getFromIndex(stop, time).isEmpty();
   }
 
   @Override
-  public boolean isAlightingPossible(StopLocation stop, int time) {
+  public boolean isAlightingPossible(StopLocation stop, Integer time) {
     return !getToIndex(stop, time).isEmpty();
   }
 
@@ -203,10 +192,10 @@ public class ScheduledDeviatedTrip extends FlexTrip {
 
       StopLocation stop = stopTimes[i].stop;
       if (stop instanceof FlexLocationGroup) {
-        if (((FlexLocationGroup) stop).getLocations().contains(stop))
+        if (((FlexLocationGroup) stop).getLocations().contains(accessEgress) )
           r.add(i);
       } else {
-        if (stop.equals(stop))
+        if (stop.equals(accessEgress))
           r.add(i);
       }
     }

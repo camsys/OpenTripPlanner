@@ -11,6 +11,6 @@ import javax.annotation.Nullable;
 public interface FlexPathCalculator {
 
   @Nullable
-  FlexPath calculateFlexPath(Vertex fromv, Vertex tov, StopLocation s1, StopLocation s2, int fromStopIndex, int toStopIndex);
+  FlexPath calculateFlexPath(Vertex fromv, Vertex tov);
 
 }

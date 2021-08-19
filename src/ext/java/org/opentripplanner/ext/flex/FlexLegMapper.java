@@ -5,21 +5,23 @@ import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.model.plan.VertexType;
 import org.opentripplanner.routing.algorithm.mapping.GraphPathToItineraryMapper;
+import org.opentripplanner.routing.graph.Edge;
 
 import java.util.ArrayList;
+import java.util.Set;
 
+// TODO: Should flex be of its own type
 public class FlexLegMapper {
 
-  static public void fixFlexTripLeg(Leg leg, FlexTripEdge flexTripEdge) {
-      leg.from.stopId = flexTripEdge.s1.getId();
-      
-      // TODO: Should flex be of its own type
+  static public void fixFlexTripLeg(Leg leg, FlexTripEdge flexTripEdge) {	  
+	  leg.from.stopId = flexTripEdge.s1.getId();
+		
       leg.from.vertexType = flexTripEdge.s1 instanceof Stop ? VertexType.TRANSIT : VertexType.NORMAL;
       leg.from.stopIndex = flexTripEdge.flexTemplate.fromStopIndex;
       leg.to.stopId = flexTripEdge.s2.getId();
       leg.to.vertexType = flexTripEdge.s2 instanceof Stop ? VertexType.TRANSIT : VertexType.NORMAL;
       leg.to.stopIndex = flexTripEdge.flexTemplate.toStopIndex;
-
+            
       leg.intermediateStops = new ArrayList<>();
       leg.distanceMeters = flexTripEdge.getDistanceMeters();
 
@@ -33,4 +35,5 @@ public class FlexLegMapper {
       leg.dropOffBookingInfo = flexTripEdge.getFlexTrip().getDropOffBookingInfo(leg.from.stopIndex);
       leg.pickupBookingInfo = flexTripEdge.getFlexTrip().getPickupBookingInfo(leg.from.stopIndex);
   }
+
 }
