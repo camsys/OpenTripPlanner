@@ -99,10 +99,10 @@ public class FlexRouter {
     calculateFlexAccessTemplates();
     calculateFlexEgressTemplates();
 
-    LOG.info("Direct Routing - Accesses: " + this.flexAccessTemplates.stream()
+    LOG.debug("Direct Routing - Accesses: " + this.flexAccessTemplates.stream()
     	.map(e -> e.getAccessEgressStop().getId() + "->" + e.getTransferStop().getId() + "\n")
     	.distinct().collect(Collectors.toList()));
-    LOG.info("Direct Routing - Egresses: " + this.flexEgressTemplates.stream()
+    LOG.debug("Direct Routing - Egresses: " + this.flexEgressTemplates.stream()
     	.map(e -> e.getAccessEgressStop().getId() + "->" + e.getTransferStop().getId() + "\n")
     	.distinct().collect(Collectors.toList()));
 

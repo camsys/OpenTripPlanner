@@ -57,12 +57,6 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 
 	    int[] flexTimes = getFlexTimes(flexEdge, state);	    
 		if (arriveBy) {
-			int flexWindowEnd = trip.latestArrivalTime(departureTime - flexTimes[2], fromStopIndex, toStopIndex);
-			if (flexWindowEnd == -1) {
-				flexWindowEnd = departureTime;
-				//return null;
-			}
-				
 			int timeShift = departureTime - flexTimes[1] - flexTimes[0];
 
 			ZonedDateTime zdt = departureServiceDate.plusSeconds(timeShift);
