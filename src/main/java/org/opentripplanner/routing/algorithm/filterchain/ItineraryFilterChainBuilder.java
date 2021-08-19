@@ -249,7 +249,7 @@ public class ItineraryFilterChainBuilder {
         }
 
         if(flexFilter) {
-            filters.add(new FlexFilter(requestTime));
+            filters.add(new FlexFilter());
         }
 
         // Apply all absolute filters AFTER the groupBy filters. Absolute filters are filters that

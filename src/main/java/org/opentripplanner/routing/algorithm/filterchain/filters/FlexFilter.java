@@ -15,13 +15,7 @@ import java.util.stream.Collectors;
 
 
 public class FlexFilter implements ItineraryFilter {
-
-  private Date requestTime;
 	
-  public FlexFilter(Date requestTime) {
-	  this.requestTime = requestTime;
-  }
-
   @Override
   public String name() {
     return "flex-filter";
@@ -29,8 +23,54 @@ public class FlexFilter implements ItineraryFilter {
 
   @Override
   public List<Itinerary> filter(List<Itinerary> itineraries) {
-	  return itineraries;
-  
+	  
+	  Set<Itinerary> newList = new HashSet<>();
+	  
+	  HashMap<String, Itinerary> itinerariesByRoutePath = new HashMap<>();
+	  for(Itinerary itin : itineraries) {
+		  String routePathKey = String.join(",",itin.legs.stream()
+				  .map(it -> it.getRoute() != null ? it.getRoute().getId().toString() : null)
+				  .filter(it -> it != null)
+				  .collect(Collectors.toList())
+				  .toArray(new String[] {}));
+				  				  
+		  Leg flexLeg = itin.legs.stream()
+				  .filter(it -> it.flexibleTrip == true)
+				  .findFirst()
+				  .orElse(null);
+	
+		  // no flex legs, so just pass through
+		  if(flexLeg == null) {
+			  newList.add(itin);
+			  continue;
+		  }
+
+		  // put this one in the map if it's the only one 
+		  Itinerary existingItin = itinerariesByRoutePath.get(routePathKey);
+		  
+		  if(existingItin == null) {
+			  itinerariesByRoutePath.put(routePathKey, itin);
+			  continue;
+		  }
+		  
+		  // ...or if it leaves before what's there
+		  Leg existingItinFlexLeg = existingItin.legs.stream()
+				  .filter(it -> it.flexibleTrip == true)
+				  .findFirst()
+				  .orElse(null);
+
+		  if(flexLeg.startTime.before(existingItinFlexLeg.startTime)) {
+			  itinerariesByRoutePath.put(routePathKey, itin);
+		  	  continue;
+	  	  }
+	  }
+	  
+	  newList.addAll(itinerariesByRoutePath.values());
+	  
+	  // remove walking all the way options
+      return newList
+              .stream().filter(it -> !it.isWalkingAllTheWay())
+              .collect(Collectors.toList());	 
   }
 
   @Override
