@@ -671,7 +671,7 @@ public class GTFSPatternHopFactory {
             for (int i = 0; i < stopTimes.size() - 1; ++i) {
                 st0 = stopTimes.get(i);
                 StopTime st1 = stopTimes.get(i + 1);
-                LineString geometry = createSimpleGeometry(st0.getStop(), st1.getStop());
+                LineString geometry = createSimpleGeometry((Stop)st0.getStop(), (Stop)st1.getStop());
                 geoms[i] = geometry;
             }
             return geoms;
@@ -685,7 +685,7 @@ public class GTFSPatternHopFactory {
         List<List<IndexedLineSegment>> possibleSegmentsForStop = new ArrayList<List<IndexedLineSegment>>();
         int minSegmentIndex = 0;
         for (int i = 0; i < stopTimes.size() ; ++i) {
-            Stop stop = stopTimes.get(i).getStop();
+            Stop stop = (Stop)stopTimes.get(i).getStop();
             Coordinate coord = new Coordinate(stop.getLon(), stop.getLat());
             List<IndexedLineSegment> stopSegments = new ArrayList<IndexedLineSegment>();
             double bestDistance = Double.MAX_VALUE;
@@ -743,7 +743,7 @@ public class GTFSPatternHopFactory {
             for (int i = 0; i < stopTimes.size() - 1; ++i) {
                 st0 = stopTimes.get(i);
                 StopTime st1 = stopTimes.get(i + 1);
-                LineString geometry = createSimpleGeometry(st0.getStop(), st1.getStop());
+                LineString geometry = createSimpleGeometry((Stop)st0.getStop(), (Stop)st1.getStop());
                 geoms[i] = geometry;
                 //this warning is not strictly correct, but will do
                 LOG.warn(graph.addBuilderAnnotation(new BogusShapeGeometryCaught(shapeId, st0, st1)));
@@ -814,7 +814,7 @@ public class GTFSPatternHopFactory {
         }
 
         StopTime st = stopTimes.get(index);
-        Stop stop = st.getStop();
+        Stop stop = (Stop)st.getStop();
         Coordinate stopCoord = new Coordinate(stop.getLon(), stop.getLat());
 
         for (IndexedLineSegment segment : possibleSegmentsForStop.get(index)) {
@@ -915,8 +915,8 @@ public class GTFSPatternHopFactory {
                 }
             }
             double hopDistance = SphericalDistanceLibrary.fastDistance(
-                   st0.getStop().getLat(), st0.getStop().getLon(),
-                   st1.getStop().getLat(), st1.getStop().getLon());
+                   ((Stop)st0.getStop()).getLat(), ((Stop)st0.getStop()).getLon(),
+                   ((Stop)st1.getStop()).getLat(), ((Stop)st1.getStop()).getLon());
             double hopSpeed = hopDistance/runningTime;
             /* zero-distance hops are probably not harmful, though they could be better 
              * represented as dwell times
@@ -1149,7 +1149,7 @@ public class GTFSPatternHopFactory {
             if (equals(startIndex, endIndex)) {
                 //bogus shape_dist_traveled 
                 graph.addBuilderAnnotation(new BogusShapeDistanceTraveled(st1));
-                return createSimpleGeometry(st0.getStop(), st1.getStop());
+                return createSimpleGeometry((Stop)st0.getStop(), (Stop)st1.getStop());
             }
             LineString line = getLineStringForShapeId(shapeId);
             LocationIndexedLine lol = new LocationIndexedLine(line);
@@ -1222,10 +1222,10 @@ public class GTFSPatternHopFactory {
                     .getCoordinates(), 2);
             geometry = _geometryFactory.createLineString(sequence);
             
-            if (!isValid(geometry, st0.getStop(), st1.getStop())) {
+            if (!isValid(geometry, (Stop)st0.getStop(), (Stop)st1.getStop())) {
                 LOG.warn(graph.addBuilderAnnotation(new BogusShapeGeometryCaught(shapeId, st0, st1)));
                 //fall back to trivial geometry
-                geometry = createSimpleGeometry(st0.getStop(), st1.getStop());
+                geometry = createSimpleGeometry((Stop)st0.getStop(), (Stop)st1.getStop());
             }
             _geometriesByShapeSegmentKey.put(key, (LineString) geometry);
         }

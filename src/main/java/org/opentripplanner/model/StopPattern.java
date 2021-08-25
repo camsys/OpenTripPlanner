@@ -101,7 +101,7 @@ public class StopPattern implements Serializable {
         if (size == 0) return;
         for (int i = 0; i < size; ++i) {
             StopTime stopTime = stopTimes.get(i);
-            stops[i] = stopTime.getStop();
+            stops[i] = (Stop) stopTime.getStop();
             // should these just be booleans? anything but 1 means pick/drop is allowed.
             // pick/drop messages could be stored in individual trips
             pickups[i] = stopTime.getPickupType();
