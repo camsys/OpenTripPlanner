@@ -65,17 +65,4 @@ public class RoutingRequestTest {
         assertTrue(req.hasIntermediatePlaces());
     }
 
-    @Test
-    public void testPreferencesPenaltyForRoute() {
-        AgencyAndId agencyAndId = new AgencyAndId();
-        Agency agency = new Agency();
-        Route route = new Route();
-        Trip trip = new Trip();
-        RoutingRequest routingRequest = new RoutingRequest();
-
-        trip.setRoute(route);
-        route.setId(agencyAndId);
-        route.setAgency(agency);
-        assertEquals(routingRequest.useUnpreferredRoutesPenalty, routingRequest.preferencesPenaltyForRoute(trip.getRoute(), null));
-    }
 }
