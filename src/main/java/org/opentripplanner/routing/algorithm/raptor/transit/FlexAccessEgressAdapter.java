@@ -23,10 +23,6 @@ public class FlexAccessEgressAdapter extends AccessEgress implements RaptorTrans
     );
 
     this.flexAccessEgress = flexAccessEgress;
-    
-    LOG.debug("RAPTOR Routing - Trip: " + this.flexAccessEgress.trip + 
-    		" From:" + this.flexAccessEgress.trip.getStops().toArray()[this.flexAccessEgress.fromStopIndex] + 
-    		" To:" + this.flexAccessEgress.trip.getStops().toArray()[this.flexAccessEgress.toStopIndex]);
   }
 
   @Override

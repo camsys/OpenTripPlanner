@@ -94,6 +94,10 @@ public class ScheduledDeviatedTrip extends FlexTrip {
     return res.stream();
   }
 
+  public ScheduledDeviatedStopTime getStopTime(int i) {
+	  return this.stopTimes[i];
+  }
+  
   @Override
   public Stream<FlexEgressTemplate> getFlexEgressTemplates(
       NearbyStop egress, FlexServiceDate serviceDate, FlexPathCalculator calculator
@@ -224,44 +228,46 @@ public class ScheduledDeviatedTrip extends FlexTrip {
   }
 
   @Override
-  public int getSafeTotalTime(FlexPath streetPath, int fromStopIndex, int toStopIndex) {
+  public float getSafeTotalTime(FlexPath streetPath, int fromStopIndex, int toStopIndex) {
 		ScheduledDeviatedStopTime fromStopTime = this.stopTimes[fromStopIndex];
 		ScheduledDeviatedStopTime toStopTime = this.stopTimes[toStopIndex];
 		
 		if(fromStopTime.stop.isArea() || toStopTime.stop.isArea()) {
-			int safeFactor = Math.max(fromStopTime.safeFactor, toStopTime.safeFactor);
-			int safeOffset = Math.max(fromStopTime.safeOffset, toStopTime.safeOffset);
+			double safeFactor = fromStopTime.safeFactor;
+			double safeOffset =fromStopTime.safeOffset;
 			if(safeFactor != MISSING_VALUE && safeOffset != MISSING_VALUE)
-				return (safeFactor * streetPath.durationSeconds) + safeOffset;
+				return (float)(safeFactor * streetPath.durationSeconds) + (float)(safeOffset * 60);
 		}
 		return streetPath.durationSeconds;					
   }
 
   @Override
-  public int getMeanTotalTime(FlexPath streetPath, int fromStopIndex, int toStopIndex) {
+  public float getMeanTotalTime(FlexPath streetPath, int fromStopIndex, int toStopIndex) {
 		ScheduledDeviatedStopTime fromStopTime = this.stopTimes[fromStopIndex];
 		ScheduledDeviatedStopTime toStopTime = this.stopTimes[toStopIndex];
 		
 		if(fromStopTime.stop.isArea() || toStopTime.stop.isArea()) {
-			int meanFactor = Math.max(fromStopTime.meanFactor, toStopTime.meanFactor);
-			int meanOffset = Math.max(fromStopTime.meanOffset, toStopTime.meanOffset);
+			double meanFactor = fromStopTime.meanFactor;
+			double meanOffset = fromStopTime.meanOffset;
 			if(meanFactor != MISSING_VALUE && meanOffset != MISSING_VALUE)
-				return (meanFactor * streetPath.durationSeconds) + meanOffset;
+				return (float)(meanFactor * streetPath.durationSeconds) +  (float)(meanOffset * 60);
 		}
 		return streetPath.durationSeconds;
   }
 
-  private static class ScheduledDeviatedStopTime implements Serializable {
+  public static class ScheduledDeviatedStopTime implements Serializable {
 	private static final long serialVersionUID = 7176753358641800732L;
 	private final StopLocation stop;
-    private final int pickupDropoffWindowStart;
-    private final int pickupDropoffWindowEnd;
-    private final int pickupType;
-    private final int dropOffType;
-    private final int safeFactor;
-    private final int safeOffset;
-    private final int meanFactor;
-    private final int meanOffset;
+    public final int pickupDropoffWindowStart;
+    public final int pickupDropoffWindowEnd;
+    public final int pickupType;
+    public final int dropOffType;
+    public final int arrivalTime;
+    public final int departureTime;
+    public final double safeFactor;
+    public final double safeOffset;
+    public final double meanFactor;
+    public final double meanOffset;
     
     private ScheduledDeviatedStopTime(StopTime st) {
       this.stop = st.getStop();
@@ -272,13 +278,14 @@ public class ScheduledDeviatedTrip extends FlexTrip {
       this.meanFactor = st.getMeanDurationFactor();
       this.meanOffset = st.getMeanDurationOffset();
 
-      this.pickupDropoffWindowEnd = st.getFlexWindowEnd() != MISSING_VALUE ? 
-    		  st.getFlexWindowEnd() : st.getDepartureTime() != MISSING_VALUE 
-    		  ? st.getDepartureTime() : null;
+      this.pickupDropoffWindowEnd = st.getFlexWindowEnd();
+      this.pickupDropoffWindowStart = st.getFlexWindowStart();
       
-      this.pickupDropoffWindowStart = st.getFlexWindowStart() != MISSING_VALUE ? 
-    		  st.getFlexWindowStart() : st.getArrivalTime() != MISSING_VALUE 
-    		  ? st.getArrivalTime() : null;
+      this.arrivalTime = st.getArrivalTime() != MISSING_VALUE ? 
+    		  st.getArrivalTime() : st.getFlexWindowStart();
+      
+      this.departureTime = st.getDepartureTime() != MISSING_VALUE ? 
+    		  st.getDepartureTime() : st.getFlexWindowEnd();
 
       // TODO: Store the window for a stop, and allow the user to have an "unguaranteed"
       // pickup/dropoff between the start and end of the window

@@ -42,7 +42,7 @@ public class FlexEgressTemplate extends FlexAccessEgressTemplate {
 
 	protected int[] getFlexTimes(FlexTripEdge flexEdge, State state) {
 		int postFlexTime = (int) accessEgress.state.getElapsedTimeSeconds();
-		int edgeTimeInSeconds = flexEdge.getTripTimeInSeconds();
+		int edgeTimeInSeconds = (int)flexEdge.getTripTimeInSeconds();
 		int preFlexTime = (int) state.getElapsedTimeSeconds() - postFlexTime - edgeTimeInSeconds;
 		return new int[] { preFlexTime, edgeTimeInSeconds, postFlexTime };
 	}
@@ -52,6 +52,8 @@ public class FlexEgressTemplate extends FlexAccessEgressTemplate {
 				accessEgress.state.getVertex(), 
 				transferStop, 
 				accessEgress.stop,
+				this.fromStopIndex,
+				this.toStopIndex,
 				this, 
 				calculator);
 	}

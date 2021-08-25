@@ -227,29 +227,29 @@ public class UnscheduledTrip extends FlexTrip {
   }
 
   @Override
-  public int getSafeTotalTime(FlexPath streetPath, int fromStopIndex, int toStopIndex) {
+  public float getSafeTotalTime(FlexPath streetPath, int fromStopIndex, int toStopIndex) {
 	    UnscheduledStopTime fromStopTime = this.stopTimes[fromStopIndex];
 	    UnscheduledStopTime toStopTime = this.stopTimes[toStopIndex];
 		
 		if(fromStopTime.stop.isArea() || toStopTime.stop.isArea()) {
-			int safeFactor = Math.max(fromStopTime.safeFactor, toStopTime.safeFactor);
-			int safeOffset = Math.max(fromStopTime.safeOffset, toStopTime.safeOffset);
+			double safeFactor = fromStopTime.safeFactor;
+			double safeOffset = fromStopTime.safeOffset;
 			if(safeFactor != MISSING_VALUE && safeOffset != MISSING_VALUE)
-				return (safeFactor * streetPath.durationSeconds) + safeOffset;
+				return (float)(safeFactor * streetPath.durationSeconds) + (float)(safeOffset * 60);
 		}
 		return streetPath.durationSeconds;					
   }
 
   @Override
-  public int getMeanTotalTime(FlexPath streetPath, int fromStopIndex, int toStopIndex) {
+  public float getMeanTotalTime(FlexPath streetPath, int fromStopIndex, int toStopIndex) {
 	    UnscheduledStopTime fromStopTime = this.stopTimes[fromStopIndex];
 		UnscheduledStopTime toStopTime = this.stopTimes[toStopIndex];
 		
 		if(fromStopTime.stop.isArea() || toStopTime.stop.isArea()) {
-			int meanFactor = Math.max(fromStopTime.meanFactor, toStopTime.meanFactor);
-			int meanOffset = Math.max(fromStopTime.meanOffset, toStopTime.meanOffset);
+			double meanFactor = fromStopTime.meanFactor;
+			double meanOffset = fromStopTime.meanOffset;
 			if(meanFactor != MISSING_VALUE && meanOffset != MISSING_VALUE)
-				return (meanFactor * streetPath.durationSeconds) + meanOffset;
+				return (float)(meanFactor * streetPath.durationSeconds) + (float)(meanOffset * 60);
 		}
 		return streetPath.durationSeconds;
   }
@@ -259,10 +259,10 @@ public class UnscheduledTrip extends FlexTrip {
 
 	private final StopLocation stop;
 
-    private final int safeFactor;
-    private final int safeOffset;
-    private final int meanFactor;
-    private final int meanOffset;
+    private final double safeFactor;
+    private final double safeOffset;
+    private final double meanFactor;
+    private final double meanOffset;
 
     private final int flexWindowStart;
     private final int flexWindowEnd;

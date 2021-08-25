@@ -42,11 +42,11 @@ public abstract class FlexTrip extends TransitEntity {
 
   // The 95% CI for travel time on this trip. Use this for connections and other things that 
   // need more certainty about the arrival/departure time.
-  public abstract int getSafeTotalTime(FlexPath streetPath, int fromStopIndex, int toStopIndex);
+  public abstract float getSafeTotalTime(FlexPath streetPath, int fromStopIndex, int toStopIndex);
 
   // The "usual" travel time on this trip. Use this for display and other things that 
   // are supposed to be more the norm vs. the "worst case" scenario.
-  public abstract int getMeanTotalTime(FlexPath streetPath, int fromStopIndex, int toStopIndex);
+  public abstract float getMeanTotalTime(FlexPath streetPath, int fromStopIndex, int toStopIndex);
 
   // Note: This method returns seconds since midnight. departureTime is also seconds since midnight/service date
   public abstract int earliestDepartureTime(int departureTime, int fromStopIndex, int toStopIndex);

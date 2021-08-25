@@ -99,13 +99,6 @@ public class FlexRouter {
     calculateFlexAccessTemplates();
     calculateFlexEgressTemplates();
 
-    LOG.debug("Direct Routing - Accesses: " + this.flexAccessTemplates.stream()
-    	.map(e -> e.getAccessEgressStop().getId() + "->" + e.getTransferStop().getId() + "\n")
-    	.distinct().collect(Collectors.toList()));
-    LOG.debug("Direct Routing - Egresses: " + this.flexEgressTemplates.stream()
-    	.map(e -> e.getAccessEgressStop().getId() + "->" + e.getTransferStop().getId() + "\n")
-    	.distinct().collect(Collectors.toList()));
-
     Multimap<StopLocation, NearbyStop> streetEgressByStop = HashMultimap.create();
     streetEgresses.forEach(it -> streetEgressByStop.put(it.stop, it));
 
@@ -114,22 +107,6 @@ public class FlexRouter {
     for (FlexAccessTemplate template : this.flexAccessTemplates) {
       StopLocation transferStop = template.getTransferStop();
 
-      LOG.debug("Direct Routing - Trip: " + template.getFlexTrip() + 
-    		" Access: " + template.getAccessEgressStop().getId() + 
-    		" Transfer: " + template.getTransferStop() +
-      		" From:" + template.getFlexTrip().getStops().toArray()[template.fromStopIndex] + 
-      		" To:" + template.getFlexTrip().getStops().toArray()[template.toStopIndex]);
-      		
-      if(LOG.isDebugEnabled()) {
-	      for(FlexEgressTemplate egress : this.flexEgressTemplates) {
-		      LOG.debug("Direct Routing - Trip: " + egress.getFlexTrip() + 
-		    		" Egress: " + egress.getAccessEgressStop().getId() + 
-		    		" Transfer: " + egress.getTransferStop() +       		
-		    		" From:" + egress.getFlexTrip().getStops().toArray()[egress.fromStopIndex] + 
-		      		" To:" + egress.getFlexTrip().getStops().toArray()[egress.toStopIndex]);
-	      }
-      }
-      
       if (this.flexEgressTemplates.stream().anyMatch(t -> t.getAccessEgressStop().equals(transferStop))) {
         for(NearbyStop egress : streetEgressByStop.get(transferStop)) {
 

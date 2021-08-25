@@ -26,7 +26,7 @@ public class FlexTripEdge extends Edge {
 
   @SuppressWarnings("serial")
   public FlexTripEdge(
-      Vertex v1, Vertex v2, StopLocation s1, StopLocation s2,
+      Vertex v1, Vertex v2, StopLocation s1, StopLocation s2, int fromIndex, int toIndex,
       FlexAccessEgressTemplate flexTemplate, FlexPathCalculator calculator
   ) {
 	  
@@ -38,7 +38,7 @@ public class FlexTripEdge extends Edge {
     this.flexTemplate = flexTemplate;
     this.fromv = v1;
     this.tov = v2;
-    this.flexPath = calculator.calculateFlexPath(fromv, tov);
+    this.flexPath = calculator.calculateFlexPath(fromv, tov, fromIndex, toIndex, flexTemplate.getFlexTrip());
   }
 
   @Override
@@ -48,7 +48,7 @@ public class FlexTripEdge extends Edge {
 	  
 	StateEditor editor = s0.edit(this);
     editor.setBackMode(TraverseMode.BUS);
-    editor.incrementTimeInSeconds(getTripTimeInSeconds());
+    editor.incrementTimeInSeconds((int)getTripTimeInSeconds());
     editor.incrementWeight(getTripTimeInSeconds()/100);
     
     editor.resetEnteredNoThroughTrafficArea();
@@ -58,7 +58,7 @@ public class FlexTripEdge extends Edge {
 
   // This method uses the "mean" time from Flex v2 to best reflect the typical travel 
   // scenario in user-facing interfaces vs. using the worst case scenario re: trip length
-  public int getTripTimeInSeconds() {
+  public float getTripTimeInSeconds() {
     return getFlexTrip().getMeanTotalTime(flexPath, flexTemplate.fromStopIndex, 
     		flexTemplate.toStopIndex);
   }

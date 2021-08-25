@@ -41,7 +41,7 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 			ZonedDateTime departureServiceDate) {
 
 		List<Edge> egressEdges = egress.edges;
-
+				  
 		Vertex flexToVertex = egress.state.getVertex();
 		FlexTripEdge flexEdge = getFlexEdge(flexToVertex, egress.stop);
 		
@@ -96,7 +96,7 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 
 	protected int[] getFlexTimes(FlexTripEdge flexEdge, State state) {
 		int preFlexTime = (int) accessEgress.state.getElapsedTimeSeconds();
-		int edgeTimeInSeconds = flexEdge.getTripTimeInSeconds();
+		int edgeTimeInSeconds = (int)flexEdge.getTripTimeInSeconds();
 		int postFlexTime = (int) state.getElapsedTimeSeconds() - preFlexTime - edgeTimeInSeconds;
 		return new int[] { preFlexTime, edgeTimeInSeconds, postFlexTime };
 	}
@@ -106,6 +106,8 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 				flexToVertex, 
 				accessEgress.stop,
 				transferStop,
+				this.fromStopIndex,
+				this.toStopIndex,
 				this, 
 				calculator);
 	}

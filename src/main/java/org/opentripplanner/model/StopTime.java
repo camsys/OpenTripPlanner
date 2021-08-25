@@ -51,13 +51,13 @@ public final class StopTime implements Comparable<StopTime> {
     // Disabled by default
     private int flexContinuousDropOff = MISSING_VALUE;
 
-    private int meanDurationFactor = MISSING_VALUE;
+    private double meanDurationFactor = MISSING_VALUE;
 
-    private int meanDurationOffset = MISSING_VALUE;
+    private double meanDurationOffset = MISSING_VALUE;
 
-    private int safeDurationFactor = MISSING_VALUE;
+    private double safeDurationFactor = MISSING_VALUE;
 
-    private int safeDurationOffset = MISSING_VALUE;
+    private double safeDurationOffset = MISSING_VALUE;
     
     private BookingInfo bookingInfo;
     private BookingInfo dropOffBookingInfo;
@@ -294,35 +294,35 @@ public final class StopTime implements Comparable<StopTime> {
         return this.getStopSequence() - o.getStopSequence();
     }
 
-	public int getMeanDurationFactor() {
+	public double getMeanDurationFactor() {
 		return this.meanDurationFactor;
 	}
 
-	public void setMeanDurationFactor(int meanDurationFactor) {
+	public void setMeanDurationFactor(double meanDurationFactor) {
 		this.meanDurationFactor = meanDurationFactor;
 	}
 
-	public int getMeanDurationOffset() {
+	public double getMeanDurationOffset() {
 		return this.meanDurationOffset;
 	}
 
-	public void setMeanDurationOffset(int meanDurationOffset) {
+	public void setMeanDurationOffset(double meanDurationOffset) {
 		this.meanDurationOffset = meanDurationOffset;
 	}
 
-	public int getSafeDurationFactor() {
+	public double getSafeDurationFactor() {
 		return this.safeDurationFactor;
 	}
 
-	public void setSafeDurationFactor(int safeDurationFactor) {
+	public void setSafeDurationFactor(double safeDurationFactor) {
 		this.safeDurationFactor = safeDurationFactor;
 	}
 
-	public int getSafeDurationOffset() {
+	public double getSafeDurationOffset() {
 		return this.safeDurationOffset;
 	}
 
-	public void setSafeDurationOffset(int safeDurationOffset) {
+	public void setSafeDurationOffset(double safeDurationOffset) {
 		this.safeDurationOffset = safeDurationOffset;
 	}
 

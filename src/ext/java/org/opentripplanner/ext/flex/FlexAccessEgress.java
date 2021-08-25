@@ -33,7 +33,7 @@ public class FlexAccessEgress {
     this.directToStop = directToStop;
   }
 
-  public int getSafeTotalTime() {
+  public double getSafeTotalTime() {
 	  State s = this.lastState;
 	  Edge e = this.lastState.backEdge;
 	  while(s != null && !(e instanceof FlexTripEdge)) {
