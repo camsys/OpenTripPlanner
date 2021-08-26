@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.stream.Collectors;
 
 import org.onebusaway.gtfs.model.Agency;
@@ -25,6 +26,7 @@ import org.opentripplanner.index.model.TripTimeShort;
 import org.opentripplanner.routing.alertpatch.Alert;
 import org.opentripplanner.routing.alertpatch.AlertPatch;
 import org.opentripplanner.routing.edgetype.PathwayEdge;
+import org.opentripplanner.routing.edgetype.TripPattern;
 import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.vertextype.TransitStationStop;
@@ -159,18 +161,20 @@ public class GraphQLRouteDestinationGroupStopTimeImpl implements GraphQLDataFetc
 
 			TripTimeShort e = environment.getSource();
 			
-			Trip t = getGraphIndex(environment).getTripForId(e.tripId);
+			Trip t = getGraphIndex(environment).getTripForId(e.tripId);			
 			if(t == null)
 				throw new Exception("Trip " + e.tripId + " not found.");
-			Stop s = getGraphIndex(environment).getTripPatternForTripId(t.getId()).getStops().get(e.stopIndex);
+			
+			TripPattern pattern = getGraphIndex(environment).getTripPatternForTripId(t.getId());			
+			Stop s = pattern.getStops().get(e.stopIndex);
 			if(s == null)
 				throw new Exception("Stops on pattern " + t + " not found (index=" + e.stopIndex + ")");
-
-			localContext.put("stop", s);
-			localContext.put("trip", t);
+			
+			localContext.put("stop", s); // boarding stop
+			localContext.put("trip", t); // trip
 			
 			List<Stop> data = 
-					getGraphIndex(environment).getTripPatternForTripId(t.getId())
+					pattern
 	    			.getStops()
 	    			.stream()
 					.collect(Collectors.toList());
