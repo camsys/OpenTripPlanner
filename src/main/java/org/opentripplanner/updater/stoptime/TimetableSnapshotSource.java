@@ -19,6 +19,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.google.transit.realtime.GtfsRealtimeNYCT;
 import com.google.transit.realtime.GtfsRealtimeOneBusAway;
+
 import org.eclipse.jetty.util.StringUtil;
 import org.onebusaway.gtfs.model.Agency;
 import org.onebusaway.gtfs.model.AgencyAndId;
@@ -50,6 +51,7 @@ import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
  * a specific point in time.
  */
 public class TimetableSnapshotSource {
+	
     private static final Logger LOG = LoggerFactory.getLogger(TimetableSnapshotSource.class);
 
     /**
@@ -367,7 +369,7 @@ public class TimetableSnapshotSource {
         final TripPattern pattern = getPatternForTripId(feedId, tripId);
 
         if (pattern == null) {
-            LOG.trace("No pattern found for tripId {} with feedId {}, skipping TripUpdate.", tripId, feedId);
+            LOG.warn("No pattern found for tripId {} with feedId {}, skipping TripUpdate.", tripId, feedId);
             return false;
         }
 
@@ -425,27 +427,28 @@ public class TimetableSnapshotSource {
         if (trip != null) {
             // TODO: should we support this and add a new instantiation of this trip (making it
             // frequency based)?
-            LOG.trace("Graph already contains trip id of ADDED trip, skipping.");
+            LOG.warn("Graph already contains trip id of ADDED trip, skipping.");
             return false;
         }
 
         // Check whether a start date exists
         if (!tripDescriptor.hasStartDate()) {
             // TODO: should we support this and apply update to all days?
-            LOG.trace("ADDED trip doesn't have a start date in TripDescriptor, skipping.");
+            LOG.warn("ADDED trip {} doesn't have a start date in TripDescriptor, skipping.", tripId);
             return false;
         }
 
         // Check whether at least two stop updates exist
         if (tripUpdate.getStopTimeUpdateCount() < 2) {
-            LOG.trace("ADDED trip has less then two stops, skipping.");
+            LOG.warn("ADDED trip {} has less then two stops, skipping.", tripId);
             return false;
         }
 
         // Check whether all stop times are available and all stops exist
         final List<Stop> stops = checkNewStopTimeUpdatesAndFindStops(feedId, tripUpdate);
         if (stops == null) {
-            return false;
+            LOG.warn("ADDED trip {} has stops that do not exist or cannot be parsed (see > prefixed messages above), skipping.", tripId);
+        	return false;
         }
 
         //
@@ -465,7 +468,10 @@ public class TimetableSnapshotSource {
      * @return stops when stop time updates are correct; null if there are errors
      */
     private List<Stop> checkNewStopTimeUpdatesAndFindStops(final String feedId, final TripUpdate tripUpdate) {
-        Integer previousStopSequence = null;
+        final TripDescriptor tripDescriptor = tripUpdate.getTrip();
+        final String tripId = tripDescriptor.getTripId();
+
+    	Integer previousStopSequence = null;
         Long previousTime = null;
         final List<StopTimeUpdate> stopTimeUpdates = tripUpdate.getStopTimeUpdateList();
         final List<Stop> stops = new ArrayList<>(stopTimeUpdates.size());
@@ -481,13 +487,13 @@ public class TimetableSnapshotSource {
 
                 // Check non-negative
                 if (stopSequence < 0) {
-                    LOG.trace("Trip update contains negative stop sequence, skipping.");
+                    LOG.warn("> Trip update for {} contains negative stop sequence, skipping.", tripId);
                     return null;
                 }
 
                 // Check whether sequence is increasing
                 if (previousStopSequence != null && previousStopSequence > stopSequence) {
-                    LOG.trace("Trip update contains decreasing stop sequence, skipping.");
+                    LOG.warn("> Trip update for {} contains decreasing stop sequence, skipping.", tripId);
                     return null;
                 }
                 previousStopSequence = stopSequence;
@@ -506,12 +512,12 @@ public class TimetableSnapshotSource {
                     // Set a null value for a skipped stop
                     stops.add(null);
                 } else {
-                    LOG.trace("Graph doesn't contain stop id \"{}\" of trip update, skipping.",
-                            stopTimeUpdate.getStopId());
+                    LOG.warn("> Graph doesn't contain stop id \"{}\" of trip update for {}, skipping.",
+                            stopTimeUpdate.getStopId(), tripId);
                     return null;
                 }
             } else {
-                LOG.trace("Trip update misses some stop ids, skipping.");
+                LOG.warn("> Trip update for {} misses some stop ids, skipping.", tripId);
                 return null;
             }
 
@@ -522,7 +528,7 @@ public class TimetableSnapshotSource {
                     // Check for increasing time
                     final Long time = stopTimeUpdate.getArrival().getTime();
                     if (previousTime != null && previousTime > time) {
-                        LOG.trace("Trip update contains decreasing times, skipping.");
+                        LOG.warn("> Trip update for {} contains decreasing times (index={}), skipping.", tripId, index);
                         return null;
                     }
                     previousTime = time;
@@ -534,7 +540,7 @@ public class TimetableSnapshotSource {
                         // Determine whether earlier stop is skipped
                         final boolean earlierSkippedStop = isStopSkipped(earlierStopTimeUpdate);
                         if (!earlierSkippedStop) {
-                            LOG.trace("Trip update misses arrival time, skipping.");
+                            LOG.warn("> Trip update for {} misses arrival time, skipping.", tripId);
                             return null;
                         }
                     }
@@ -545,7 +551,7 @@ public class TimetableSnapshotSource {
                     // Check for increasing time
                     final Long time = stopTimeUpdate.getDeparture().getTime();
                     if (previousTime != null && previousTime > time) {
-                        LOG.trace("Trip update contains decreasing times, skipping.");
+                        LOG.warn("> Trip update for {} contains decreasing times (index={}), skipping.", tripId, index);
                         return null;
                     }
                     previousTime = time;
@@ -557,7 +563,7 @@ public class TimetableSnapshotSource {
                         // Determine whether later stop is skipped
                         final boolean laterSkippedStop = isStopSkipped(laterStopTimeUpdate);
                         if (!laterSkippedStop) {
-                            LOG.trace("Trip update misses departure time, skipping.");
+                            LOG.warn("> Trip update for {} misses departure time, skipping.", tripId);
                             return null;
                         }
                     }
@@ -638,7 +644,7 @@ public class TimetableSnapshotSource {
         final Set<AgencyAndId> serviceIds = graph.getCalendarService().getServiceIdsOnDate(serviceDate);
         if (serviceIds.isEmpty()) {
             // No service id exists: return error for now
-            LOG.trace("ADDED trip has service date for which no service id is available, skipping.");
+            LOG.warn("ADDED trip {} has service date for which no service id is available, skipping.", trip.getId());
             return false;
         } else {
             // Just use first service id of set
@@ -656,7 +662,7 @@ public class TimetableSnapshotSource {
         if (StringUtil.isNotBlank(tripDirection)) {
             trip.setDirectionId(tripDirection);
         }
-
+       
         final boolean success = addTripToGraphAndBuffer(feedId, graph, trip, tripUpdate, stops, serviceDate, RealTimeState.ADDED, timestamp);
         return success;
     }
@@ -816,7 +822,7 @@ public class TimetableSnapshotSource {
         boolean success = false;
         
         final TripPattern pattern = getPatternForTripId(feedId, tripId);
-
+        
         if (pattern != null) {
             // Cancel scheduled trip times for this trip in this pattern
             final Timetable timetable = pattern.scheduledTimetable;
@@ -824,7 +830,7 @@ public class TimetableSnapshotSource {
             if (tripIndex == -1) {
                 LOG.warn("Could not cancel scheduled trip {}", tripId);
             } else {
-                final TripTimes newTripTimes = new TripTimes(timetable.getTripTimes(tripIndex));
+            	final TripTimes newTripTimes = new TripTimes(timetable.getTripTimes(tripIndex));
                 newTripTimes.cancel();
                 newTripTimes.setTimestamp(timestamp);
                 buffer.update(feedId, pattern, newTripTimes, serviceDate);
@@ -989,10 +995,10 @@ public class TimetableSnapshotSource {
             if (cancelScheduledSuccess || cancelPreviouslyAddedSuccess) {
                 success = true;
             } else {
-                LOG.warn("No pattern found for tripId {}, skipping TripUpdate.", tripId);
+                LOG.warn("No pattern found for tripId {}, skipping cancelled TripUpdate.", tripId);
             }
         } else {
-            LOG.warn("No trip id in CANCELED trip update, skipping TripUpdate.");
+            LOG.warn("No trip id in CANCELED trip update, skipping cancelled TripUpdate.");
         }
 
         return success;

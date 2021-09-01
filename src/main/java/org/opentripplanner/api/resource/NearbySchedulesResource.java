@@ -312,6 +312,9 @@ public class NearbySchedulesResource {
                 if (router.defaultRoutingRequest.bannedStopsNearby.matches(stop)) {
                     continue;
                 }
+                
+                if(stop.getLocationType() != Stop.LOCATION_TYPE_STATION && stop.getLocationType() != Stop.LOCATION_TYPE_STOP)
+                	continue;
 
                 Stop requiredStop = null;
                 if (stoppingAt != null){
