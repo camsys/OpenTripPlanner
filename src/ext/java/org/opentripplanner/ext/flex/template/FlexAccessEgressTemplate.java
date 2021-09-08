@@ -119,7 +119,7 @@ public abstract class FlexAccessEgressTemplate {
     } else {
       // transferStop is Location Area/Line
       List<FlexAccessEgress> r = getTransfersFromTransferStop(graph)
-          .stream()
+          .parallelStream()
           .filter(simpleTransfer -> getFinalStop(simpleTransfer) != null)
           .map(simpleTransfer -> {
             List<Edge> edges = getTransferEdges(simpleTransfer);

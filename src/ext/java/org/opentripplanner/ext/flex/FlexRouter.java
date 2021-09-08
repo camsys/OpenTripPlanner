@@ -107,7 +107,7 @@ public class FlexRouter {
     for (FlexAccessTemplate template : this.flexAccessTemplates) {
       StopLocation transferStop = template.getTransferStop();
 
-      if (this.flexEgressTemplates.stream().anyMatch(t -> t.getAccessEgressStop().equals(transferStop))) {
+      if (this.flexEgressTemplates.parallelStream().anyMatch(t -> t.getAccessEgressStop().equals(transferStop))) {
         for(NearbyStop egress : streetEgressByStop.get(transferStop)) {
 
           Itinerary itinerary = template.createDirectItinerary(egress, arriveBy, departureTime, startOfTime);
@@ -125,7 +125,7 @@ public class FlexRouter {
     calculateFlexAccessTemplates();
 
     return this.flexAccessTemplates
-        .stream()
+        .parallelStream()
         .flatMap(template -> template.createFlexAccessEgressStream(graph))
         .filter(e -> e != null)
         .collect(Collectors.toList());
@@ -135,7 +135,7 @@ public class FlexRouter {
     calculateFlexEgressTemplates();
 
     return this.flexEgressTemplates
-        .stream()
+        .parallelStream()
         .flatMap(template -> template.createFlexAccessEgressStream(graph))
         .filter(e -> e != null)
         .collect(Collectors.toList());
@@ -180,7 +180,7 @@ public class FlexRouter {
   private Stream<T2<NearbyStop, FlexTrip>> getClosestFlexTrips(Collection<NearbyStop> nearbyStops, boolean pickup) {
     // Find all trips reachable from the nearbyStops
     Collection<T2<NearbyStop, FlexTrip>> flexTripsReachableFromNearbyStops = nearbyStops
-        .stream()
+        .parallelStream()
         .flatMap(accessEgress -> flexIndex
             .getFlexTripsByStop(accessEgress.stop)
             .filter(flexTrip -> pickup ? flexTrip.isBoardingPossible(accessEgress.stop, arriveBy == false ? departureTime : null) 
@@ -190,15 +190,15 @@ public class FlexRouter {
 
     // Group all (NearbyStop, FlexTrip) tuples by flexTrip
     Collection<List<T2<NearbyStop, FlexTrip>>> groupedReachableFlexTrips = flexTripsReachableFromNearbyStops
-    	.stream()
+    	.parallelStream()
         .collect(Collectors.groupingBy(t2 -> t2.second))
         .values();
 
     // Get the stop with least walking time from each group 
     List<T2<NearbyStop, FlexTrip>> r = groupedReachableFlexTrips
-        .stream()
+        .parallelStream()
         .map(t2s -> t2s
-            .stream()
+            .parallelStream()
             .filter(t2 -> !t2.first.stop.isArea() && !t2.first.stop.isLine())
             .min(Comparator.comparingLong(t2 -> t2.first.state.getElapsedTimeSeconds())))
         .flatMap(Optional::stream)
@@ -209,9 +209,9 @@ public class FlexRouter {
     // (we handle these separately since areas can contain stops, but stops can have special
     // rules that apply only to that one point inside the area vs. just getting the area)
     r.addAll(groupedReachableFlexTrips
-            .stream()
+            .parallelStream()
             .map(t2s -> t2s
-                .stream()
+                .parallelStream()
                 .filter(t2 -> t2.first.stop.isArea() || t2.first.stop.isLine())
                 .min(Comparator.comparingLong(t2 -> t2.first.state.getElapsedTimeSeconds() + 60)))
             .flatMap(Optional::stream)

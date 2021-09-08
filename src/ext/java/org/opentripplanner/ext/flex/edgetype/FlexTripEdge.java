@@ -22,8 +22,14 @@ public class FlexTripEdge extends Edge {
   public final StopLocation s2;
   
   public final FlexAccessEgressTemplate flexTemplate;
-  public final FlexPath flexPath;
 
+  public boolean flexPathLoaded = false;
+  public FlexPath flexPath;
+
+  public final FlexPathCalculator calculator;
+  public final int fromIndex;
+  public final int toIndex;
+  
   @SuppressWarnings("serial")
   public FlexTripEdge(
       Vertex v1, Vertex v2, StopLocation s1, StopLocation s2, int fromIndex, int toIndex,
@@ -35,15 +41,19 @@ public class FlexTripEdge extends Edge {
     
     this.s1 = s1;
     this.s2 = s2;
-    this.flexTemplate = flexTemplate;
     this.fromv = v1;
     this.tov = v2;
-    this.flexPath = calculator.calculateFlexPath(fromv, tov, fromIndex, toIndex, flexTemplate.getFlexTrip());
+    this.fromIndex = fromIndex;
+    this.toIndex = toIndex;
+        
+    this.flexTemplate = flexTemplate;
+
+    this.calculator = calculator;
   }
 
   @Override
-  public State traverse(State s0) {
-	if(this.flexPath == null)
+  public State traverse(State s0) {	  
+	if(getFlexPath() == null)
 		return null; // = not routable
 	  
 	StateEditor editor = s0.edit(this);
@@ -59,20 +69,29 @@ public class FlexTripEdge extends Edge {
   // This method uses the "mean" time from Flex v2 to best reflect the typical travel 
   // scenario in user-facing interfaces vs. using the worst case scenario re: trip length
   public float getTripTimeInSeconds() {
-    return getFlexTrip().getMeanTotalTime(flexPath, flexTemplate.fromStopIndex, 
+	  return getFlexTrip().getMeanTotalTime(getFlexPath(), flexTemplate.fromStopIndex, 
     		flexTemplate.toStopIndex);
   }
 
   @Override
   public double getDistanceMeters() {
-    return flexPath.distanceMeters;
+	  return getFlexPath().distanceMeters;
   }
 
   @Override
   public LineString getGeometry() {
-    return flexPath.geometry;
+	  return getFlexPath().geometry;
   }
 
+  public FlexPath getFlexPath() {
+	  if(!flexPathLoaded) {
+		  this.flexPath = calculator.calculateFlexPath(fromv, tov, fromIndex, toIndex, flexTemplate.getFlexTrip());
+		  flexPathLoaded = true;
+	  }
+
+	  return flexPath;
+  }
+  
   @Override
   public Trip getTrip() {
     return getFlexTrip().getTrip();

@@ -4,7 +4,6 @@ import org.opentripplanner.ext.flex.FlexServiceDate;
 import org.opentripplanner.ext.flex.edgetype.FlexTripEdge;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
-import org.opentripplanner.model.FlexStopLocation;
 import org.opentripplanner.model.SimpleTransfer;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopLocation;
@@ -26,7 +25,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
-import java.util.stream.Collectors;
 
 public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 	
@@ -67,7 +65,7 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 
 	    // check that we can make this trip re: pickup/dropoff time restrictions
 		long serviceDayInMillis = departureServiceDate.toInstant().toEpochMilli();
-		Leg flexLeg = itinerary.legs.stream().filter(it -> it.flexibleTrip).findFirst().orElse(null);
+		Leg flexLeg = itinerary.legs.parallelStream().filter(it -> it.flexibleTrip).findFirst().orElse(null);
 		
 		if(!this.getFlexTrip().isBoardingPossible(accessEgress.stop, (int)(flexLeg.startTime.getTimeInMillis()/1000 - serviceDayInMillis/1000)))
 			return null;

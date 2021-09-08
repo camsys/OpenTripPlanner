@@ -73,6 +73,9 @@ public class StreetEdge extends Edge implements BikeWalkableEdge, Cloneable, Car
     private static final int WHEELCHAIR_ACCESSIBLE_FLAG_INDEX = 6;
     private static final int BICYCLE_NOTHRUTRAFFIC = 7;
 
+    private LineString cachedLineString = null;
+    
+    
     /** back, roundabout, stairs, ... */
     private byte flags;
 
@@ -615,7 +618,10 @@ public class StreetEdge extends Edge implements BikeWalkableEdge, Cloneable, Car
 	}
 
 	public LineString getGeometry() {
-		return CompactLineString.uncompactLineString(fromv.getLon(), fromv.getLat(), tov.getLon(), tov.getLat(), compactGeometry, isBack());
+		if(cachedLineString == null)
+			cachedLineString = CompactLineString.uncompactLineString(fromv.getLon(), fromv.getLat(), tov.getLon(), tov.getLat(), compactGeometry, isBack());
+
+		return cachedLineString;
 	}
 
 	private void setGeometry(LineString geometry) {
