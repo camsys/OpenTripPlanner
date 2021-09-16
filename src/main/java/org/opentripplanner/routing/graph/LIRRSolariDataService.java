@@ -68,8 +68,13 @@ public class LIRRSolariDataService {
 
     public LIRRSolariDataService(Graph graph) throws Exception {
     	_graph = graph;
-    	
-    	JsonNode root = objectMapper.readValue(graph.routerConfig, JsonNode.class);
+
+    	if(_graph.routerConfig == null) {
+    		_log.error("No configuration found. Exiting.");
+    		return;
+    	}
+    		
+    	JsonNode root = objectMapper.readValue(_graph.routerConfig, JsonNode.class);
     	JsonNode config = root.get("LIRRSolariConfig");
     	
     	if(config != null) {
@@ -85,7 +90,7 @@ public class LIRRSolariDataService {
     			STATION_ID_WHITELIST.add(e.asText());
     		}
     	} else {
-    		_log.error("No configuration found. Exiting.");
+    		_log.error("No configuration found for this module. Exiting.");
     		return;
     	}
     	
