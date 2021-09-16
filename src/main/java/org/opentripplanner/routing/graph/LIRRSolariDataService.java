@@ -1,6 +1,5 @@
 package org.opentripplanner.routing.graph;
 
-import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -10,7 +9,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -58,7 +56,7 @@ public class LIRRSolariDataService {
 	
 	private final String[] directionIdMap = new String[] { "E", "W" }; //  0=E, 1=W
 	
-    public HashMultimap<T2<String, String>, JsonNode> solariDataByTripAndStop = HashMultimap.create();
+    public HashMap<T2<String, String>, JsonNode> solariDataByTripAndStop = new HashMap<>();
     
 	public HashMap<String, Stop> stopsByStationCode = null;	
 
@@ -270,13 +268,9 @@ public class LIRRSolariDataService {
   	                matched++;
                 
                 T2<String, String> key = new T2<String, String>(
-                		bestTrip != null ? AgencyAndId.convertToString(bestTrip.getId()) : null, 
+                		bestTrip != null ? AgencyAndId.convertToString(bestTrip.getId()) : "LI_TRAIN_NO_" + trainNumberRaw, 
                 		AgencyAndId.convertToString(stationAsStop.getId()));
-                
-                // trip matches have to be unique, null trip (no match) can be multi per stop/pair
-                if(key.first != null)
-                    solariDataByTripAndStop.removeAll(key);
-                
+                                
                 solariDataByTripAndStop.put(key, train);
 
                 if(_log.isDebugEnabled()) {

@@ -333,7 +333,7 @@ public class NearbySchedulesResource {
                     bannedAgencies, bannedRouteTypes, getTrackIds(), showCancelledTrips, includeStopsForTrip, signMode);
 
                 // arrivals from Solari
-            	List<Entry<T2<String, String>, JsonNode>> solariMessages = this.lirrSolari.solariDataByTripAndStop.entries()
+            	List<Entry<T2<String, String>, JsonNode>> solariMessages = this.lirrSolari.solariDataByTripAndStop.entrySet()
                 		.stream()
                 		.filter(it -> { return it.getKey().second.equals(AgencyAndId.convertToString(stop.getId())); })
                 		.collect(Collectors.toList());
@@ -369,9 +369,9 @@ public class NearbySchedulesResource {
 
                 		// the case where Solari has trips that are not in the schedule or in GTFS RT, so 
         	        	// we need to pluck what we can from its packet and add it to the data structures here
-                		if(tripGtfsId == null)
+                		if(tripGtfsId.startsWith("LI_TRAIN_NO_")) { // this string means the trip is fake
                 			stopTimes.addPatternsViaSolariPacket(solariPacket, index);
-                		else {
+                		} else {
                 	        Date date = new Date(startTime * 1000);
         	        		TripPattern p = index.getTripPatternForTripId(AgencyAndId.convertFromString(tripGtfsId));
 
@@ -383,9 +383,10 @@ public class NearbySchedulesResource {
                 			
         	        		if(stopTimesForPattern != null)
         	        			stopTimes.addPatternWithSolariPacket(stopTimesForPattern, solariPacket, index);
+        	        		else
+                    			stopTimes.addPatternsViaSolariPacket(solariPacket, index);
                 		}
                 	}
-                 
 
                 // otherwise use patterns from GTFS/GTFS-RT
                 } else {

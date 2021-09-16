@@ -233,4 +233,12 @@ public class TripTimeShort {
     public void setRegionalFareCardAccepted(boolean regionalFareCardAccepted) {
         this.regionalFareCardAccepted = regionalFareCardAccepted;
     }
+    
+    public boolean equals(Object o) {
+        return (o instanceof TripTimeShort) && ((TripTimeShort)o).tripId.equals(this.tripId);
+    }
+
+    public int hashCode() {
+        return tripId.hashCode();
+    }
 }
