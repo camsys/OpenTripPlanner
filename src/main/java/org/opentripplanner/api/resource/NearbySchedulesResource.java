@@ -12,34 +12,22 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 package org.opentripplanner.api.resource;
 
-import org.locationtech.jts.geom.Coordinate;
-import org.apache.commons.lang.StringUtils;
-import org.joda.time.DateTime;
-import org.onebusaway.gtfs.model.AgencyAndId;
-import org.onebusaway.gtfs.model.Stop;
-import org.onebusaway.gtfs.model.Trip;
-import org.onebusaway.gtfs.model.calendar.ServiceDate;
-import org.opentripplanner.api.util.StopFinder;
-import org.opentripplanner.index.IndexAPI;
-import org.opentripplanner.index.model.StopTimesByStop;
-import org.opentripplanner.index.model.StopTimesInPattern;
-import org.opentripplanner.routing.alertpatch.AlertPatch;
-import org.opentripplanner.routing.algorithm.AStar;
-import org.opentripplanner.routing.core.RouteMatcher;
-import org.opentripplanner.routing.core.RoutingRequest;
-import org.opentripplanner.routing.core.State;
-import org.opentripplanner.routing.core.TraverseMode;
-import org.opentripplanner.routing.core.TraverseModeSet;
-import org.opentripplanner.routing.edgetype.Timetable;
-import org.opentripplanner.routing.edgetype.TripPattern;
-import org.opentripplanner.routing.error.VertexNotFoundException;
-import org.opentripplanner.routing.graph.GraphIndex;
-import org.opentripplanner.routing.services.StreetVertexIndexService;
-import org.opentripplanner.routing.trippattern.TripTimes;
-import org.opentripplanner.routing.vertextype.TransitStop;
-import org.opentripplanner.standalone.OTPServer;
-import org.opentripplanner.standalone.Router;
-import org.opentripplanner.util.DateUtils;
+import static org.opentripplanner.api.resource.ServerInfo.Q;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -51,10 +39,31 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import org.apache.commons.lang.StringUtils;
+import org.locationtech.jts.geom.Coordinate;
+import org.onebusaway.gtfs.model.AgencyAndId;
+import org.onebusaway.gtfs.model.Stop;
+import org.opentripplanner.api.util.StopFinder;
+import org.opentripplanner.common.model.T2;
+import org.opentripplanner.index.model.StopTimesByStop;
+import org.opentripplanner.index.model.StopTimesInPattern;
+import org.opentripplanner.routing.alertpatch.AlertPatch;
+import org.opentripplanner.routing.algorithm.AStar;
+import org.opentripplanner.routing.core.RouteMatcher;
+import org.opentripplanner.routing.core.RoutingRequest;
+import org.opentripplanner.routing.core.State;
+import org.opentripplanner.routing.core.TraverseMode;
+import org.opentripplanner.routing.core.TraverseModeSet;
+import org.opentripplanner.routing.edgetype.TripPattern;
+import org.opentripplanner.routing.error.VertexNotFoundException;
+import org.opentripplanner.routing.graph.GraphIndex;
+import org.opentripplanner.routing.graph.LIRRSolariDataService;
+import org.opentripplanner.routing.vertextype.TransitStop;
+import org.opentripplanner.standalone.OTPServer;
+import org.opentripplanner.standalone.Router;
+import org.opentripplanner.util.DateUtils;
 
-import static org.opentripplanner.api.resource.ServerInfo.Q;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Lookup arrival/departure times for a group of stops, by location of interest or list of stops.
@@ -236,21 +245,21 @@ public class NearbySchedulesResource {
 
     private GraphIndex index;
 
+    private LIRRSolariDataService lirrSolari;
+
     private Router router;
-
-    private StreetVertexIndexService streetIndex;
-
+    
     public NearbySchedulesResource(@Context OTPServer otpServer, @PathParam("routerId") String routerId) {
         Router router = otpServer.getRouter(routerId);
         this.router = router;
         index = router.graph.index;
-        streetIndex = router.graph.streetIndex;
+        lirrSolari = index.lirrSolari;
     }
 
     public NearbySchedulesResource(Router router) {
         this.router = router;
         index = router.graph.index;
-        streetIndex = router.graph.streetIndex;
+        lirrSolari = index.lirrSolari;
     }
 
     /**
@@ -260,7 +269,7 @@ public class NearbySchedulesResource {
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML + Q})
-    public Collection<StopTimesByStop> getNearbySchedules() {
+    public Collection<StopTimesByStop> getNearbySchedules() throws Exception {
         boolean isLatLonSearch = lat != null && lon != null && radius != null;
         long startTime = getStartTimeSec();
 
@@ -286,17 +295,13 @@ public class NearbySchedulesResource {
     }
 
     private Map<AgencyAndId, StopTimesByStop> getStopTimesByParentStop(Collection<TransitStop> transitStops, 
-    		long startTime, Map<TransitStop, State> stateMap){
+    		long startTime, Map<TransitStop, State> stateMap) throws Exception {
         Map<AgencyAndId, StopTimesByStop> stopIdAndStopTimesMap = new LinkedHashMap<>();
         List<AlertPatch> alertPatchSnapshot = index.graph.getAlertPatchesAsList();    	
 
         RouteMatcher routeMatcher = RouteMatcher.parse(routesStr);
         for (TransitStop tstop : transitStops) {
-            if(tstop == null || tstop.equals(null))
-            {
-                //TODO add a warning here to indicate no stop found??
-            } else
-            {
+            if(tstop != null) {
                 Stop stop = tstop.getStop();
                 AgencyAndId key = key(stop);
 
@@ -322,9 +327,16 @@ public class NearbySchedulesResource {
                     requiredStop = index.stopForId.get(id);
                 }
 
+                // schedule/RT arrivals
                 List<StopTimesInPattern> stopTimesPerPattern = index.stopTimesForStop(
                         stop, startTime, timeRange, numberOfDepartures, omitNonPickups, routeMatcher, direction, null, tripHeadsign, requiredStop,
                     bannedAgencies, bannedRouteTypes, getTrackIds(), showCancelledTrips, includeStopsForTrip, signMode);
+
+                // arrivals from Solari
+            	List<Entry<T2<String, String>, JsonNode>> solariMessages = this.lirrSolari.solariDataByTripAndStop.entries()
+                		.stream()
+                		.filter(it -> { return it.getKey().second.equals(AgencyAndId.convertToString(stop.getId())); })
+                		.collect(Collectors.toList());
 
                 StopTimesByStop stopTimes = stopIdAndStopTimesMap.get(key);
 
@@ -341,11 +353,45 @@ public class NearbySchedulesResource {
                     } else {
                         stopTimes = new StopTimesByStop(stop, groupByParent);
                     }
+                    
                     stopIdAndStopTimesMap.put(key, stopTimes);
                 }
-                stopTimes.addPatterns(stopTimesPerPattern);
+                
+            	// if solari has trips for the station we're looking for, use those--otherwise use the RT/schedule 
 
+            	// use Solari preferentially
+                if(!solariMessages.isEmpty()) {
+                	stopTimesPerPattern = new ArrayList<StopTimesInPattern>();
 
+                    for(Entry<T2<String, String>, JsonNode> e : solariMessages) {
+                		JsonNode solariPacket = e.getValue();
+                		String tripGtfsId = e.getKey().first;
+
+                		// the case where Solari has trips that are not in the schedule or in GTFS RT, so 
+        	        	// we need to pluck what we can from its packet and add it to the data structures here
+                		if(tripGtfsId == null)
+                			stopTimes.addPatternsViaSolariPacket(solariPacket, index);
+                		else {
+                	        Date date = new Date(startTime * 1000);
+        	        		TripPattern p = index.getTripPatternForTripId(AgencyAndId.convertFromString(tripGtfsId));
+
+        	        		// TODO: what a mess... 
+        	        		// NOTE: filters disabled so we don't filter trips Solari is showing
+        	        		StopTimesInPattern stopTimesForPattern = index.getStopTimesForPattern(
+                            		p, date, router.graph.timetableSnapshotSource.getTimetableSnapshot(), stop, 
+                            		Integer.MAX_VALUE, 1, true, null, null, null, true, includeStopsForTrip, false); 
+                			
+        	        		if(stopTimesForPattern != null)
+        	        			stopTimes.addPatternWithSolariPacket(stopTimesForPattern, solariPacket, index);
+                		}
+                	}
+                 
+
+                // otherwise use patterns from GTFS/GTFS-RT
+                } else {
+                    stopTimes.addPatterns(stopTimesPerPattern);                
+                }
+                	
                 addAlertsToStopTimes(stop, stopTimes, alertPatchSnapshot);
             }
         }

@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.onebusaway.csv_entities.EntityHandler;
+import org.onebusaway.csv_entities.schema.DefaultEntitySchemaFactory;
 import org.onebusaway.gtfs.impl.GtfsRelationalDaoImpl;
 import org.onebusaway.gtfs.model.*;
 import org.onebusaway.gtfs.model.calendar.CalendarServiceData;
@@ -39,6 +40,7 @@ import org.opentripplanner.graph_builder.services.GraphBuilderModule;
 import org.opentripplanner.gtfs.BikeAccess;
 import org.opentripplanner.gtfs.GtfsContext;
 import org.opentripplanner.gtfs.GtfsLibrary;
+import org.opentripplanner.model.MTAStop;
 import org.opentripplanner.routing.edgetype.factory.GTFSPatternHopFactory;
 import org.opentripplanner.routing.edgetype.factory.GtfsStopContext;
 import org.opentripplanner.routing.graph.Graph;
@@ -165,6 +167,9 @@ public class GtfsModule implements GraphBuilderModule {
         GtfsFeedId gtfsFeedId = gtfsBundle.getFeedId();
 
         GtfsReader reader = new GtfsReader();
+        DefaultEntitySchemaFactory des = (DefaultEntitySchemaFactory)reader.getEntitySchemaFactory();
+        des.addExtension(Stop.class, MTAStop.class);
+        
         reader.setInputSource(gtfsBundle.getCsvInputSource());
         reader.setEntityStore(store);
         reader.setInternStrings(true);

@@ -12,9 +12,13 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 package org.opentripplanner.index.model;
 
+import org.onebusaway.gtfs.model.Stop;
 import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.routing.core.TraverseMode;
+import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.routing.trippattern.TripTimes;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.Comparator;
 import java.util.Iterator;
@@ -43,7 +47,23 @@ public class StopTimesByRouteAndHeadsign {
         this.isStopHeadsign = isStopHeadsign;
         this.isBusRoute = (route.mode == TraverseMode.BUS.toString());
     }
+    
+    // creates a trip time from only a Solari Packet, no GTFS/GTFS-RT
+    public void addTime(JsonNode solariPacket, GraphIndex index) {
+    	TripTimeShort tt = new TripTimeShort(solariPacket, index);
+    	times.add(tt);
+    }
 
+    // patches a trip time from GTFS/GTFS-RT with authoratative info from a Solari Packet
+    public void addTime(TripTimeShort tripTime, JsonNode solariPacket) {     
+    	tripTime.track = solariPacket.get("track").asText();
+    	tripTime.realtimeSignText = solariPacket.get("status").asText();
+        tripTime.realtime = true;
+        tripTime.peakOffpeak = solariPacket.get("peakCode").asText().equals("P") ? 1 : 0;
+
+    	addTime(tripTime);    	
+    }
+    
     public void addTime(TripTimeShort tripTime) {
         times.add(tripTime);
         if (isBusRoute) {

@@ -28,8 +28,10 @@ public class RemoteCSVBackedHashMap extends HashMap<String, HashMap<AgencyAndId,
 
 		while(true) {
 			try {
-				LOG.info("Updating CSV backed hashmap...");
-				update();				
+				LOG.info("Updating CSV backed hashmap from {}...", source);
+
+				update();		
+				
 				LOG.info("done.");
 				break;
 			} catch(Exception e) {

@@ -127,6 +127,8 @@ public class GraphBuilder implements Runnable {
     }
 
     public void run() {
+    	System.setProperty("isBundleBuilder", "true");    	
+    	
         /* Record how long it takes to build the graph, purely for informational purposes. */
         long startTime = System.currentTimeMillis();
 

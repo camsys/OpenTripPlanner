@@ -1,19 +1,24 @@
 package org.opentripplanner.index.model;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.Trip;
+import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.opentripplanner.api.model.VehicleInfo;
 import org.opentripplanner.routing.core.ServiceDay;
 import org.opentripplanner.routing.edgetype.Timetable;
 import org.opentripplanner.routing.edgetype.TripPattern;
+import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.routing.trippattern.RealTimeState;
 import org.opentripplanner.routing.trippattern.TripTimes;
 
 import com.beust.jcommander.internal.Lists;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import static org.opentripplanner.util.DateUtils.formatDateIso;
 
@@ -149,6 +154,29 @@ public class TripTimeShort {
         }
     }
 
+    public TripTimeShort(JsonNode solariPacket, GraphIndex index) { 
+    	String destinationLocationCode = solariPacket.get("destinationLocation").get("code").asText();
+    	Stop stop = index.lirrSolari.stopsByStationCode.get(destinationLocationCode);
+
+    	this.stopId 			= stop.getId();
+        this.stopName           = stop.getName();
+        this.stopLat            = stop.getLat();
+        this.stopLon            = stop.getLon();
+        
+        Calendar scheduledDeparture = javax.xml.bind.DatatypeConverter.parseDateTime(solariPacket.get("scheduleDateTime").asText());
+        this.scheduledDeparture = (int)(scheduledDeparture.getTimeInMillis()/1000);
+        
+        Calendar predictedDeparture = javax.xml.bind.DatatypeConverter.parseDateTime(solariPacket.get("predictedDateTime").asText());
+        this.realtimeDeparture = (int)(predictedDeparture.getTimeInMillis()/1000);
+
+        this.tripId = new AgencyAndId("LI", "TRAIN_NO_" + solariPacket.get("trainNumber").asText());
+        this.tripHeadsign = solariPacket.get("destinationLocation").get("name").asText();
+        this.realtime = true;
+        this.track = solariPacket.get("track").asText();
+        this.peakOffpeak = solariPacket.get("peakCode").asText().equals("P") ? 1 : 0;
+        this.realtimeSignText = solariPacket.get("status").asText();
+    }
+    
     public TripTimeShort(TripPattern tripPattern, TripTimes tt, int i, Stop stop, ServiceDay sd, TimeZone tz) {
         this(tripPattern, tt, i, stop, sd, tz, false);
     }
