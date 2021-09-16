@@ -1,6 +1,5 @@
 package org.opentripplanner.ext.flex.trip;
 
-import org.opentripplanner.ext.flex.FlexRouter;
 import org.opentripplanner.ext.flex.FlexServiceDate;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPath;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
@@ -8,16 +7,12 @@ import org.opentripplanner.ext.flex.template.FlexAccessTemplate;
 import org.opentripplanner.ext.flex.template.FlexEgressTemplate;
 import org.opentripplanner.model.BookingInfo;
 import org.opentripplanner.model.FlexLocationGroup;
-import org.opentripplanner.model.FlexStopLocation;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -36,11 +31,7 @@ import static org.opentripplanner.model.StopTime.MISSING_VALUE;
  */
 public class ScheduledDeviatedTrip extends FlexTrip {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ScheduledDeviatedTrip.class);
-
   private static final long serialVersionUID = -8704964150428339679L;
-
-  private final ScheduledDeviatedStopTime[] stopTimes;
 
   private final BookingInfo[] dropOffBookingInfos;
   private final BookingInfo[] pickupBookingInfos;
@@ -62,12 +53,12 @@ public class ScheduledDeviatedTrip extends FlexTrip {
     }
 
     int nStops = stopTimes.size();
-    this.stopTimes = new ScheduledDeviatedStopTime[nStops];
+    this.stopTimes = new FlexTripStopTime[nStops];
     this.dropOffBookingInfos = new BookingInfo[nStops];
     this.pickupBookingInfos = new BookingInfo[nStops];
 
     for (int i = 0; i < nStops; i++) {
-      this.stopTimes[i] = new ScheduledDeviatedStopTime(stopTimes.get(i));
+      this.stopTimes[i] = new FlexTripStopTime(stopTimes.get(i));
       this.dropOffBookingInfos[i] = stopTimes.get(i).getDropOffBookingInfo();
       this.pickupBookingInfos[i] = stopTimes.get(i).getPickupBookingInfo();
     }
@@ -94,10 +85,6 @@ public class ScheduledDeviatedTrip extends FlexTrip {
     return res.stream();
   }
 
-  public ScheduledDeviatedStopTime getStopTime(int i) {
-	  return this.stopTimes[i];
-  }
-  
   @Override
   public Stream<FlexEgressTemplate> getFlexEgressTemplates(
       NearbyStop egress, FlexServiceDate serviceDate, FlexPathCalculator calculator
@@ -123,7 +110,7 @@ public class ScheduledDeviatedTrip extends FlexTrip {
   public int earliestDepartureTime(int departureTime, int fromStopIndex, int toStopIndex) {
 	int stopDepartureTime = MISSING_VALUE;
     for (int i = fromStopIndex; stopDepartureTime == MISSING_VALUE && i >= 0; i--) {
-    	stopDepartureTime = stopTimes[i].pickupDropoffWindowStart;
+    	stopDepartureTime = stopTimes[i].flexWindowStart;
     }
     if(stopDepartureTime == MISSING_VALUE)
     	return -1;
@@ -134,7 +121,7 @@ public class ScheduledDeviatedTrip extends FlexTrip {
   public int latestArrivalTime(int arrivalTime, int fromStopIndex, int toStopIndex) {
     int stopArrivalTime = MISSING_VALUE;
     for (int i = toStopIndex; stopArrivalTime == MISSING_VALUE && i < stopTimes.length; i++) {
-      stopArrivalTime = stopTimes[i].pickupDropoffWindowEnd;
+      stopArrivalTime = stopTimes[i].flexWindowEnd;
     }
     if(stopArrivalTime == MISSING_VALUE)
     	return -1;
@@ -190,7 +177,7 @@ public class ScheduledDeviatedTrip extends FlexTrip {
     for (int i = 0; i < stopTimes.length; i++) {
       if (stopTimes[i].pickupType == PICKDROP_NONE) continue; // No pickup allowed here
       if(time != null) {
-    	  if(!(time >= stopTimes[i].pickupDropoffWindowStart && time <= stopTimes[i].pickupDropoffWindowEnd))
+    	  if(!(time >= stopTimes[i].flexWindowStart && time <= stopTimes[i].flexWindowEnd))
     		  continue;
       }
 
@@ -211,7 +198,7 @@ public class ScheduledDeviatedTrip extends FlexTrip {
     for (int i = stopTimes.length - 1; i >= 0; i--) {
       if (stopTimes[i].dropOffType == PICKDROP_NONE) continue; // No drop off allowed here
       if(time != null) {
-    	  if(!(time >= stopTimes[i].pickupDropoffWindowStart && time <= stopTimes[i].pickupDropoffWindowEnd))
+    	  if(!(time >= stopTimes[i].flexWindowStart && time <= stopTimes[i].flexWindowEnd))
     		  continue;
       }
       
@@ -229,8 +216,8 @@ public class ScheduledDeviatedTrip extends FlexTrip {
 
   @Override
   public float getSafeTotalTime(FlexPath streetPath, int fromStopIndex, int toStopIndex) {
-		ScheduledDeviatedStopTime fromStopTime = this.stopTimes[fromStopIndex];
-		ScheduledDeviatedStopTime toStopTime = this.stopTimes[toStopIndex];
+	  	FlexTripStopTime fromStopTime = this.stopTimes[fromStopIndex];
+	  	FlexTripStopTime toStopTime = this.stopTimes[toStopIndex];
 		
 		if(fromStopTime.stop.isArea() || toStopTime.stop.isArea()) {
 			double safeFactor = fromStopTime.safeFactor;
@@ -243,8 +230,8 @@ public class ScheduledDeviatedTrip extends FlexTrip {
 
   @Override
   public float getMeanTotalTime(FlexPath streetPath, int fromStopIndex, int toStopIndex) {
-		ScheduledDeviatedStopTime fromStopTime = this.stopTimes[fromStopIndex];
-		ScheduledDeviatedStopTime toStopTime = this.stopTimes[toStopIndex];
+	  	FlexTripStopTime fromStopTime = this.stopTimes[fromStopIndex];
+	  	FlexTripStopTime toStopTime = this.stopTimes[toStopIndex];
 		
 		if(fromStopTime.stop.isArea() || toStopTime.stop.isArea()) {
 			double meanFactor = fromStopTime.meanFactor;
@@ -253,45 +240,6 @@ public class ScheduledDeviatedTrip extends FlexTrip {
 				return (float)(meanFactor * streetPath.durationSeconds) +  (float)(meanOffset * 60);
 		}
 		return streetPath.durationSeconds;
-  }
-
-  public static class ScheduledDeviatedStopTime implements Serializable {
-	private static final long serialVersionUID = 7176753358641800732L;
-	private final StopLocation stop;
-    public final int pickupDropoffWindowStart;
-    public final int pickupDropoffWindowEnd;
-    public final int pickupType;
-    public final int dropOffType;
-    public final int arrivalTime;
-    public final int departureTime;
-    public final double safeFactor;
-    public final double safeOffset;
-    public final double meanFactor;
-    public final double meanOffset;
-    
-    private ScheduledDeviatedStopTime(StopTime st) {
-      this.stop = st.getStop();
-
-      this.safeFactor = st.getSafeDurationFactor();
-      this.safeOffset = st.getSafeDurationOffset();
-
-      this.meanFactor = st.getMeanDurationFactor();
-      this.meanOffset = st.getMeanDurationOffset();
-
-      this.pickupDropoffWindowEnd = st.getFlexWindowEnd();
-      this.pickupDropoffWindowStart = st.getFlexWindowStart();
-      
-      this.arrivalTime = st.getArrivalTime() != MISSING_VALUE ? 
-    		  st.getArrivalTime() : st.getFlexWindowStart();
-      
-      this.departureTime = st.getDepartureTime() != MISSING_VALUE ? 
-    		  st.getDepartureTime() : st.getFlexWindowEnd();
-
-      // TODO: Store the window for a stop, and allow the user to have an "unguaranteed"
-      // pickup/dropoff between the start and end of the window
-      this.pickupType = st.getPickupType();
-      this.dropOffType = st.getDropOffType();
-    }
   }
 
 }

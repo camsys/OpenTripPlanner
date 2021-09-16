@@ -58,6 +58,7 @@ public class LegMapper {
         api.mode = TraverseModeMapper.mapToApi(domain.mode);
         api.agencyTimeZoneOffset = domain.agencyTimeZoneOffset;
         api.transitLeg = domain.isTransitLeg();
+        api.requiresReservation = domain.requiresReservation;
 
         if(domain.isTransitLeg()) {
             var agency = domain.getAgency();
@@ -103,6 +104,8 @@ public class LegMapper {
         api.alightRule = domain.alightRule;
         api.rentedBike = domain.rentedBike;
         api.walkingBike = domain.walkingBike;
+        api.pickupBookingInfo = domain.pickupBookingInfo;
+        api.dropOffBookingInfo = domain.dropOffBookingInfo;
 
         return api;
     }

@@ -1,11 +1,9 @@
 package org.opentripplanner.ext.flex.flexpathcalculator;
 
 import org.locationtech.jts.geom.LineString;
-import org.onebusaway.gtfs.model.StopTime;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
+import org.opentripplanner.ext.flex.trip.FlexTripStopTime;
 import org.opentripplanner.ext.flex.trip.ScheduledDeviatedTrip;
-import org.opentripplanner.ext.flex.trip.ScheduledDeviatedTrip.ScheduledDeviatedStopTime;
-import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.routing.algorithm.astar.AStar;
 import org.opentripplanner.routing.algorithm.astar.strategies.DurationSkipEdgeStrategy;
 import org.opentripplanner.routing.algorithm.astar.strategies.TrivialRemainingWeightHeuristic;
@@ -75,9 +73,8 @@ public class StreetFlexPathCalculator implements FlexPathCalculator {
     // we assume to be the most direct/best case and the scheduled case (stop_times.txt) case to only 
     // be worse
     if(trip instanceof ScheduledDeviatedTrip) {
-    	ScheduledDeviatedTrip sdTrip = (ScheduledDeviatedTrip)trip;
-    	ScheduledDeviatedStopTime fromST = sdTrip.getStopTime(fromStopIndex);
-    	ScheduledDeviatedStopTime toST = sdTrip.getStopTime(toStopIndex);
+    	FlexTripStopTime fromST = trip.getStopTime(fromStopIndex);
+    	FlexTripStopTime toST = trip.getStopTime(toStopIndex);
 
     	int newDuration = toST.arrivalTime - fromST.departureTime;
 

@@ -1,5 +1,6 @@
 package org.opentripplanner.api.model;
 
+import org.opentripplanner.model.BookingInfo;
 import org.opentripplanner.util.model.EncodedPolylineBean;
 
 import java.util.Calendar;
@@ -195,6 +196,8 @@ public class ApiLeg {
 
     public List<ApiAlert> alerts;
 
+    public Boolean requiresReservation;
+    
     public String routeShortName;
 
     public String routeLongName;
@@ -203,6 +206,10 @@ public class ApiLeg {
 
     public String alightRule;
 
+    public BookingInfo dropOffBookingInfo = null;
+
+    public BookingInfo pickupBookingInfo = null;
+    
     public Boolean rentedBike;
 
      /**

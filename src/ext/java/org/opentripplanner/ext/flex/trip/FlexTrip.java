@@ -6,8 +6,6 @@ import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
 import org.opentripplanner.ext.flex.template.FlexAccessTemplate;
 import org.opentripplanner.ext.flex.template.FlexEgressTemplate;
 import org.opentripplanner.model.BookingInfo;
-import org.opentripplanner.model.FlexStopLocation;
-import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.model.TransitEntity;
 import org.opentripplanner.model.Trip;
@@ -27,6 +25,8 @@ public abstract class FlexTrip extends TransitEntity {
 
   protected final Trip trip;
   
+  protected FlexTripStopTime[] stopTimes;
+
   public FlexTrip(Trip trip) {
     super(trip.getId());
     this.trip = trip;
@@ -56,6 +56,10 @@ public abstract class FlexTrip extends TransitEntity {
 
   public abstract Collection<StopLocation> getStops();
 
+  public FlexTripStopTime getStopTime(int i) {
+  	return stopTimes[i];
+  }
+  
   public Trip getTrip() {
     return trip;
   }

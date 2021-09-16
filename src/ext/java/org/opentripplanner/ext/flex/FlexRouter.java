@@ -8,15 +8,12 @@ import org.opentripplanner.ext.flex.flexpathcalculator.StreetFlexPathCalculator;
 import org.opentripplanner.ext.flex.template.FlexAccessTemplate;
 import org.opentripplanner.ext.flex.template.FlexEgressTemplate;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
-import org.opentripplanner.model.FlexStopLocation;
 import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.model.calendar.ServiceDate;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.routing.algorithm.raptor.transit.mappers.DateMapper;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -33,8 +30,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class FlexRouter {
-
-  private static final Logger LOG = LoggerFactory.getLogger(FlexRouter.class);
 
   /* Transit data */
   private final Graph graph;

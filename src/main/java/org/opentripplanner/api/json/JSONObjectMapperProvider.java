@@ -2,6 +2,8 @@ package org.opentripplanner.api.json;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -58,6 +60,10 @@ public class JSONObjectMapperProvider implements ContextResolver<ObjectMapper> {
         mapper = new ObjectMapper()
                 .registerModule(FeedScopedIdSerializer.makeModule())
                 .setSerializationInclusion(Include.NON_NULL); // skip null fields
+
+        // to serialize LocalDateTime
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 
     /**

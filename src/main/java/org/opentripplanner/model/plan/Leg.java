@@ -128,6 +128,11 @@ public class Leg {
     */
    public ServiceDate serviceDate = null;
 
+   /**
+    * For Flex v2 legs, whether the service requires advanced registration or not. 
+    */
+   public Boolean requiresReservation = null;
+
     /**
      * For transit leg, the route's branding URL (if one exists). For non-transit legs, null.
      */

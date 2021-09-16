@@ -16,8 +16,6 @@ import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.routing.spt.GraphPath;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.ZonedDateTime;
 import java.util.Calendar;
@@ -28,8 +26,6 @@ import java.util.TimeZone;
 
 public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 	
-	private static final Logger LOG = LoggerFactory.getLogger(FlexAccessTemplate.class);
-
 	public FlexAccessTemplate(NearbyStop accessEgress, FlexTrip trip, int fromStopTime, int toStopTime,
 			StopLocation transferStop, FlexServiceDate serviceDate, FlexPathCalculator calculator) {
 		super(accessEgress, trip, fromStopTime, toStopTime, transferStop, serviceDate, calculator);

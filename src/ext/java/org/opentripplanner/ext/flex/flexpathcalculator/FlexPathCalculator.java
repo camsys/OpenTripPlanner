@@ -1,7 +1,6 @@
 package org.opentripplanner.ext.flex.flexpathcalculator;
 
 import org.opentripplanner.ext.flex.trip.FlexTrip;
-import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.routing.graph.Vertex;
 
 import javax.annotation.Nullable;
