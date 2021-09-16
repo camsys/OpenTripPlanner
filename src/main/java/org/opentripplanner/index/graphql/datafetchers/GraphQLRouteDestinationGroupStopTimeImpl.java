@@ -4,6 +4,7 @@ import graphql.execution.DataFetcherResult;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,6 +24,7 @@ import org.opentripplanner.index.model.EquipmentShort;
 import org.opentripplanner.index.model.StopTimesByRouteAndHeadsign;
 import org.opentripplanner.index.model.StopTimesByStop;
 import org.opentripplanner.index.model.TripTimeShort;
+import org.opentripplanner.model.StopPattern;
 import org.opentripplanner.routing.alertpatch.Alert;
 import org.opentripplanner.routing.alertpatch.AlertPatch;
 import org.opentripplanner.routing.edgetype.PathwayEdge;
@@ -173,12 +175,13 @@ public class GraphQLRouteDestinationGroupStopTimeImpl implements GraphQLDataFetc
 			localContext.put("stop", s); // boarding stop
 			localContext.put("trip", t); // trip
 			
-			List<Stop> data = 
-					pattern
-	    			.getStops()
-	    			.stream()
-					.collect(Collectors.toList());
-
+			List<Stop> data = new ArrayList<Stop>();
+			for(int i = 0; i < pattern.getStops().size(); i++) {
+				Stop stop = pattern.getStops().get(i);
+				if(pattern.stopPattern.dropoffs[i] != StopPattern.PICKDROP_NONE)				
+					data.add(stop);
+			}
+			
 			return DataFetcherResult.newResult()
 					.data(data)
 					.localContext(localContext)

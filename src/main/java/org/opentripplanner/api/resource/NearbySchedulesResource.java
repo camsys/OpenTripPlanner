@@ -160,7 +160,7 @@ public class NearbySchedulesResource {
      * If true, omit non-pickups, i.e. arrival/departures where the vehicle does not pick up passengers
      */
     @QueryParam("omitNonPickups")
-    @DefaultValue("false")
+    @DefaultValue("true")
     public boolean omitNonPickups;
 
     /**
