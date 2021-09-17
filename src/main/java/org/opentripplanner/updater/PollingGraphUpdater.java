@@ -83,6 +83,8 @@ public abstract class PollingGraphUpdater implements GraphUpdater {
                     // cancel();
                 }
                                
+                Thread.yield();
+                
                 // Sleep a given number of seconds
                 Thread.sleep(frequencySec * 1000);
             }
