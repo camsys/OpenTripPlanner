@@ -325,7 +325,6 @@ public class LIRRSolariDataService {
 	  	        		JsonNode jsonMessage = objectMapper.readValue(rawJson, JsonNode.class);
 	  	        		process(jsonMessage);
 	  	        	}	        	  	        
-	  	        	Thread.yield();
             	} catch(Exception e) {
             		e.printStackTrace();
             	} 
