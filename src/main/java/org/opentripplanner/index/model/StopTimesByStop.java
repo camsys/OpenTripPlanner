@@ -95,7 +95,7 @@ public class StopTimesByStop {
     	String headsign = destinationLocation;
     	
     	Route route = index.routeForId.values().stream()
-    			.filter(it -> it.getLongName().equals(destinationLocation))
+    			.filter(it -> it != null && it.getLongName() != null && it.getLongName().equals(destinationLocation))
     			.findFirst()
     			.orElse(null);
 
