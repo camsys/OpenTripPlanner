@@ -105,7 +105,7 @@ public class StopTimesByStop {
     	if(route == null) {
     		if(direction.equals("E") || direction.equals("W")) {
     		   	route = index.routeForId.values().stream()
-	    			.filter(it -> it.getLongName().equals("City Zone"))
+	    			.filter(it -> it != null && it.getLongName() != null && it.getLongName().equals("City Zone"))
 	    			.findFirst()
 	    			.orElse(null);   			
     		} else
