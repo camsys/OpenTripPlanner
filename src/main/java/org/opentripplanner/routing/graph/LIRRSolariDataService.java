@@ -135,6 +135,18 @@ public class LIRRSolariDataService {
         	
         	Stop stationAsStop = stopsByStationCode.get(stationCode);
 
+        	// scheduled patterns
+        	List<TripPattern> patterns = new ArrayList<>(_graph.index.patternsForFeedId.get("LI"));
+           	
+        	// patterns added via RT
+        	if (_graph.timetableSnapshotSource != null) {
+            	TimetableSnapshot snapshot = _graph.timetableSnapshotSource.getTimetableSnapshot();
+
+            	if (snapshot != null) {
+                	patterns.addAll(snapshot.getTripPatternsForStop(stationAsStop));
+                }
+            }
+        	
         	for(JsonNode train : message.get("trains")) {
         		String trainNumberRaw = train.get("trainNumber").asText();
         		String directionRaw = train.get("direction").asText();
@@ -159,18 +171,6 @@ public class LIRRSolariDataService {
 							return 0;
 						}
 	            	});
-            	
-            	// scheduled patterns
-            	List<TripPattern> patterns = new ArrayList<>(_graph.index.patternsForFeedId.get("LI"));
-               	
-            	// patterns added via RT
-            	if (_graph.timetableSnapshotSource != null) {
-                	TimetableSnapshot snapshot = _graph.timetableSnapshotSource.getTimetableSnapshot();
-
-                	if (snapshot != null) {
-                    	patterns.addAll(snapshot.getTripPatternsForStop(stationAsStop));
-                    }
-                }
             	
             	// go through all candidate trips and add some "points" (score) to each option
             	// based on how well it matches what we're looking for--top result wins
