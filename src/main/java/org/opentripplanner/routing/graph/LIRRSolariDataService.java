@@ -140,8 +140,9 @@ public class LIRRSolariDataService {
            	
         	// patterns added via RT
         	if (_graph.timetableSnapshotSource != null) {
+            	_graph.timetableSnapshotSource.purgeExpiredData = true;
             	TimetableSnapshot snapshot = _graph.timetableSnapshotSource.getTimetableSnapshot();
-
+            		
             	if (snapshot != null) {
                 	patterns.addAll(snapshot.getTripPatternsForStop(stationAsStop));
                 }
@@ -187,7 +188,9 @@ public class LIRRSolariDataService {
                         if(directionRaw.equals(directionIdMap[Integer.parseInt(t.getDirectionId())]))
                 			score += 10.0f;
 
+                        _log.info("Before updatedTimetable()");
                         Timetable updatedTimeTable = _graph.index.currentUpdatedTimetableForTripPattern(tripPattern);
+                        _log.info("After updatedTimetable()");
 
                         int index = 0;
                 		for(Stop stop : tripPattern.getStops()) {     
