@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -17,6 +19,7 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+import javax.xml.bind.DatatypeConverter;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.commons.lang3.ArrayUtils;
@@ -34,7 +37,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
 
@@ -105,6 +107,7 @@ public class LIRRSolariDataService {
 	    Destination destination = session.createTopic(TOPIC);
 	
 	    ProcessorThread thread = new ProcessorThread(destination, session);
+	    thread.setName("LIRR Solari Processor Thread");
 	    thread.start();
 	    
 		_log.info("Finished initializing.");
@@ -120,40 +123,39 @@ public class LIRRSolariDataService {
 
         private void process(JsonNode message) {
         	if(_graph == null || _graph.index == null || _graph.index.patternsForFeedId == null || stopsByStationCode == null) {
-        		_log.trace("Processor not yet ready...");
+        		_log.trace("Processor thread not yet ready...");
         		return;
         	}
+        	
+        	_log.debug("Start processing thread");
         
         	int matched = 0;
         	double averageScore = 0f;
         	
         	JsonNode stationLocation = message.get("location");            
-
         	String stationCode = stationLocation.get("code").asText();
-        	if(!STATION_ID_WHITELIST.contains(stationCode))
-        		return;
-        	
         	Stop stationAsStop = stopsByStationCode.get(stationCode);
 
         	// scheduled patterns
-        	List<TripPattern> patterns = new ArrayList<>(_graph.index.patternsForFeedId.get("LI"));
-           	
+        	List<TripPattern> rawPatterns = new ArrayList<>(_graph.index.patternsForStop.get(stationAsStop));
+        	
         	// patterns added via RT
         	if (_graph.timetableSnapshotSource != null) {
             	_graph.timetableSnapshotSource.purgeExpiredData = true;
             	TimetableSnapshot snapshot = _graph.timetableSnapshotSource.getTimetableSnapshot();
             		
             	if (snapshot != null) {
-                	patterns.addAll(snapshot.getTripPatternsForStop(stationAsStop));
+            		rawPatterns.addAll(snapshot.getTripPatternsForStop(stationAsStop));
                 }
             }
+        	
+        	Set<TripPattern> patterns = rawPatterns.stream().distinct().collect(Collectors.toSet());
         	
         	for(JsonNode train : message.get("trains")) {
         		String trainNumberRaw = train.get("trainNumber").asText();
         		String directionRaw = train.get("direction").asText();
         		
-        		Calendar scheduleDateTimeCalendar = 
-                		javax.xml.bind.DatatypeConverter.parseDateTime(train.get("scheduleDateTime").asText());
+        		Calendar scheduleDateTimeCalendar = DatatypeConverter.parseDateTime(train.get("scheduleDateTime").asText());
         		ServiceDate scheduleDateTimeServiceDate = new ServiceDate(scheduleDateTimeCalendar);
         		
                 JsonNode destinationStopRaw = train.get("destinationLocation");
@@ -175,23 +177,22 @@ public class LIRRSolariDataService {
             	
             	// go through all candidate trips and add some "points" (score) to each option
             	// based on how well it matches what we're looking for--top result wins
-                for(TripPattern tripPattern : patterns) {
-                	for(Trip t : tripPattern.getTrips()) {
+                for(TripPattern tripPattern : patterns) {                	
+                    Timetable updatedTimeTable = _graph.index.currentUpdatedTimetableForTripPattern(tripPattern);
+
+                    for(Trip t : tripPattern.getTrips()) {
                 		float score = 0f;
                 		
                 		// the train number being inside the trip ID 
                 		if(ArrayUtils.contains(t.getId().toString().split(" |_"), trainNumberRaw))
-                			score += 40.0f;
+                			continue; // for efficiency
+                		score += 40.0f;
                 			
                 		// direction ID being right--trains can still be on their previous trip if they're late, so we 
                 		// don't make this a hard check
                         if(directionRaw.equals(directionIdMap[Integer.parseInt(t.getDirectionId())]))
                 			score += 10.0f;
-
-                        _log.info("Before updatedTimetable()");
-                        Timetable updatedTimeTable = _graph.index.currentUpdatedTimetableForTripPattern(tripPattern);
-                        _log.info("After updatedTimetable()");
-
+                        
                         int index = 0;
                 		for(Stop stop : tripPattern.getStops()) {     
                         	if(!stop.getId().equals(stopsByStationCode.get(stationCode).getId())) {
@@ -303,6 +304,8 @@ public class LIRRSolariDataService {
                 }
         	} // for each train
 
+        	_log.debug("End processing thread");
+
             _log.info("Found {} Solari trip messages for LIRR station {}, {} matched to schedule. Average match score is {} %", message.get("trains").size(), stationCode, matched, (float)(averageScore/message.get("trains").size()));
         }
     	
@@ -325,7 +328,13 @@ public class LIRRSolariDataService {
 	  	        	Message message = consumer.receive();
 	  	        	if(message != null) {
 	  	        		String rawJson = ((TextMessage)message).getText();
-	  	        		JsonNode jsonMessage = objectMapper.readValue(rawJson, JsonNode.class);
+	  	        		JsonNode jsonMessage = objectMapper.readValue(rawJson, JsonNode.class);	  	        	   	
+
+	  	        		JsonNode stationLocation = jsonMessage.get("location");
+	  	        		String stationCode = stationLocation.get("code").asText();
+	  	        		if(!STATION_ID_WHITELIST.contains(stationCode))
+	  	        			continue;
+	  	          	
 	  	        		process(jsonMessage);
 	  	        	}	        	  	        
             	} catch(Exception e) {
