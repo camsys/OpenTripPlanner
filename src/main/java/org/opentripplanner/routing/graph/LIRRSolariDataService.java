@@ -113,15 +113,15 @@ public class LIRRSolariDataService {
 		_log.info("Finished initializing.");
     }
     
-    public class ProcessorThread extends Thread {
+    public class MessageProcessorThread extends Thread {
     	
-        private MessageConsumer consumer = null;
-        
-        public ProcessorThread(Destination destination, Session session) throws JMSException {
-        	this.consumer = session.createConsumer(destination);   
+    	private final JsonNode message;
+    	
+        public MessageProcessorThread(JsonNode message) {
+        	this.message = message; 
         }
 
-        private void process(JsonNode message) {
+        public void run() {
         	if(_graph == null || _graph.index == null || _graph.index.patternsForFeedId == null || stopsByStationCode == null) {
         		_log.trace("Processor thread not yet ready...");
         		return;
@@ -309,6 +309,16 @@ public class LIRRSolariDataService {
             _log.info("Found {} Solari trip messages for LIRR station {}, {} matched to schedule. Average match score is {} %", message.get("trains").size(), stationCode, matched, (float)(averageScore/message.get("trains").size()));
         }
     	
+    }
+    
+    public class ProcessorThread extends Thread {
+    	
+        private MessageConsumer consumer = null;
+        
+        public ProcessorThread(Destination destination, Session session) throws JMSException {
+        	this.consumer = session.createConsumer(destination);   
+        }
+
         public void run() {
         	  while(true) {
           		// lazy initialize maps
@@ -335,7 +345,9 @@ public class LIRRSolariDataService {
 	  	        		if(!STATION_ID_WHITELIST.contains(stationCode))
 	  	        			continue;
 	  	          	
-	  	        		process(jsonMessage);
+	  	        		Thread t = new MessageProcessorThread(jsonMessage);
+	  	        		t.setName("Message processor thread for LIRR Solari");
+	  	        		t.run();
 	  	        	}	        	  	        
             	} catch(Exception e) {
             		e.printStackTrace();
