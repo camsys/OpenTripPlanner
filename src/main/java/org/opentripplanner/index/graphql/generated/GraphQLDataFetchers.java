@@ -28,6 +28,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<String> phone();
     public DataFetcher<String> fareUrl();
     public DataFetcher<Iterable<Object>> routes();
+    public DataFetcher<Iterable<Object>> stops();
     public DataFetcher<Iterable<Object>> alerts();
     public DataFetcher<Iterable<Object>> mtaEquipment();
   }

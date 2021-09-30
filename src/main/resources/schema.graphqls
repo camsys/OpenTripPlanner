@@ -508,6 +508,9 @@ type Agency {
     """List of routes operated by this agency"""
     routes: [Route]
 
+    """List of stops used by this agency"""
+    stops: [Stop]
+
     """
     List of alerts which have an effect on all operations of the agency
     """
