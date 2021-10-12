@@ -61,6 +61,11 @@ public class ApiPlace {
     public Integer stopIndex;
 
     /**
+     * For Flex v2 trips, whether the pickup/dropoff location is deviated from the route. Only applicable to scheduled deviated trips.
+     */
+    public Boolean isDeviated = null;
+    
+    /**
      * For transit trips, the sequence number of the stop. Per GTFS, these numbers are increasing.
      */
     public Integer stopSequence;

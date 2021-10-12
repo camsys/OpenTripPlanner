@@ -42,6 +42,7 @@ public class PlaceMapper {
         api.stopSequence = domain.stopSequence;
         api.vertexType = VertexTypeMapper.mapVertexType(domain.vertexType);
         api.bikeShareId = domain.bikeShareId;
+        api.isDeviated = domain.isDeviated;
 
         return api;
     }

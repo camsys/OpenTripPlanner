@@ -51,6 +51,11 @@ public class Place {
     public Integer stopSequence;
 
     /**
+     * For Flex v2 trips, whether the pickup/dropoff location is deviated from the route. Only applicable to scheduled deviated trips.
+     */
+    public Boolean isDeviated = null;
+    
+    /**
      * Type of vertex. (Normal, Bike sharing station, Bike P+R, Transit stop)
      * Mostly used for better localization of bike sharing and P+R station names
      */
