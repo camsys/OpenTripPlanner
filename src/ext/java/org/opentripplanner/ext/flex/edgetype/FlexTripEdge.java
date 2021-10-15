@@ -59,7 +59,7 @@ public class FlexTripEdge extends Edge {
 	StateEditor editor = s0.edit(this);
     editor.setBackMode(TraverseMode.BUS);
     editor.incrementTimeInSeconds((int)getTripTimeInSeconds());
-    editor.incrementWeight(getTripTimeInSeconds()/100);
+    editor.incrementWeight(getTripTimeInSeconds());
     
     editor.resetEnteredNoThroughTrafficArea();
     
