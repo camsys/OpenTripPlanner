@@ -4,6 +4,9 @@ import com.beust.jcommander.internal.Lists;
 import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.PrecisionModel;
+
 import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.common.MinMap;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
@@ -221,20 +224,40 @@ public class NearbyStopFinder {
             for (var locationStates : locationsMap.asMap().entrySet()) {
                 FlexStopLocation flexStopLocation = locationStates.getKey();
                 Collection<State> states = locationStates.getValue();
-                // Select the vertex from all vertices that are reachable per FlexStopLocation by taking
-                // the minimum walking distance
-                State min = Collections.min(states,
-                    (s1, s2) -> (int) (s1.walkDistance - s2.walkDistance)
-                );
+                
+                // if the stoplocation is an area or line, we need to use the location the user searched for
+                // that is on the line or within the area vs. using the centroid
+                if(flexStopLocation.isArea() || flexStopLocation.isLine()) {	                   	
+                    for (Vertex vertex : originVertices) {
 
-                // If the best state for this FlexStopLocation is a SplitterVertex, we want to get the
-                // TemporaryStreetLocation instead. This allows us to reach SplitterVertices in both
-                // directions when routing later.
-                if (min.getBackState().getVertex() instanceof TemporaryStreetLocation) {
-                    min = min.getBackState();
+                    	// create a stop within the area that is where the user searched for
+                    	NearbyStop ns = new NearbyStop(
+                    		flexStopLocation,
+                            0,
+                            Collections.emptyList(),
+							null,
+							new State(vertex, routingRequest)
+                        );
+                	
+                    	stopsFound.add(ns);
+                    }
+                    
+                } else {
+	                // Select the vertex from all vertices that are reachable per FlexStopLocation by taking
+	                // the minimum walking distance
+	                State min = Collections.min(states,
+	                    (s1, s2) -> (int) (s1.walkDistance - s2.walkDistance)
+	                );
+	
+	                // If the best state for this FlexStopLocation is a SplitterVertex, we want to get the
+	                // TemporaryStreetLocation instead. This allows us to reach SplitterVertices in both
+	                // directions when routing later.
+	                if (min.getBackState().getVertex() instanceof TemporaryStreetLocation) {
+	                    min = min.getBackState();
+	                }
+	
+	                stopsFound.add(NearbyStop.nearbyStopForState(min, flexStopLocation));
                 }
-
-                stopsFound.add(NearbyStop.nearbyStopForState(min, flexStopLocation));
             }
         }
 

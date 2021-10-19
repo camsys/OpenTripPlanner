@@ -14,6 +14,8 @@ import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.routing.algorithm.raptor.transit.mappers.DateMapper;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -30,6 +32,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class FlexRouter {
+
+  private static final Logger LOG = LoggerFactory.getLogger(FlexRouter.class);
 
   /* Transit data */
   private final Graph graph;
@@ -94,18 +98,31 @@ public class FlexRouter {
     calculateFlexAccessTemplates();
     calculateFlexEgressTemplates();
 
-    Multimap<StopLocation, NearbyStop> streetEgressByStop = HashMultimap.create();
-    streetEgresses.forEach(it -> streetEgressByStop.put(it.stop, it));
-
     Set<Itinerary> itineraries = new HashSet<>();
 
+//    LOG.info("Direct Routing - Accesses: " + this.flexAccessTemplates.stream()
+//	.map(e -> e.getFlexTrip() + " " + e.getAccessEgressStop().getId() + "->" + e.getTransferStop().getId() + "\n")
+//	.distinct().collect(Collectors.toList()));
+    
+    
+//    LOG.info("Direct Routing - Egresses: " + this.flexEgressTemplates.stream()
+//	.map(e -> e.getFlexTrip() + " " + e.getAccessEgressStop().getId() + "->" + e.getTransferStop().getId() + "\n")
+//	.distinct().collect(Collectors.toList()));
+    
+    
     for (FlexAccessTemplate template : this.flexAccessTemplates) {
       StopLocation transferStop = template.getTransferStop();
 
-      if (this.flexEgressTemplates.parallelStream().anyMatch(t -> t.getAccessEgressStop().equals(transferStop))) {
-        for(NearbyStop egress : streetEgressByStop.get(transferStop)) {
+      List<FlexEgressTemplate> egressTemplates = 
+    		  this.flexEgressTemplates.parallelStream().filter(t -> t.getAccessEgressStop().equals(transferStop)).collect(Collectors.toList());
 
-          Itinerary itinerary = template.createDirectItinerary(egress, arriveBy, departureTime, startOfTime);
+      if (!egressTemplates.isEmpty()) {
+        for(FlexEgressTemplate egressTemplate : egressTemplates) {
+          Itinerary itinerary = template.createDirectItinerary(egressTemplate.getAccessEgress(), arriveBy, departureTime, startOfTime);
+  
+//          LOG.info("Creating itin for trip " + template.getFlexTrip() + " from:" + template.getAccessEgressStop() + " to:" + 
+//          		egressTemplate.getAccessEgressStop() + " itin=" + itinerary.generalizedCost);
+          
           if (itinerary != null) {
             itineraries.add(itinerary);
           }
@@ -178,8 +195,8 @@ public class FlexRouter {
         .parallelStream()
         .flatMap(accessEgress -> flexIndex
             .getFlexTripsByStop(accessEgress.stop)
-            .filter(flexTrip -> pickup ? flexTrip.isBoardingPossible(accessEgress.stop, arriveBy == false ? departureTime : null) 
-            		: flexTrip.isAlightingPossible(accessEgress.stop, arriveBy == false ? departureTime : null))
+//            .filter(flexTrip -> pickup ? flexTrip.isBoardingPossible(accessEgress.stop, arriveBy == false ? departureTime : null) 
+//            		: flexTrip.isAlightingPossible(accessEgress.stop, arriveBy == false ? departureTime : null))
             .map(flexTrip -> new T2<>(accessEgress, flexTrip)))
         .collect(Collectors.toList());
 
@@ -198,20 +215,21 @@ public class FlexRouter {
             .min(Comparator.comparingLong(t2 -> t2.first.state.getElapsedTimeSeconds())))
         .flatMap(Optional::stream)
         .collect(Collectors.toList());
-    
-    // ...and then the same (least from each group) for both lines and areas
+   
+    // ...and then get the same (least from each group) for both lines and areas
     //
     // (we handle these separately since areas can contain stops, but stops can have special
-    // rules that apply only to that one point inside the area vs. just getting the area)
+    // rules that apply only to that one point inside the area vs. just getting the area), so we want both 
+    // in the list of options
     r.addAll(groupedReachableFlexTrips
             .parallelStream()
             .map(t2s -> t2s
                 .parallelStream()
                 .filter(t2 -> t2.first.stop.isArea() || t2.first.stop.isLine())
-                .min(Comparator.comparingLong(t2 -> t2.first.state.getElapsedTimeSeconds() + 60)))
+                .min(Comparator.comparingLong(t2 -> t2.first.state.getElapsedTimeSeconds())))
             .flatMap(Optional::stream)
             .collect(Collectors.toList()));
-        
+
     return r.stream();
   }
 

@@ -95,7 +95,7 @@ public class ScheduledDeviatedTrip extends FlexTrip {
     ArrayList<FlexEgressTemplate> res = new ArrayList<>();
 
 	for(Integer toIndex : toIndices) {
-	    for (int fromIndex = toIndex; fromIndex >= 0; fromIndex--) {
+	    for (int fromIndex = stopTimes.length - 1; fromIndex >= toIndex; fromIndex--) {
 	      if (stopTimes[fromIndex].pickupType == PICKDROP_NONE) continue;
 	      for (StopLocation stop : expandStops(stopTimes[fromIndex].stop)) {
 	        res.add(new FlexEgressTemplate(egress, this, fromIndex, toIndex, stop, serviceDate, calculator));

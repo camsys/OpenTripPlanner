@@ -4,6 +4,7 @@ import org.opentripplanner.ext.flex.FlexServiceDate;
 import org.opentripplanner.ext.flex.edgetype.FlexTripEdge;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
+import org.opentripplanner.ext.flex.trip.UnscheduledTrip;
 import org.opentripplanner.model.SimpleTransfer;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopLocation;
@@ -50,7 +51,7 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 		Itinerary itinerary = GraphPathToItineraryMapper.generateItinerary(new GraphPath(state), Locale.ENGLISH);
 
 	    int[] flexTimes = getFlexTimes(flexEdge, state);	    
-		if (arriveBy) {
+		if (arriveBy && trip instanceof UnscheduledTrip) {
 			int timeShift = departureTime - flexTimes[1] - flexTimes[0];
 
 			ZonedDateTime zdt = departureServiceDate.plusSeconds(timeShift);
