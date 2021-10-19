@@ -67,9 +67,11 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 		if(!this.getFlexTrip().isBoardingPossible(accessEgress.stop, (int)(flexLeg.startTime.getTimeInMillis()/1000 - serviceDayInMillis/1000)))
 			return null;
     	
-		if(!this.getFlexTrip().isAlightingPossible(egress.stop, (int)(flexLeg.endTime.getTimeInMillis()/1000 - serviceDayInMillis/1000)))
-			return null;	    
-    	    
+		if (trip instanceof UnscheduledTrip) {
+			if(!this.getFlexTrip().isAlightingPossible(egress.stop, (int)(flexLeg.endTime.getTimeInMillis()/1000 - serviceDayInMillis/1000)))
+				return null;	    
+		}
+		
 		return itinerary;
 	}
 	  
