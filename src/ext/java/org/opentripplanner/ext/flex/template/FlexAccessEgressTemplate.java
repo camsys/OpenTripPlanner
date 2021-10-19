@@ -123,7 +123,7 @@ public abstract class FlexAccessEgressTemplate {
           .map(simpleTransfer -> {
             List<Edge> edges = getTransferEdges(simpleTransfer);
             return getFlexAccessEgress(edges,
-                getFlexVertex(edges.get(0)),
+                (edges.size() > 0) ? getFlexVertex(edges.get(0)) : null,
                 getFinalStop(simpleTransfer)
             );
           })
