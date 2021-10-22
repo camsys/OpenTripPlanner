@@ -12,6 +12,7 @@ import org.opentripplanner.routing.core.StateEditor;
 import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
+
 import java.util.Locale;
 
 public class FlexTripEdge extends Edge {
@@ -55,11 +56,12 @@ public class FlexTripEdge extends Edge {
   public State traverse(State s0) {	  
 	if(getFlexPath() == null)
 		return null; // = not routable
-	  
+
 	StateEditor editor = s0.edit(this);
     editor.setBackMode(TraverseMode.BUS);
-    editor.incrementTimeInSeconds((int)getTripTimeInSeconds());
+        
     editor.incrementWeight(getTripTimeInSeconds());
+    editor.incrementTimeInSeconds((int)getTripTimeInSeconds()); // travel time only, no waits 
     
     editor.resetEnteredNoThroughTrafficArea();
     

@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import javax.annotation.Nonnull;
+import javax.ws.rs.QueryParam;
+
 import org.geotools.geojson.geom.GeometryJSON;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
@@ -219,6 +221,18 @@ public class RoutingRequest implements AutoCloseable, Cloneable, Serializable {
      */
     public boolean wheelchairAccessible = false;
 
+    /**
+     * The maximum distance (in meters) the user is willing to walk. Defaults to unlimited.
+     *
+     * @deprecated TODO OTP2 Regression. Not currently working in OTP2. We might not implement the
+     *                       old functionality the same way, but we will try to map this parameter
+     *                       so it does work similar as before.
+     * @see https://github.com/opentripplanner/OpenTripPlanner/issues/2886
+     */
+    @Deprecated
+    @QueryParam("maxWalkDistance")
+    public Double maxWalkDistance;
+    
     /**
      * The maximum number of itineraries to return. In OTP1 this parameter terminates the search,
      * but in OTP2 it crops the list of itineraries AFTER the search is complete. This parameter is

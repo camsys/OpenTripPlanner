@@ -712,6 +712,9 @@ public abstract class RoutingResource {
         if (walkReluctance != null)
             request.setWalkReluctance(walkReluctance);
 
+        if (maxWalkDistance != null)
+            request.maxWalkDistance = maxWalkDistance;
+
         if (waitReluctance != null)
             request.setWaitReluctance(waitReluctance);
 

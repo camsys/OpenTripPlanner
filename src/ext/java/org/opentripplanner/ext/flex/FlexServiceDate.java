@@ -28,8 +28,4 @@ public class FlexServiceDate {
     return servicesRunning != null
         && servicesRunning.contains(graph.getServiceCodes().get(flexTrip.getTrip().getServiceId()));
   }  
-  
-  public int getAsEpochSeconds(TimeZone tz) {
-	return (int)(serviceDate.getAsDate(tz).getTime()/1000);
-  }
 }

@@ -37,7 +37,7 @@ public class ItineraryFilterChainBuilder {
     private final List<GroupBySimilarity> groupBySimilarity = new ArrayList<>();
 
     private boolean debug = false;
-    private Date requestTime;
+    private Double maxWalkDistance = null;
     private int maxNumberOfItineraries = NOT_SET;
     private boolean removeTransitWithHigherCostThanBestOnStreetOnly = true;
     private double minSafeTransferTimeFactor;
@@ -206,9 +206,9 @@ public class ItineraryFilterChainBuilder {
         return this;
     }
 
-    public ItineraryFilterChainBuilder withFlexFilter(boolean enable, Date requestTime) {
-        this.flexFilter = enable;
-        this.requestTime = requestTime;
+    public ItineraryFilterChainBuilder withFlexFilter(Double maxWalkDistance) {
+    	this.flexFilter = true;
+    	this.maxWalkDistance = maxWalkDistance;
         return this;
     }
 
@@ -249,7 +249,7 @@ public class ItineraryFilterChainBuilder {
         }
 
         if(flexFilter) {
-            filters.add(new FlexFilter());
+            filters.add(new FlexFilter(maxWalkDistance));
         }
 
         // Apply all absolute filters AFTER the groupBy filters. Absolute filters are filters that

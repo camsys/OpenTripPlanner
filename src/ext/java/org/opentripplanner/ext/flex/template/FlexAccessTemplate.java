@@ -4,6 +4,7 @@ import org.opentripplanner.ext.flex.FlexServiceDate;
 import org.opentripplanner.ext.flex.edgetype.FlexTripEdge;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
+import org.opentripplanner.ext.flex.trip.FlexTripStopTime;
 import org.opentripplanner.ext.flex.trip.UnscheduledTrip;
 import org.opentripplanner.model.SimpleTransfer;
 import org.opentripplanner.model.Stop;
@@ -32,7 +33,7 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 		super(accessEgress, trip, fromStopTime, toStopTime, transferStop, serviceDate, calculator);
 	}
 
-	public Itinerary createDirectItinerary(NearbyStop egress, boolean arriveBy, int departureTime,
+	public Itinerary createDirectItinerary(NearbyStop egress, boolean arriveBy, int time,
 			ZonedDateTime departureServiceDate) {
 
 		List<Edge> egressEdges = egress.edges;
@@ -41,37 +42,46 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 		FlexTripEdge flexEdge = getFlexEdge(flexToVertex, egress.stop);
 		
 		State state = flexEdge.traverse(accessEgress.state);
-	    if(state == null) return null;
+	    if(state == null) 
+	    	return null;
 
 	    for (Edge e : egressEdges) {
 			state = e.traverse(state);
-		    if(state == null) return null;
+		    if(state == null) 
+		    	return null;
 		}
 	    
 		Itinerary itinerary = GraphPathToItineraryMapper.generateItinerary(new GraphPath(state), Locale.ENGLISH);
 
-	    int[] flexTimes = getFlexTimes(flexEdge, state);	    
-		if (arriveBy && trip instanceof UnscheduledTrip) {
-			int timeShift = departureTime - flexTimes[1] - flexTimes[0];
+	    // adjust departure time to arrive before/at the proper time
+	    if (arriveBy) {
+	    	FlexTripStopTime ftst = this.trip.getStopTime(this.toStopIndex);
 
-			ZonedDateTime zdt = departureServiceDate.plusSeconds(timeShift);
+	    	int newTime = time - (int)flexEdge.getTripTimeInSeconds();
+	    	if(time > ftst.flexWindowEnd)
+	    		newTime = ftst.flexWindowEnd - (int)flexEdge.getTripTimeInSeconds();
+
+			ZonedDateTime zdt = departureServiceDate.plusSeconds(newTime);
 			Calendar c = Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone()));
 			c.setTimeInMillis(zdt.toInstant().toEpochMilli());
 			itinerary.timeShiftToStartAt(c);
+			itinerary.generalizedCost += Math.abs(time - newTime);
+
+		// shift requested departure time to next departure time
+	    } else {		
+	    	FlexTripStopTime ftst = this.trip.getStopTime(this.fromStopIndex);
+
+	    	if(time > ftst.flexWindowStart && time < ftst.flexWindowEnd) {
+	    		// nothing to do?
+	    	} else {
+		    	ZonedDateTime zdt = departureServiceDate.plusSeconds(ftst.flexWindowStart);
+				Calendar c = Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone()));
+				c.setTimeInMillis(zdt.toInstant().toEpochMilli());
+				itinerary.timeShiftToStartAt(c);	 
+				itinerary.generalizedCost += Math.abs(time - ftst.flexWindowStart);
+	    	}
 		}
 
-	    // check that we can make this trip re: pickup/dropoff time restrictions
-		long serviceDayInMillis = departureServiceDate.toInstant().toEpochMilli();
-		Leg flexLeg = itinerary.legs.parallelStream().filter(it -> it.flexibleTrip).findFirst().orElse(null);
-		
-		if(!this.getFlexTrip().isBoardingPossible(accessEgress.stop, (int)(flexLeg.startTime.getTimeInMillis()/1000 - serviceDayInMillis/1000)))
-			return null;
-    	
-		if (trip instanceof UnscheduledTrip) {
-			if(!this.getFlexTrip().isAlightingPossible(egress.stop, (int)(flexLeg.endTime.getTimeInMillis()/1000 - serviceDayInMillis/1000)))
-				return null;	    
-		}
-		
 		return itinerary;
 	}
 	  

@@ -100,30 +100,28 @@ public class FlexRouter {
 
     Set<Itinerary> itineraries = new HashSet<>();
 
-//    LOG.info("Direct Routing - Accesses: " + this.flexAccessTemplates.stream()
-//	.map(e -> e.getFlexTrip() + " " + e.getAccessEgressStop().getId() + "->" + e.getTransferStop().getId() + "\n")
-//	.distinct().collect(Collectors.toList()));
-    
-    
-//    LOG.info("Direct Routing - Egresses: " + this.flexEgressTemplates.stream()
-//	.map(e -> e.getFlexTrip() + " " + e.getAccessEgressStop().getId() + "->" + e.getTransferStop().getId() + "\n")
-//	.distinct().collect(Collectors.toList()));
-    
+    LOG.info("Direct Routing - Accesses: " + this.flexAccessTemplates.stream()
+	.map(e -> e.getFlexTrip() + " " + e.getAccessEgressStop().getId() + "->" + e.getTransferStop().getId() + "\n")
+	.distinct().collect(Collectors.toList()));
+        
+    LOG.info("Direct Routing - Egresses: " + this.flexEgressTemplates.stream()
+	.map(e -> e.getFlexTrip() + " " + e.getTransferStop().getId() + " -> " + e.getAccessEgressStop().getId() + "\n")
+	.distinct().collect(Collectors.toList()));
     
     for (FlexAccessTemplate template : this.flexAccessTemplates) {
       StopLocation transferStop = template.getTransferStop();
 
       List<FlexEgressTemplate> egressTemplates = 
-    		  this.flexEgressTemplates.parallelStream().filter(t -> t.getAccessEgressStop().equals(transferStop)).collect(Collectors.toList());
+    		  this.flexEgressTemplates.parallelStream().filter(t -> t.getTransferStop().equals(transferStop)).collect(Collectors.toList());
 
       if (!egressTemplates.isEmpty()) {
         for(FlexEgressTemplate egressTemplate : egressTemplates) {
           Itinerary itinerary = template.createDirectItinerary(egressTemplate.getAccessEgress(), arriveBy, departureTime, startOfTime);
   
-//          LOG.info("Creating itin for trip " + template.getFlexTrip() + " from:" + template.getAccessEgressStop() + " to:" + 
-//          		egressTemplate.getAccessEgressStop() + " itin=" + itinerary.generalizedCost);
-          
           if (itinerary != null) {
+              LOG.info("Creating itin for trip " + template.getFlexTrip() + " from:" + template.getAccessEgressStop() + " to:" + 
+                		egressTemplate.getAccessEgressStop() + " itin=" + itinerary);
+                
             itineraries.add(itinerary);
           }
         }
@@ -157,7 +155,7 @@ public class FlexRouter {
     if (this.flexAccessTemplates != null) { return; }
 
     // Fetch the closest flexTrips reachable from the access stops
-    this.flexAccessTemplates = getClosestFlexTrips(streetAccesses, true)
+    this.flexAccessTemplates = getClosestFlexTrips(streetAccesses)
         // For each date the router has data for
         .flatMap(t2 -> Arrays.stream(dates)
             // Discard if service is not running on date
@@ -175,7 +173,7 @@ public class FlexRouter {
     if (this.flexEgressTemplates != null) { return; }
 
     // Fetch the closest flexTrips reachable from the egress stops
-    this.flexEgressTemplates = getClosestFlexTrips(streetEgresses, false)
+    this.flexEgressTemplates = getClosestFlexTrips(streetEgresses)
         // For each date the router has data for
         .flatMap(t2 -> Arrays.stream(dates)
             // Discard if service is not running on date
@@ -189,14 +187,12 @@ public class FlexRouter {
         .collect(Collectors.toList());
   }
 
-  private Stream<T2<NearbyStop, FlexTrip>> getClosestFlexTrips(Collection<NearbyStop> nearbyStops, boolean pickup) {
+  private Stream<T2<NearbyStop, FlexTrip>> getClosestFlexTrips(Collection<NearbyStop> nearbyStops) {
     // Find all trips reachable from the nearbyStops
     Collection<T2<NearbyStop, FlexTrip>> flexTripsReachableFromNearbyStops = nearbyStops
         .parallelStream()
         .flatMap(accessEgress -> flexIndex
             .getFlexTripsByStop(accessEgress.stop)
-//            .filter(flexTrip -> pickup ? flexTrip.isBoardingPossible(accessEgress.stop, arriveBy == false ? departureTime : null) 
-//            		: flexTrip.isAlightingPossible(accessEgress.stop, arriveBy == false ? departureTime : null))
             .map(flexTrip -> new T2<>(accessEgress, flexTrip)))
         .collect(Collectors.toList());
 

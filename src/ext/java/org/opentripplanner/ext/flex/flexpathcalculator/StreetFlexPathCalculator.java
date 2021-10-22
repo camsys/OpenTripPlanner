@@ -56,32 +56,27 @@ public class StreetFlexPathCalculator implements FlexPathCalculator {
     ShortestPathTree shortestPathTree;
     if (cache.containsKey(originVertex)) {
       shortestPathTree = cache.get(originVertex);
+
     } else {
       shortestPathTree = routeToMany(originVertex);
       cache.put(originVertex, shortestPathTree);
     }
 
     GraphPath path = shortestPathTree.getPath(destinationVertex, false);
-    if (path == null) {
-      return null;
-    }
-
+    if(path == null)
+    	return null;
+    
     int distance = (int) path.getDistanceMeters();
     int duration = path.getDuration();
 
-    // only allow times from stop_times.txt to *extend* the travel time via the street, the latter
-    // we assume to be the most direct/best case and the scheduled case (stop_times.txt) case to only 
-    // be worse
     if(trip instanceof ScheduledDeviatedTrip) {
     	FlexTripStopTime fromST = trip.getStopTime(fromStopIndex);
     	FlexTripStopTime toST = trip.getStopTime(toStopIndex);
 
-    	int newDuration = toST.arrivalTime - fromST.departureTime;
-
-    	if(newDuration > 0 && newDuration > duration)
+    	int newDuration = (toST.departureTime - toST.arrivalTime) + (fromST.departureTime - fromST.arrivalTime);
+    	if(newDuration > 0) // filter invalid data; in this case, use street traversal time
     		duration = newDuration;
     }
-    
     
     LineString geometry = path.getGeometry();
 
