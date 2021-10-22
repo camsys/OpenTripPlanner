@@ -89,7 +89,7 @@ public class Place {
      * just the necessary information for a human to identify the place in a given the context.
      */
     public String toStringShort() {
-        StringBuilder buf = new StringBuilder(name);
+        StringBuilder buf = new StringBuilder(name + "");
         if(stopId != null) {
             buf.append(" (").append(stopId).append(")");
         } else {

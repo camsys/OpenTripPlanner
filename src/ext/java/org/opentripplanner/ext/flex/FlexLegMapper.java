@@ -42,8 +42,8 @@ public class FlexLegMapper {
 
       
 	  if(flexTripEdge.s2.isArea() || flexTripEdge.s2.isLine()) {
-		  GenericLocation from = states[1].getOptions().to;
-		  leg.to = new Place(from.lat, from.lng, from.label);				  
+		  GenericLocation to = states[1].getOptions().to;
+		  leg.to = new Place(to.lat, to.lng, to.label);				  
 		  leg.to.stopId = flexTripEdge.s2.getId();
 	  }	  
 

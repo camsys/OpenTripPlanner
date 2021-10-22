@@ -110,7 +110,7 @@ public class ScheduledDeviatedTrip extends FlexTrip {
   public int earliestDepartureTime(int departureTime, int fromStopIndex, int toStopIndex) {
 	int stopDepartureTime = MISSING_VALUE;
     for (int i = fromStopIndex; stopDepartureTime == MISSING_VALUE && i >= 0; i--) {
-    	stopDepartureTime = stopTimes[i].flexWindowStart;
+    	stopDepartureTime = stopTimes[i].arrivalTime != MISSING_VALUE ? stopTimes[i].arrivalTime : stopTimes[i].flexWindowStart;
     }
     if(stopDepartureTime == MISSING_VALUE)
     	return -1;
@@ -121,7 +121,7 @@ public class ScheduledDeviatedTrip extends FlexTrip {
   public int latestArrivalTime(int arrivalTime, int fromStopIndex, int toStopIndex) {
     int stopArrivalTime = MISSING_VALUE;
     for (int i = toStopIndex; stopArrivalTime == MISSING_VALUE && i < stopTimes.length; i++) {
-      stopArrivalTime = stopTimes[i].flexWindowEnd;
+      stopArrivalTime = stopTimes[i].departureTime != MISSING_VALUE ? stopTimes[i].departureTime :stopTimes[i].flexWindowEnd;
     }
     if(stopArrivalTime == MISSING_VALUE)
     	return -1;
@@ -177,7 +177,9 @@ public class ScheduledDeviatedTrip extends FlexTrip {
     for (int i = 0; i < stopTimes.length; i++) {
       if (stopTimes[i].pickupType == PICKDROP_NONE) continue; // No pickup allowed here
       if(time != null) {
-    	  if(!(time >= stopTimes[i].flexWindowStart && time <= stopTimes[i].flexWindowEnd))
+    	  int s = stopTimes[i].arrivalTime != MISSING_VALUE ? stopTimes[i].arrivalTime : stopTimes[i].flexWindowStart;
+    	  int e = stopTimes[i].departureTime != MISSING_VALUE ? stopTimes[i].departureTime : stopTimes[i].flexWindowEnd;
+    	  if(!(time >= s && time <= e))
     		  continue;
       }
 
@@ -198,7 +200,9 @@ public class ScheduledDeviatedTrip extends FlexTrip {
     for (int i = stopTimes.length - 1; i >= 0; i--) {
       if (stopTimes[i].dropOffType == PICKDROP_NONE) continue; // No drop off allowed here
       if(time != null) {
-    	  if(!(time >= stopTimes[i].flexWindowStart && time <= stopTimes[i].flexWindowEnd))
+    	  int s = stopTimes[i].arrivalTime != MISSING_VALUE ? stopTimes[i].arrivalTime : stopTimes[i].flexWindowStart;
+    	  int e = stopTimes[i].departureTime != MISSING_VALUE ? stopTimes[i].departureTime : stopTimes[i].flexWindowEnd;
+    	  if(!(time >= s && time <= e))
     		  continue;
       }
       
