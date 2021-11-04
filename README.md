@@ -2,6 +2,7 @@
 
 * dev-2.x: Latest OTP 2 branch with Flex work (MA DOT)
 * mta-master: Latest OTP 1.4x branch with work for NY MTA
+* v1.5.x: Sound Transit branch off upstream v1.5.0
 * rtd-master: Maybe in use? 
 * ocny-master: Maybe in use? 
 * vtrans-master: Maybe in use? 
