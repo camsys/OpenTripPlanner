@@ -721,8 +721,8 @@ public class GraphIndex {
         return stopTimesForStop(stop, startTime, timeRange, numberOfDepartures, omitNonPickups, RouteMatcher.emptyMatcher(), null);
     }
 
-    public List<StopTimesInPattern> stopTimesForStop(Stop stop, long startTime, int timeRange, int numberOfDepartures, boolean omitNonPickups, boolean ignoreRealtimeUpdates) {
-        return stopTimesForStop(stop, startTime, timeRange, numberOfDepartures, omitNonPickups, RouteMatcher.emptyMatcher(), null, null, null, null, null, null, null, false, false, false);
+    public List<StopTimesInPattern> stopTimesForStop(Stop stop, long startTime, int timeRange, int numberOfDepartures, boolean omitNonPickups, boolean signMode) {
+        return stopTimesForStop(stop, startTime, timeRange, numberOfDepartures, omitNonPickups, RouteMatcher.emptyMatcher(), null, null, null, null, null, null, null, false, false, signMode);
     }
 
     /**
