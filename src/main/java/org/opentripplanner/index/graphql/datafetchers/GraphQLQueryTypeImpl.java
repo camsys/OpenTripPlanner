@@ -379,6 +379,9 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 			nsr.includeStopsForTrip = input.getGraphQLIncludeStopsForTrip();
 			nsr.signMode = input.getGraphQLSignMode();
 			
+			// controls how sub elements display arrivals (realtime or scheduled); see ...StopImpl.java
+			environment.<GraphQLRequestContext>getContext().setSignMode(nsr.signMode);
+			
 			return nsr.getNearbySchedules().stream().collect(Collectors.toList());
 		};
 	}

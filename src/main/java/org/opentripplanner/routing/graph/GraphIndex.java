@@ -636,7 +636,6 @@ public class GraphIndex {
     		int timeRange, int numberOfDepartures, boolean omitNonPickups,
             String headsign, String tripHeadsign, Collection<String> trackIds, boolean showCancelledTrips, boolean includeStopsForTrip, boolean signMode) {
 
-        boolean filterRealtimeData = signMode;
     	ServiceDate[] serviceDates = {new ServiceDate(date).previous(), new ServiceDate(date), new ServiceDate(date).next()};
 
         // Use the Lucene PriorityQueue, which has a fixed size
@@ -670,7 +669,7 @@ public class GraphIndex {
                     	if (tripHeadsign != null && !tripHeadsign.equals(t.trip.getTripHeadsign())) continue;
                         if (headsign != null && !headsign.equals(t.getHeadsign(sidx))) continue;
                         if (trackIds != null && t.getTrack(sidx) != null && !trackIds.contains(t.getTrack(sidx))) continue;
-                        if (filterRealtimeData && t.isScheduled()) continue;
+                        if (signMode && t.isScheduled()) continue;
 
                         if (shouldShowDeparture(t.getDepartureTime(sidx), secondsSinceMidnight)
                                 || (showCancelledTrips && shouldShowDeparture(t.getScheduledDepartureTime(sidx), secondsSinceMidnight))) {

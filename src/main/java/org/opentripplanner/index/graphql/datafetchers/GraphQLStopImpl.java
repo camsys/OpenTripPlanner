@@ -248,7 +248,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 		    		// get arrivals at this stop within the following 30m of our arrival
 					Collection<StopTimesInPattern> stip = 
 								getGraphIndex(environment).stopTimesForStop(e, ourArrivalEpochSeconds, 30 * 60, 1000, 
-										true, !environment.getArgumentOrDefault("signMode", false));
+										true, environment.<GraphQLRequestContext>getContext().getSignMode());
 
 					return stip.stream()
 							.map(r -> { return getGraphIndex(environment).routeForId.get(r.route.id); })
@@ -290,7 +290,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 			    			// get arrivals at this stop within the following 30m of our arrival
 							Collection<StopTimesInPattern> stip = 
 									getGraphIndex(environment).stopTimesForStop(stop, ourArrivalEpochSeconds, 30 * 60, 1000, 
-											true, !environment.getArgumentOrDefault("signMode", false));
+											true, environment.<GraphQLRequestContext>getContext().getSignMode());
 	
 							routes.addAll(stip.stream()
 									.map(r -> { return getGraphIndex(environment).routeForId.get(r.route.id); })
