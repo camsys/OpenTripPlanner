@@ -28,7 +28,6 @@ public class GraphQLDataFetchers {
     public DataFetcher<String> phone();
     public DataFetcher<String> fareUrl();
     public DataFetcher<Iterable<Object>> routes();
-    public DataFetcher<Iterable<Object>> stops();
     public DataFetcher<Iterable<Object>> alerts();
     public DataFetcher<Iterable<Object>> mtaEquipment();
   }
@@ -66,6 +65,8 @@ public class GraphQLDataFetchers {
     public DataFetcher<String> feedId();
     public DataFetcher<String> feedVersion();
     public DataFetcher<Iterable<Object>> agencies();
+    public DataFetcher<Iterable<Object>> routes();
+    public DataFetcher<Iterable<Object>> stops();
   }
   
   public interface GraphQLKeyValueEntry {
@@ -84,6 +85,7 @@ public class GraphQLDataFetchers {
   
   public interface GraphQLQueryType {
     public DataFetcher<Iterable<Object>> feeds();
+    public DataFetcher<Object> feed();
     public DataFetcher<Iterable<Object>> agencies();
     public DataFetcher<Object> agency();
     public DataFetcher<Object> stop();

@@ -77,18 +77,6 @@ public class GraphQLAgencyImpl implements GraphQLDataFetchers.GraphQLAgency {
 	    	return e.getFareUrl();
 	    };
 	}
-
-	@Override
-	public DataFetcher<Iterable<Object>> stops() {
-	    return environment -> {
-	    	Agency e = environment.getSource();
-
-	    	return getGraphIndex(environment).stopForId.entrySet().stream()
-	    		.filter(o -> o.getKey().getAgencyId().equals(e.getId()))
-	    		.map(s -> s.getValue())
-	    		.collect(Collectors.toList());
-	    };
-	}
 	
 	@Override
 	public DataFetcher<Iterable<Object>> routes() {
@@ -96,7 +84,7 @@ public class GraphQLAgencyImpl implements GraphQLDataFetchers.GraphQLAgency {
 	    	Agency e = environment.getSource();
 
 	    	return getGraphIndex(environment).routeForId.values().stream()
-	    		.filter(o -> o.getId().getAgencyId().equals(e.getId()))
+	    		.filter(o -> o.getAgency().getId().equals(e.getId()))
 	    		.distinct()
 	    		.collect(Collectors.toList());
 	    };

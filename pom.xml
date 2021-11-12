@@ -364,8 +364,8 @@
 						</goals>
 						<configuration>
 							<mainClass>org.opentripplanner.standalone.OTPMain</mainClass>
-							<jvmArgs>-Duser.timezone=America/New_York </jvmArgs>
-							<commandlineArgs>--router default --server --verbose --clientFiles /var/otp/mta-ui --clientPath / --disableNativeClient --clientFallback</commandlineArgs>
+							<jvmArgs>-Duser.timezone=America/New_York --illegal-access=permit </jvmArgs>
+							<commandlineArgs>--router default  --server --verbose --clientFiles /var/otp/mta-ui --clientPath / --disableNativeClient --clientFallback</commandlineArgs>
 						</configuration>
 					</execution>
 					<execution>
@@ -375,8 +375,8 @@
 						</goals>
 						<configuration>
 							<mainClass>org.opentripplanner.standalone.OTPMain</mainClass>
-							<jvmArgs>-Duser.timezone=America/New_York </jvmArgs>
-							<commandlineArgs>--build /var/otp/graphs/default --verbose</commandlineArgs>
+							<jvmArgs>-Duser.timezone=America/New_York --illegal-access=permit </jvmArgs>
+							<commandlineArgs>--build /var/otp/graphs/default --verbose  </commandlineArgs>
 						</configuration>
 					</execution>
 

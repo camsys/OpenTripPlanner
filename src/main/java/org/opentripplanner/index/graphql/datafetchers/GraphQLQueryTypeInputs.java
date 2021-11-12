@@ -7,6 +7,14 @@ import org.opentripplanner.index.graphql.generated.GraphQLTypes.*;
 @SuppressWarnings("unchecked")
 public class GraphQLQueryTypeInputs {
 
+	public static class GraphQLQueryTypeFeedArgsInput extends GraphQLQueryTypeFeedArgs {
+	    public GraphQLQueryTypeFeedArgsInput(Map<String, Object> args) {
+	        if (args != null) {
+	        	this.setGraphQLId((String)args.get("id"));
+	        }
+	    }
+	}
+	
 	public static class GraphQLQueryTypeAgencyArgsInput extends GraphQLQueryTypeAgencyArgs {
 	    public GraphQLQueryTypeAgencyArgsInput(Map<String, Object> args) {
 	        if (args != null) {

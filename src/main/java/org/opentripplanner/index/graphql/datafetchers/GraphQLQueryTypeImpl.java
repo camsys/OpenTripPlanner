@@ -50,6 +50,13 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 			}	
 		};
 	}
+	
+	@Override
+	public DataFetcher<Object> feed() {
+		return environment -> getGraphIndex(environment)
+	    		.feedInfoForId
+	    		.get(new GraphQLQueryTypeFeedArgsInput(environment.getArguments()).getGraphQLId());
+	}
 
 	@Override
 	public DataFetcher<Iterable<Object>> feeds() {

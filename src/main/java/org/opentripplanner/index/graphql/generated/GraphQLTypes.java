@@ -81,6 +81,14 @@ public class GraphQLTypes {
   }
   
   
+  public static class GraphQLQueryTypeFeedArgs {
+    private String id;
+  
+    public GraphQLQueryTypeFeedArgs() {}
+  
+    public String getGraphQLId() { return this.id; }
+    public void setGraphQLId(String id) { this.id = id; }
+  }
   public static class GraphQLQueryTypeAgencyArgs {
     private String id;
   
