@@ -32,7 +32,7 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 			StopLocation transferStop, FlexServiceDate serviceDate, FlexPathCalculator calculator) {
 		super(accessEgress, trip, fromStopTime, toStopTime, transferStop, serviceDate, calculator);
 	}
-
+	  
 	public Itinerary createDirectItinerary(NearbyStop egress, boolean arriveBy, int time,
 			ZonedDateTime departureServiceDate) {
 
@@ -72,7 +72,10 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 	    	FlexTripStopTime ftst = this.trip.getStopTime(this.fromStopIndex);
 
 	    	if(time > ftst.flexWindowStart && time < ftst.flexWindowEnd) {
-	    		// nothing to do?
+		    	ZonedDateTime zdt = departureServiceDate.plusSeconds(time);
+				Calendar c = Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone()));
+				c.setTimeInMillis(zdt.toInstant().toEpochMilli());
+				itinerary.timeShiftToStartAt(c);	 
 	    	} else {
 		    	ZonedDateTime zdt = departureServiceDate.plusSeconds(ftst.flexWindowStart);
 				Calendar c = Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone()));

@@ -5,6 +5,7 @@ import com.google.common.collect.Multimap;
 import org.opentripplanner.common.model.T2;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
 import org.opentripplanner.ext.flex.flexpathcalculator.StreetFlexPathCalculator;
+import org.opentripplanner.ext.flex.template.FlexAccessEgressTemplate;
 import org.opentripplanner.ext.flex.template.FlexAccessTemplate;
 import org.opentripplanner.ext.flex.template.FlexEgressTemplate;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
@@ -26,8 +27,12 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -108,19 +113,19 @@ public class FlexRouter {
 	.map(e -> e.getFlexTrip() + " " + e.getTransferStop().getId() + " -> " + e.getAccessEgressStop().getId() + "\n")
 	.distinct().collect(Collectors.toList()));
     
-    for (FlexAccessTemplate template : this.flexAccessTemplates) {
+    for (FlexAccessTemplate template : this.flexAccessTemplates.stream().distinct().collect(Collectors.toList())) {
       StopLocation transferStop = template.getTransferStop();
 
       List<FlexEgressTemplate> egressTemplates = 
-    		  this.flexEgressTemplates.parallelStream().filter(t -> t.getTransferStop().equals(transferStop)).collect(Collectors.toList());
+    		  this.flexEgressTemplates.parallelStream().distinct().filter(t -> t.getTransferStop().equals(transferStop)).distinct().collect(Collectors.toList());
 
       if (!egressTemplates.isEmpty()) {
         for(FlexEgressTemplate egressTemplate : egressTemplates) {
           Itinerary itinerary = template.createDirectItinerary(egressTemplate.getAccessEgress(), arriveBy, departureTime, startOfTime);
   
           if (itinerary != null) {
-              LOG.info("Creating itin for trip " + template.getFlexTrip() + " from:" + template.getAccessEgressStop() + " to:" + 
-                		egressTemplate.getAccessEgressStop() + " itin=" + itinerary);
+              LOG.info("Creating itin for trip " + egressTemplate.getFlexTrip()+"/" +template.getFlexTrip() + " from:" + template.getAccessEgressStop() + " to:" + 
+                		egressTemplate.getAccessEgressStop() + " xfr=" + template.getTransferStop() + " itin=" + itinerary);
                 
             itineraries.add(itinerary);
           }
@@ -131,13 +136,20 @@ public class FlexRouter {
     return itineraries;
   }
 
+  public static <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor) {
+		Map<Object, Boolean> map = new ConcurrentHashMap<>();
+		return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
+  }
+  
   public Collection<FlexAccessEgress> createFlexAccesses() {
     calculateFlexAccessTemplates();
 
     return this.flexAccessTemplates
         .parallelStream()
+        .distinct()
         .flatMap(template -> template.createFlexAccessEgressStream(graph))
         .filter(e -> e != null)
+        .distinct()
         .collect(Collectors.toList());
   }
 
@@ -146,8 +158,10 @@ public class FlexRouter {
 
     return this.flexEgressTemplates
         .parallelStream()
+        .distinct()
         .flatMap(template -> template.createFlexAccessEgressStream(graph))
         .filter(e -> e != null)
+        .distinct()
         .collect(Collectors.toList());
   }
 
@@ -188,7 +202,18 @@ public class FlexRouter {
   }
 
   private Stream<T2<NearbyStop, FlexTrip>> getClosestFlexTrips(Collection<NearbyStop> nearbyStops) {
-    // Find all trips reachable from the nearbyStops
+	    List<NearbyStop> invalid = nearbyStops
+	    		.stream()
+	    		.filter(it -> it.stop == null)
+	    		.collect(Collectors.toList());
+	    
+	    if(!invalid.isEmpty()) {
+	    	System.out.println("NULL");
+	    }
+	    
+
+	  
+	  // Find all trips reachable from the nearbyStops
     Collection<T2<NearbyStop, FlexTrip>> flexTripsReachableFromNearbyStops = nearbyStops
         .parallelStream()
         .flatMap(accessEgress -> flexIndex
@@ -199,7 +224,8 @@ public class FlexRouter {
     // Group all (NearbyStop, FlexTrip) tuples by flexTrip
     Collection<List<T2<NearbyStop, FlexTrip>>> groupedReachableFlexTrips = flexTripsReachableFromNearbyStops
     	.parallelStream()
-        .collect(Collectors.groupingBy(t2 -> t2.second))
+        .distinct()
+        .collect(Collectors.groupingBy(t2 -> t2.second.getId()))
         .values();
 
     // Get the stop with least walking time from each group 
@@ -210,7 +236,7 @@ public class FlexRouter {
             .min(Comparator.comparingLong(t2 -> t2.first.state.getElapsedTimeSeconds())))
         .flatMap(Optional::stream)
         .collect(Collectors.toList());
-
+    
     return r.stream();
   }
 

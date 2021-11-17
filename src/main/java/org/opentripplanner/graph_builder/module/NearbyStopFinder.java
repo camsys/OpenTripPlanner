@@ -227,11 +227,9 @@ public class NearbyStopFinder {
             for (var locationStates : locationsMap.asMap().entrySet()) {
                 FlexStopLocation flexStopLocation = locationStates.getKey();
                 Collection<State> states = locationStates.getValue();
- 
 
                 // if the stoplocation is an area or line, we need to use the location the user searched for
                 // that is on the line or within the area vs. using the centroid
- /*
                 if(flexStopLocation.isArea() || flexStopLocation.isLine()) {	                	
                 	for(Vertex v : originVertices) {
 //                	for(State s : states) {
@@ -273,8 +271,7 @@ public class NearbyStopFinder {
                   	}
                 	
                 } else {
-                */
-                	 // Select the vertex from all vertices that are reachable per FlexStopLocation by taking
+                	// Select the vertex from all vertices that are reachable per FlexStopLocation by taking
 	                // the minimum walking distance
 	                State min = Collections.min(states,
 	                    (s1, s2) -> (int) (s1.walkDistance - s2.walkDistance)
@@ -290,7 +287,7 @@ public class NearbyStopFinder {
                 	stopsFound.add(NearbyStop.nearbyStopForState(min, flexStopLocation));
                 }
             }
-//        }
+        }
 
         if (removeTempEdges) {
             routingRequest.cleanup();

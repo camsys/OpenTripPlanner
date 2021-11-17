@@ -156,4 +156,31 @@ public abstract class FlexAccessEgressTemplate {
     );
   }
 
+  @Override
+  public boolean equals(Object o) {
+      if (o == this)
+          return true;
+      
+      if (!(o instanceof FlexAccessEgressTemplate))
+          return false;
+      
+      FlexAccessEgressTemplate other = (FlexAccessEgressTemplate)o;
+
+      return serviceDate.serviceDate.equals(other.serviceDate.serviceDate) && 
+    		  accessEgress.stop.getId().equals(other.accessEgress.stop.getId()) && 
+    		  trip.getId().equals(other.trip.getId()) && 
+    		  transferStop.getId().equals(other.transferStop.getId());
+  }
+  
+  
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + serviceDate.serviceDate.getAsDate().hashCode();
+    result = prime * result + accessEgress.stop.getId().hashCode();
+    result = prime * result + trip.getId().hashCode();
+    result = prime * result + transferStop.getId().hashCode();
+    return result;
+  }
 }
