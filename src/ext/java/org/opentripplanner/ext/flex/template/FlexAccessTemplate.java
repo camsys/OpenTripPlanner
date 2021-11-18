@@ -53,36 +53,36 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 	    
 		Itinerary itinerary = GraphPathToItineraryMapper.generateItinerary(new GraphPath(state), Locale.ENGLISH);
 
-	    // adjust departure time to arrive before/at the proper time
-	    if (arriveBy) {
-	    	FlexTripStopTime ftst = this.trip.getStopTime(this.toStopIndex);
-
-	    	int newTime = time - (int)flexEdge.getTripTimeInSeconds();
-	    	if(time > ftst.flexWindowEnd)
-	    		newTime = ftst.flexWindowEnd - (int)flexEdge.getTripTimeInSeconds();
-
-			ZonedDateTime zdt = departureServiceDate.plusSeconds(newTime);
-			Calendar c = Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone()));
-			c.setTimeInMillis(zdt.toInstant().toEpochMilli());
-			itinerary.timeShiftToStartAt(c);
-			itinerary.generalizedCost += Math.abs(time - newTime);
-
-		// shift requested departure time to next departure time
-	    } else {		
-	    	FlexTripStopTime ftst = this.trip.getStopTime(this.fromStopIndex);
-
-	    	if(time > ftst.flexWindowStart && time < ftst.flexWindowEnd) {
-		    	ZonedDateTime zdt = departureServiceDate.plusSeconds(time);
+		// change trips that can occur within a range to a specific time that makes sense given the optimization
+		// requested
+		if(trip instanceof UnscheduledTrip) {
+		    if (arriveBy) {
+		    	FlexTripStopTime ftst = this.trip.getStopTime(this.toStopIndex);
+	
+		    	int newTime = time - (int)flexEdge.getTripTimeInSeconds();
+		    	if(time > ftst.flexWindowEnd)
+		    		newTime = ftst.flexWindowEnd - (int)flexEdge.getTripTimeInSeconds();
+	
+				ZonedDateTime zdt = departureServiceDate.plusSeconds(newTime);
 				Calendar c = Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone()));
 				c.setTimeInMillis(zdt.toInstant().toEpochMilli());
-				itinerary.timeShiftToStartAt(c);	 
-	    	} else {
-		    	ZonedDateTime zdt = departureServiceDate.plusSeconds(ftst.flexWindowStart);
-				Calendar c = Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone()));
-				c.setTimeInMillis(zdt.toInstant().toEpochMilli());
-				itinerary.timeShiftToStartAt(c);	 
-				itinerary.generalizedCost += Math.abs(time - ftst.flexWindowStart);
-	    	}
+				itinerary.timeShiftToStartAt(c);
+				itinerary.generalizedCost += Math.abs(time - newTime);
+	
+		    } else {		
+		    	FlexTripStopTime ftst = this.trip.getStopTime(this.fromStopIndex);
+	
+		    	if(time > ftst.flexWindowStart && time < ftst.flexWindowEnd) {
+			    	ZonedDateTime zdt = departureServiceDate.plusSeconds(time);
+					Calendar c = Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone()));
+					c.setTimeInMillis(zdt.toInstant().toEpochMilli());
+					itinerary.timeShiftToStartAt(c);	 
+
+				// outside travel window--trip is not valid. 
+		    	} else {
+		    		return null;
+		    	}
+			}
 		}
 
 		return itinerary;

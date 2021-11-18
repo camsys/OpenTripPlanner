@@ -46,6 +46,7 @@ public class StreetFlexPathCalculator implements FlexPathCalculator {
     this.reverseDirection = reverseDirection;
   }
 
+  // NB: duration can never be 0. 
   @Override
   public FlexPath calculateFlexPath(Vertex fromv, Vertex tov, int fromStopIndex, int toStopIndex, FlexTrip trip) {
     // These are the origin and destination vertices from the perspective of the one-to-many search,
@@ -73,8 +74,10 @@ public class StreetFlexPathCalculator implements FlexPathCalculator {
     	FlexTripStopTime fromST = trip.getStopTime(fromStopIndex);
     	FlexTripStopTime toST = trip.getStopTime(toStopIndex);
 
+    	// GTFS data can be incomplete, so try our best to arrive at something sane 
     	int newDuration = (toST.departureTime - toST.arrivalTime) + (fromST.departureTime - fromST.arrivalTime);
-    	if(newDuration > 0) // filter invalid data; in this case, use street traversal time
+
+    	if(newDuration > 0) // filter invalid GTFS data; in this case, use street traversal time
     		duration = newDuration;
     }
     

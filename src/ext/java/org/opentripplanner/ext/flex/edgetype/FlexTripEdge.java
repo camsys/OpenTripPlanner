@@ -1,6 +1,7 @@
 package org.opentripplanner.ext.flex.edgetype;
 
 import org.locationtech.jts.geom.LineString;
+import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPath;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
 import org.opentripplanner.ext.flex.template.FlexAccessEgressTemplate;
@@ -13,6 +14,7 @@ import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
 
+import java.util.Date;
 import java.util.Locale;
 
 public class FlexTripEdge extends Edge {
@@ -59,9 +61,18 @@ public class FlexTripEdge extends Edge {
 
 	StateEditor editor = s0.edit(this);
     editor.setBackMode(TraverseMode.BUS);
-        
-    editor.incrementWeight(getTripTimeInSeconds());
-    editor.incrementTimeInSeconds((int)getTripTimeInSeconds()); // travel time only, no waits 
+    
+    // TODO: model this as an edge traversal? 
+    int departureTime = flexTemplate.getFlexTrip().getStopTime(this.fromIndex).departureTime;
+    long serviceDate = new ServiceDate(new Date(s0.getTimeInMillis())).getAsDate().getTime();
+    int offsetFromMidnight = (int)((s0.getTimeInMillis() - serviceDate) / 1000);
+    
+    int wait = departureTime - offsetFromMidnight;    
+    if(wait < 0)
+    	return null; // missed it
+    
+    editor.incrementWeight(getTripTimeInSeconds() + wait);
+    editor.incrementTimeInSeconds((int)getTripTimeInSeconds() + wait);
     
     editor.resetEnteredNoThroughTrafficArea();
     
