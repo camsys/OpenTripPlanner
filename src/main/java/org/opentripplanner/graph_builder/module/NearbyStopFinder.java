@@ -42,9 +42,11 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * These library functions are used by the streetless and streetful stop linkers, and in profile transfer generation.
@@ -231,52 +233,69 @@ public class NearbyStopFinder {
         if (OTPFeature.FlexRouting.isOn()) {
             for (var locationStates : locationsMap.asMap().entrySet()) {
                 FlexStopLocation flexStopLocation = locationStates.getKey();
-                Collection<State> states = locationStates.getValue();
+                List<State> states = locationStates.getValue().stream().collect(Collectors.toList());
 
-                // if the stoplocation is an area or line, we need to use the location the user searched for
-                // that is on the line or within the area vs. using the centroid
-                if(flexStopLocation.isArea() || flexStopLocation.isLine()) {	                	
-                	for(State s : states) {
-                		Vertex v = s.getVertex();
+            	// Select the vertex from all vertices that are reachable per FlexStopLocation by taking
+                // the minimum walking distance
+            	Collections.sort(states, new Comparator<State>() {
 
-                		Point origin = geometryFactory.createPoint(s.getOptions().from.getCoordinate());
-                		Point destination = geometryFactory.createPoint(v.getCoordinate());
+					@Override
+					public int compare(State o1, State o2) {
+						return (int) (o1.walkDistance - o2.walkDistance);
+					}
+            		
+            	});
+                
+                // If the best state for this FlexStopLocation is a SplitterVertex, we want to get the
+                // TemporaryStreetLocation instead. This allows us to reach SplitterVertices in both
+                // directions when routing later.
+            	State min = null;
+            	for(State state : states) {
+            		min = state;
 
-                		// if area does not contain the origin/dest point, don't add it as a stop
-                    	if(!flexStopLocation.getGeometry().contains(origin) || !flexStopLocation.getGeometry().contains(destination))
-                    		continue;
-                    	
-                    	for(Vertex originVertex : originVertices) {
-	                        NearbyStop ns = new NearbyStop(
-		                        flexStopLocation,
-		                        0,
-		                        List.of(reverseDirection ? new FlexDeviationEdge(v, (TemporaryVertex)originVertex) : new FlexDeviationEdge((TemporaryVertex)originVertex, v)),
-		                        null,
-		                        new State(v, routingRequest)
-		                    );
-
-//		                    LOG.info(flexStopLocation.getId() + " (" + reverseDirection + ")" + "->" +  v.getLat() + "," +  v.getLon());                	    
-
-		                    stopsFound.add(ns);
-                    	}
-                  	}
-                	
-                } else {
-                	// Select the vertex from all vertices that are reachable per FlexStopLocation by taking
-	                // the minimum walking distance
-	                State min = Collections.min(states,
-	                    (s1, s2) -> (int) (s1.walkDistance - s2.walkDistance)
-	                );
-	                
                     // If the best state for this FlexStopLocation is a SplitterVertex, we want to get the
                     // TemporaryStreetLocation instead. This allows us to reach SplitterVertices in both
                     // directions when routing later.
                     if (min.getBackState().getVertex() instanceof TemporaryStreetLocation) {
                     	min = min.getBackState();
                     }
-                    
+
+                    if(originVertices.contains(min.getVertex()))
+                    	continue;
+                    else
+                    	break;
+            	}
+                
+                // if the stoplocation is an area or line, we need to use the location the user searched for
+                // that is on the line or within the area vs. using the centroid
+                if(flexStopLocation.isArea() || flexStopLocation.isLine()) {	                	
+            		Vertex v = min.getVertex();
+
+            		Point origin = geometryFactory.createPoint(min.getOptions().from.getCoordinate());
+            		Point destination = geometryFactory.createPoint(v.getCoordinate());
+
+            		// if area does not contain the origin/dest point, don't add it as a stop
+                	if(!flexStopLocation.getGeometry().contains(origin) || !flexStopLocation.getGeometry().contains(destination))
+                		continue;
+                	
+                	for(Vertex originVertex : originVertices) {
+                        NearbyStop ns = new NearbyStop(
+	                        flexStopLocation,
+	                        0,
+	                        List.of(reverseDirection ? 
+	                        		new FlexDeviationEdge(v, (TemporaryVertex)originVertex) : 
+	                        			new FlexDeviationEdge((TemporaryVertex)originVertex, v)),
+	                        null,
+	                        new State(v, routingRequest)
+	                    );
+
+//		                    LOG.info(flexStopLocation.getId() + " (" + reverseDirection + ")" + "->" +  v.getLat() + "," +  v.getLon());                	    
+
+	                    stopsFound.add(ns);
+                	}
+                } else {
                 	stopsFound.add(NearbyStop.nearbyStopForState(min, flexStopLocation));
-                }
+                } // if area/line
             }
         }
 

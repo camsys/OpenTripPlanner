@@ -26,6 +26,10 @@ public class FlexTripEdge extends Edge {
 
   public final FlexPathCalculator calculator;
   
+  public final StopLocation from;
+
+  public final StopLocation to;
+
   public final FlexAccessEgressTemplate flexTemplate;
   
   public FlexPath flexPath = null;
@@ -37,7 +41,8 @@ public class FlexTripEdge extends Edge {
   ) {	    
     // null graph because we don't want this edge to be added to the edge lists.
     super(new Vertex(null, null, 0.0, 0.0) {}, new Vertex(null, null, 0.0, 0.0) {});
-    
+    this.from = s1;
+    this.to = s2;
     this.fromv = v1;
     this.tov = v2;
     this.flexTemplate = flexTemplate;
@@ -94,11 +99,13 @@ public class FlexTripEdge extends Edge {
   }
 
   public StopLocation getOriginStop() {
-	  return flexTemplate.getFlexTrip().getStops().get(flexTemplate.fromStopIndex);
+	  return this.from;
+//	  return flexTemplate.getFlexTrip().getStops().get(flexTemplate.fromStopIndex);
   }
 
   public StopLocation getDestinationStop() {
-	  return flexTemplate.getFlexTrip().getStops().get(flexTemplate.toStopIndex);
+	  return this.to;	  
+//	  return flexTemplate.getFlexTrip().getStops().get(flexTemplate.toStopIndex);
   }
 
   public FlexPath getFlexPath() {

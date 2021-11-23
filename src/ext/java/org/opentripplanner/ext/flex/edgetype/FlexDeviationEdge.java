@@ -24,12 +24,12 @@ public class FlexDeviationEdge extends TemporaryFreeEdge {
 	@Override
 	public State traverse(State s0) {
 		StateEditor editor = s0.edit(this);
-	    editor.setBackMode(TraverseMode.BUS);
+//	    editor.setBackMode(TraverseMode.CAR);
 	    
 	    editor.incrementWeight(60 * 5);
 	    editor.incrementTimeInSeconds(60 * 5);
 	    
-	    editor.resetEnteredNoThroughTrafficArea();
+	    //editor.resetEnteredNoThroughTrafficArea();
 	    
 	    return editor.makeState();
 	}

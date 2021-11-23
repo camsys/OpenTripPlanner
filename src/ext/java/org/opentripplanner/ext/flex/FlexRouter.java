@@ -225,11 +225,7 @@ public class FlexRouter {
         .flatMap(Optional::stream)
         .collect(Collectors.toList());
     
-    Stream<T2<NearbyStop, FlexTrip>> s = r.stream();    
-
-    LOG.info("getClosestStops() returns " + s.count() + " pairs");    
-    
-    return s;
+    return r.stream();
   }
 
 }
