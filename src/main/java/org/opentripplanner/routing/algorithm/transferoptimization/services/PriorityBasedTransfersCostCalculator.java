@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
+
+import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.model.transfer.Transfer;
@@ -17,11 +19,11 @@ import org.opentripplanner.transit.raptor.api.transit.RaptorTripSchedule;
 
 
 public class PriorityBasedTransfersCostCalculator<T extends RaptorTripSchedule> {
-  private final IntFunction<Stop> stopLookup;
+  private final IntFunction<StopLocation> stopLookup;
   private final TransferService transferService;
 
   public PriorityBasedTransfersCostCalculator(
-      IntFunction<Stop> stopLookup,
+      IntFunction<StopLocation> stopLookup,
       TransferService transferService
   ) {
     this.stopLookup = stopLookup;
@@ -74,7 +76,7 @@ public class PriorityBasedTransfersCostCalculator<T extends RaptorTripSchedule> 
     );
   }
 
-  private Stop stop(int index) {
+  private StopLocation stop(int index) {
     return stopLookup.apply(index);
   }
 

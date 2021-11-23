@@ -118,7 +118,7 @@ public class RoutingWorker {
         this.debugTimingAggregator.finishedTransitRouter();
 
         // Filter itineraries
-        itineraries = filterItineraries(itineraries);
+//        itineraries = filterItineraries(itineraries);
         LOG.debug("Return TripPlan with {} itineraries", itineraries.size());
 
         this.debugTimingAggregator.finishedFiltering();
@@ -248,7 +248,13 @@ public class RoutingWorker {
         // TODO
         for (Path<TripSchedule> path : paths) {
             // Convert the Raptor/Astar paths to OTP API Itineraries
-            Itinerary itinerary = itineraryMapper.createItinerary(path);
+        	Itinerary itinerary = null; 
+        	try {
+        		itinerary = itineraryMapper.createItinerary(path);
+        	} catch(Exception e) {
+        		e.printStackTrace();
+        	}
+        	
             // Decorate the Itineraries with fare information.
             // Itinerary and Leg are API model classes, lacking internal object references needed for effective
             // fare calculation. We derive the fares from the internal Path objects and add them to the itinerary.

@@ -35,6 +35,7 @@ public class FlexIndex {
     for (SimpleTransfer transfer : graph.transfersByStop.values()) {
       transfersToStop.put(transfer.to, transfer);
     }
+
     for (FlexTrip flexTrip : graph.flexTripsById.values()) {
       routeById.put(flexTrip.getTrip().getRoute().getId(), flexTrip.getTrip().getRoute());
       tripById.put(flexTrip.getTrip().getId(), flexTrip.getTrip());
@@ -48,17 +49,19 @@ public class FlexIndex {
         }
       }
     }
+    
     for (FlexLocationGroup flexLocationGroup : graph.locationGroupsById.values()) {
       for (StopLocation stop : flexLocationGroup.getLocations()) {
         locationGroupsByStop.put(stop, flexLocationGroup);
       }
     }
+    
     for (FlexStopLocation flexStopLocation : graph.locationsById.values()) {
       locationIndex.insert(flexStopLocation.getGeometry().getEnvelopeInternal(), flexStopLocation);
     }
   }
 
-  Stream<FlexTrip> getFlexTripsByStop(StopLocation stopLocation) {
+  public Stream<FlexTrip> getFlexTripsByStop(StopLocation stopLocation) {
     return flexTripsByStop.get(stopLocation).stream();
   }
 }

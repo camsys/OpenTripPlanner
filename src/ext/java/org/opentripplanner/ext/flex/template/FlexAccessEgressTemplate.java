@@ -17,7 +17,6 @@ import org.opentripplanner.routing.vertextype.TransitStopVertex;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -25,11 +24,14 @@ import java.util.stream.Stream;
 public abstract class FlexAccessEgressTemplate {
 
   protected final NearbyStop accessEgress;
+
+  protected final StopLocation transferStop;
+  
   protected final FlexTrip trip;
   
   public final int fromStopIndex;
+  
   public final int toStopIndex;
-  protected final StopLocation transferStop;
   
   public final FlexServiceDate serviceDate;
   
@@ -171,7 +173,6 @@ public abstract class FlexAccessEgressTemplate {
     		  trip.getId().equals(other.trip.getId()) && 
     		  transferStop.getId().equals(other.transferStop.getId());
   }
-  
   
   @Override
   public int hashCode() {

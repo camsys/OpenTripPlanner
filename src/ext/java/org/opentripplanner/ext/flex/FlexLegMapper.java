@@ -1,5 +1,6 @@
 package org.opentripplanner.ext.flex;
 
+import org.onebusaway.gtfs.model.StopTime;
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.opentripplanner.ext.flex.edgetype.FlexTripEdge;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
@@ -27,13 +28,13 @@ public class FlexLegMapper {
 
 	  // if the from location is an area or line, return the location the user searched for *on* that
 	  // line or *within* that location vs. the centroid of the line/area. 
-	  if(flexTripEdge.s1.isArea() || flexTripEdge.s1.isLine()) {
+	  if(flexTripEdge.getOriginStop().isArea() || flexTripEdge.getOriginStop().isLine()) {
 		  GenericLocation from = states[1].getOptions().from;
 		  leg.from = new Place(from.lat, from.lng, from.label);		
 	  }	  
 	  
-	  leg.from.stopId = flexTripEdge.s1.getId();		
-	  leg.from.vertexType = flexTripEdge.s1 instanceof Stop ? VertexType.TRANSIT : VertexType.NORMAL;
+	  leg.from.stopId = flexTripEdge.getOriginStop().getId();		
+	  leg.from.vertexType = flexTripEdge.getOriginStop() instanceof Stop ? VertexType.TRANSIT : VertexType.NORMAL;
       leg.from.stopIndex = flexTripEdge.flexTemplate.fromStopIndex;
       
       if(flexTripEdge.getFlexTrip() instanceof ScheduledDeviatedTrip) {
@@ -43,19 +44,21 @@ public class FlexLegMapper {
     	  
     	  ServiceDate serviceDate = new ServiceDate(new Date(states[1].getTimeInMillis()));
     	  Calendar calendar = new GregorianCalendar();
+    	  
+    	  FlexTripStopTime st = flexTripEdge.flexTemplate.getFlexTrip().getStopTime(flexTripEdge.flexTemplate.fromStopIndex);    	  
     	  calendar.setTimeInMillis(serviceDate.getAsDate().getTime() + 
-    			  (flexTripEdge.flexTemplate.getFlexTrip().getStopTime(flexTripEdge.fromIndex).arrivalTime * 1000));    	  
+    			  ((st.arrivalTime != StopTime.MISSING_VALUE ? st.arrivalTime : st.flexWindowStart) * 1000));    	  
 	      leg.startTime = calendar;
       } 
 
       
-	  if(flexTripEdge.s2.isArea() || flexTripEdge.s2.isLine()) {
+	  if(flexTripEdge.getDestinationStop().isArea() || flexTripEdge.getDestinationStop().isLine()) {
 		  GenericLocation to = states[1].getOptions().to;
 		  leg.to = new Place(to.lat, to.lng, to.label);				  
 	  }	  
 
-      leg.to.stopId = flexTripEdge.s2.getId();
-      leg.to.vertexType = flexTripEdge.s2 instanceof Stop ? VertexType.TRANSIT : VertexType.NORMAL;
+      leg.to.stopId = flexTripEdge.getDestinationStop().getId();
+      leg.to.vertexType = flexTripEdge.getDestinationStop() instanceof Stop ? VertexType.TRANSIT : VertexType.NORMAL;
       leg.to.stopIndex = flexTripEdge.flexTemplate.toStopIndex;
 
       if(flexTripEdge.getFlexTrip() instanceof ScheduledDeviatedTrip) {
@@ -65,13 +68,15 @@ public class FlexLegMapper {
     	  
     	  ServiceDate serviceDate = new ServiceDate(new Date(states[1].getTimeInMillis()));
     	  Calendar calendar = new GregorianCalendar();
+
+    	  FlexTripStopTime st = flexTripEdge.flexTemplate.getFlexTrip().getStopTime(flexTripEdge.flexTemplate.toStopIndex);    	  
     	  calendar.setTimeInMillis(serviceDate.getAsDate().getTime() + 
-    			  (flexTripEdge.flexTemplate.getFlexTrip().getStopTime(flexTripEdge.toIndex).departureTime * 1000));    	  
+    			  ((st.departureTime != StopTime.MISSING_VALUE ? st.departureTime : st.flexWindowEnd)  * 1000));    	  
 	      leg.endTime = calendar;
       }
 
       FlexTrip t = flexTripEdge.flexTemplate.getFlexTrip();
-      leg.requiresReservation = t.getStopTime(flexTripEdge.fromIndex).pickupType == 2 || t.getStopTime(flexTripEdge.toIndex).dropOffType == 2;     	  
+      leg.requiresReservation = t.getStopTime(flexTripEdge.flexTemplate.fromStopIndex).pickupType == 2 || t.getStopTime(flexTripEdge.flexTemplate.toStopIndex).dropOffType == 2;     	  
       
       leg.intermediateStops = new ArrayList<>();
       leg.distanceMeters = flexTripEdge.getDistanceMeters();

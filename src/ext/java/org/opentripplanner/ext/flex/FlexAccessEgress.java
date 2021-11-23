@@ -6,6 +6,11 @@ import org.opentripplanner.model.Stop;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.graph.Edge;
 
+/**
+ * This is an adapter that gives the RAPTOR algorithm access to the data
+ * structures used here. 
+ *
+ */
 public class FlexAccessEgress {
   public final Stop stop;
   public final int[] flexTimes; // pre, flex, post
@@ -41,7 +46,7 @@ public class FlexAccessEgress {
 		  s = s.getBackState();
 	  }
 	  
-	  return this.trip.getSafeTotalTime(((FlexTripEdge)e).flexPath, this.fromStopIndex, this.toStopIndex);
+	  return this.trip.getSafeTotalTime(((FlexTripEdge)e).getFlexPath(), this.fromStopIndex, this.toStopIndex);
   }
   
   public State getAccessEgressState() {
@@ -69,7 +74,6 @@ public class FlexAccessEgress {
     if (latestAvailableTransitArrivalTime == -1) { return -1; }
     return latestAvailableTransitArrivalTime + flexTimes[2];
   }
-  
 
   @Override
   public boolean equals(Object o) {
@@ -84,7 +88,6 @@ public class FlexAccessEgress {
       return trip.getId().equals(other.trip.getId()) && 
       		stop.getId().equals(other.stop.getId());
   }
-  
   
   @Override
   public int hashCode() {

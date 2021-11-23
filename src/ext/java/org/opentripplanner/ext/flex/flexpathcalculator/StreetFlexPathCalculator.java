@@ -1,6 +1,7 @@
 package org.opentripplanner.ext.flex.flexpathcalculator;
 
 import org.locationtech.jts.geom.LineString;
+import org.onebusaway.gtfs.model.StopTime;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
 import org.opentripplanner.ext.flex.trip.FlexTripStopTime;
 import org.opentripplanner.ext.flex.trip.ScheduledDeviatedTrip;
@@ -38,7 +39,9 @@ public class StreetFlexPathCalculator implements FlexPathCalculator {
   private static final long MAX_FLEX_TRIP_DURATION_SECONDS = Duration.ofMinutes(45).toSeconds();
 
   private final Graph graph;
+
   private final Map<Vertex, ShortestPathTree> cache = new HashMap<>();
+  
   private final boolean reverseDirection;
 
   public StreetFlexPathCalculator(Graph graph, boolean reverseDirection) {
@@ -46,10 +49,11 @@ public class StreetFlexPathCalculator implements FlexPathCalculator {
     this.reverseDirection = reverseDirection;
   }
 
-  // NB: duration can never be 0. 
+  // NB: duration can never be 0! 
   @Override
   public FlexPath calculateFlexPath(Vertex fromv, Vertex tov, int fromStopIndex, int toStopIndex, FlexTrip trip) {
-    // These are the origin and destination vertices from the perspective of the one-to-many search,
+
+	// These are the origin and destination vertices from the perspective of the one-to-many search,
     // which may be reversed
     Vertex originVertex = reverseDirection ? tov : fromv;
     Vertex destinationVertex = reverseDirection ? fromv : tov;
@@ -57,7 +61,6 @@ public class StreetFlexPathCalculator implements FlexPathCalculator {
     ShortestPathTree shortestPathTree;
     if (cache.containsKey(originVertex)) {
       shortestPathTree = cache.get(originVertex);
-
     } else {
       shortestPathTree = routeToMany(originVertex);
       cache.put(originVertex, shortestPathTree);
@@ -74,34 +77,49 @@ public class StreetFlexPathCalculator implements FlexPathCalculator {
     	FlexTripStopTime fromST = trip.getStopTime(fromStopIndex);
     	FlexTripStopTime toST = trip.getStopTime(toStopIndex);
 
-    	// GTFS data can be incomplete, so try our best to arrive at something sane 
-    	int newDuration = (toST.departureTime - toST.arrivalTime) + (fromST.departureTime - fromST.arrivalTime);
+    	int newFromST = 0;
+    	int newToST = 0;
+    	
+    	if(fromST.departureTime != StopTime.MISSING_VALUE)
+    		newFromST = fromST.departureTime;
+    	else
+    		newFromST = fromST.flexWindowEnd - ((fromST.flexWindowEnd - fromST.flexWindowStart) / 2);
 
+    	if(toST.arrivalTime != StopTime.MISSING_VALUE)
+    		newToST = toST.arrivalTime;
+    	else
+    		newToST = toST.flexWindowStart + ((toST.flexWindowEnd - toST.flexWindowStart) / 2);
+
+    	int newDuration = newToST - newFromST;    	
     	if(newDuration > 0) // filter invalid GTFS data; in this case, use street traversal time
     		duration = newDuration;
     }
     
-    LineString geometry = path.getGeometry();
-
-    return new FlexPath(distance, duration, geometry);
+    return new FlexPath(distance, duration, path.getGeometry());
   }
 
   private ShortestPathTree routeToMany(Vertex vertex) {
     RoutingRequest routingRequest = new RoutingRequest(TraverseMode.CAR);
+
     routingRequest.arriveBy = reverseDirection;
+    
     if (reverseDirection) {
       routingRequest.setRoutingContext(graph, null, vertex);
     } else {
       routingRequest.setRoutingContext(graph, vertex, null);
     }
+    
     routingRequest.disableRemainingWeightHeuristic = true;
     routingRequest.rctx.remainingWeightHeuristic = new TrivialRemainingWeightHeuristic();
     routingRequest.dominanceFunction = new DominanceFunction.EarliestArrival();
     routingRequest.oneToMany = true;
+    
     AStar search = new AStar();
     search.setSkipEdgeStrategy(new DurationSkipEdgeStrategy(MAX_FLEX_TRIP_DURATION_SECONDS));
+    
     ShortestPathTree spt = search.getShortestPathTree(routingRequest);
     routingRequest.cleanup();
+    
     return spt;
   }
 }

@@ -1,7 +1,5 @@
 package org.opentripplanner.ext.flex.trip;
 
-import static org.opentripplanner.model.StopTime.MISSING_VALUE;
-
 import java.io.Serializable;
 
 import org.opentripplanner.model.StopLocation;
@@ -39,11 +37,8 @@ public class FlexTripStopTime implements Serializable {
 		this.flexWindowStart = st.getFlexWindowStart();
 		this.flexWindowEnd = st.getFlexWindowEnd();
 
-        this.arrivalTime = st.getArrivalTime() != MISSING_VALUE ? 
-        		  st.getArrivalTime() : st.getFlexWindowStart();
-          
-        this.departureTime = st.getDepartureTime() != MISSING_VALUE ? 
-        		  st.getDepartureTime() : st.getFlexWindowEnd();
+        this.arrivalTime = st.getArrivalTime();          
+        this.departureTime = st.getDepartureTime();
 
 		this.pickupType = st.getPickupType();
 		this.dropOffType = st.getDropOffType();

@@ -1,11 +1,14 @@
 package org.opentripplanner.ext.flex.edgetype;
 
 import org.locationtech.jts.geom.LineString;
+import org.onebusaway.gtfs.model.StopTime;
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPath;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
 import org.opentripplanner.ext.flex.template.FlexAccessEgressTemplate;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
+import org.opentripplanner.ext.flex.trip.FlexTripStopTime;
+import org.opentripplanner.ext.flex.trip.ScheduledDeviatedTrip;
 import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.routing.core.State;
@@ -19,57 +22,51 @@ import java.util.Locale;
 
 public class FlexTripEdge extends Edge {
 
-  private static final long serialVersionUID = 1L;
-
-  public final StopLocation s1;
-  public final StopLocation s2;
-  
-  public final FlexAccessEgressTemplate flexTemplate;
-
-  public boolean flexPathLoaded = false;
-  public FlexPath flexPath;
+  private static final long serialVersionUID = 3478869956635040033L;
 
   public final FlexPathCalculator calculator;
-  public final int fromIndex;
-  public final int toIndex;
   
+  public final FlexAccessEgressTemplate flexTemplate;
+  
+  public FlexPath flexPath = null;
+
   @SuppressWarnings("serial")
   public FlexTripEdge(
-      Vertex v1, Vertex v2, StopLocation s1, StopLocation s2, int fromIndex, int toIndex,
-      FlexAccessEgressTemplate flexTemplate, FlexPathCalculator calculator
-  ) {
-	  
+	Vertex v1, Vertex v2, StopLocation s1, StopLocation s2, int fromIndex, int toIndex,
+	FlexAccessEgressTemplate flexTemplate, FlexPathCalculator calculator
+  ) {	    
     // null graph because we don't want this edge to be added to the edge lists.
     super(new Vertex(null, null, 0.0, 0.0) {}, new Vertex(null, null, 0.0, 0.0) {});
     
-    this.s1 = s1;
-    this.s2 = s2;
     this.fromv = v1;
     this.tov = v2;
-    this.fromIndex = fromIndex;
-    this.toIndex = toIndex;
-        
     this.flexTemplate = flexTemplate;
-
     this.calculator = calculator;
   }
 
   @Override
   public State traverse(State s0) {	  
-	if(getFlexPath() == null)
-		return null; // = not routable
-
 	StateEditor editor = s0.edit(this);
     editor.setBackMode(TraverseMode.BUS);
     
-    // TODO: model this as an edge traversal? 
-    int departureTime = flexTemplate.getFlexTrip().getStopTime(this.fromIndex).departureTime;
-    long serviceDate = new ServiceDate(new Date(s0.getTimeInMillis())).getAsDate().getTime();
-    int offsetFromMidnight = (int)((s0.getTimeInMillis() - serviceDate) / 1000);
-    
-    int wait = departureTime - offsetFromMidnight;    
-    if(wait < 0)
-    	return null; // missed it
+    // should this be modeled as an edge traversal? 
+    int wait = 0;
+    if(getFlexTrip() instanceof ScheduledDeviatedTrip) {
+    	FlexTripStopTime ftst = getFlexTrip().getStopTime(this.flexTemplate.fromStopIndex);
+    	
+    	int departureTime = 0;
+    	if(ftst.departureTime != StopTime.MISSING_VALUE)
+    		departureTime = ftst.departureTime;
+    	else
+    		departureTime = ftst.flexWindowStart + ((ftst.flexWindowEnd - ftst.flexWindowStart) / 2);
+    	
+	    long serviceDate = new ServiceDate(new Date(s0.getTimeInMillis())).getAsDate().getTime();
+	    int offsetFromMidnight = (int)((s0.getTimeInMillis() - serviceDate) / 1000);
+	    
+	    wait = departureTime - offsetFromMidnight;    
+	    if(wait < 0)
+	    	return null; // missed it
+    }
     
     editor.incrementWeight(getTripTimeInSeconds() + wait);
     editor.incrementTimeInSeconds((int)getTripTimeInSeconds() + wait);
@@ -82,8 +79,8 @@ public class FlexTripEdge extends Edge {
   // This method uses the "mean" time from Flex v2 to best reflect the typical travel 
   // scenario in user-facing interfaces vs. using the worst case scenario re: trip length
   public float getTripTimeInSeconds() {
-	  return getFlexTrip().getMeanTotalTime(getFlexPath(), flexTemplate.fromStopIndex, 
-    		flexTemplate.toStopIndex);
+	  return getFlexTrip().getMeanTotalTime(getFlexPath(), 
+			  this.flexTemplate.fromStopIndex, this.flexTemplate.toStopIndex);
   }
 
   @Override
@@ -96,22 +93,30 @@ public class FlexTripEdge extends Edge {
 	  return getFlexPath().geometry;
   }
 
-  public FlexPath getFlexPath() {
-	  if(!flexPathLoaded) {
-		  this.flexPath = calculator.calculateFlexPath(fromv, tov, fromIndex, toIndex, flexTemplate.getFlexTrip());
-		  flexPathLoaded = true;
-	  }
+  public StopLocation getOriginStop() {
+	  return flexTemplate.getFlexTrip().getStops().get(flexTemplate.fromStopIndex);
+  }
 
-	  return flexPath;
+  public StopLocation getDestinationStop() {
+	  return flexTemplate.getFlexTrip().getStops().get(flexTemplate.toStopIndex);
+  }
+
+  public FlexPath getFlexPath() {
+	  if(this.flexPath == null)
+		  this.flexPath = calculator.calculateFlexPath(fromv, tov, 
+				  this.flexTemplate.fromStopIndex, this.flexTemplate.toStopIndex, getFlexTrip());
+
+	  return this.flexPath;
   }
   
+  public FlexTrip getFlexTrip() {
+    return flexTemplate.getFlexTrip();
+  }
+
+  // this is the OTP trip that underlies the FlexTrip, not sure this is used anywhere
   @Override
   public Trip getTrip() {
     return getFlexTrip().getTrip();
-  }
-
-  public FlexTrip getFlexTrip() {
-    return flexTemplate.getFlexTrip();
   }
 
   @Override

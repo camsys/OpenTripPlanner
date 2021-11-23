@@ -2,6 +2,7 @@ package org.opentripplanner.routing.algorithm.raptor.transit.mappers;
 
 import org.opentripplanner.ext.flex.FlexAccessEgress;
 import org.opentripplanner.model.Stop;
+import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.routing.algorithm.raptor.transit.AccessEgress;
 import org.opentripplanner.routing.algorithm.raptor.transit.FlexAccessEgressAdapter;
 import org.opentripplanner.routing.algorithm.raptor.transit.StopIndexForRaptor;
@@ -21,9 +22,9 @@ public class AccessEgressMapper {
   }
 
   public AccessEgress mapNearbyStop(NearbyStop nearbyStop, boolean isEgress) {
-    if (!(nearbyStop.stop instanceof Stop)) { return null; }
+    if (!(nearbyStop.stop instanceof StopLocation)) { return null; }
     return new AccessEgress(
-        stopIndex.indexByStop.get(nearbyStop.stop),
+    	stopIndex.indexByStop.get(nearbyStop.stop),
         isEgress ? nearbyStop.state.reverse() : nearbyStop.state
     );
   }

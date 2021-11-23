@@ -11,6 +11,7 @@ import org.opentripplanner.model.TransitEntity;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
 
+import java.util.List;
 import java.util.Collection;
 import java.util.stream.Stream;
 
@@ -31,7 +32,7 @@ public abstract class FlexTrip extends TransitEntity {
     super(trip.getId());
     this.trip = trip;
   }
-
+  
   public abstract Stream<FlexAccessTemplate> getFlexAccessTemplates(
       NearbyStop access, FlexServiceDate servicedate, FlexPathCalculator calculator
   );
@@ -40,6 +41,20 @@ public abstract class FlexTrip extends TransitEntity {
       NearbyStop egress, FlexServiceDate servicedate, FlexPathCalculator calculator
   );
 
+  public FlexTripStopTime getStopTime(int i) {
+  	return stopTimes[i];
+  }
+
+  public Trip getTrip() {
+    return trip;
+  }
+
+  public abstract List<StopLocation> getStops();
+
+  public abstract BookingInfo getDropOffBookingInfo(int i);
+
+  public abstract BookingInfo getPickupBookingInfo(int i);
+  
   // The 95% CI for travel time on this trip. Use this for connections and other things that 
   // need more certainty about the arrival/departure time.
   public abstract float getSafeTotalTime(FlexPath streetPath, int fromStopIndex, int toStopIndex);
@@ -53,27 +68,5 @@ public abstract class FlexTrip extends TransitEntity {
 
   // Note: This method returns seconds since midnight. departureTime is also seconds since midnight/service date
   public abstract int latestArrivalTime(int arrivalTime, int fromStopIndex, int toStopIndex);
-
-  public abstract Collection<StopLocation> getStops();
-
-  public FlexTripStopTime getStopTime(int i) {
-  	return stopTimes[i];
-  }
-  
-  public Trip getTrip() {
-    return trip;
-  }
-
-  public abstract BookingInfo getDropOffBookingInfo(int i);
-
-  public abstract BookingInfo getPickupBookingInfo(int i);
-
-  public abstract boolean isBoardingPossible(StopLocation stop);
-
-  public abstract boolean isAlightingPossible(StopLocation stop);
-
-  public abstract boolean isBoardingPossible(StopLocation stop, Integer time);
-
-  public abstract boolean isAlightingPossible(StopLocation stop, Integer time);
 
 }

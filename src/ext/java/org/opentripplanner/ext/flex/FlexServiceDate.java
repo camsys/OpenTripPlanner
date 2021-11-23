@@ -2,8 +2,6 @@ package org.opentripplanner.ext.flex;
 
 import gnu.trove.set.TIntSet;
 
-import java.util.TimeZone;
-
 import org.opentripplanner.ext.flex.trip.FlexTrip;
 import org.opentripplanner.model.calendar.ServiceDate;
 import org.opentripplanner.routing.graph.Graph;
@@ -13,10 +11,8 @@ import org.opentripplanner.routing.graph.Graph;
  */
 public class FlexServiceDate {
 
-  /** The local date */
   public final ServiceDate serviceDate;
 
-  /** Which services are running on the date.*/
   public final TIntSet servicesRunning;
 
   FlexServiceDate(ServiceDate serviceDate, TIntSet servicesRunning) {

@@ -2,6 +2,7 @@ package org.opentripplanner.routing.impl;
 
 import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.model.Stop;
+import org.opentripplanner.model.StopLocation;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -31,9 +32,9 @@ public class Ride {
     // it can be used differently in custom fare services
     public Object classifier;
 
-    public Stop firstStop;
+    public StopLocation firstStop;
 
-    public Stop lastStop;
+    public StopLocation lastStop;
 
     public Ride() {
         zones = new HashSet<String>();

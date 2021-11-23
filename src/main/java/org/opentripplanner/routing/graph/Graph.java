@@ -1055,8 +1055,7 @@ public class Graph implements Serializable {
                 .filter(s -> s instanceof FlexLocationGroup)
                 .flatMap(g -> ((FlexLocationGroup) g)
                     .getLocations()
-                    .stream()
-                    .filter(e -> e instanceof Stop))
+                    .stream())
                 .collect(Collectors.toList())
         );
 

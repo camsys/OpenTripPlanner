@@ -37,12 +37,19 @@ public class ScheduledDeviatedTrip extends FlexTrip {
   private final BookingInfo[] pickupBookingInfos;
 
   public static boolean isScheduledFlexTrip(List<StopTime> stopTimes) {
-    Predicate<StopTime> notStopType = Predicate.not(st -> st.getStop() instanceof Stop);
-    Predicate<StopTime> notContinuousStop = stopTime -> 
-    	stopTime.getFlexContinuousDropOff() == PICKDROP_NONE && 
-    	stopTime.getFlexContinuousPickup() == PICKDROP_NONE;
-    return stopTimes.stream().anyMatch(notStopType)
-        && stopTimes.stream().allMatch(notContinuousStop);
+	  // non areas have explicit times
+	  // areas have ranges
+	  // pickup/dropoff is >= 2 on at least one ST
+	  return stopTimes.stream()
+	  	.anyMatch(it -> !(it.getStop() instanceof Stop))
+		  && stopTimes.stream()
+		  	.allMatch(it -> it.getFlexContinuousDropOff() == 1 && it.getFlexContinuousPickup() == 1)
+		  && stopTimes.stream()
+			.filter(it -> !it.getStop().isArea() && !it.getStop().isLine())
+		  	.allMatch(it -> it.getFlexWindowEnd() == StopTime.MISSING_VALUE && it.getFlexWindowStart() == StopTime.MISSING_VALUE)
+		  && stopTimes.stream()
+		  	.filter(it -> it.getStop().isArea() || it.getStop().isLine())
+		  	.allMatch(it -> it.getFlexWindowEnd() != StopTime.MISSING_VALUE && it.getFlexWindowStart() != StopTime.MISSING_VALUE);
   }
 
   public ScheduledDeviatedTrip(Trip trip, List<StopTime> stopTimes) {
@@ -129,11 +136,11 @@ public class ScheduledDeviatedTrip extends FlexTrip {
   }
 
   @Override
-  public Collection<StopLocation> getStops() {
+  public List<StopLocation> getStops() {
     return Arrays
         .stream(stopTimes)
         .map(scheduledDeviatedStopTime -> scheduledDeviatedStopTime.stop)
-        .collect(Collectors.toSet());
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -146,25 +153,6 @@ public class ScheduledDeviatedTrip extends FlexTrip {
     return pickupBookingInfos[i];
   }
 
-  @Override
-  public boolean isBoardingPossible(StopLocation stop) {
-    return !getFromIndex(stop, null).isEmpty();
-  }
-
-  @Override
-  public boolean isAlightingPossible(StopLocation stop) {
-    return !getToIndex(stop, null).isEmpty();
-  }
-
-  @Override
-  public boolean isBoardingPossible(StopLocation stop, Integer time) {
-    return !getFromIndex(stop, time).isEmpty();
-  }
-
-  @Override
-  public boolean isAlightingPossible(StopLocation stop, Integer time) {
-    return !getToIndex(stop, time).isEmpty();
-  }
 
   private Collection<StopLocation> expandStops(StopLocation stop) {
     return stop instanceof FlexLocationGroup

@@ -10,7 +10,6 @@ import org.opentripplanner.model.SimpleTransfer;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.model.plan.Itinerary;
-import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.routing.algorithm.mapping.GraphPathToItineraryMapper;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.graph.Edge;
@@ -78,7 +77,7 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 					c.setTimeInMillis(zdt.toInstant().toEpochMilli());
 					itinerary.timeShiftToStartAt(c);	 
 
-				// outside travel window--trip is not valid. 
+				// outside travel window
 		    	} else {
 		    		return null;
 		    	}

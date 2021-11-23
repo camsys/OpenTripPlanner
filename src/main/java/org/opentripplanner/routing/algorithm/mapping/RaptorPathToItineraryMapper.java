@@ -10,6 +10,7 @@ import java.util.TimeZone;
 import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.common.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.model.Stop;
+import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.model.TripPattern;
 import org.opentripplanner.model.calendar.ServiceDate;
 import org.opentripplanner.model.plan.Itinerary;
@@ -78,7 +79,7 @@ public class RaptorPathToItineraryMapper {
         this.request = request;
     }
 
-    public Itinerary createItinerary(Path<TripSchedule> path) {
+    public Itinerary createItinerary(Path<TripSchedule> path) throws Exception {
         var optimizedPath = path instanceof OptimizedPath
                 ? (OptimizedPath<TripSchedule>) path : null;
         List<Leg> legs = new ArrayList<>();
@@ -152,10 +153,10 @@ public class RaptorPathToItineraryMapper {
             Leg prevTransitLeg,
             TransitPathLeg<TripSchedule> pathLeg,
             boolean firstLeg
-    ) {
+    ) throws Exception {
 
-        Stop boardStop = transitLayer.getStopByIndex(pathLeg.fromStop());
-        Stop alightStop = transitLayer.getStopByIndex(pathLeg.toStop());
+        StopLocation boardStop = transitLayer.getStopByIndex(pathLeg.fromStop());
+        StopLocation alightStop = transitLayer.getStopByIndex(pathLeg.toStop());
         TripSchedule tripSchedule = pathLeg.trip();
         TripTimes tripTimes = tripSchedule.getOriginalTripTimes();
 
@@ -230,9 +231,9 @@ public class RaptorPathToItineraryMapper {
         return leg;
     }
 
-    private List<Leg> mapTransferLeg(TransferPathLeg<TripSchedule> pathLeg) {
-        Stop transferFromStop = transitLayer.getStopByIndex(pathLeg.fromStop());
-        Stop transferToStop = transitLayer.getStopByIndex(pathLeg.toStop());
+    private List<Leg> mapTransferLeg(TransferPathLeg<TripSchedule> pathLeg) throws Exception {
+    	StopLocation transferFromStop = transitLayer.getStopByIndex(pathLeg.fromStop());
+    	StopLocation transferToStop = transitLayer.getStopByIndex(pathLeg.toStop());
         Transfer transfer = ((TransferWithDuration) pathLeg.transfer()).transfer();
 
         Place from = mapStopToPlace(transferFromStop);
@@ -332,8 +333,15 @@ public class RaptorPathToItineraryMapper {
 
     /**
      * Maps stops for non-transit (transfer) legs.
+     * @throws Exception 
      */
-    private Place mapStopToPlace(Stop stop) {
+    private Place mapStopToPlace(StopLocation _stop) throws Exception {
+    	if(!(_stop instanceof Stop)) {
+    		throw new Exception("Must be stop");
+    	}
+    	
+    	Stop stop = (Stop)_stop;
+    	
         Place place = new Place(stop.getLat(), stop.getLon(), stop.getName());
         place.stopId = stop.getId();
         place.stopCode = stop.getCode();
@@ -345,9 +353,16 @@ public class RaptorPathToItineraryMapper {
 
     /**
      * Maps stops for transit legs.
+     * @throws Exception 
      */
-    private Place mapStopToPlace(Stop stop, Integer stopIndex, TripTimes tripTimes) {
-        Place place = mapStopToPlace(stop);
+    private Place mapStopToPlace(StopLocation _stop, Integer stopIndex, TripTimes tripTimes) throws Exception {
+    	if(!(_stop instanceof Stop)) {
+    		throw new Exception("Must be stop");
+    	}
+
+    	Stop stop = (Stop)_stop;
+
+    	Place place = mapStopToPlace(stop);
         place.stopIndex = stopIndex;
         place.stopSequence = tripTimes.getStopSequence(stopIndex);
         return place;
@@ -360,7 +375,7 @@ public class RaptorPathToItineraryMapper {
         return c;
     }
 
-    private List<StopArrival> extractIntermediateStops(TransitPathLeg<TripSchedule> pathLeg, int boardStopIndexInPattern, int alightStopIndexInPattern) {
+    private List<StopArrival> extractIntermediateStops(TransitPathLeg<TripSchedule> pathLeg, int boardStopIndexInPattern, int alightStopIndexInPattern) throws Exception {
         List<StopArrival> visits = new ArrayList<>();
         TripPattern tripPattern = pathLeg.trip().getOriginalTripPattern();
         TripSchedule tripSchedule = pathLeg.trip();
