@@ -214,7 +214,7 @@ public class NearbyStopFinder {
                 Vertex targetVertex = state.getVertex();
                 if (originVertices.contains(targetVertex)) continue;
                 if (targetVertex instanceof TransitStopVertex && state.isFinal()) {
-//                    stopsFound.add(NearbyStop.nearbyStopForState(state, ((TransitStopVertex) targetVertex).getStop()));
+                    stopsFound.add(NearbyStop.nearbyStopForState(state, ((TransitStopVertex) targetVertex).getStop()));
                 }
                 if (OTPFeature.FlexRouting.isOn() && targetVertex instanceof StreetVertex 
                     && ((StreetVertex) targetVertex).flexStopLocations != null) {

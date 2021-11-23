@@ -305,7 +305,7 @@ public abstract class GraphPathToItineraryMapper {
         addStreetNotes(graph, leg, states);
 
         if (flexEdge != null) {
-            FlexLegMapper.fixFlexTripLeg(leg, flexEdge, states);
+            FlexLegMapper.fixFlexTripLeg(graph, leg, flexEdge, states);
         }
 
         return leg;

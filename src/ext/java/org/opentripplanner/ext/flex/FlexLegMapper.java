@@ -1,5 +1,6 @@
 package org.opentripplanner.ext.flex;
 
+import org.locationtech.jts.geom.Coordinate;
 import org.onebusaway.gtfs.model.StopTime;
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.opentripplanner.ext.flex.edgetype.FlexTripEdge;
@@ -9,22 +10,29 @@ import org.opentripplanner.ext.flex.trip.ScheduledDeviatedTrip;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopLocation;
+import org.opentripplanner.model.TripPattern;
 import org.opentripplanner.model.WgsCoordinate;
 import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.model.plan.Place;
 import org.opentripplanner.model.plan.VertexType;
 import org.opentripplanner.routing.algorithm.mapping.GraphPathToItineraryMapper;
+import org.opentripplanner.routing.algorithm.raptor.transit.TripSchedule;
 import org.opentripplanner.routing.core.State;
+import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.transit.raptor.api.path.TransitPathLeg;
+import org.opentripplanner.util.PolylineEncoder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.List;
 
 // TODO: Should flex be of its own type
 public class FlexLegMapper {
 
-  static public void fixFlexTripLeg(Leg leg, FlexTripEdge flexTripEdge, State[] states) {	  
+  static public void fixFlexTripLeg(Graph graph, Leg leg, FlexTripEdge flexTripEdge, State[] states) {	  
 
 	  // if the from location is an area or line, return the location the user searched for *on* that
 	  // line or *within* that location vs. the centroid of the line/area. 
@@ -50,7 +58,6 @@ public class FlexLegMapper {
     			  ((st.arrivalTime != StopTime.MISSING_VALUE ? st.arrivalTime : st.flexWindowStart) * 1000));    	  
 	      leg.startTime = calendar;
       } 
-
       
 	  if(flexTripEdge.getDestinationStop().isArea() || flexTripEdge.getDestinationStop().isLine()) {
 		  GenericLocation to = states[1].getOptions().to;
@@ -76,6 +83,7 @@ public class FlexLegMapper {
       }
 
       FlexTrip t = flexTripEdge.flexTemplate.getFlexTrip();
+      
       leg.requiresReservation = t.getStopTime(flexTripEdge.flexTemplate.fromStopIndex).pickupType == 2 || t.getStopTime(flexTripEdge.flexTemplate.toStopIndex).dropOffType == 2;     	  
       
       leg.intermediateStops = new ArrayList<>();

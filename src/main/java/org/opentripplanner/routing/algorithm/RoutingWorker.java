@@ -118,7 +118,7 @@ public class RoutingWorker {
         this.debugTimingAggregator.finishedTransitRouter();
 
         // Filter itineraries
-//        itineraries = filterItineraries(itineraries);
+        itineraries = filterItineraries(itineraries);
         LOG.debug("Return TripPlan with {} itineraries", itineraries.size());
 
         this.debugTimingAggregator.finishedFiltering();
