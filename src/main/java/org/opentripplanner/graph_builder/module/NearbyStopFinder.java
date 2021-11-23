@@ -271,7 +271,8 @@ public class NearbyStopFinder {
                 if(flexStopLocation.isArea() || flexStopLocation.isLine()) {	                	
             		Vertex v = min.getVertex();
 
-            		Point origin = geometryFactory.createPoint(min.getOptions().from.getCoordinate());
+            		Point origin = reverseDirection ? geometryFactory.createPoint(min.getOptions().to.getCoordinate()) 
+            				: geometryFactory.createPoint(min.getOptions().from.getCoordinate());
             		Point destination = geometryFactory.createPoint(v.getCoordinate());
 
             		// if area does not contain the origin/dest point, don't add it as a stop
