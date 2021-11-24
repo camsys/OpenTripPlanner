@@ -9,6 +9,7 @@ import org.opentripplanner.model.BookingInfo;
 import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.model.TransitEntity;
 import org.opentripplanner.model.Trip;
+import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
 
 import java.util.List;
@@ -34,11 +35,11 @@ public abstract class FlexTrip extends TransitEntity {
   }
   
   public abstract Stream<FlexAccessTemplate> getFlexAccessTemplates(
-      NearbyStop access, FlexServiceDate servicedate, FlexPathCalculator calculator
+      NearbyStop access, FlexServiceDate servicedate, FlexPathCalculator calculator, RoutingRequest request
   );
 
   public abstract Stream<FlexEgressTemplate> getFlexEgressTemplates(
-      NearbyStop egress, FlexServiceDate servicedate, FlexPathCalculator calculator
+      NearbyStop egress, FlexServiceDate servicedate, FlexPathCalculator calculator, RoutingRequest request
   );
 
   public FlexTripStopTime getStopTime(int i) {

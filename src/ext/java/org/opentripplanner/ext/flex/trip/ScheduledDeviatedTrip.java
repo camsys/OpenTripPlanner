@@ -1,5 +1,9 @@
 package org.opentripplanner.ext.flex.trip;
 
+import org.opentripplanner.model.ShapePoint;
+import org.locationtech.jts.geom.Coordinate;
+import org.opentripplanner.common.geometry.GeometryUtils;
+import org.opentripplanner.common.model.P2;
 import org.opentripplanner.ext.flex.FlexServiceDate;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPath;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
@@ -11,7 +15,10 @@ import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.model.Trip;
+import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
+
+import org.locationtech.jts.geom.LineString;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,6 +43,8 @@ public class ScheduledDeviatedTrip extends FlexTrip {
   private final BookingInfo[] dropOffBookingInfos;
   private final BookingInfo[] pickupBookingInfos;
 
+  public Coordinate[] geometryCoords = null;
+  
   public static boolean isScheduledFlexTrip(List<StopTime> stopTimes) {
 	  // non areas have explicit times
 	  // areas have ranges
@@ -52,7 +61,7 @@ public class ScheduledDeviatedTrip extends FlexTrip {
 		  	.allMatch(it -> it.getFlexWindowEnd() != StopTime.MISSING_VALUE && it.getFlexWindowStart() != StopTime.MISSING_VALUE);
   }
 
-  public ScheduledDeviatedTrip(Trip trip, List<StopTime> stopTimes) {
+  public ScheduledDeviatedTrip(Trip trip, List<StopTime> stopTimes, Collection<ShapePoint> geometry) {
     super(trip);
 
     if (!isScheduledFlexTrip(stopTimes)) {
@@ -64,6 +73,14 @@ public class ScheduledDeviatedTrip extends FlexTrip {
     this.dropOffBookingInfos = new BookingInfo[nStops];
     this.pickupBookingInfos = new BookingInfo[nStops];
 
+    List<Coordinate> geometryCoordArray = new ArrayList<Coordinate>(); 
+    int z = 0;
+    for(ShapePoint sp : geometry) {
+    	Coordinate n = new Coordinate(sp.getLon(), sp.getLat());
+    	geometryCoordArray.add(n);
+    }
+    this.geometryCoords = geometryCoordArray.toArray(new Coordinate[geometryCoordArray.size()]);
+
     for (int i = 0; i < nStops; i++) {
       this.stopTimes[i] = new FlexTripStopTime(stopTimes.get(i));
       this.dropOffBookingInfos[i] = stopTimes.get(i).getDropOffBookingInfo();
@@ -73,7 +90,7 @@ public class ScheduledDeviatedTrip extends FlexTrip {
 
   @Override
   public Stream<FlexAccessTemplate> getFlexAccessTemplates(
-      NearbyStop access, FlexServiceDate serviceDate, FlexPathCalculator calculator
+      NearbyStop access, FlexServiceDate serviceDate, FlexPathCalculator calculator, RoutingRequest request
   ) {
     List<Integer> fromIndices = getFromIndex(access.stop, null);
     if (fromIndices.isEmpty()) { return Stream.empty(); }
@@ -84,7 +101,7 @@ public class ScheduledDeviatedTrip extends FlexTrip {
 	    for (int toIndex = fromIndex; toIndex < stopTimes.length; toIndex++) {
 	      if (stopTimes[toIndex].dropOffType == PICKDROP_NONE) continue;
 	        for (StopLocation stop : expandStops(stopTimes[toIndex].stop)) {
-	          res.add(new FlexAccessTemplate(access, this, fromIndex, toIndex, stop, serviceDate, calculator));
+	          res.add(new FlexAccessTemplate(access, this, fromIndex, toIndex, stop, serviceDate, calculator, request));
 	      }
 	    }
 	}
@@ -94,7 +111,7 @@ public class ScheduledDeviatedTrip extends FlexTrip {
 
   @Override
   public Stream<FlexEgressTemplate> getFlexEgressTemplates(
-      NearbyStop egress, FlexServiceDate serviceDate, FlexPathCalculator calculator
+      NearbyStop egress, FlexServiceDate serviceDate, FlexPathCalculator calculator, RoutingRequest request
   ) {
     List<Integer> toIndices = getToIndex(egress.stop, null);
     if (toIndices.isEmpty()) { return Stream.empty(); }
@@ -105,7 +122,7 @@ public class ScheduledDeviatedTrip extends FlexTrip {
 	    for (int fromIndex = stopTimes.length - 1; fromIndex >= toIndex; fromIndex--) {
 	      if (stopTimes[fromIndex].pickupType == PICKDROP_NONE) continue;
 	      for (StopLocation stop : expandStops(stopTimes[fromIndex].stop)) {
-	        res.add(new FlexEgressTemplate(egress, this, fromIndex, toIndex, stop, serviceDate, calculator));
+	        res.add(new FlexEgressTemplate(egress, this, fromIndex, toIndex, stop, serviceDate, calculator, request));
 	      }
 	    }
 	}

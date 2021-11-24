@@ -1,14 +1,18 @@
 package org.opentripplanner.ext.flex.edgetype;
 
+import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.onebusaway.gtfs.model.StopTime;
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
+import org.opentripplanner.common.geometry.GeometryUtils;
+import org.opentripplanner.common.model.P2;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPath;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
 import org.opentripplanner.ext.flex.template.FlexAccessEgressTemplate;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
 import org.opentripplanner.ext.flex.trip.FlexTripStopTime;
 import org.opentripplanner.ext.flex.trip.ScheduledDeviatedTrip;
+import org.opentripplanner.ext.flex.trip.UnscheduledTrip;
 import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.routing.core.State;
@@ -16,6 +20,8 @@ import org.opentripplanner.routing.core.StateEditor;
 import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
+
+import com.vividsolutions.jts.geom.Geometry;
 
 import java.util.Date;
 import java.util.Locale;
@@ -26,9 +32,9 @@ public class FlexTripEdge extends Edge {
 
   public final FlexPathCalculator calculator;
   
-  public final StopLocation from;
+  public final StopLocation from; // resolved stops in the case of groups
 
-  public final StopLocation to;
+  public final StopLocation to;  // resolved stops in the case of groups
 
   public final FlexAccessEgressTemplate flexTemplate;
   
@@ -95,7 +101,21 @@ public class FlexTripEdge extends Edge {
 
   @Override
   public LineString getGeometry() {
-	  return getFlexPath().geometry;
+	  if(flexTemplate.getFlexTrip() instanceof UnscheduledTrip)
+		  return getFlexPath().geometry;
+	  else if(flexTemplate.getFlexTrip() instanceof ScheduledDeviatedTrip) {
+		    
+		  LineString geometry = 
+				  GeometryUtils.makeLineString(((ScheduledDeviatedTrip)getFlexTrip()).geometryCoords);		    
+
+		  P2<LineString> lineString = 
+				  GeometryUtils.splitGeometryAtPoint(geometry, flexTemplate.request.from.getCoordinate());
+		  P2<LineString> lineString2 = 
+				  GeometryUtils.splitGeometryAtPoint(lineString.first, flexTemplate.request.to.getCoordinate());
+		  
+		  return lineString2.second;
+	  } else
+		  return null;
   }
 
   public StopLocation getOriginStop() {

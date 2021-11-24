@@ -1,8 +1,10 @@
 package org.opentripplanner.ext.flex;
 
+import org.opentripplanner.model.ShapePoint;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
 import org.opentripplanner.ext.flex.trip.ScheduledDeviatedTrip;
 import org.opentripplanner.ext.flex.trip.UnscheduledTrip;
+import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.model.TripStopTimes;
@@ -10,6 +12,8 @@ import org.opentripplanner.model.impl.OtpTransitServiceBuilder;
 import org.opentripplanner.util.ProgressTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Multimap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +30,8 @@ public class FlexTripsMapper {
     
     TripStopTimes stopTimesByTrip = builder.getStopTimesSortedByTrip();
 
+    Multimap<FeedScopedId, ShapePoint> shapesById = builder.getShapePoints();
+    
     final int tripSize = stopTimesByTrip.size();
     ProgressTracker progress = ProgressTracker.track(
         "Create flex trips", 500, tripSize
@@ -40,7 +46,7 @@ public class FlexTripsMapper {
         LOG.debug("Found unscheduled trip " + trip.getId() + " on route " + trip.getRoute().getLongName());
       
       } else if (ScheduledDeviatedTrip.isScheduledFlexTrip(stopTimes)) {
-        result.add(new ScheduledDeviatedTrip(trip, stopTimes));
+        result.add(new ScheduledDeviatedTrip(trip, stopTimes, shapesById.get(trip.getShapeId())));
         LOG.debug("Found scheduled-deviated trip " + trip.getId() + " on route " + trip.getRoute().getShortName());
       
       } else if (hasContinuousStops(stopTimes)) {

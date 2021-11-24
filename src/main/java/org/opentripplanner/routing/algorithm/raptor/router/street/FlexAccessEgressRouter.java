@@ -37,7 +37,8 @@ public class FlexAccessEgressRouter {
         request.additionalSearchDaysBeforeToday,
         request.additionalSearchDaysAfterToday,
         accessStops,
-        egressStops
+        egressStops,
+        request
     );
 
     return isEgress ? flexRouter.createFlexEgresses() : flexRouter.createFlexAccesses();

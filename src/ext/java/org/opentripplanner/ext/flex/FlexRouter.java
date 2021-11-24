@@ -28,6 +28,7 @@ import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.model.calendar.ServiceDate;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.routing.algorithm.raptor.transit.mappers.DateMapper;
+import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.slf4j.Logger;
@@ -37,6 +38,8 @@ public class FlexRouter {
 
   private static final Logger LOG = LoggerFactory.getLogger(FlexRouter.class);
 
+  private final RoutingRequest request;
+  
   private final Graph graph;
   private final FlexIndex flexIndex;
 
@@ -67,7 +70,8 @@ public class FlexRouter {
       int additionalPastSearchDays,
       int additionalFutureSearchDays,
       Collection<NearbyStop> streetAccesses,
-      Collection<NearbyStop> egressTransfers
+      Collection<NearbyStop> egressTransfers,
+      RoutingRequest request
   ) {
     this.graph = graph;
     this.flexIndex = graph.index.getFlexIndex();
@@ -75,6 +79,7 @@ public class FlexRouter {
     this.egressFlexPathCalculator = new StreetFlexPathCalculator(graph, true);
     this.streetAccesses = streetAccesses;
     this.streetEgresses = egressTransfers;
+    this.request = request;
     
     ZoneId tz = graph.getTimeZone().toZoneId();
     LocalDate searchDate = LocalDate.ofInstant(searchInstant, tz);
@@ -103,11 +108,11 @@ public class FlexRouter {
 
     Set<Itinerary> itineraries = new HashSet<>();
 
-    LOG.info("Direct Routing - Accesses: " + this.flexAccessTemplates.stream()
+    LOG.debug("Direct Routing - Accesses: " + this.flexAccessTemplates.stream()
     	.map(e -> e.getFlexTrip() + " " + e.getAccessEgressStop().getId() + "->" + e.getTransferStop().getId() + "\n")
     	.distinct().collect(Collectors.toList()));
         
-    LOG.info("Direct Routing - Egresses: " + this.flexEgressTemplates.stream()
+    LOG.debug("Direct Routing - Egresses: " + this.flexEgressTemplates.stream()
     	.map(e -> e.getFlexTrip() + " " + e.getTransferStop().getId() + " -> " + e.getAccessEgressStop().getId() + "\n")
 		.distinct().collect(Collectors.toList()));
     
@@ -122,7 +127,7 @@ public class FlexRouter {
           Itinerary itinerary = template.createDirectItinerary(egressTemplate.getAccessEgress(), arriveBy, departureTime, startOfTime);
   
           if (itinerary != null) {
-              LOG.info("Creating itin for trip " + egressTemplate.getFlexTrip()+"/" +template.getFlexTrip() + " from:" + template.getAccessEgressStop() + " to:" + 
+              LOG.debug("Creating itin for trip " + egressTemplate.getFlexTrip()+"/" +template.getFlexTrip() + " from:" + template.getAccessEgressStop() + " to:" + 
                 		egressTemplate.getAccessEgressStop() + " xfr=" + template.getTransferStop() + " itin=" + itinerary);
                 
             itineraries.add(itinerary);
@@ -176,7 +181,8 @@ public class FlexRouter {
             .flatMap(date -> t2.second.getFlexAccessTemplates(
                 t2.first,
                 date,
-                accessFlexPathCalculator
+                accessFlexPathCalculator,
+                request
             )))
         .collect(Collectors.toList());
   }
@@ -194,7 +200,8 @@ public class FlexRouter {
             .flatMap(date -> t2.second.getFlexEgressTemplates(
                 t2.first, 
                 date,
-                egressFlexPathCalculator
+                egressFlexPathCalculator,
+                request
             )))
         .collect(Collectors.toList());
   }

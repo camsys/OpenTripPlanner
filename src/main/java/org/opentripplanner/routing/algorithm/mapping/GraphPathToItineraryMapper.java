@@ -145,6 +145,7 @@ public abstract class GraphPathToItineraryMapper {
      * @return The coordinates of the points on the edges
      */
     private static CoordinateArrayListSequence makeCoordinates(Edge[] edges) {
+    	
         CoordinateArrayListSequence coordinates = new CoordinateArrayListSequence();
 
         for (Edge edge : edges) {

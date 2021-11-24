@@ -28,12 +28,14 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 // TODO: Should flex be of its own type
 public class FlexLegMapper {
 
   static public void fixFlexTripLeg(Graph graph, Leg leg, FlexTripEdge flexTripEdge, State[] states) {	  
-
+	  
 	  // if the from location is an area or line, return the location the user searched for *on* that
 	  // line or *within* that location vs. the centroid of the line/area. 
 	  if(flexTripEdge.getOriginStop().isArea() || flexTripEdge.getOriginStop().isLine()) {
@@ -78,8 +80,13 @@ public class FlexLegMapper {
 
     	  FlexTripStopTime st = flexTripEdge.flexTemplate.getFlexTrip().getStopTime(flexTripEdge.flexTemplate.toStopIndex);    	  
     	  calendar.setTimeInMillis(serviceDate.getAsDate().getTime() + 
-    			  ((st.departureTime != StopTime.MISSING_VALUE ? st.departureTime : st.flexWindowEnd)  * 1000));    	  
-	      leg.endTime = calendar;
+    			  ((st.departureTime != StopTime.MISSING_VALUE ? st.departureTime : st.flexWindowEnd)  * 1000));
+
+    	  // duration can never be zero, so add 1 to ensure this
+    	  if(leg.startTime.equals(leg.endTime))
+    		  calendar.set(Calendar.MINUTE, calendar.get(Calendar.MINUTE) + 1);
+
+    	  leg.endTime = calendar;
       }
 
       FlexTrip t = flexTripEdge.flexTemplate.getFlexTrip();

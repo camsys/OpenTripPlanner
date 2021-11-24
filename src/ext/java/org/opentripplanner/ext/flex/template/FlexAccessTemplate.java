@@ -11,6 +11,7 @@ import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.routing.algorithm.mapping.GraphPathToItineraryMapper;
+import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
@@ -28,8 +29,8 @@ import java.util.TimeZone;
 public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 	
 	public FlexAccessTemplate(NearbyStop accessEgress, FlexTrip trip, int fromStopTime, int toStopTime,
-			StopLocation transferStop, FlexServiceDate serviceDate, FlexPathCalculator calculator) {
-		super(accessEgress, trip, fromStopTime, toStopTime, transferStop, serviceDate, calculator);
+			StopLocation transferStop, FlexServiceDate serviceDate, FlexPathCalculator calculator, RoutingRequest request) {
+		super(accessEgress, trip, fromStopTime, toStopTime, transferStop, serviceDate, calculator, request);
 	}
 	  
 	public Itinerary createDirectItinerary(NearbyStop egress, boolean arriveBy, int time,

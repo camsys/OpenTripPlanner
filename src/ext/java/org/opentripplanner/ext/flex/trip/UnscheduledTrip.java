@@ -22,6 +22,7 @@ import org.opentripplanner.model.FlexLocationGroup;
 import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.model.Trip;
+import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
 
 
@@ -65,7 +66,7 @@ public class UnscheduledTrip extends FlexTrip {
 
   @Override
   public Stream<FlexAccessTemplate> getFlexAccessTemplates(
-      NearbyStop access, FlexServiceDate serviceDate, FlexPathCalculator calculator
+      NearbyStop access, FlexServiceDate serviceDate, FlexPathCalculator calculator, RoutingRequest request
   ) {
 	List<Integer> fromIndices = getFromIndex(access.stop, null);
     if (fromIndices.isEmpty()) { return Stream.empty(); }
@@ -75,7 +76,7 @@ public class UnscheduledTrip extends FlexTrip {
 
 	for(Integer fromIndex : fromIndices) 
 		for (StopLocation stop : expandStops(stopTimes[fromIndex].stop)) {
-    		res.add(new FlexAccessTemplate(access, this, fromIndex, fromIndex, stop, serviceDate, calculator));
+    		res.add(new FlexAccessTemplate(access, this, fromIndex, fromIndex, stop, serviceDate, calculator, request));
     }
 
     return res.stream();
@@ -83,7 +84,7 @@ public class UnscheduledTrip extends FlexTrip {
 
   @Override
   public Stream<FlexEgressTemplate> getFlexEgressTemplates(
-      NearbyStop egress, FlexServiceDate serviceDate, FlexPathCalculator calculator
+      NearbyStop egress, FlexServiceDate serviceDate, FlexPathCalculator calculator, RoutingRequest request
   ) {
     List<Integer> toIndices = getToIndex(egress.stop, null);
     if (toIndices.isEmpty()) { return Stream.empty(); }
@@ -93,7 +94,7 @@ public class UnscheduledTrip extends FlexTrip {
 
 	for(Integer toIndex : toIndices) 
 		for (StopLocation stop : expandStops(stopTimes[toIndex].stop)) {
-    		res.add(new FlexEgressTemplate(egress, this, toIndex, toIndex, stop, serviceDate, calculator));
+    		res.add(new FlexEgressTemplate(egress, this, toIndex, toIndex, stop, serviceDate, calculator, request));
     }
 
     return res.stream();

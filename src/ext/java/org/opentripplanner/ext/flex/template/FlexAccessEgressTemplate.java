@@ -8,6 +8,7 @@ import org.opentripplanner.ext.flex.trip.FlexTrip;
 import org.opentripplanner.model.SimpleTransfer;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopLocation;
+import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
@@ -22,7 +23,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public abstract class FlexAccessEgressTemplate {
-
+  
+  public final RoutingRequest request;
+  
   protected final NearbyStop accessEgress;
 
   protected final StopLocation transferStop;
@@ -54,7 +57,8 @@ public abstract class FlexAccessEgressTemplate {
       int toStopIndex,
       StopLocation transferStop,
       FlexServiceDate serviceDate,
-      FlexPathCalculator calculator
+      FlexPathCalculator calculator,
+      RoutingRequest request
   ) {
     this.accessEgress = accessEgress;
     this.trip = trip;
@@ -63,6 +67,7 @@ public abstract class FlexAccessEgressTemplate {
     this.transferStop = transferStop;
     this.serviceDate = serviceDate;
     this.calculator = calculator;
+    this.request = request;
   }
 
   public StopLocation getTransferStop() {
