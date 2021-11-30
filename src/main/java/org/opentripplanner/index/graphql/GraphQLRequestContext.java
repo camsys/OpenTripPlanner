@@ -7,7 +7,7 @@ public class GraphQLRequestContext {
   private final Router router;
   private final GraphIndex index;
 
-  private boolean signMode = false;
+  private boolean signMode = true;
   
   public GraphQLRequestContext(Router router, GraphIndex index) {
     this.router = router;
