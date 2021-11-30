@@ -33,6 +33,12 @@ public class StopIndexForRaptor {
     public final Map<StopLocation, Integer> indexByStop = new HashMap<>();
     public final int[] stopBoardAlightCosts;
 
+    public StopIndexForRaptor(Collection<Stop> stops, TransitTuningParameters tuningParameters) {
+    	this.stopsByIndex = new ArrayList<>(stops);
+        initializeIndexByStop();
+        this.stopBoardAlightCosts = createStopBoardAlightCosts(stopsByIndex, tuningParameters);
+    }
+    
     public StopIndexForRaptor(Graph graph, TransitTuningParameters tuningParameters) {
     	Collection<StopLocation> stops = new ArrayList<>();
     	for(StopLocation sl : graph.getAllFlexStopsFlat()) {

@@ -108,11 +108,11 @@ public class FlexRouter {
 
     Set<Itinerary> itineraries = new HashSet<>();
 
-    LOG.debug("Direct Routing - Accesses: " + this.flexAccessTemplates.stream()
+    LOG.info("Direct Routing - Accesses: " + this.flexAccessTemplates.stream()
     	.map(e -> e.getFlexTrip() + " " + e.getAccessEgressStop().getId() + "->" + e.getTransferStop().getId() + "\n")
     	.distinct().collect(Collectors.toList()));
         
-    LOG.debug("Direct Routing - Egresses: " + this.flexEgressTemplates.stream()
+    LOG.info("Direct Routing - Egresses: " + this.flexEgressTemplates.stream()
     	.map(e -> e.getFlexTrip() + " " + e.getTransferStop().getId() + " -> " + e.getAccessEgressStop().getId() + "\n")
 		.distinct().collect(Collectors.toList()));
     
@@ -127,7 +127,7 @@ public class FlexRouter {
           Itinerary itinerary = template.createDirectItinerary(egressTemplate.getAccessEgress(), arriveBy, departureTime, startOfTime);
   
           if (itinerary != null) {
-              LOG.debug("Creating itin for trip " + egressTemplate.getFlexTrip()+"/" +template.getFlexTrip() + " from:" + template.getAccessEgressStop() + " to:" + 
+              LOG.info("Creating itin for trip " + egressTemplate.getFlexTrip()+"/" +template.getFlexTrip() + " from:" + template.getAccessEgressStop() + " to:" + 
                 		egressTemplate.getAccessEgressStop() + " xfr=" + template.getTransferStop() + " itin=" + itinerary);
                 
             itineraries.add(itinerary);

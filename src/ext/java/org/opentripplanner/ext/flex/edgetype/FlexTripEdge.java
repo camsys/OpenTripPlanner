@@ -106,7 +106,7 @@ public class FlexTripEdge extends Edge {
 	  else if(flexTemplate.getFlexTrip() instanceof ScheduledDeviatedTrip) {
 		    
 		  LineString geometry = 
-				  GeometryUtils.makeLineString(((ScheduledDeviatedTrip)getFlexTrip()).geometryCoords);		    
+				  GeometryUtils.makeLineString(((ScheduledDeviatedTrip)getFlexTrip()).geometryCoords.);		    
 
 		  P2<LineString> lineString = 
 				  GeometryUtils.splitGeometryAtPoint(geometry, flexTemplate.request.from.getCoordinate());
