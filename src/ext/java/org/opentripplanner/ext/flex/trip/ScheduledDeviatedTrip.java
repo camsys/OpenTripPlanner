@@ -24,7 +24,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -73,14 +79,18 @@ public class ScheduledDeviatedTrip extends FlexTrip {
     this.dropOffBookingInfos = new BookingInfo[nStops];
     this.pickupBookingInfos = new BookingInfo[nStops];
 
-    List<Coordinate> geometryCoordArray = new ArrayList<Coordinate>(); 
+    Map<Integer, Coordinate> geometryCoordArray = new HashMap<Integer, Coordinate>(); 
     int z = 0;
     for(ShapePoint sp : geometry) {
     	Coordinate n = new Coordinate(sp.getLon(), sp.getLat());
-    	geometryCoordArray.add(n);
-    }
-    this.geometryCoords = geometryCoordArray.toArray(new Coordinate[geometryCoordArray.size()]);
-
+    	geometryCoordArray.put(sp.getSequence(), n);
+    }    
+    this.geometryCoords = geometryCoordArray.entrySet()
+    		.stream()
+    		.sorted(Comparator.comparingInt(Entry::getKey))
+    		.map(entry -> entry.getValue())
+    		.collect(Collectors.toList()).toArray(new Coordinate[geometryCoordArray.keySet().size()]);
+    		
     for (int i = 0; i < nStops; i++) {
       this.stopTimes[i] = new FlexTripStopTime(stopTimes.get(i));
       this.dropOffBookingInfos[i] = stopTimes.get(i).getDropOffBookingInfo();
