@@ -111,6 +111,8 @@ public class GtfsRealtimeHttpTripUpdateSource implements TripUpdateSource, JsonC
                 // Create List of TripUpdates
                 updates = new ArrayList<TripUpdate>(feedEntityList.size());
 
+                int droppedTripUpdates = 0;
+                int totalTripUpdates = 0;
                 nextFE:
                 for (FeedEntity feedEntity : feedEntityList) {                	
                 	if (feedEntity.hasTripUpdate()) {
@@ -120,27 +122,15 @@ public class GtfsRealtimeHttpTripUpdateSource implements TripUpdateSource, JsonC
                     			feedEntity.getTripUpdate().getTrip().getExtension(GtfsRealtimeNYCT.nyctTripDescriptor);
                     	
                 			if(td.getIsAssigned() == false) {
-                				Trip trip = 
-                						graph.index.getTripForId(new AgencyAndId("MTASBWY", feedEntity.getTripUpdate().getTrip().getTripId()));
-
-                				LOG.debug("Here for unassigned trip described by " + feedEntity.getTripUpdate().getTrip().getTripId());
-                				
-                				// discard trips that are not assigned and not matched to a scheduled trip
-                				if(trip == null) {
-                    				LOG.debug("Trip not found in graph; skipping update.");
-                					continue;
-                				}
-                				
-                				TripPattern pattern = graph.index.getTripPatternForTripId(trip.getId());
+                				LOG.debug("Here for unassigned trip described by " + feedEntity.getTripUpdate().getTrip().getTripId().replace("\r|\n", ""));
                 				
                 				// create a hash map of the terminal plus 4 stops after which we want to show for any
                 				// unassigned trips
-                				List<Stop> stops = pattern.getStops();
-                				HashMap<String, Stop> stopsToShow = new HashMap<>();
-                				
+                				HashMap<String, StopTimeUpdate> stopsToShow = new HashMap<>();
+                				List<StopTimeUpdate> stops = feedEntity.getTripUpdate().getStopTimeUpdateList();                				
                 				for(int i = 0; i < Math.min(stops.size(), 5); i++) { // show 4 stops after terminal
-                					Stop s = stops.get(i);
-                					stopsToShow.put(s.getId().getId(), s);
+                					StopTimeUpdate s = stops.get(i);
+                					stopsToShow.put(s.getStopId(), s);
                 				}
 
                 				LOG.debug("Terminal plus stops = " + stopsToShow.keySet());
@@ -154,16 +144,16 @@ public class GtfsRealtimeHttpTripUpdateSource implements TripUpdateSource, JsonC
                 				                				
                 				for(StopTimeUpdate stu : tripUpdate.getStopTimeUpdateList()) {
                 					// is this update for the origin terminal?
-                					if(pattern.getStop(0).getId().getId().equals(stu.getStopId())) {
+                					if(stops.get(0).getStopId().equals(stu.getStopId())) {
                 						long departureTime = stu.getDeparture().getTime();
                 						long now = timestamp;
 
-                        				LOG.debug("Departure at terminal " + pattern.getStop(0) + " happens at " + departureTime + ". Now=" + now + " delta=" + (now - departureTime));
+                        				LOG.debug("Departure at terminal " + stops.get(0).getStopId() + " happens at " + departureTime + ". Now=" + now + " delta=" + (now - departureTime));
 
                 						// if the train was supposed to leave the terminal > 5 minutes ago, skip this TU
                 						if(now - departureTime > 5 * 60) {
                 							LOG.debug("skipping because departure is 5+ min old");
-
+                							droppedTripUpdates++;
                 							continue nextFE;
                 						}
                 					}                					
@@ -176,23 +166,27 @@ public class GtfsRealtimeHttpTripUpdateSource implements TripUpdateSource, JsonC
                 				
                 				// no stops made it through
                 				if(builtNewTripUpdate.getStopTimeUpdateList().isEmpty()) {
-        							LOG.debug("Skipping update for trip " + trip + " because no stop times were filtered through.");
+        							LOG.debug("Skipping update for trip " + td + " because no stop times were filtered through.");
                 					continue;
                 				} else {		
-        							LOG.debug("Pushing update for trip " + trip + " to update list with terminal plus up to 4 stops; total=" + builtNewTripUpdate.getStopTimeUpdateCount() + " stops");
+        							LOG.debug("Pushing update for trip " + td + " to update list with terminal plus up to 4 stops; total=" + builtNewTripUpdate.getStopTimeUpdateCount() + " stops");
                 					updates.add(builtNewTripUpdate);
+                					totalTripUpdates++;
                 				}
                 			}
                 		}
                 		
                 		updates.add(feedEntity.getTripUpdate());
-                	}
-                }
+                	} // if has tripupdate
+                }// for feedentity
+                
+            	LOG.info("Dropped StopUpdate total because of unassigned status = " + droppedTripUpdates + ", passed count = " + totalTripUpdates);
             }
         } catch (Exception e) {
             LOG.warn("Failed to parse gtfs-rt feed from " + url + ":", e);
         } finally {
-            long end = System.currentTimeMillis();
+
+        	long end = System.currentTimeMillis();
             LOG.info("Feed " + this.feedId + " downloaded in " + (end - start) + "ms via url=" + url);
         }
         return updates;

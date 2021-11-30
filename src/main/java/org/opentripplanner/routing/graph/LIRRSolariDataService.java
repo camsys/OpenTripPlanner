@@ -159,7 +159,10 @@ public class LIRRSolariDataService {
         		ServiceDate scheduleDateTimeServiceDate = new ServiceDate(scheduleDateTimeCalendar);
         		
                 JsonNode destinationStopRaw = train.get("destinationLocation");
-            	String destinationStopCode = destinationStopRaw.get("code").asText();
+                
+                String destinationStopCode = null;
+                if(destinationStopRaw != null && destinationStopRaw.get("code") != null)
+                	destinationStopCode = destinationStopRaw.get("code").asText();
 
             	SortedSetMultimap<Float, Trip> bestTrips = TreeMultimap.create(
 	            	new Comparator<Float>() {
@@ -229,17 +232,18 @@ public class LIRRSolariDataService {
                 		Stop lastStop = tripPattern.getStops().get(tripPattern.getStops().size() - 1);
                 		Stop firstStop = tripPattern.getStops().get(0);
 
-                		if(lastStop.getId().equals(stopsByStationCode.get(destinationStopCode).getId()) 
+                		if(destinationStopCode != null)
+                			if(lastStop.getId().equals(stopsByStationCode.get(destinationStopCode).getId()) 
                 				|| firstStop.getId().equals(stopsByStationCode.get(destinationStopCode).getId())) {
-                			score += 10.0f;                        			
-                		}                   
+                				score += 10.0f;                        			
+                			}                   
                 		
                 		bestTrips.put(score, t);
                    } // for each trip
                 } // for each serviceDate
 
                 if(bestTrips == null || bestTrips.isEmpty()) {
-                	_log.error("No match in the schedule could be found for " + train);
+                	_log.debug("No match in the schedule could be found for " + train);
                 	continue;
                 }
 
@@ -249,9 +253,9 @@ public class LIRRSolariDataService {
                 Trip bestTrip = bestTrips.values().iterator().next();
 
                 if(matchScore < 80.0f) {
-                	_log.error("Poor match in the schedule for record below; need 80% or higher:");
+                	_log.debug("Poor match in the schedule for record below; need 80% or higher:");
 
-                	_log.error("RECORD FROM MTA: Train " + trainNumberRaw + " " + 
+                	_log.debug("RECORD FROM MTA: Train " + trainNumberRaw + " " + 
   	                		directionRaw + " at " + scheduleDateTimeCalendar.getTime() + " to " + destinationStopRaw.get("name"));
   	
   	                for(java.util.Map.Entry<Float, Trip> e : bestTrips.entries()) {
@@ -263,7 +267,7 @@ public class LIRRSolariDataService {
             			if(sd == null)
             				sd = new ServiceDate();
 
-  	                	_log.error(" " + e.getKey() + " Trip " + t.getId() + " " + t.getDirectionId() 
+  	                	_log.debug(" " + e.getKey() + " Trip " + t.getId() + " " + t.getDirectionId() 
   	                			+ "(" + directionIdMap[Integer.parseInt(t.getDirectionId())] + ") to " 
   	                			+ stopTimes.get(stopTimes.size() - 1).getName() + " at "
 	                			+ sd.getAsDate().toInstant()
