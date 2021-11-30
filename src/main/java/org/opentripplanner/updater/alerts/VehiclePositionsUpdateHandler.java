@@ -52,12 +52,13 @@ public class VehiclePositionsUpdateHandler extends AbstractUpdateHandler {
 	}
 
 	private void handleVehiclePosition(VehiclePosition vehiclePosition) {
-
 		if (vehiclePosition.hasTrip()) {
 			String tripId = vehiclePosition.getTrip().getTripId();
 			AlertPatch patch = new AlertPatch();
+
 			patch.setTrip(new AgencyAndId(feedId, tripId));
 			patch.setFeedId(feedId);
+			
 			ServiceDate sd;
 			// time period should be the service day for which the trip is active
 			if (vehiclePosition.getTrip().hasStartDate()) {
@@ -70,12 +71,10 @@ public class VehiclePositionsUpdateHandler extends AbstractUpdateHandler {
 			} else {
 				sd = new ServiceDate(new Date(vehiclePosition.getTimestamp() * 1000));
 			}
+			
 			ArrayList<TimePeriod> periods = new ArrayList<TimePeriod>();
 			periods.add(new TimePeriod(sd.getAsDate().getTime() / 1000, sd.next().getAsDate().getTime() / 1000));
 			patch.setTimePeriods(periods);
-
-			
-			
 			
 			VehicleInfo vehicleInfo = new VehicleInfo();
 			if (vehiclePosition.getVehicle().hasId()) {
@@ -115,6 +114,8 @@ public class VehiclePositionsUpdateHandler extends AbstractUpdateHandler {
 				vehicleInfo.setBearing((double) vehiclePosition.getPosition().getBearing());
 			}
 
+			
+			
 			vehicleInfo.setOccupancyStatus(convertOccupancyStatus(vehiclePosition.getOccupancyStatus()));
 			
 			// now look for extensions
@@ -138,7 +139,7 @@ public class VehiclePositionsUpdateHandler extends AbstractUpdateHandler {
 			patch.setId(patchId);
 			patchIds.add(patchId);
 			alertPatchService.apply(patch);
-		}
+		} // if hasTrip()
 	}
 
 	private VehicleInfo.OccupancyStatus convertOccupancyStatus(OccupancyStatus occupancyStatus) {

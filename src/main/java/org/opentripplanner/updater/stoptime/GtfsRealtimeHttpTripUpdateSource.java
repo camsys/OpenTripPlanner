@@ -15,13 +15,22 @@ package org.opentripplanner.updater.stoptime;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 import com.google.protobuf.ExtensionRegistry;
 import com.google.transit.realtime.GtfsRealtimeExtensions;
+import com.google.transit.realtime.GtfsRealtimeNYCT;
+import com.google.transit.realtime.GtfsRealtimeNYCT.NyctTripDescriptor;
+
 import org.opentripplanner.updater.JsonConfigurable;
+import org.onebusaway.gtfs.model.AgencyAndId;
+import org.onebusaway.gtfs.model.Stop;
+import org.onebusaway.gtfs.model.Trip;
+import org.opentripplanner.routing.core.State;
+import org.opentripplanner.routing.edgetype.TripPattern;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.util.HttpUtils;
 import org.slf4j.Logger;
@@ -31,6 +40,7 @@ import com.google.transit.realtime.GtfsRealtime;
 import com.google.transit.realtime.GtfsRealtime.FeedEntity;
 import com.google.transit.realtime.GtfsRealtime.FeedMessage;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
+import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
 
 public class GtfsRealtimeHttpTripUpdateSource implements TripUpdateSource, JsonConfigurable {
     private static final Logger LOG =
@@ -52,6 +62,8 @@ public class GtfsRealtimeHttpTripUpdateSource implements TripUpdateSource, JsonC
     private String url;
 
     private long timestamp;
+    
+    private Graph graph;
 
     private boolean matchStopSequence;
 
@@ -69,6 +81,7 @@ public class GtfsRealtimeHttpTripUpdateSource implements TripUpdateSource, JsonC
         this.url = url;
         this.feedId = config.path("feedId").asText();
         this.matchStopSequence = config.path("matchStopSequence").asBoolean(true);
+        this.graph = graph;
     }
 
     @Override
@@ -97,8 +110,83 @@ public class GtfsRealtimeHttpTripUpdateSource implements TripUpdateSource, JsonC
 
                 // Create List of TripUpdates
                 updates = new ArrayList<TripUpdate>(feedEntityList.size());
-                for (FeedEntity feedEntity : feedEntityList) {
-                    if (feedEntity.hasTripUpdate()) updates.add(feedEntity.getTripUpdate());
+
+                nextFE:
+                for (FeedEntity feedEntity : feedEntityList) {                	
+                	if (feedEntity.hasTripUpdate()) {
+                	
+                		if(feedEntity.getTripUpdate().getTrip().hasExtension(GtfsRealtimeNYCT.nyctTripDescriptor)) {
+                			NyctTripDescriptor td = 
+                    			feedEntity.getTripUpdate().getTrip().getExtension(GtfsRealtimeNYCT.nyctTripDescriptor);
+                    	
+                			if(td.getIsAssigned() == false) {
+                				Trip trip = 
+                						graph.index.getTripForId(new AgencyAndId("MTASBWY", feedEntity.getTripUpdate().getTrip().getTripId()));
+
+                				LOG.debug("Here for unassigned trip described by " + feedEntity.getTripUpdate().getTrip().getTripId());
+                				
+                				// discard trips that are not assigned and not matched to a scheduled trip
+                				if(trip == null) {
+                    				LOG.debug("Trip not found in graph; skipping update.");
+                					continue;
+                				}
+                				
+                				TripPattern pattern = graph.index.getTripPatternForTripId(trip.getId());
+                				
+                				// create a hash map of the terminal plus 4 stops after which we want to show for any
+                				// unassigned trips
+                				List<Stop> stops = pattern.getStops();
+                				HashMap<String, Stop> stopsToShow = new HashMap<>();
+                				
+                				for(int i = 0; i < Math.min(stops.size(), 5); i++) { // show 4 stops after terminal
+                					Stop s = stops.get(i);
+                					stopsToShow.put(s.getId().getId(), s);
+                				}
+
+                				LOG.debug("Terminal plus stops = " + stopsToShow.keySet());
+                				
+                				// filter the stop time updates to just include STUs for the terminal plus those 4 stops
+                				TripUpdate tripUpdate = feedEntity.getTripUpdate();
+                				TripUpdate.Builder newTripUpdate = TripUpdate.newBuilder();
+                				newTripUpdate.setDelay(tripUpdate.getDelay());
+                				newTripUpdate.setTimestamp(tripUpdate.getTimestamp());
+                				newTripUpdate.setTrip(tripUpdate.getTrip());
+                				                				
+                				for(StopTimeUpdate stu : tripUpdate.getStopTimeUpdateList()) {
+                					// is this update for the origin terminal?
+                					if(pattern.getStop(0).getId().getId().equals(stu.getStopId())) {
+                						long departureTime = stu.getDeparture().getTime();
+                						long now = timestamp;
+
+                        				LOG.debug("Departure at terminal " + pattern.getStop(0) + " happens at " + departureTime + ". Now=" + now + " delta=" + (now - departureTime));
+
+                						// if the train was supposed to leave the terminal > 5 minutes ago, skip this TU
+                						if(now - departureTime > 5 * 60) {
+                							LOG.debug("skipping because departure is 5+ min old");
+
+                							continue nextFE;
+                						}
+                					}                					
+                					
+                					if(stopsToShow.keySet().contains(stu.getStopId()))
+                						newTripUpdate.addStopTimeUpdate(stu);
+                				}
+                				
+                				TripUpdate builtNewTripUpdate = newTripUpdate.build();
+                				
+                				// no stops made it through
+                				if(builtNewTripUpdate.getStopTimeUpdateList().isEmpty()) {
+        							LOG.debug("Skipping update for trip " + trip + " because no stop times were filtered through.");
+                					continue;
+                				} else {		
+        							LOG.debug("Pushing update for trip " + trip + " to update list with terminal plus up to 4 stops; total=" + builtNewTripUpdate.getStopTimeUpdateCount() + " stops");
+                					updates.add(builtNewTripUpdate);
+                				}
+                			}
+                		}
+                		
+                		updates.add(feedEntity.getTripUpdate());
+                	}
                 }
             }
         } catch (Exception e) {
