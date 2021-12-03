@@ -103,9 +103,6 @@ public class AlertsUpdateHandler extends AbstractUpdateHandler {
             if (mercuryAlert.hasAlertType()) {
                 alertText.alertType = toTL(mercuryAlert.getAlertType());
             }
-            if (mercuryAlert.hasAdditionalInformation()) {
-                alertText.additionalInfo = deBuffer(mercuryAlert.getAdditionalInformation());
-            }
             if (mercuryAlert.hasDisplayBeforeActive()) {
                 alertText.displayBeforeActive = toDate(mercuryAlert.getDisplayBeforeActive());
             }
