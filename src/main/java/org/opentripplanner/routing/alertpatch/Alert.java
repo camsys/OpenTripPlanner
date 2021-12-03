@@ -49,8 +49,6 @@ public class Alert implements Serializable {
 
     public I18NString alertType;
 
-    public I18NString additionalInfo;
-
     // friendly description of complex periods
     public I18NString humanReadableActivePeriod;
 
