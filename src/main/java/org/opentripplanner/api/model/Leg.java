@@ -71,6 +71,16 @@ public class Leg {
      * "scheduled time of arrival at alighting stop" = endTime - arrivalDelay
      */
     public int arrivalDelay = 0;
+
+    /* scheduled times in epoch/ISO format */
+    public Calendar scheduledArrivalTime = null;
+
+    public Calendar scheduledDepartureTime = null;
+
+    public String scheduledArrivalTimeFmt = null;
+
+    public String scheduledDepartureTimeFmt = null;
+
     /**
      * Whether there is real-time data about this Leg
      */
@@ -378,4 +388,15 @@ public class Leg {
         this.endTime = calendar;
         this.endTimeFmt = formatDateIso(calendar);
     }
+    
+    public void setScheduledDeparture(Calendar calendar) {
+        this.scheduledDepartureTime = calendar;
+        this.scheduledDepartureTimeFmt = formatDateIso(calendar);
+    }
+
+    public void setScheduledArrival(Calendar calendar) {
+        this.scheduledArrivalTime = calendar;
+        this.scheduledArrivalTimeFmt = formatDateIso(calendar);
+    }
+
 }

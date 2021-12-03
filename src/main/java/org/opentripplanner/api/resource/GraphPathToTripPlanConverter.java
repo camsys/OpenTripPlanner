@@ -18,6 +18,7 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
 import org.apache.commons.lang.StringUtils;
 import org.onebusaway.gtfs.model.*;
+import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.opentripplanner.api.model.*;
 import org.opentripplanner.common.geometry.DirectionUtils;
 import org.opentripplanner.common.geometry.GeometryUtils;
@@ -358,7 +359,7 @@ public abstract class GraphPathToTripPlanConverter {
         Edge[] edges = new Edge[states.length - 1];
 
         leg.setStartTime(makeCalendar(states[0]));
-        leg.setEndTime(makeCalendar(states[states.length - 1]));
+        leg.setEndTime(makeCalendar(states[states.length - 1]));       
 
         // Calculate leg distance and fill array of edges
         leg.distance = 0.0;
@@ -863,6 +864,30 @@ public abstract class GraphPathToTripPlanConverter {
         leg.from.clearArrival();
         leg.to = makePlace(states[states.length - 1], lastVertex, null, lastStop, tripTimes, requestedLocale);
         leg.to.clearDeparture();
+         
+        if(leg.tripId != null) {
+	        if (tripTimes != null && states[0].backEdge instanceof OnboardEdge) {
+	            ServiceDate fromServiceDate = new ServiceDate(new Date(states[0].getTimeInMillis()));
+	
+	            Calendar s = new GregorianCalendar();
+	            s.setTime(fromServiceDate.getAsDate());
+	            s.add(Calendar.SECOND, 
+	            		tripTimes.getScheduledDepartureTime(((OnboardEdge)edges[0]).getStopIndex()));	            
+	            leg.setScheduledDeparture(s);
+	        }	      
+	        
+	        if (tripTimes != null && states[states.length - 1].backEdge instanceof OnboardEdge) {
+	            ServiceDate toServiceDate = new ServiceDate(new Date(states[states.length - 1].getTimeInMillis()));
+
+	            Calendar s = new GregorianCalendar();
+	            s.setTime(toServiceDate.getAsDate());
+	            // +1 on index here: not sure why, but makePlace() does it too, so doing it here
+	            s.add(Calendar.SECOND, 
+	            		tripTimes.getScheduledArrivalTime(((OnboardEdge)states[states.length - 1].getBackEdge()).getStopIndex() + 1));
+	            leg.setScheduledArrival(s);
+	        }
+        }
+        
 
         if (showIntermediateStops) {
             leg.stop = new ArrayList<Place>();
@@ -930,6 +955,7 @@ public abstract class GraphPathToTripPlanConverter {
             place.vertexType = VertexType.TRANSIT;
             place.track = tripTimes.getTrack(place.stopIndex);
             place.note = tripTimes.getNote(place.stopIndex);
+            
         } else if(vertex instanceof BikeRentalStationVertex) {
             place.bikeShareId = ((BikeRentalStationVertex) vertex).getId();
             LOG.trace("Added bike share Id {} to place", place.bikeShareId);
