@@ -79,14 +79,6 @@ public class LocalizedAlert {
 
     @JsonSerialize
     /** non-standard mercury extension **/
-    public String getAdditionalInfo() {
-        if (alert.additionalInfo == null)
-            return null;
-        return alert.additionalInfo.toString(locale);
-    }
-
-    @JsonSerialize
-    /** non-standard mercury extension **/
     public String getAlertType() {
         if (alert.alertType == null)
             return null;
