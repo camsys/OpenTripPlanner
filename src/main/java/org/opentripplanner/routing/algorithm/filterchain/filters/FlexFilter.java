@@ -68,13 +68,7 @@ public class FlexFilter implements ItineraryFilter {
 			  continue;
 		  }
 		  
-		  // ...or if it leaves before what's there now
-		  Leg existingItinFlexLeg = existingItin.legs.stream()
-				  .filter(it -> it.flexibleTrip == true)
-				  .findFirst()
-				  .orElse(null);
-
-		  if(flexLeg.startTime.before(existingItinFlexLeg.startTime)) {
+		  if(itin.generalizedCost < existingItin.generalizedCost) {
 			  itinerariesByRoutePath.put(routePathKey, itin);
 		  	  continue;
 	  	  }
