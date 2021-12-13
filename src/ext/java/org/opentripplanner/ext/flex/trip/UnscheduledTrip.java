@@ -102,28 +102,22 @@ public class UnscheduledTrip extends FlexTrip {
 
   @Override
   public int earliestDepartureTime(int departureTime, int fromStopIndex, int toStopIndex) {
-	FlexTripStopTime fromStopTime = stopTimes[fromStopIndex];
+		FlexTripStopTime ftst = stopTimes[fromStopIndex];
+	    
+	    if (departureTime < ftst.flexWindowEnd)
+	        return -1;
 
-    if(fromStopTime.flexWindowStart == MISSING_VALUE)
-    	return -1;
-    
-    if (fromStopTime.flexWindowEnd < departureTime)
-        return -1;
-
-    return Math.max(departureTime, fromStopTime.flexWindowStart);
+	    return departureTime;
   }
 
   @Override
   public int latestArrivalTime(int arrivalTime, int fromStopIndex, int toStopIndex) {
-	FlexTripStopTime toStopTime = stopTimes[toStopIndex];
+	FlexTripStopTime ftst = stopTimes[toStopIndex];
 	    
-    if(toStopTime.flexWindowEnd == MISSING_VALUE)
-    	return -1;
-    
-    if (toStopTime.flexWindowStart > arrivalTime)
+    if (arrivalTime < ftst.flexWindowStart)
         return -1;
 
-    return Math.min(arrivalTime, toStopTime.flexWindowEnd);
+    return arrivalTime;
   }
 
   @Override

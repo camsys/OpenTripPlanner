@@ -225,13 +225,28 @@ public class FlexRouter {
 
     // Get the stop with least walking time from each group 
     List<T2<NearbyStop, FlexTrip>> r = groupedReachableFlexTrips
-        .parallelStream()
+    	.parallelStream()
         .map(t2s -> t2s
             .parallelStream()
+            .filter(t2 -> !t2.first.stop.isArea() && !t2.first.stop.isLine())
             .min(Comparator.comparingLong(t2 -> t2.first.state.getElapsedTimeSeconds())))
         .flatMap(Optional::stream)
         .collect(Collectors.toList());
     
+    // ...and then get the same (least from each group) for both lines and areas
+    //
+    // (we handle these separately since areas can contain stops, but stops can have special
+    // rules that apply only to that one point inside the area vs. just getting the area), so we want both 
+    // in the list of options
+    r.addAll(groupedReachableFlexTrips
+            .parallelStream()
+            .map(t2s -> t2s
+                .parallelStream()
+                .filter(t2 -> t2.first.stop.isArea() || t2.first.stop.isLine())
+                .min(Comparator.comparingLong(t2 -> t2.first.state.getElapsedTimeSeconds())))
+            .flatMap(Optional::stream)
+            .collect(Collectors.toList()));
+    	        
     return r.stream();
   }
 

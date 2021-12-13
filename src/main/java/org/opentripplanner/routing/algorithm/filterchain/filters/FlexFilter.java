@@ -72,64 +72,13 @@ public class FlexFilter implements ItineraryFilter {
 			  itinerariesByRoutePath.put(routePathKey, itin);
 		  	  continue;
 	  	  }
-	  }
+	  }	 
 	  
-	  // filter out any trips that jump onto fixed route for short periods 
-	  for(Entry<String, Itinerary> entry : itinerariesByRoutePath.entrySet()) {
-		  Itinerary itin = entry.getValue();
-		  
-		  Leg[] legs = itin.legs
-				  .stream()
-				  .filter(it -> !it.isWalkingLeg())
-				  .collect(Collectors.toList())
-				  .toArray(new Leg[] {});
-		  		  
-		  // can't fit our criteria with < 3 items
-		  if(legs.length < 2) {
-			  newList.add(itin);
-			  continue;
-		  }
-
-		  boolean skip = false;
-		  for(int i = 1; i < legs.length - 1; i++) {
-			  Leg prevLeg = legs[i - 1];
-			  Leg thisLeg = legs[i];
-			  Leg nextLeg = legs[i + 1];
-
-			  // skip flex legs right after one another
-			  if(thisLeg.flexibleTrip) {
-				  if(prevLeg.flexibleTrip || nextLeg.flexibleTrip) {
-					  skip = true;
-				  	  break;
-				  }
-			  }
-
-			  // skip flex legs right short transit legs right before/after
-			  if(thisLeg.flexibleTrip) {
-				  if(!prevLeg.flexibleTrip && nextLeg.isTransitLeg()) {
-					  if(prevLeg.getDuration() < 60 * 5 * 1000) {
-						  skip = true;
-						  break;
-					  }				  
-
-				  } else if(!nextLeg.flexibleTrip && nextLeg.isTransitLeg()) {
-					  if(nextLeg.getDuration() < 60 * 5 * 1000) {
-						  skip = true;
-						  break;
-					  }				  
-				  }
-			  }
-			  		  
-			  if(!skip) 
-				  newList.add(itin);
-		  }
-	  }
-	  	  
 	  // remove walking all the way options
-      return newList
-              .stream().filter(it -> !it.isWalkingAllTheWay())
-              .collect(Collectors.toList());	 
-             
+      return itinerariesByRoutePath.values()
+              .stream()
+              .filter(it -> !it.isWalkingAllTheWay())
+              .collect(Collectors.toList());            
   }
 
   @Override
