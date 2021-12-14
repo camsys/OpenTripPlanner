@@ -34,11 +34,11 @@ public abstract class FlexTrip extends TransitEntity {
     this.trip = trip;
   }
   
-  public abstract Stream<FlexAccessTemplate> getFlexAccessTemplates(
+  public abstract List<FlexAccessTemplate> getFlexAccessTemplates(
       NearbyStop access, FlexServiceDate servicedate, FlexPathCalculator calculator, RoutingRequest request
   );
 
-  public abstract Stream<FlexEgressTemplate> getFlexEgressTemplates(
+  public abstract List<FlexEgressTemplate> getFlexEgressTemplates(
       NearbyStop egress, FlexServiceDate servicedate, FlexPathCalculator calculator, RoutingRequest request
   );
 

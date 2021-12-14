@@ -4,12 +4,15 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,6 +36,8 @@ import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.HashMultimap;
 
 public class FlexRouter {
 
@@ -171,48 +176,42 @@ public class FlexRouter {
   private void calculateFlexAccessTemplates() {
     if (this.flexAccessTemplates != null) { return; }
 
-    // Fetch the closest flexTrips reachable from the access stops
-    this.flexAccessTemplates = getClosestFlexTrips(streetAccesses)
-        // For each date the router has data for
-        .flatMap(t2 -> Arrays.stream(dates)
-            // Discard if service is not running on date
-            .filter(date -> date.isFlexTripRunning(t2.second, this.graph))
-            // Create templates from trip, boarding at the nearbyStop
-            .flatMap(date -> t2.second.getFlexAccessTemplates(
-                t2.first,
-                date,
-                accessFlexPathCalculator,
-                request
-            )))
-        .collect(Collectors.toList());
+    this.flexAccessTemplates = new ArrayList<>();
+    for(Entry<NearbyStop, Collection<FlexTrip>> e : getClosestFlexTrips(streetAccesses)) {
+    	for(FlexTrip trip : e.getValue()) {
+        	for(int i = 0; i < dates.length - 1; i++) {
+        		FlexServiceDate date = dates[i];
+        		if(date.isFlexTripRunning(trip, graph))
+        			flexAccessTemplates.addAll(
+        				trip.getFlexAccessTemplates(e.getKey(), date, accessFlexPathCalculator, request));
+        	}
+    	}
+    }
   }
 
   private void calculateFlexEgressTemplates() {
     if (this.flexEgressTemplates != null) { return; }
 
-    // Fetch the closest flexTrips reachable from the egress stops
-    this.flexEgressTemplates = getClosestFlexTrips(streetEgresses)
-        // For each date the router has data for
-        .flatMap(t2 -> Arrays.stream(dates)
-            // Discard if service is not running on date
-            .filter(date -> date.isFlexTripRunning(t2.second, this.graph))
-            // Create templates from trip, alighting at the nearbyStop
-            .flatMap(date -> t2.second.getFlexEgressTemplates(
-                t2.first, 
-                date,
-                egressFlexPathCalculator,
-                request
-            )))
-        .collect(Collectors.toList());
+    this.flexEgressTemplates = new ArrayList<>();
+    for(Entry<NearbyStop, Collection<FlexTrip>> e : getClosestFlexTrips(streetEgresses)) {
+    	for(FlexTrip trip : e.getValue()) {
+        	for(int i = 0; i < dates.length - 1; i++) {
+        		FlexServiceDate date = dates[i];
+        		if(date.isFlexTripRunning(trip, graph))
+        			flexEgressTemplates.addAll(
+        				trip.getFlexEgressTemplates(e.getKey(), date, egressFlexPathCalculator, request));
+        	}
+    	}
+    }
   }
 
-  private Stream<T2<NearbyStop, FlexTrip>> getClosestFlexTrips(Collection<NearbyStop> nearbyStops) {
+  private Set<Entry<NearbyStop, Collection<FlexTrip>>> getClosestFlexTrips(Collection<NearbyStop> nearbyStops) {
 	  
 	// Find all trips reachable from the nearbyStops
     Collection<T2<NearbyStop, FlexTrip>> flexTripsReachableFromNearbyStops = nearbyStops
         .parallelStream()
         .flatMap(accessEgress -> flexIndex
-            .getFlexTripsByStop(accessEgress.stop)
+            .getFlexTripsByStop(accessEgress.stop)            
             .map(flexTrip -> new T2<>(accessEgress, flexTrip)))
         .collect(Collectors.toList());
 
@@ -223,31 +222,37 @@ public class FlexRouter {
         .collect(Collectors.groupingBy(t2 -> t2.second.getId()))
         .values();
 
+    HashMultimap<NearbyStop, FlexTrip> r = HashMultimap.create();
+    
     // Get the stop with least walking time from each group 
-    List<T2<NearbyStop, FlexTrip>> r = groupedReachableFlexTrips
-    	.parallelStream()
+    groupedReachableFlexTrips
+    	.stream()
         .map(t2s -> t2s
             .parallelStream()
             .filter(t2 -> !t2.first.stop.isArea() && !t2.first.stop.isLine())
             .min(Comparator.comparingLong(t2 -> t2.first.state.getElapsedTimeSeconds())))
         .flatMap(Optional::stream)
-        .collect(Collectors.toList());
+        .forEach(it -> {
+        	r.put(it.first, it.second);        	
+        });
     
     // ...and then get the same (least from each group) for both lines and areas
     //
     // (we handle these separately since areas can contain stops, but stops can have special
     // rules that apply only to that one point inside the area vs. just getting the area), so we want both 
     // in the list of options
-    r.addAll(groupedReachableFlexTrips
-            .parallelStream()
+    groupedReachableFlexTrips
+            .stream()
             .map(t2s -> t2s
                 .parallelStream()
                 .filter(t2 -> t2.first.stop.isArea() || t2.first.stop.isLine())
                 .min(Comparator.comparingLong(t2 -> t2.first.state.getElapsedTimeSeconds())))
             .flatMap(Optional::stream)
-            .collect(Collectors.toList()));
+            .forEach(it -> {
+            	r.put(it.first, it.second);        	
+            });
     	        
-    return r.stream();
+    return r.asMap().entrySet();
   }
 
 }

@@ -73,28 +73,6 @@ public class StreetFlexPathCalculator implements FlexPathCalculator {
     int distance = (int) path.getDistanceMeters();
     int duration = path.getDuration();
 
-    if(trip instanceof ScheduledDeviatedTrip) {
-    	FlexTripStopTime fromST = trip.getStopTime(fromStopIndex);
-    	FlexTripStopTime toST = trip.getStopTime(toStopIndex);
-
-    	int newFromST = 0;
-    	int newToST = 0;
-    	
-    	if(fromST.departureTime != StopTime.MISSING_VALUE)
-    		newFromST = fromST.departureTime;
-    	else
-    		newFromST = fromST.flexWindowEnd - ((fromST.flexWindowEnd - fromST.flexWindowStart) / 2);
-
-    	if(toST.arrivalTime != StopTime.MISSING_VALUE)
-    		newToST = toST.arrivalTime;
-    	else
-    		newToST = toST.flexWindowStart + ((toST.flexWindowEnd - toST.flexWindowStart) / 2);
-
-    	int newDuration = newToST - newFromST;    	
-    	if(newDuration > 0) // filter invalid GTFS data; in this case, use street traversal time
-    		duration = newDuration;
-    }
-    
     return new FlexPath(distance, duration, path.getGeometry());
   }
 

@@ -1,6 +1,5 @@
 package org.opentripplanner.ext.flex.edgetype;
 
-import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.onebusaway.gtfs.model.StopTime;
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
@@ -21,16 +20,12 @@ import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
 
-import com.vividsolutions.jts.geom.Geometry;
-
 import java.util.Date;
 import java.util.Locale;
 
 public class FlexTripEdge extends Edge {
 
   private static final long serialVersionUID = 3478869956635040033L;
-
-  public final FlexPathCalculator calculator;
   
   public final StopLocation from; // resolved stops in the case of groups
 
@@ -52,7 +47,37 @@ public class FlexTripEdge extends Edge {
     this.fromv = v1;
     this.tov = v2;
     this.flexTemplate = flexTemplate;
-    this.calculator = calculator;
+    
+    FlexTrip trip = flexTemplate.getFlexTrip();
+    if(trip instanceof ScheduledDeviatedTrip) {
+    	FlexTripStopTime fromST = trip.getStopTime(fromIndex);
+    	FlexTripStopTime toST = trip.getStopTime(toIndex);
+
+    	int newFromST = 0;
+    	int newToST = 0;
+    	
+    	if(fromST.departureTime != StopTime.MISSING_VALUE)
+    		newFromST = fromST.departureTime;
+    	else
+    		newFromST = fromST.flexWindowEnd - ((fromST.flexWindowEnd - fromST.flexWindowStart) / 2);
+
+    	if(toST.arrivalTime != StopTime.MISSING_VALUE)
+    		newToST = toST.arrivalTime;
+    	else
+    		newToST = toST.flexWindowStart + ((toST.flexWindowEnd - toST.flexWindowStart) / 2);
+
+    	int duration = Math.abs(newToST - newFromST);    	
+
+    	if(duration == 0) 
+  		  this.flexPath = calculator.calculateFlexPath(fromv, tov, 
+				  this.flexTemplate.fromStopIndex, this.flexTemplate.toStopIndex, getFlexTrip());
+    	    	
+		this.flexPath = new FlexPath(0, duration, null);
+    
+    } else if(trip instanceof UnscheduledTrip) {
+		  this.flexPath = calculator.calculateFlexPath(fromv, tov, 
+				  this.flexTemplate.fromStopIndex, this.flexTemplate.toStopIndex, getFlexTrip());
+    }   
   }
 
   @Override
@@ -78,6 +103,9 @@ public class FlexTripEdge extends Edge {
 	    if(wait < 0)
 	    	return null; // missed it
     }
+    
+    if(getFlexPath() == null)
+    	return null; // not routable
     
     editor.incrementWeight(getTripTimeInSeconds() + wait);
     editor.incrementTimeInSeconds((int)getTripTimeInSeconds() + wait);
@@ -129,10 +157,6 @@ public class FlexTripEdge extends Edge {
   }
 
   public FlexPath getFlexPath() {
-	  if(this.flexPath == null)
-		  this.flexPath = calculator.calculateFlexPath(fromv, tov, 
-				  this.flexTemplate.fromStopIndex, this.flexTemplate.toStopIndex, getFlexTrip());
-
 	  return this.flexPath;
   }
   

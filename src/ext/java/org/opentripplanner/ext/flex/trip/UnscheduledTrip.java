@@ -65,11 +65,11 @@ public class UnscheduledTrip extends FlexTrip {
   }
 
   @Override
-  public Stream<FlexAccessTemplate> getFlexAccessTemplates(
+  public List<FlexAccessTemplate> getFlexAccessTemplates(
       NearbyStop access, FlexServiceDate serviceDate, FlexPathCalculator calculator, RoutingRequest request
   ) {
 	List<Integer> fromIndices = getFromIndex(access.stop, null);
-    if (fromIndices.isEmpty()) { return Stream.empty(); }
+    if (fromIndices.isEmpty()) { return List.of(); }
 //    if (stopTimes[1].dropOffType == PICKDROP_NONE) { return Stream.empty(); }
 
     ArrayList<FlexAccessTemplate> res = new ArrayList<>();
@@ -79,15 +79,15 @@ public class UnscheduledTrip extends FlexTrip {
     		res.add(new FlexAccessTemplate(access, this, fromIndex, fromIndex, stop, serviceDate, calculator, request));
     }
 
-    return res.stream();
+    return res;
   }
 
   @Override
-  public Stream<FlexEgressTemplate> getFlexEgressTemplates(
+  public List<FlexEgressTemplate> getFlexEgressTemplates(
       NearbyStop egress, FlexServiceDate serviceDate, FlexPathCalculator calculator, RoutingRequest request
   ) {
     List<Integer> toIndices = getToIndex(egress.stop, null);
-    if (toIndices.isEmpty()) { return Stream.empty(); }
+    if (toIndices.isEmpty()) { return List.of(); }
 //    if (stopTimes[0].pickupType == PICKDROP_NONE) { return Stream.empty(); }
 
     ArrayList<FlexEgressTemplate> res = new ArrayList<>();
@@ -97,27 +97,29 @@ public class UnscheduledTrip extends FlexTrip {
     		res.add(new FlexEgressTemplate(egress, this, toIndex, toIndex, stop, serviceDate, calculator, request));
     }
 
-    return res.stream();
+    return res;
   }
 
+  // See RaptorTransfer for definitions/semantics
   @Override
   public int earliestDepartureTime(int departureTime, int fromStopIndex, int toStopIndex) {
-		FlexTripStopTime ftst = stopTimes[fromStopIndex];
+	FlexTripStopTime ftst = stopTimes[fromStopIndex];
 	    
-	    if (departureTime < ftst.flexWindowEnd)
-	        return -1;
+	if (departureTime < ftst.flexWindowEnd) // latest possible time bus will leave stop 
+		return -1;
 
-	    return departureTime;
+	return departureTime;
   }
 
+  // See RaptorTransfer for definitions/semantics
   @Override
   public int latestArrivalTime(int arrivalTime, int fromStopIndex, int toStopIndex) {
 	FlexTripStopTime ftst = stopTimes[toStopIndex];
 	    
-    if (arrivalTime < ftst.flexWindowStart)
+  if (arrivalTime < ftst.flexWindowStart) // earliest possible arrival time
         return -1;
 
-    return arrivalTime;
+	return arrivalTime;
   }
 
   @Override
@@ -188,6 +190,9 @@ public class UnscheduledTrip extends FlexTrip {
 
   @Override
   public float getSafeTotalTime(FlexPath streetPath, int fromStopIndex, int toStopIndex) {
+	  	if(streetPath == null)
+	  		return -1;
+	  	
 	  	FlexTripStopTime fromStopTime = this.stopTimes[fromStopIndex];
 	  	FlexTripStopTime toStopTime = this.stopTimes[toStopIndex];
 		
@@ -202,6 +207,9 @@ public class UnscheduledTrip extends FlexTrip {
 
   @Override
   public float getMeanTotalTime(FlexPath streetPath, int fromStopIndex, int toStopIndex) {
+	  	if(streetPath == null)
+	  		return -1;
+	  	
 	  	FlexTripStopTime fromStopTime = this.stopTimes[fromStopIndex];
 	  	FlexTripStopTime toStopTime = this.stopTimes[toStopIndex];
 		

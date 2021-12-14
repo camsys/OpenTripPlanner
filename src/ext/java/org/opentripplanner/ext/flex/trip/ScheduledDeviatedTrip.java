@@ -99,11 +99,11 @@ public class ScheduledDeviatedTrip extends FlexTrip {
   }
 
   @Override
-  public Stream<FlexAccessTemplate> getFlexAccessTemplates(
+  public List<FlexAccessTemplate> getFlexAccessTemplates(
       NearbyStop access, FlexServiceDate serviceDate, FlexPathCalculator calculator, RoutingRequest request
   ) {
     List<Integer> fromIndices = getFromIndex(access.stop, null);
-    if (fromIndices.isEmpty()) { return Stream.empty(); }
+    if (fromIndices.isEmpty()) { return List.of(); }
 
     ArrayList<FlexAccessTemplate> res = new ArrayList<>();
 
@@ -116,15 +116,15 @@ public class ScheduledDeviatedTrip extends FlexTrip {
 	    }
 	}
 
-    return res.stream();
+    return res;
   }
 
   @Override
-  public Stream<FlexEgressTemplate> getFlexEgressTemplates(
+  public List<FlexEgressTemplate> getFlexEgressTemplates(
       NearbyStop egress, FlexServiceDate serviceDate, FlexPathCalculator calculator, RoutingRequest request
   ) {
     List<Integer> toIndices = getToIndex(egress.stop, null);
-    if (toIndices.isEmpty()) { return Stream.empty(); }
+    if (toIndices.isEmpty()) { return List.of(); }
 
     ArrayList<FlexEgressTemplate> res = new ArrayList<>();
 
@@ -137,29 +137,31 @@ public class ScheduledDeviatedTrip extends FlexTrip {
 	    }
 	}
 	
-    return res.stream();
-  }
-  
-  @Override
-  public int earliestDepartureTime(int departureTime, int fromStopIndex, int toStopIndex) {
-	int stopDepartureTime = MISSING_VALUE;
-    for (int i = fromStopIndex; stopDepartureTime == MISSING_VALUE && i >= 0; i--) {
-    	stopDepartureTime = stopTimes[i].arrivalTime != MISSING_VALUE ? stopTimes[i].arrivalTime : stopTimes[i].flexWindowStart;
-    }
-    if(stopDepartureTime == MISSING_VALUE)
-    	return -1;
-    return stopDepartureTime >= departureTime ? stopDepartureTime : -1;
+    return res;
   }
 
+  // See RaptorTransfer for definitions/semantics
+  @Override
+  public int earliestDepartureTime(int departureTime, int fromStopIndex, int toStopIndex) {
+		FlexTripStopTime ftst = stopTimes[fromStopIndex];
+
+		int stopDepartureTime = ftst.departureTime != MISSING_VALUE ? ftst.departureTime : ftst.flexWindowEnd;
+	    if (departureTime > stopDepartureTime)
+	        return -1;
+
+	    return stopDepartureTime;
+  }
+
+  // See RaptorTransfer for definitions/semantics
   @Override
   public int latestArrivalTime(int arrivalTime, int fromStopIndex, int toStopIndex) {
-    int stopArrivalTime = MISSING_VALUE;
-    for (int i = toStopIndex; stopArrivalTime == MISSING_VALUE && i < stopTimes.length; i++) {
-      stopArrivalTime = stopTimes[i].departureTime != MISSING_VALUE ? stopTimes[i].departureTime :stopTimes[i].flexWindowEnd;
-    }
-    if(stopArrivalTime == MISSING_VALUE)
-    	return -1;
-    return stopArrivalTime <= arrivalTime ? stopArrivalTime : -1;
+	FlexTripStopTime ftst = stopTimes[fromStopIndex];
+	
+	int stopArrivalTime = ftst.arrivalTime != MISSING_VALUE ? ftst.arrivalTime : ftst.flexWindowStart;
+    if (arrivalTime <= stopArrivalTime)
+        return -1;
+
+    return stopArrivalTime;
   }
 
   @Override
