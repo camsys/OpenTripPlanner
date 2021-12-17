@@ -75,7 +75,13 @@ public class TransferFactory {
                 Trip toTrip = t.getToTrip();
                 Vertex fromVertex = _stopIndex.getArriveVertexForStop(fromStop);
                 Vertex toVertex = _stopIndex.getDepartVertexForStop(toStop);
-                switch (t.getTransferType()) {
+
+                // set default to 1 for LIRR
+                int transferType = t.getTransferType();
+                if(fromStop.getId().getAgencyId().equals("LI"))
+                	transferType = 1;
+                
+                switch (transferType) {
                     case 1:
                         // timed (synchronized) transfer
                         // Handle with edges that bypass the street network.
@@ -96,7 +102,7 @@ public class TransferFactory {
                             new TimedTransferEdge(fromVertex, toVertex);
                         }
                         // add to transfer table to handle specificity
-                        transferTable.addTransferTime(fromStop, toStop, null, fromRoute, toRoute, fromTrip, toTrip, StopTransfer.TIMED_TRANSFER);
+                        transferTable.addTransferTime(fromStop, toStop, requiredStop, fromRoute, toRoute, fromTrip, toTrip, StopTransfer.TIMED_TRANSFER);
                         break;
                     case 2:
                         // min transfer time
@@ -106,8 +112,8 @@ public class TransferFactory {
                         // forbidden transfer
                         transferTable.addTransferTime(fromStop, toStop, null, fromRoute, toRoute, fromTrip, toTrip, StopTransfer.FORBIDDEN_TRANSFER);
                         break;
+                	default:
                     case 0:
-                    default:
                         // preferred transfer
                         transferTable.addTransferTime(fromStop, toStop, requiredStop, fromRoute, toRoute, fromTrip, toTrip, StopTransfer.PREFERRED_TRANSFER);
                         break;

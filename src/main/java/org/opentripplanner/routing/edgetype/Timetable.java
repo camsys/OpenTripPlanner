@@ -33,7 +33,6 @@ import org.opentripplanner.common.MavenVersion;
 import org.opentripplanner.routing.core.ServiceDay;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.core.StopTransfer;
-import org.opentripplanner.routing.core.TransferDetail;
 import org.opentripplanner.routing.core.TransferTable;
 import org.opentripplanner.routing.trippattern.FrequencyEntry;
 import org.opentripplanner.routing.trippattern.TripTimes;
@@ -56,7 +55,7 @@ public class Timetable implements Serializable {
 
     private static final Logger LOG = LoggerFactory.getLogger(Timetable.class);
     private static final long serialVersionUID = MavenVersion.VERSION.getUID();
-    
+
     /**
      * A circular reference between TripPatterns and their scheduled (non-updated) timetables.
      */
@@ -142,15 +141,8 @@ public class Timetable implements Serializable {
      * trip matches both the time and other criteria.
      */
     public TripTimes getNextTrip(State s0, ServiceDay serviceDay, int stopIndex, boolean boarding) {
-    	return getNextPreferredTrip(s0, serviceDay, stopIndex, boarding, null, null, null);
-    }
-   
-    public TripTimes getNextPreferredTrip(State s0, ServiceDay serviceDay, int stopIndex, boolean boarding, 
-    		Stop fromStop, Stop toStop, Trip fromTrip) {
-
         /* Search at the state's time, but relative to midnight on the given service day. */
         int time = serviceDay.secondsSinceMidnight(s0.getTimeSeconds());
-
         // NOTE the time is sometimes negative here. That is fine, we search for the first trip of the day.
         // Adjust for possible boarding time TODO: This should be included in the trip and based on GTFS
         if (boarding) {
@@ -158,11 +150,8 @@ public class Timetable implements Serializable {
         } else {
             time -= s0.getOptions().getAlightTime(this.pattern.mode);
         }
-        
         TripTimes bestTrip = null;
-        TripTimes bestPreferredTrip = null;
         Stop currentStop = pattern.getStop(stopIndex);
-        
         // Linear search through the timetable looking for the best departure.
         // We no longer use a binary search on Timetables because:
         // 1. we allow combining trips from different service IDs on the same tripPattern.
@@ -170,35 +159,18 @@ public class Timetable implements Serializable {
         // 3. Stoptimes may change with realtime updates, and we cannot count on them being sorted.
         //    The complexity of keeping sorted indexes up to date does not appear to be worth the
         //    apparently minor speed improvement.
-
-        // WARNING: /2 so when we add the nonpreferredTransferPenalty later, we don't overflow
-        int bestTime = boarding ? Integer.MAX_VALUE / 2 : Integer.MIN_VALUE / 2; 
-
+        int bestTime = boarding ? Integer.MAX_VALUE : Integer.MIN_VALUE;
         // Hoping JVM JIT will distribute the loop over the if clauses as needed.
         // We could invert this and skip some service days based on schedule overlap as in RRRR.
 
         // Only compute transfer once, if possible - it's expensive.
         int exampleAdjustedTime = -1;
         boolean recomputeTime = transferDependsOnTrip(s0, currentStop, boarding);
-        
         if (!recomputeTime && tripTimes.size() > 0) {
             exampleAdjustedTime = adjustTimeForTransfer(s0, currentStop, getTripTimes(0).trip, boarding, serviceDay, time);
         }
-        
+
         for (TripTimes tt : tripTimes) {
-        	boolean isPreferred = false;
-        	Trip toTrip = tt.trip;
-
-        	if(s0.getOptions().getRoutingContext() != null && fromStop != null) {
-        		TransferTable transferTable = s0.getOptions().getRoutingContext().transferTable;
-	        	TransferDetail transferDetail = transferTable.getTransferTime(fromStop, toStop, fromTrip, toTrip, !s0.getReverseOptimizing());
-	            
-	        	if((transferDetail.getTransferTime() == StopTransfer.PREFERRED_TRANSFER 
-	        			|| transferDetail.getTransferTime() == StopTransfer.TIMED_TRANSFER)) {	        		
-	        		isPreferred = true;
-	        	}
-        	}
-
             int adjustedTime = recomputeTime
                 ? adjustTimeForTransfer(s0, currentStop, tt.trip, boarding, serviceDay, time)
                 : exampleAdjustedTime;
@@ -209,15 +181,10 @@ public class Timetable implements Serializable {
                 if (depTime < 0) continue; // negative values were previously used for canceled trips/passed stops/skipped stops, but
                                            // now its not sure if this check should be still in place because there is a boolean field
                                            // for canceled trips
-                
                 if (depTime >= adjustedTime && depTime < bestTime) {
                     if (isTripTimesOk(tt, serviceDay, s0, stopIndex, true)) {
-                    	if(isPreferred && depTime <= bestTime + s0.getOptions().getRoutingContext().opt.nonpreferredTransferPenalty) {
-                    		bestPreferredTrip = tt;
-                    	}
-                    	
-                    	bestTrip = tt;
-                    	bestTime = depTime;
+                        bestTrip = tt;
+                        bestTime = depTime;
                     }
                 }
             } else {
@@ -225,17 +192,12 @@ public class Timetable implements Serializable {
                 if (arvTime < 0) continue;
                 if (arvTime <= adjustedTime && arvTime > bestTime) {
                     if (isTripTimesOk(tt, serviceDay, s0, stopIndex, true)) {
-                    	if(isPreferred && arvTime >= bestTime - s0.getOptions().getRoutingContext().opt.nonpreferredTransferPenalty) {
-                    		bestPreferredTrip = tt;
-                    	} 
-
-                    	bestTrip = tt;
-                    	bestTime = arvTime;
+                        bestTrip = tt;
+                        bestTime = arvTime;
                     }
                 }
             }
         }
-        
         // ACK all logic is identical to above.
         // A sign that FrequencyEntries and TripTimes need a common interface.
         FrequencyEntry bestFreq = null;
@@ -267,12 +229,8 @@ public class Timetable implements Serializable {
             // A FrequencyEntry beat all the TripTimes.
             // Materialize that FrequencyEntry entry at the given time.
             bestTrip = bestFreq.tripTimes.timeShift(stopIndex, bestTime, boarding, bestFreq);
-        }       
-    	
-        if(bestPreferredTrip != null)
-        	return bestPreferredTrip;
-        else
-        	return bestTrip;
+        }
+        return bestTrip;
     }
 
     public boolean isTripTimesOk(TripTimes tt, ServiceDay serviceDay, State s0, int stopIndex, boolean checkBannedTrips) {
@@ -296,12 +254,12 @@ public class Timetable implements Serializable {
         TransferTable transferTable = state.getOptions().getRoutingContext().transferTable;
         int transferTime = transferTable.getTransferTime(state.getPreviousStop(), currentStop, state.getPreviousTrip(), trip, boarding).getTransferTime();
         // Check whether back edge is TimedTransferEdge
-//        if (state.getBackEdge() instanceof TimedTransferEdge) {
-//            // Transfer must be of type TIMED_TRANSFER
-//            if (transferTime != StopTransfer.TIMED_TRANSFER && transferTime != StopTransfer.PREFERRED_TRANSFER) {
-//                return -1;
-//            }
-//        }
+        if (state.getBackEdge() instanceof TimedTransferEdge) {
+            // Transfer must be of type TIMED_TRANSFER
+            if (transferTime != StopTransfer.TIMED_TRANSFER) {
+                return -1;
+            }
+        }
         if (transferTime == StopTransfer.UNKNOWN_TRANSFER) {
             return t0; // no special rules, just board
         }

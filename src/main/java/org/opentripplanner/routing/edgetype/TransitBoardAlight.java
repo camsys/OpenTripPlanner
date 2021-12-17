@@ -14,8 +14,10 @@
 package org.opentripplanner.routing.edgetype;
 
 import java.util.BitSet;
-
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Stop;
@@ -25,7 +27,6 @@ import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.ServiceDay;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.core.StateEditor;
-import org.opentripplanner.routing.core.StopTransfer;
 import org.opentripplanner.routing.core.TransferTable;
 import org.opentripplanner.routing.core.TransferDetail;
 import org.opentripplanner.routing.core.TraverseMode;
@@ -60,7 +61,7 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
 
     private static final Logger LOG = LoggerFactory.getLogger(TransitBoardAlight.class);
 
-    private final int stopIndex;
+    private int stopIndex;
 
     private int modeMask; // TODO: via TablePatternEdge it should be possible to grab this from the pattern
    
@@ -68,10 +69,6 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
     public boolean boarding;
 
     public Stop requiredStop;
-    
-    public boolean preferredTransfer = false; 
-    
-    private AgencyAndId tripId = null;
 
     public Stop getRequiredStop(){
         return requiredStop;
@@ -202,6 +199,7 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
             s1.setPreviousStop(getStop()); 
             s1.setLastPattern(this.getPattern());
 
+
             if (boarding) {
                 int boardingTime = options.getBoardTime(this.getPattern().mode);
                 if (boardingTime != 0) {
@@ -260,8 +258,8 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
 
             s1.setBackMode(getMode());
             return s1.makeState();
-
         } else {
+
             /* We are going onto transit and must look for a suitable transit trip on this pattern. */   
             
             /* Disallow ever re-boarding the same trip pattern. */
@@ -294,52 +292,23 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
              */
             TripPattern tripPattern = this.getPattern();
             int bestWait = -1;
-            
             TripTimes  bestTripTimes  = null;
             ServiceDay bestServiceDay = null;
-            
-            Stop toStop = getStop();
-            Stop fromStop = s0.getPreviousStop();
-            Trip fromTrip = s0.getPreviousTrip();
-            
-            Stop givenRequiredStop = null;
-            State prevState = s0.getBackState();
-			while(prevState != null) {
-			 	Edge e = prevState.getBackEdge();
-			 					 	
-			 	if(e instanceof TransitBoardAlight) {
-			 		TransitBoardAlight tba = (TransitBoardAlight)e;
-			 		if(tba.getStop() != getStop() && tba.boarding == true) {
-			 			givenRequiredStop = tba.getStop();
-			 			break;
-			 		}
-			 	}
-			 	prevState = prevState.getBackState(); 
-			}
-           				
-			LOG.debug("Parameters for TBA: toStop=" + toStop + " fromStop=" + fromStop + " fromTrip=" + fromTrip + " givenRequiredStop=" + givenRequiredStop + " boarding=" + boarding + " numBoardings=" + s0.getNumBoardings() + " reverse=" + s0.getReverseOptimizing());
-			
             for (ServiceDay sd : rctx.serviceDays) {
                 /* Find the proper timetable (updated or original) if there is a realtime snapshot. */
                 Timetable timetable = tripPattern.getUpdatedTimetable(options, sd);
-
                 /* Skip this day/timetable if no trip in it could possibly be useful. */
                 if ( ! timetable.temporallyViable(sd, s0.getTimeSeconds(), bestWait, boarding))
                     continue;
-
                 /* Find the next or prev departure depending on final boolean parameter. */
-                TripTimes tripTimes = timetable.getNextPreferredTrip(s0, sd, stopIndex, boarding, 
-                		fromStop, toStop, fromTrip);
-
+                TripTimes tripTimes = timetable.getNextTrip(s0, sd, stopIndex, boarding);                
                 if (tripTimes != null) {
                     /* Wait is relative to departures on board and arrivals on alight. */
                     int wait = boarding ? 
                         (int)(sd.time(tripTimes.getDepartureTime(stopIndex)) - s0.getTimeSeconds()):
                         (int)(s0.getTimeSeconds() - sd.time(tripTimes.getArrivalTime(stopIndex)));
-                    
                     /* A trip was found. The wait should be non-negative. */
                     if (wait < 0) LOG.error("Negative wait time when boarding.");
-                    
                     /* Track the soonest departure over all relevant schedules. */
                     if (bestWait < 0 || wait < bestWait) {
                         bestWait       = wait;
@@ -350,52 +319,40 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
             }
             if (bestWait < 0) return null; // no appropriate trip was found
             Trip trip = bestTripTimes.trip;
-
+            
             /* check if route and/or Agency are banned for this plan */
-            if (options.tripIsBanned(trip)) 
-            	return null;
+            // FIXME this should be done WHILE searching for a trip.
+            if (options.tripIsBanned(trip)) return null;
 
             /* Check if route is preferred by the user. */
+
             long preferences_penalty = options.preferencesPenaltyForRoute(getPattern().route, s0);
+
+            /* Compute penalty for non-preferred transfers. */
             int transferPenalty = 0;
-            int transferTime = StopTransfer.UNKNOWN_TRANSFER;
-            
             /* If this is not the first boarding, then we are transferring. */
             if (s0.isEverBoarded()) {
                 TransferTable transferTable = options.getRoutingContext().transferTable;
-                TransferDetail transferDetail = transferTable.getTransferTime(s0.getPreviousStop(), getStop(), 
-                		s0.getPreviousTrip(), trip, boarding);
-            
+                TransferDetail transferDetail = transferTable.getTransferTime(s0.getPreviousStop(),
+                                   getStop(), s0.getPreviousTrip(), trip, boarding);
+                int transferTime = transferDetail.getTransferTime();
                 Stop requiredStop = transferDetail.getRequiredStop();
-
-                if(requiredStop != null && givenRequiredStop != null) {
-                	if(requiredStop.getId().equals(givenRequiredStop.getId())) {
-	                	transferTime = transferDetail.getTransferTime();
-	                	transferPenalty = transferTable.determineTransferPenalty(transferTime, options.nonpreferredTransferPenalty);
-                	}
-                } else {
-                	transferTime = transferDetail.getTransferTime();
-                	transferPenalty = transferTable.determineTransferPenalty(transferTime, options.nonpreferredTransferPenalty);                	
-                }
+                this.requiredStop = requiredStop;
+                //int transferTime = transferTable.getRequiredStop(s0.getPreviousStop(),
+                //        getStop(), s0.getPreviousTrip(), trip, boarding);
+                transferPenalty  = transferTable.determineTransferPenalty(transferTime, 
+                                   options.nonpreferredTransferPenalty);
             }
-            
-            LOG.debug("*** Selected trip=" + trip + " TTime=" + transferTime + " penalty=" + transferPenalty + " boardingCount=" + s0.getNumBoardings() + " boarding=" + boarding + " reverse=" + s0.getReverseOptimizing());
 
             /* Found a trip to board. Now make the child state. */
             StateEditor s1 = s0.edit(this);
             s1.setBackMode(getMode());
             s1.setServiceDay(bestServiceDay);
-            
             // Save the trip times in the State to ensure that router has a consistent view 
             // and constant-time access to them.
             s1.setTripTimes(bestTripTimes);
             s1.incrementTimeInSeconds(bestWait);
             s1.incrementNumBoardings();
-            if(transferTime == StopTransfer.PREFERRED_TRANSFER || transferTime == StopTransfer.TIMED_TRANSFER) {
-            	preferredTransfer = true;
-                s1.incrementNumPreferredBoardings();
-            }
-            tripId = trip.getId();
             s1.setTripId(trip.getId());
             s1.setPreviousTrip(trip);
             s1.setZone(getPattern().getZone(stopIndex));
@@ -428,15 +385,11 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
             if (options.reverseOptimizeOnTheFly && 
                !options.reverseOptimizing && 
                 s0.isEverBoarded() && 
-                preferredTransfer == false && 
                 s0.getLastNextArrivalDelta() <= bestWait &&
                 s0.getLastNextArrivalDelta() > -1) {
                 // it is re-reversed by optimize, so this still yields a forward tree
                 State optimized = s1.makeState().optimizeOrReverse(true, true);
                 if (optimized == null) LOG.error("Null optimized state. This shouldn't happen.");
-
-            	tripId = optimized.getTripId();
-
                 return optimized;
             }
             
@@ -460,7 +413,7 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
 
     /* See weightLowerBound comment. */
     public double timeLowerBound(RoutingRequest options) {
-    	if ((options.arriveBy && boarding) || (!options.arriveBy && !boarding)) {
+        if ((options.arriveBy && boarding) || (!options.arriveBy && !boarding)) {
             if (!options.modes.get(modeMask)) {
                 return Double.POSITIVE_INFINITY;
             }
@@ -472,7 +425,6 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
         } else {
             return 0;
         }
-        
     }
 
     /* If the main search is proceeding backward, the lower bound search is proceeding forward.
@@ -481,7 +433,7 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
      * edges. The lower bound search is proceeding backward, and if it has reached a board edge the
      * pattern was already deemed useful. */
     public double weightLowerBound(RoutingRequest options) {
-    	// return 0; // for testing/comparison, since 0 is always a valid heuristic value
+        // return 0; // for testing/comparison, since 0 is always a valid heuristic value
         if ((options.arriveBy && boarding) || (!options.arriveBy && !boarding))
             return timeLowerBound(options);
         else
@@ -496,7 +448,7 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
     public String toString() {
         return "TransitBoardAlight(" +
                 (boarding ? "boarding " : "alighting ") +
-                getFromVertex() + " to " + getToVertex() + ") trip=" + tripId + " preferredTransfer=" + preferredTransfer;
+                getFromVertex() + " to " + getToVertex() + ")";
     }
 
 }

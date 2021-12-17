@@ -182,6 +182,23 @@ public class GraphQLTypes {
     public void setGraphQLMtaComplexId(String mtaComplexId) { this.mtaComplexId = mtaComplexId; }
     public void setGraphQLMtaStationId(String mtaStationId) { this.mtaStationId = mtaStationId; }
   }
+  public static class GraphQLQueryTypeScheduleArgs {
+    private String fromGtfsId;
+    private String toGtfsId;
+    private String time;
+    private Integer maxResults;
+  
+    public GraphQLQueryTypeScheduleArgs() {}
+  
+    public String getGraphQLFromGtfsId() { return this.fromGtfsId; }
+    public String getGraphQLToGtfsId() { return this.toGtfsId; }
+    public String getGraphQLTime() { return this.time; }
+    public Integer getGraphQLMaxResults() { return this.maxResults; }
+    public void setGraphQLFromGtfsId(String fromGtfsId) { this.fromGtfsId = fromGtfsId; }
+    public void setGraphQLToGtfsId(String toGtfsId) { this.toGtfsId = toGtfsId; }
+    public void setGraphQLTime(String time) { this.time = time; }
+    public void setGraphQLMaxResults(Integer maxResults) { this.maxResults = maxResults; }
+  }
   public static class GraphQLQueryTypeNearbyArgs {
     private Double latitude;
     private Double longitude;
@@ -247,6 +264,8 @@ public class GraphQLTypes {
     public void setGraphQLTracksList(String tracksList) { this.tracksList = tracksList; }
     public void setGraphQLSignMode(Boolean signMode) { this.signMode = signMode; }
   }
+  
+  
   
   
   

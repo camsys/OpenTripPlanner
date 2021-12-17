@@ -96,6 +96,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<Iterable<Object>> trips();
     public DataFetcher<Object> trip();
     public DataFetcher<Object> accessibility();
+    public DataFetcher<Iterable<Object>> schedule();
     public DataFetcher<Iterable<Object>> nearby();
   }
   
@@ -144,6 +145,23 @@ public class GraphQLDataFetchers {
     public DataFetcher<Object> vehicleInfo();
     public DataFetcher<Iterable<Object>> stopsForTrip();
     public DataFetcher<String> realtimeSignText();
+  }
+  
+  public interface GraphQLScheduleResult {
+    public DataFetcher<Integer> transfers();
+    public DataFetcher<Integer> durationSeconds();
+    public DataFetcher<Iterable<Object>> legs();
+  }
+  
+  public interface GraphQLScheduleResultLeg {
+    public DataFetcher<String> headsign();
+    public DataFetcher<String> routeLongName();
+    public DataFetcher<String> from();
+    public DataFetcher<Object> departTime();
+    public DataFetcher<String> departTimeString();
+    public DataFetcher<String> to();
+    public DataFetcher<Object> arriveTime();
+    public DataFetcher<String> arriveTimeString();
   }
   
   /**

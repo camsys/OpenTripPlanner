@@ -667,6 +667,70 @@ type RouteDestinationGroupStopTime {
 
 }
     
+type ScheduleResult {
+	
+	"""
+	Number of transfers in this itinerary
+    """
+	transfers: Int
+	
+	"""
+	Total duration of this itinerary in seconds
+    """
+	durationSeconds: Int
+	
+	"""
+    Legs in this itinerary
+    """
+	legs: [ScheduleResultLeg]
+
+}
+
+type ScheduleResultLeg {
+	
+	"""
+ 	Headsign to be displayed by the train serving this leg
+    """
+	headsign: String
+
+
+	"""
+	Route name of the train serving this leg
+    """
+	routeLongName: String
+
+	"""
+	From station name
+    """
+	from: String
+
+	"""
+    Departure time. Format: Unix timestamp in seconds
+    """
+	departTime: Long
+
+	"""
+    Departure time. Format: ISO date
+    """
+	departTimeString: String
+
+	"""
+	To station name
+    """
+	to: String
+	
+	"""
+    Arrival time. Format: Unix timestamp in seconds
+    """
+	arriveTime: Long
+
+	"""
+    Arrival time. Format: ISO date
+    """
+	arriveTimeString: String
+		
+}
+    
 type KeyValueMap {
     data: [KeyValueEntry]
 }
@@ -801,6 +865,34 @@ type QueryType {
         mtaStationId: String
         
 	): AccessibleResult
+	
+	
+	""" 
+	Shows all upcoming departures to a given station, from a given station, at a given time
+	
+	"""
+	schedule(
+        """
+        GTFS Stop ID (format: `FeedId_StopId`)
+        """
+		fromGtfsId: String
+		
+        """
+        GTFS Stop ID (format: `FeedId_StopId`)
+        """
+		toGtfsId: String	
+		
+		"""
+     	Time to return departure times for. Will default to the current time.
+     	"""
+     	time: String	
+
+		"""
+     	Number of results. Defaults to 10.
+     	"""
+     	maxResults: Int
+
+	): [ScheduleResult]
 	
 	
 	nearby(
