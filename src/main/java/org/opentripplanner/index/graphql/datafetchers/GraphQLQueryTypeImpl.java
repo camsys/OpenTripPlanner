@@ -68,6 +68,7 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.collect.TreeMultimap;
 
 import org.opentripplanner.routing.core.State;
+import org.opentripplanner.routing.core.TraverseMode;
 
 import graphql.execution.DataFetcherResult;
 import graphql.schema.DataFetcher;
@@ -472,8 +473,7 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 					RoutingRequest rr = new RoutingRequest();
 					rr.setDateTime(new Date(departureTime - 1));
 					rr.setNumItineraries(1);
-					rr.maxTransfers = 1;
-					rr.onlyTransitTrips = true;
+					rr.setMode(TraverseMode.TRANSIT);
 					rr.setRoutingContext(getRouter(environment).graph,
 							getRouter(environment).graph.index.stopVertexForStop.get(fromStop),
 							getRouter(environment).graph.index.stopVertexForStop.get(toStop));
