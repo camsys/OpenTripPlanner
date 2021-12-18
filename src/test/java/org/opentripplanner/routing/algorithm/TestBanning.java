@@ -141,8 +141,7 @@ public class TestBanning extends TestCase {
                         } else {
                             stopSet = BannedStopSet.ALL;
                         }
-                        if (tripId != null && tbae.preferredTransfer != true) // if this is a preferred transfer, don't expect it to be banned. 
-                        													  // See TBA edge line 329, changed for LIRR. 
+                        if (tripId != null) 
                             usedTripDefs.add(new T2<AgencyAndId, BannedStopSet>(tripId, stopSet));
                     }
                 }
