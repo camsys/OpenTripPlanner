@@ -42,9 +42,12 @@ import org.opentripplanner.routing.algorithm.strategies.SkipEdgeStrategy;
 import org.opentripplanner.routing.core.OptimizeType;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.ServiceDay;
+import org.opentripplanner.routing.edgetype.FreeEdge;
+import org.opentripplanner.routing.edgetype.LandmarkEdge;
 import org.opentripplanner.routing.edgetype.StreetEdge;
 import org.opentripplanner.routing.edgetype.StreetTransitLink;
 import org.opentripplanner.routing.edgetype.Timetable;
+import org.opentripplanner.routing.edgetype.TransferEdge;
 import org.opentripplanner.routing.edgetype.TripPattern;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
@@ -53,6 +56,7 @@ import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.spt.ShortestPathTree;
 import org.opentripplanner.routing.trippattern.TripTimes;
 import org.opentripplanner.routing.vertextype.TransitStationStop;
+import org.opentripplanner.routing.vertextype.TransitStop;
 import org.opentripplanner.standalone.Router;
 
 import com.google.common.collect.HashMultimap;
@@ -561,11 +565,19 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 
 			if(edge instanceof StreetEdge || edge instanceof StreetTransitLink || origin.equals(target))
 				return true;
-			
-			if(target instanceof TransitStationStop) {
-				TransitStationStop tss = (TransitStationStop)target;				
-				if(!tss.getStopId().getAgencyId().equals(agencyId))
-					return true;
+	
+			if(edge instanceof TransferEdge || edge instanceof LandmarkEdge) {
+				if(edge.getFromVertex() instanceof TransitStop) {
+					if(!GtfsLibrary.convertIdFromString(edge.getFromVertex().getLabel())
+							.getAgencyId().equals(agencyId))
+						return true;
+				}
+				
+				if(edge.getToVertex() instanceof TransitStop) {
+					if(!GtfsLibrary.convertIdFromString(edge.getToVertex().getLabel())
+							.getAgencyId().equals(agencyId))
+						return true;					
+				}
 			}
 
 			return false;
