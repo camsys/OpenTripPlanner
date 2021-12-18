@@ -102,7 +102,7 @@ public class TransferFactory {
                             new TimedTransferEdge(fromVertex, toVertex);
                         }
                         // add to transfer table to handle specificity
-                        transferTable.addTransferTime(fromStop, toStop, requiredStop, fromRoute, toRoute, fromTrip, toTrip, StopTransfer.TIMED_TRANSFER);
+                        transferTable.addTransferTime(fromStop, toStop, null, fromRoute, toRoute, fromTrip, toTrip, StopTransfer.TIMED_TRANSFER);
                         break;
                     case 2:
                         // min transfer time
