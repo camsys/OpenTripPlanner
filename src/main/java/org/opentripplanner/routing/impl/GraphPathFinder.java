@@ -279,16 +279,7 @@ public class GraphPathFinder {
                 if (pathIsAbsurd(path, bestDuration)){
                     continue;
                 }
-
-                // agency specific business rules 
-            	State finalState = path.states.getLast();
-            	if(finalState != null) {
-            		int numPreferredBoardings = finalState.getNumPreferredBoardings();
-            		if(numPreferredBoardings > maxPreferredBoardings)
-            			maxPreferredBoardings = numPreferredBoardings;
-            	}
-                paths = options.getFilter(paths, maxPreferredBoardings);
-
+                                
                 // add consequences
                 path.addPlanAlerts(realtimeConsequences);
 
@@ -310,7 +301,7 @@ public class GraphPathFinder {
         }
         LOG.debug("END SEARCH ({} msec)", System.currentTimeMillis() - searchBeginTime);
         
-        Collections.sort(paths, options.getPathComparator(options.arriveBy, maxPreferredBoardings));
+        Collections.sort(paths, options.getPathComparator(options.arriveBy));
 
         if (verbose) {
         	int i = 0;

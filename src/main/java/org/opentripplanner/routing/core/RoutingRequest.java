@@ -31,7 +31,6 @@ import org.opentripplanner.routing.error.TrivialPathException;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.Vertex;
-import org.opentripplanner.routing.comparator.MtaPathComparator;
 import org.opentripplanner.routing.comparator.PathComparator;
 import org.opentripplanner.routing.request.BannedStopSet;
 import org.opentripplanner.routing.spt.DominanceFunction;
@@ -406,7 +405,7 @@ public class RoutingRequest implements Cloneable, Serializable {
     /**
      * When true, do a full reversed search to compact the legs of the GraphPath.
      */
-    public boolean compactLegsByReversedSearch = false;
+    public boolean compactLegsByReversedSearch = true;
 
     /**
      * If true, cost turns as they would be in a country where driving occurs on the right; otherwise, cost them as they would be in a country where
@@ -1482,16 +1481,8 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     }
 
-    public List<GraphPath> getFilter(List<GraphPath> paths, int maxPreferredBoardings) {
-        return MtaPathComparator.filter(paths, maxPreferredBoardings);
-    }
-    
-    public Comparator<GraphPath> getPathComparator(boolean compareStartTimes, int maxPreferredBoardings) {
-//        return new MtaPathComparator(compareStartTimes, false, maxPreferredBoardings);
-		
-  		if ("mta".equals(pathComparator)) {
-            return new MtaPathComparator(compareStartTimes, true, maxPreferredBoardings);
-        } else if ("transfers".equals(pathComparator)) {
+    public Comparator<GraphPath> getPathComparator(boolean compareStartTimes) {
+    	if ("transfers".equals(pathComparator)) {
             return new TransfersComparator();
         } else if ("walking".equals(pathComparator)) {
             return new WalkingComparator();
