@@ -490,7 +490,9 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 					if(itineraries == null)
 						itineraries = new HashSet<>();
 					
-					if(!itineraries.contains(i))
+					if(!itineraries.stream()
+							.map(it -> it.toString())
+							.collect(Collectors.toList()).contains(i.toString()))
 						itineraries.add(i);
 					
 					departures.put(departureTime, itineraries);
