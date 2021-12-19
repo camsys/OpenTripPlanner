@@ -1,6 +1,8 @@
 package org.opentripplanner.routing.core;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -29,9 +31,9 @@ public class SpecificTransfer implements Serializable {
     public static final int MAX_SPECIFICITY = 4;
 
     /**
-     * Required origin of the passenger to be able to use this transfer.
+     * Required origins of the passenger to be able to use this transfer.
      */
-    final private Stop requiredStop;
+    private List<Stop> requiredStops;
 
     /**
      * Route id of arriving trip. Is allowed to be null. Is ignored when fromTripId is not null.
@@ -59,12 +61,18 @@ public class SpecificTransfer implements Serializable {
      */
     final int transferTime;
 
-    public Stop getRequiredStop() {
-        return requiredStop;
+    public List<Stop> getRequiredStops() {
+        return requiredStops;
     }
 
-    public SpecificTransfer(Stop requiredStop, AgencyAndId fromRouteId, AgencyAndId toRouteId, AgencyAndId fromTripId, AgencyAndId toTripId, int transferTime) {
-        this.requiredStop = requiredStop;
+    public void addRequiredStop(Stop requiredStop) {
+    	if(requiredStops == null)
+    		requiredStops = new ArrayList<>();
+        requiredStops.add(requiredStop);
+    }
+
+    public SpecificTransfer(List<Stop> requiredStops, AgencyAndId fromRouteId, AgencyAndId toRouteId, AgencyAndId fromTripId, AgencyAndId toTripId, int transferTime) {
+        this.requiredStops = requiredStops;
         this.fromRouteId = fromRouteId;
         this.toRouteId = toRouteId;
         this.fromTripId = fromTripId;
@@ -74,10 +82,10 @@ public class SpecificTransfer implements Serializable {
 
     public SpecificTransfer(Stop requiredStop, Route fromRoute, Route toRoute, Trip fromTrip, Trip toTrip, int transferTime) {
         if (requiredStop != null) {
-            this.requiredStop = requiredStop;
+        	addRequiredStop(requiredStop);
         }
         else {
-            this.requiredStop = null;
+            this.requiredStops = null;
         }
 
         if (fromRoute != null) {
@@ -160,6 +168,24 @@ public class SpecificTransfer implements Serializable {
         return match;
     }
 
+    public boolean matches(Trip fromTrip, Trip toTrip, Route fromRoute, Route toRoute) {
+    	boolean fromTripResult = true;
+    	boolean toTripResult = true;
+    	boolean toRouteResult = true;
+    	boolean fromRouteResult = true;
+    	
+    	if(fromTrip != null) 
+    		fromTripResult = (this.fromTripId == fromTrip.getId());
+    	if(toTrip != null) 
+    		toTripResult = (this.toTripId == toTrip.getId());
+    	if(toRoute != null) 
+    		toRouteResult = (this.toRouteId == toRoute.getId());
+    	if(fromRoute != null) 
+    		fromRouteResult = (this.fromRouteId == fromRoute.getId());
+    	    	
+    	return fromTripResult && toTripResult && toRouteResult && fromRouteResult;
+    }
+
     public boolean matchesFrom(Trip trip) {
         checkNotNull(trip);
 
@@ -183,6 +209,10 @@ public class SpecificTransfer implements Serializable {
     
     public AgencyAndId getToTripId() {
     	return toTripId;
+    }
+
+    public AgencyAndId getFromTripId() {
+    	return fromTripId;
     }
 
     public boolean isPreferred() {
@@ -215,7 +245,7 @@ public class SpecificTransfer implements Serializable {
     }
     
     public String toString() {
-    	return "SpecificTransfer(" + fromTripId + "->" + toTripId + " requiredStop=" + requiredStop + ")";
+    	return "SpecificTransfer(" + fromTripId + "->" + toTripId + " requiredStops=" + requiredStops + ")";
     }
 
 }

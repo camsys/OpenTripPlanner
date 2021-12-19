@@ -79,7 +79,7 @@ public class StopTransfer implements Serializable {
     public TransferDetail getTransferTime(Trip fromTrip, Trip toTrip) {
         // By default the transfer is unknown
         int transferTime = UNKNOWN_TRANSFER;
-        Stop requiredStop = null;
+        List<Stop> requiredStops = null;
         TransferDetail transferDetail = new TransferDetail();
         transferDetail.setTransferTime(transferTime);
 
@@ -91,10 +91,10 @@ public class StopTransfer implements Serializable {
                 if (specificTransfer.matches(fromTrip, toTrip)) {
                     // Set the found transfer time
                     transferTime = specificTransfer.transferTime;
-                    requiredStop = specificTransfer.getRequiredStop();
+                    requiredStops = specificTransfer.getRequiredStops();
                     maxFoundSpecificity = specificity;
 
-                    transferDetail.setRequiredStop(requiredStop);
+                    transferDetail.setRequiredStops(requiredStops);
                     transferDetail.setTransferTime(transferTime);
 
                     // Break when highest specificity is found

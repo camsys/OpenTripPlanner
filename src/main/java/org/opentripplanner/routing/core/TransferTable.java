@@ -204,8 +204,8 @@ public class TransferTable implements Serializable {
 
         return stopTransfer.getSpecificTransfers()
 								        		.stream()
-								        		.filter(e -> { return (e.getRequiredStop() == null) ? true : 
-								        				requiredStop.getId().equals(e.getRequiredStop().getId()); })
+								        		.filter(e -> { return (e.getRequiredStops() == null) ? true : 
+								        			e.getRequiredStops().contains(requiredStop); })
 								        		.filter(e -> { return e.isPreferred() || e.isTimedTransfer(); })
 								        		.filter(e -> { return e.matchesFrom(fromTrip); })
 								        		.map(e -> e.getToTripId())
@@ -245,6 +245,14 @@ public class TransferTable implements Serializable {
             feedsWithTransfers.add(stopIdPair.map(AgencyAndId::getAgencyId));
         }
         assert(stopTransfer != null);
+        
+        // Add required stop to existing specific transfer
+        for(SpecificTransfer st : stopTransfer.getSpecificTransfers()) {
+        	if(st.matches(fromTrip, toTrip, fromRoute, toRoute)) {
+        		st.addRequiredStop(requiredStop);
+        		return;
+        	}        	
+        }
         
         // Create and add a specific transfer to the stop transfer
         SpecificTransfer specificTransfer = new SpecificTransfer(requiredStop, fromRoute, toRoute, fromTrip, toTrip, transferTime);

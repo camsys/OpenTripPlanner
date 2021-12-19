@@ -68,10 +68,10 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
     /** True if this edge represents boarding a vehicle, false if it represents alighting. */
     public boolean boarding;
 
-    public Stop requiredStop;
+    public List<Stop> requiredStops;
 
-    public Stop getRequiredStop(){
-        return requiredStop;
+    public List<Stop> getRequiredStops(){
+        return requiredStops;
     }
 
     /** Boarding constructor (TransitStopDepart → PatternStopVertex)
@@ -336,10 +336,39 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
                 TransferDetail transferDetail = transferTable.getTransferTime(s0.getPreviousStop(),
                                    getStop(), s0.getPreviousTrip(), trip, boarding);
                 int transferTime = transferDetail.getTransferTime();
-                Stop requiredStop = transferDetail.getRequiredStop();
-                this.requiredStop = requiredStop;
-                //int transferTime = transferTable.getRequiredStop(s0.getPreviousStop(),
-                //        getStop(), s0.getPreviousTrip(), trip, boarding);
+                
+                // for LIRR, disallow unknown transfers
+                if(trip.getId().getAgencyId().equals("LI") && transferTime == -999)
+                	return null;
+                
+                // check requiredStops (just applies to LIRR)
+                this.requiredStops = transferDetail.getRequiredStops();                
+                if(requiredStops != null) {
+	                Stop givenRequiredStop = null;
+	                State prevState = s0.getBackState();
+	    			while(prevState != null) {
+	    			 	Edge e = prevState.getBackEdge();
+	    			 					 	
+	    			 	if(e instanceof TransitBoardAlight) {
+	    			 		TransitBoardAlight tba = (TransitBoardAlight)e;
+	    			 		if(tba.getStop() != getStop() && tba.boarding == true) {
+	    			 			givenRequiredStop = tba.getStop();
+	    			 			break;
+	    			 		}
+	    			 	}
+	    			 	prevState = prevState.getBackState(); 
+	    			}
+	                
+	    			// Direction ID: 0=E, 1=W
+	    			//
+	    			// the "requiredStop" rules for LIRR apply using the prior stop for eastbound trips,
+	    			// and the next stop (which isn't avilable yet) for westbound trips.
+	    			if(trip.getId().getAgencyId().equals("LI") 
+	                		&& trip.getDirectionId().equals("0") 
+	                		&& !requiredStops.contains(givenRequiredStop))
+	                	return null;                
+                }
+                
                 transferPenalty  = transferTable.determineTransferPenalty(transferTime, 
                                    options.nonpreferredTransferPenalty);
             }

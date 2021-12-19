@@ -461,67 +461,66 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 							2 * 60 * 60,
 							10,
 							true);
-				
-			HashMap<Long, Set<Itinerary>> departures = new HashMap<>();
+
+			HashSet<Long> uniqueDepartureTimes = new HashSet<Long>();
 			for(StopTimesInPattern stip : stips) {
 				for(TripTimeShort tts : stip.times) {
 					long departureTime = (tts.serviceDay + tts.scheduledDeparture) * 1000;
-
 					if(departureTime < time)
 						continue;
-					
-					RoutingRequest rr = new RoutingRequest();
-					rr.setDateTime(new Date(departureTime - 1));
-					rr.setNumItineraries(1);
-					rr.setMode(TraverseMode.TRANSIT);
-					rr.setRoutingContext(getRouter(environment).graph,
-							getRouter(environment).graph.index.stopVertexForStop.get(fromStop),
-							getRouter(environment).graph.index.stopVertexForStop.get(toStop));
-					
-					GenericDijkstra gd = new GenericDijkstra(rr);
-					gd.skipEdgeStrategy = new OneAgencySkipEdgeStrategy(stip.route.id.getAgencyId()); 
-					
-					State initialState = new State(rr);
-					ShortestPathTree spt = gd.getShortestPathTree(initialState);
-					
-					if(spt.getPaths().isEmpty())
-						continue;
-					
-					GraphPath path = spt.getPaths().get(0);
+
+					uniqueDepartureTimes.add(departureTime);
+				}
+			}
+			
+			HashMap<String, Set<Itinerary>> itinerariesByDepartureTime = new HashMap<>();
+			for(Long departureTime : uniqueDepartureTimes) {			
+				RoutingRequest rr = new RoutingRequest();
+				rr.setDateTime(new Date(departureTime - 1));
+				rr.setNumItineraries(2);
+				rr.setMode(TraverseMode.TRANSIT);
+				rr.setRoutingContext(getRouter(environment).graph,
+						getRouter(environment).graph.index.stopVertexForStop.get(fromStop),
+						getRouter(environment).graph.index.stopVertexForStop.get(toStop));
+				
+				GenericDijkstra gd = new GenericDijkstra(rr);
+				gd.skipEdgeStrategy = new OneAgencySkipEdgeStrategy(fromStop.getId().getAgencyId()); 
+				
+				State initialState = new State(rr);
+				ShortestPathTree spt = gd.getShortestPathTree(initialState);
+				
+				if(spt.getPaths().isEmpty())
+					continue;
+				
+				for(GraphPath path : spt.getPaths()) {
 					Itinerary i = GraphPathToTripPlanConverter.generateItinerary(path, false, true, Locale.ENGLISH);
 
-					Set<Itinerary> itineraries = departures.get(departureTime);
+					Set<Itinerary> itineraries = itinerariesByDepartureTime.get(i.startTimeFmt);
 					if(itineraries == null)
 						itineraries = new HashSet<>();
 					
-					if(!itineraries.stream()
-							.map(it -> it.toString())
-							.collect(Collectors.toList()).contains(i.toString()))
+					// itineraries don't implement Comparable, so a hack: 
+					String thisItineraryHash = itineraryHash(i);
+					List<String> existingItineraryHashes = itineraries.stream()
+							.map(itin -> itineraryHash(itin))
+							.collect(Collectors.toList());
+					
+					if(!existingItineraryHashes.contains(thisItineraryHash))
 						itineraries.add(i);
 					
-					departures.put(departureTime, itineraries);
-					
-					if(departures.size() >= maxResults)
-						break;
+					itinerariesByDepartureTime.put(i.startTimeFmt, itineraries);
 				}
-
-				if(departures.size() >= maxResults)
+				
+				if(itinerariesByDepartureTime.size() >= maxResults)
 					break;
 			}
 
-			List<Long> departuresSorted = new ArrayList<>(departures.keySet());
-			Collections.sort(departuresSorted, new Comparator<Long>() {
-
-				@Override
-				public int compare(Long o1, Long o2) {
-					return o1.compareTo(o2);
-				}
-				
-			});
+			List<String> departuresSorted = new ArrayList<>(itinerariesByDepartureTime.keySet());
+			Collections.sort(departuresSorted);
 			
 			List<Object> r = new ArrayList<>();
-			for(Long key : departuresSorted) {
-				for(Itinerary itin : departures.get(key)) {
+			for(String key : departuresSorted) {
+				for(Itinerary itin : itinerariesByDepartureTime.get(key)) {
 					HashMap<String, Object> itineraryOut = new HashMap<>();
 					itineraryOut.put("transfers", itin.transfers);
 					itineraryOut.put("durationSeconds", itin.duration);
@@ -550,6 +549,12 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 			return r;
 		};
 	
+	}
+	
+	private String itineraryHash(Itinerary itin) {
+		return String.join("", itin.legs.stream()
+				.map(leg -> leg.startTimeFmt + leg.endTimeFmt + leg.from.stopId + leg.to.stopId)
+				.collect(Collectors.toList()));
 	}
 	
 	private class OneAgencySkipEdgeStrategy implements SkipEdgeStrategy {
