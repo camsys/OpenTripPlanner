@@ -25,8 +25,6 @@ public class FlexFilter implements ItineraryFilter {
 
   @Override
   public List<Itinerary> filter(List<Itinerary> itineraries) {
-
-	  Set<Itinerary> newList = new HashSet<>();
 	  
 	  HashMap<String, Itinerary> itinerariesByRoutePath = new HashMap<>();
 
@@ -56,7 +54,7 @@ public class FlexFilter implements ItineraryFilter {
 	
 		  // no flex legs? just pass through
 		  if(flexLeg == null) {
-			  newList.add(itin);
+			  itinerariesByRoutePath.put(routePathKey, itin);
 			  continue;
 		  }
 
