@@ -271,35 +271,45 @@ public class NearbyStopFinder {
                 if(flexStopLocation.isArea() || flexStopLocation.isLine()) {	                	
             		Vertex v = min.getVertex();
 
-            		Point origin = null;
-            		try {
-            			origin = reverseDirection ? geometryFactory.createPoint(min.getOptions().to.getCoordinate()) 
-                				: geometryFactory.createPoint(min.getOptions().from.getCoordinate());
-            		} catch(Exception e) {
-            			continue;
-            		}
+            		boolean hasTemporaryOriginVertices = originVertices.stream()
+            				.filter(it -> (it instanceof TemporaryVertex))
+            				.count() > 0;
             		
-            		Point destination = geometryFactory.createPoint(v.getCoordinate());
+            		// user request case
+            		if(hasTemporaryOriginVertices) {
+            			Point origin = null;
+	            		try {
+	            			origin = reverseDirection ? geometryFactory.createPoint(min.getOptions().to.getCoordinate()) 
+	                				: geometryFactory.createPoint(min.getOptions().from.getCoordinate());
+	            		} catch(Exception e) {
+	            			continue;
+	            		}
+	            		
+	            		Point destination = geometryFactory.createPoint(v.getCoordinate());
+	
+	            		// if area does not contain the origin/dest point, don't add it as a stop
+	                	if(!flexStopLocation.getGeometry().contains(origin) || !flexStopLocation.getGeometry().contains(destination))
+	                		continue;
+	                	
+	                	for(Vertex originVertex : originVertices) {
+	                        NearbyStop ns = new NearbyStop(
+		                        flexStopLocation,
+		                        0,
+		                        List.of(reverseDirection ? 
+		                        		new FlexDeviationEdge(v, (TemporaryVertex)originVertex) : 
+		                        			new FlexDeviationEdge((TemporaryVertex)originVertex, v)),
+		                        null,
+		                        new State(v, routingRequest)
+		                    );
+	
+	//		                    LOG.info(flexStopLocation.getId() + " (" + reverseDirection + ")" + "->" +  v.getLat() + "," +  v.getLon());                	    
+	
+		                    stopsFound.add(ns);
+	                	}
 
-            		// if area does not contain the origin/dest point, don't add it as a stop
-                	if(!flexStopLocation.getGeometry().contains(origin) || !flexStopLocation.getGeometry().contains(destination))
-                		continue;
-                	
-                	for(Vertex originVertex : originVertices) {
-                        NearbyStop ns = new NearbyStop(
-	                        flexStopLocation,
-	                        0,
-	                        List.of(reverseDirection ? 
-	                        		new FlexDeviationEdge(v, (TemporaryVertex)originVertex) : 
-	                        			new FlexDeviationEdge((TemporaryVertex)originVertex, v)),
-	                        null,
-	                        new State(v, routingRequest)
-	                    );
-
-//		                    LOG.info(flexStopLocation.getId() + " (" + reverseDirection + ")" + "->" +  v.getLat() + "," +  v.getLon());                	    
-
-	                    stopsFound.add(ns);
-                	}
+            		// bundle builder case
+            		} else 
+                    	stopsFound.add(NearbyStop.nearbyStopForState(min, flexStopLocation));
                 } else {
                 	stopsFound.add(NearbyStop.nearbyStopForState(min, flexStopLocation));
                 } // if area/line

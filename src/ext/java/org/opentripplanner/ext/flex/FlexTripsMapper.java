@@ -50,7 +50,7 @@ public class FlexTripsMapper {
         LOG.debug("Found scheduled-deviated trip " + trip.getId() + " on route " + trip.getRoute().getShortName());
       
       } else if (hasContinuousStops(stopTimes)) {
-        LOG.error("Found continuous stops trip " + trip.getId() + " on route " + trip.getRoute().getShortName() + "; NOT SUPPORTED CURRENTLY. IGNORING.");
+        LOG.error("Found continuous stops trip " + trip.getId() + " on route " + trip.getRoute().getShortName() + "; The Flex v2 module does not currently support this type. Skipping. (To be clear: other modules may parse and add this trip?)");
     
       }
 
