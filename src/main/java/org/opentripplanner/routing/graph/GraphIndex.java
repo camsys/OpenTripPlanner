@@ -11,9 +11,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.Response;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import org.apache.commons.math3.util.Pair;
 import org.apache.lucene.util.PriorityQueue;
 import org.joda.time.LocalDate;
@@ -105,9 +108,10 @@ public class GraphIndex {
     public final Map<String, StopCluster> stopClusterForId = Maps.newHashMap();
     public final Multimap<String, PathwayEdge> pathwayForElevator = ArrayListMultimap.create();
     public final Map<AgencyAndId, HashSet<PathwayEdge>> equipmentEdgesForStationId = new HashMap<AgencyAndId, HashSet<PathwayEdge>>();
-	public final Map<String, HashSet<Vertex>> connectionsFromMap = new HashMap<String, HashSet<Vertex>>();    	
+	public final Map<String, HashSet<Vertex>> connectionsFromMap = new HashMap<String, HashSet<Vertex>>();
+    public Cache<String, Set<Route>> routesForMtaComplexCache = CacheBuilder.newBuilder().expireAfterWrite(5 , TimeUnit.MINUTES ).build();
 
-	public RemoteCSVBackedHashMap mtaSubwayStations = null; 
+	public RemoteCSVBackedHashMap mtaSubwayStations = null;
 
 	public RemoteCSVBackedHashMap mtaSubwayComplexes = null;
 
