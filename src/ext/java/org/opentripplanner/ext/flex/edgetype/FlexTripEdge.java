@@ -1,6 +1,11 @@
 package org.opentripplanner.ext.flex.edgetype;
 
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.operation.distance.DistanceOp;
 import org.onebusaway.gtfs.model.StopTime;
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.opentripplanner.common.geometry.GeometryUtils;
@@ -133,18 +138,34 @@ public class FlexTripEdge extends Edge {
 		  return getFlexPath().geometry;
 	  else if(flexTemplate.getFlexTrip() instanceof ScheduledDeviatedTrip) {
 		    
-		  LineString geometry = 
-				  GeometryUtils.makeLineString(((ScheduledDeviatedTrip)getFlexTrip()).geometryCoords);		    
+		  LineString geometry = GeometryUtils.makeLineString(((ScheduledDeviatedTrip)getFlexTrip()).geometryCoords);		    
 
-		  P2<LineString> lineString = 
-				  GeometryUtils.splitGeometryAtPoint(geometry, flexTemplate.request.from.getCoordinate());
-		  P2<LineString> lineString2 = 
-				  GeometryUtils.splitGeometryAtPoint(lineString.first, flexTemplate.request.to.getCoordinate());
+		  Coordinate from = getClosestPointOnLine(geometry, flexTemplate.request.from.getCoordinate());
+		  Coordinate to = getClosestPointOnLine(geometry, flexTemplate.request.to.getCoordinate());
 		  
-		  return lineString2.second;
+		  LineString l = GeometryUtils.getInteriorSegment(geometry, from, to);
+		 
+		  // from needs to be after to for this method to work, 
+		  // this seems like a cheap way to find out? HACK FIXME
+		  if(l.getLength() > 0)
+			  return l;
+		  else
+			  return GeometryUtils.getInteriorSegment(geometry, to, from);
 	  } else
 		  return null;
   }
+  
+  private Coordinate getClosestPointOnLine(Geometry line, Coordinate coord) {
+	  Geometry g = line.getGeometryN(0);
+	  GeometryFactory gf = g.getFactory();
+		  
+	  Point p = gf.createPoint(coord);
+		  
+	  Coordinate[] nearestCoords = DistanceOp.nearestPoints(g, p.getGeometryN(0));
+	  return nearestCoords[0];
+  }
+  
+  
 
   public StopLocation getOriginStop() {
 	  return this.from;

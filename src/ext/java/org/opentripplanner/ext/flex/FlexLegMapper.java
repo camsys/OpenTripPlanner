@@ -40,7 +40,7 @@ public class FlexLegMapper {
 	  // line or *within* that location vs. the centroid of the line/area. 
 	  if(flexTripEdge.getOriginStop().isArea() || flexTripEdge.getOriginStop().isLine()) {
 		  GenericLocation from = states[1].getOptions().from;
-		  leg.from = new Place(from.lat, from.lng, from.label);		
+		  leg.from = new Place(from.lat, from.lng, from.label != null ? from.label : "Origin");		
 	  }	  
 	  
 	  leg.from.stopId = flexTripEdge.getOriginStop().getId();		
@@ -63,7 +63,7 @@ public class FlexLegMapper {
       
 	  if(flexTripEdge.getDestinationStop().isArea() || flexTripEdge.getDestinationStop().isLine()) {
 		  GenericLocation to = states[1].getOptions().to;
-		  leg.to = new Place(to.lat, to.lng, to.label);				  
+		  leg.to = new Place(to.lat, to.lng, to.label != null ? to.label : "Destination");		
 	  }	  
 
       leg.to.stopId = flexTripEdge.getDestinationStop().getId();
