@@ -34,7 +34,6 @@ import org.opentripplanner.routing.edgetype.TripPattern;
 import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.routing.trippattern.TripTimes;
 import org.opentripplanner.standalone.Router;
-import org.opentripplanner.util.IntervalTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
