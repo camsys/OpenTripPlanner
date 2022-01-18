@@ -799,11 +799,15 @@ public class NycAdvancedFareServiceImpl implements FareService, Serializable {
 
     /** check to see if zone A is less than zone B */
     private boolean isLessThan(String zoneA, String zoneB){
+    	if(zoneA == null || zoneB == null)
+    		return false;
         return Integer.parseInt(zoneA) <= Integer.parseInt(zoneB);
     }
 
     /** check to see if zone A is less than zone B */
     private boolean isGreaterThan(String zoneA, String zoneB){
+    	if(zoneA == null || zoneB == null)
+    		return false;
         return Integer.parseInt(zoneA) >= Integer.parseInt(zoneB);
     }
 

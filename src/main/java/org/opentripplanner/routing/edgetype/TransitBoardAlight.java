@@ -336,11 +336,11 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
                 TransferDetail transferDetail = transferTable.getTransferTime(s0.getPreviousStop(),
                                    getStop(), s0.getPreviousTrip(), trip, boarding);
                 int transferTime = transferDetail.getTransferTime();
-                
-                // for LIRR, disallow unknown transfers
+                               
+                // for LIRR, penalize unknown transfers
                 if(trip.getId().getAgencyId().equals("LI") && transferTime == -999)
-                	return null;
-                
+                	transferPenalty = options.nonpreferredTransferPenalty;
+               
                 // check requiredStops (just applies to LIRR)
                 this.requiredStops = transferDetail.getRequiredStops();                
                 if(requiredStops != null) {
@@ -366,10 +366,9 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
 	    			if(trip.getId().getAgencyId().equals("LI") 
 	                		&& trip.getDirectionId().equals("0") 
 	                		&& !requiredStops.contains(givenRequiredStop))
-	                	return null;                
-                }
-                
-                transferPenalty  = transferTable.determineTransferPenalty(transferTime, 
+	                	transferPenalty = options.nonpreferredTransferPenalty;
+                } else                 
+                	transferPenalty  = transferTable.determineTransferPenalty(transferTime, 
                                    options.nonpreferredTransferPenalty);
             }
 
