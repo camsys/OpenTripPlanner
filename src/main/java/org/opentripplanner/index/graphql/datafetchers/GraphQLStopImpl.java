@@ -4,14 +4,7 @@ import graphql.execution.ExecutionStepInfo;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -21,6 +14,7 @@ import org.onebusaway.gtfs.model.Trip;
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Route;
+import org.opentripplanner.analyst.batch.BasicPopulation;
 import org.opentripplanner.common.model.P2;
 import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
@@ -40,8 +34,14 @@ import org.opentripplanner.routing.edgetype.TripPattern;
 import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.routing.trippattern.TripTimes;
 import org.opentripplanner.standalone.Router;
+import org.opentripplanner.util.IntervalTimer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
+
+	private static final Logger LOG = LoggerFactory.getLogger(GraphQLStopImpl.class);
+
 
 	@Override
 	public DataFetcher<String> gtfsId() {
@@ -270,35 +270,42 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 		    	Stop e = environment.getSource();
 		    	if(e.getLocationType() == Stop.LOCATION_TYPE_STATION || e.getLocationType() == Stop.LOCATION_TYPE_STOP) {
 					Map<String, Object> localContext = environment.getLocalContext();
-					
+					GraphIndex graphIndex = getGraphIndex(environment);
 					// case when we're nested inside a stopTime, e.g. in nearby's stopTime, return routes
 					// that stop at this station within the next 30m
 					if(localContext.containsKey("stop") && localContext.containsKey("trip")) {
 						Trip trip = (Trip)localContext.get("trip");
-						TripPattern pattern = getGraphIndex(environment).getTripPatternForTripId(trip.getId());
-						Timetable timetable = getGraphIndex(environment).currentUpdatedTimetableForTripPattern(pattern);
-						// (the triptimes that are used prior are not for the entire trip, so have to refetch here)
-						TripTimes tripTimes = timetable.getTripTimes(trip);
 
-						int stopIndex = pattern.getStops().indexOf(e);
-						long ourArrivalEpochSeconds = (new ServiceDate().getAsDate().getTime()/1000) + tripTimes.getArrivalTime(stopIndex);
+						Set<Route> routes = graphIndex.routesForMtaComplexCache.getIfPresent(e.getMtaStopId() + "_" + trip.getId());
+						if(routes == null){
+							routes = new HashSet<>();
 
-			    		Set<Route> routes = new HashSet<Route>();
-			    		for(Object _stop : stopsForMtaComplex().get(environment)) {
-			    			Stop stop = (Stop)_stop;
+							TripPattern pattern = getGraphIndex(environment).getTripPatternForTripId(trip.getId());
+							Timetable timetable = getGraphIndex(environment).currentUpdatedTimetableForTripPattern(pattern);
+							TripTimes tripTimes = timetable.getTripTimes(trip);
 
-			    			// get arrivals at this stop within the following 30m of our arrival
-							Collection<StopTimesInPattern> stip = 
-									getGraphIndex(environment).stopTimesForStop(stop, ourArrivalEpochSeconds, 30 * 60, 1000, 
-											true, environment.<GraphQLRequestContext>getContext().getSignMode());
-	
-							routes.addAll(stip.stream()
-									.map(r -> { return getGraphIndex(environment).routeForId.get(r.route.id); })
-									.distinct()
-									.collect(Collectors.toList()));
-			    		}
-			    		
-			    		return routes.stream().collect(Collectors.toList());
+							// (the triptimes that are used prior are not for the entire trip, so have to refetch here)
+							int stopIndex = pattern.getStops().indexOf(e);
+							long ourArrivalEpochSeconds = (new ServiceDate().getAsDate().getTime()/1000) + tripTimes.getArrivalTime(stopIndex);
+
+							for(Object _stop : stopsForMtaComplex().get(environment)) {
+								Stop stop = (Stop)_stop;
+
+								// get arrivals at this stop within the following 30m of our arrival
+								Collection<StopTimesInPattern> stip = getGraphIndex(environment).stopTimesForStop(stop, ourArrivalEpochSeconds, 30 * 60, 1000,
+										true, environment.<GraphQLRequestContext>getContext().getSignMode());
+
+								routes.addAll(stip.stream()
+										.map(r -> { return getGraphIndex(environment).routeForId.get(r.route.id); })
+										.distinct()
+										.collect(Collectors.toList()));
+							}
+
+							graphIndex.routesForMtaComplexCache.put(e.getMtaStopId() + "_" + trip.getId(), routes);
+
+						}
+
+						return routes.stream().collect(Collectors.toList());
 
 					// standalone case
 					} else {
@@ -313,7 +320,7 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 			    		return routes.stream().collect(Collectors.toList());
 					}
 		    	} else
-		    		return null;		 
+		    		return null;
  		 };
 	}
 
