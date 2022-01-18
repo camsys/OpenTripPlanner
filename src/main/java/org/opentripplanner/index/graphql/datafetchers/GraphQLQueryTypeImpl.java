@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -462,7 +463,7 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 							10,
 							true);
 
-			HashSet<Long> uniqueDepartureTimes = new HashSet<Long>();
+			TreeSet<Long> uniqueDepartureTimes = new TreeSet<Long>();
 			for(StopTimesInPattern stip : stips) {
 				for(TripTimeShort tts : stip.times) {
 					long departureTime = (tts.serviceDay + tts.scheduledDeparture) * 1000;
