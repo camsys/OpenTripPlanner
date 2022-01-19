@@ -460,10 +460,10 @@ public class Timetable implements Serializable {
             for (int i = 0; i < numStops; i++) {
                 boolean match = false;
                 if (update != null) {
-                    if (update.hasStopSequence() && matchStopSequence) {
-                        match = update.getStopSequence() == newTimes.getStopSequence(i);
-                    } else if (update.hasStopId()) {
+                	if (update.hasStopId()) {
                         match = pattern.getStop(i).getId().getId().equals(update.getStopId());
+                	} else if (update.hasStopSequence() && matchStopSequence) {
+                        match = update.getStopSequence() == newTimes.getStopSequence(i);
                     }
                 }
 
@@ -485,7 +485,11 @@ public class Timetable implements Serializable {
 
                         if (update.hasArrival()) {
                             StopTimeEvent arrival = update.getArrival();
-                            if (arrival.hasDelay()) {
+                            if (arrival.hasTime()) {
+                                newTimes.updateArrivalTime(i,
+                                        (int) (arrival.getTime() - today));
+                                delay = newTimes.getArrivalDelay(i);
+                            } else if (arrival.hasDelay()) {
                                 delay = arrival.getDelay();
                                 if (arrival.hasTime()) {
                                     newTimes.updateArrivalTime(i,
@@ -493,10 +497,6 @@ public class Timetable implements Serializable {
                                 } else {
                                     newTimes.updateArrivalDelay(i, delay);
                                 }
-                            } else if (arrival.hasTime()) {
-                                newTimes.updateArrivalTime(i,
-                                        (int) (arrival.getTime() - today));
-                                delay = newTimes.getArrivalDelay(i);
                             } else {
                                 LOG.error("Arrival time at index {} is erroneous.", i);
                                 return null;
@@ -511,7 +511,11 @@ public class Timetable implements Serializable {
 
                         if (update.hasDeparture()) {
                             StopTimeEvent departure = update.getDeparture();
-                            if (departure.hasDelay()) {
+                            if (departure.hasTime()) {
+                                newTimes.updateDepartureTime(i,
+                                        (int) (departure.getTime() - today));
+                                delay = newTimes.getDepartureDelay(i);
+                            } else if (departure.hasDelay()) {
                                 delay = departure.getDelay();
                                 if (departure.hasTime()) {
                                     newTimes.updateDepartureTime(i,
@@ -519,10 +523,6 @@ public class Timetable implements Serializable {
                                 } else {
                                     newTimes.updateDepartureDelay(i, delay);
                                 }
-                            } else if (departure.hasTime()) {
-                                newTimes.updateDepartureTime(i,
-                                        (int) (departure.getTime() - today));
-                                delay = newTimes.getDepartureDelay(i);
                             } else {
                                 LOG.error("Departure time at index {} is erroneous.", i);
                                 return null;
