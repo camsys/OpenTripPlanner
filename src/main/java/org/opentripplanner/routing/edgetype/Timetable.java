@@ -456,12 +456,20 @@ public class Timetable implements Serializable {
 
             Integer delay = null;
 
-
             for (int i = 0; i < numStops; i++) {
                 boolean match = false;
                 if (update != null) {
                 	if (update.hasStopId()) {
-                        match = pattern.getStop(i).getId().getId().equals(update.getStopId());
+                        match = pattern.getStop(i).getId().getId().endsWith(update.getStopId());
+
+                        // if this is an MNR feed, try the ID itself and without "NJT-"
+                        // beacuse of some ugly hacks employed to merge the NJT and MNR
+                        // feeds together for shared services; see transforms and the collector.
+                        if(pattern.getFeedId().equals("MNR")) {
+                        	if(!match)
+                        		match = pattern.getStop(i).getId().getId().replace("NJT-", "").equals(update.getStopId());
+                        }
+                	
                 	} else if (update.hasStopSequence() && matchStopSequence) {
                         match = update.getStopSequence() == newTimes.getStopSequence(i);
                     }
