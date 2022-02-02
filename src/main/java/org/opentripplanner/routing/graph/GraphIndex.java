@@ -294,6 +294,9 @@ public class GraphIndex {
     }
 
     private JsonNode getRouterConfig(){
+    	if(graph.routerConfig == null)
+    		return null;
+    	
         if(graph != null){
             ObjectMapper objectMapper = new ObjectMapper();
             try {
