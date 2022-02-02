@@ -1,20 +1,13 @@
 package org.opentripplanner.routing.graph;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.io.IOException;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.Response;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.apache.commons.math3.util.Pair;
@@ -62,6 +55,7 @@ import org.opentripplanner.routing.trippattern.FrequencyEntry;
 import org.opentripplanner.routing.trippattern.TripTimes;
 import org.opentripplanner.routing.vertextype.TransitStationStop;
 import org.opentripplanner.routing.vertextype.TransitStop;
+import org.opentripplanner.standalone.OTPMain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,6 +104,7 @@ public class GraphIndex {
     public final Map<AgencyAndId, HashSet<PathwayEdge>> equipmentEdgesForStationId = new HashMap<AgencyAndId, HashSet<PathwayEdge>>();
 	public final Map<String, HashSet<Vertex>> connectionsFromMap = new HashMap<String, HashSet<Vertex>>();
     public Cache<String, Set<Route>> routesForMtaComplexCache = CacheBuilder.newBuilder().expireAfterWrite(5 , TimeUnit.MINUTES ).build();
+    public Set<String> signModeHideSchedule = new HashSet<>();
 
 	public RemoteCSVBackedHashMap mtaSubwayStations = null;
 
@@ -288,6 +283,27 @@ public class GraphIndex {
 	    		e.printStackTrace();
 	    	}
     	}
+
+    	JsonNode routerConfig = getRouterConfig();
+    	if(routerConfig != null){
+            JsonNode signModeHideScheduleConfig = routerConfig.get("signModeHideSchedule");
+            if (signModeHideScheduleConfig != null) {
+                signModeHideSchedule = new HashSet<>(Arrays.asList(signModeHideScheduleConfig.asText().split(",")));
+            }
+        }
+    }
+
+    private JsonNode getRouterConfig(){
+        if(graph != null){
+            ObjectMapper objectMapper = new ObjectMapper();
+            try {
+                JsonNode routerConfig = objectMapper.readValue(graph.routerConfig, JsonNode.class);
+                return routerConfig;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
     }
 
 	private Boolean walkPathwayEdges(Vertex v, HashSet<Vertex> connectionsFromHere, HashSet<PathwayEdge> equipmentAccessFromHere, 
@@ -673,8 +689,7 @@ public class GraphIndex {
                     	if (tripHeadsign != null && !tripHeadsign.equals(t.trip.getTripHeadsign())) continue;
                         if (headsign != null && !headsign.equals(t.getHeadsign(sidx))) continue;
                         if (trackIds != null && t.getTrack(sidx) != null && !trackIds.contains(t.getTrack(sidx))) continue;
-                        if (signMode && t.isScheduled()) continue;
-
+                        if (hideScheduledInfo(signMode, t.isScheduled(), t.trip.getId().getAgencyId())) continue;
                         if (shouldShowDeparture(t.getDepartureTime(sidx), secondsSinceMidnight)
                                 || (showCancelledTrips && shouldShowDeparture(t.getScheduledDepartureTime(sidx), secondsSinceMidnight))) {
                             pq.insertWithOverflow(new TripTimeShort(pattern, t, sidx, stop, sd, graph.getTimeZone(), includeStopsForTrip));
@@ -710,6 +725,14 @@ public class GraphIndex {
         }
         
         return null;
+    }
+
+    private boolean hideScheduledInfo(boolean signMode, boolean isScheduled, String agencyId){
+        if(signMode && isScheduled && (signModeHideSchedule.contains(agencyId.toUpperCase()) ||
+                signModeHideSchedule.contains(agencyId.toLowerCase())) ){
+            return true;
+        }
+        return false;
     }
 
     private boolean shouldShowDeparture(int departureTime, int time) {
