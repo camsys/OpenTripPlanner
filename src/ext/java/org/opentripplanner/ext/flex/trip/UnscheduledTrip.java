@@ -24,6 +24,8 @@ import org.opentripplanner.model.StopTime;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -39,7 +41,15 @@ public class UnscheduledTrip extends FlexTrip {
   private final BookingInfo[] dropOffBookingInfos;
   private final BookingInfo[] pickupBookingInfos;
 
+  private static final Logger LOG = LoggerFactory.getLogger(UnscheduledTrip.class);
+
   public static boolean isUnscheduledTrip(List<StopTime> stopTimes) {
+	stopTimes.stream()
+		.filter(it -> it.getStop() == null)
+		.forEach(it -> {
+			LOG.error("Stop time for trip " + it.getTrip() + ", sequence=" + it.getStopSequence() + " has a stop that could not be found. This may cause errors...");
+		});
+	  
 	// all areas, all time ranges	  
 	return stopTimes.stream().allMatch(it -> it.getStop().isArea() && it.getStop().isLine())
 			&& stopTimes.stream().allMatch(it -> it.getArrivalTime() == StopTime.MISSING_VALUE 

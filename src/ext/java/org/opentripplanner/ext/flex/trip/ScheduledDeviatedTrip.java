@@ -4,6 +4,7 @@ import org.opentripplanner.model.ShapePoint;
 import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.common.geometry.GeometryUtils;
 import org.opentripplanner.common.model.P2;
+import org.opentripplanner.ext.flex.FlexRouter;
 import org.opentripplanner.ext.flex.FlexServiceDate;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPath;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
@@ -17,7 +18,8 @@ import org.opentripplanner.model.StopTime;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.locationtech.jts.geom.LineString;
 
 import java.util.ArrayList;
@@ -51,7 +53,16 @@ public class ScheduledDeviatedTrip extends FlexTrip {
 
   public Coordinate[] geometryCoords = null;
   
+  private static final Logger LOG = LoggerFactory.getLogger(ScheduledDeviatedTrip.class);
+
   public static boolean isScheduledFlexTrip(List<StopTime> stopTimes) {
+	  stopTimes.stream()
+		.filter(it -> it.getStop() == null)
+		.forEach(it -> {
+			LOG.error("Stop time for trip " + it.getTrip() + ", sequence=" + it.getStopSequence() + " has a stop that could not be found. This may cause errors...");
+		});
+	  
+	  
 	  // non areas have explicit times
 	  // areas have ranges
 	  // pickup/dropoff is >= 2 on at least one ST
