@@ -43,20 +43,30 @@ public class LandmarksFilter {
             try {
                 targetGeometry = reader.read(targetWkt);
                 areaGeometry = reader.read(areaWkt);
-                locationGeometry = reader.read("POINT (" + fromPlace + ")");
             } catch (ParseException pe){
                 LOG.info("Couldn't convert wkt to jts geometry", pe);
                 return null;
             }
-            if (locationGeometry != null && areaGeometry.contains(locationGeometry)) {
-                locationUpdate[0] = targetGeometry.getCoordinate().x+","+targetGeometry.getCoordinate().y;
-            }
-            locationGeometry = reader.read("POINT (" + toPlace + ")");
-            if (locationGeometry != null && areaGeometry.contains(locationGeometry)) {
-                locationUpdate[1] = targetGeometry.getCoordinate().x+","+targetGeometry.getCoordinate().y;
-            }
+
+            try {
+	            locationGeometry = reader.read("POINT (" + fromPlace + ")");
+	            if (locationGeometry != null && areaGeometry.contains(locationGeometry)) {
+	                locationUpdate[0] = targetGeometry.getCoordinate().x+","+targetGeometry.getCoordinate().y;
+	            }
+            } catch (ParseException pe){}
+            
+            try {
+	            locationGeometry = reader.read("POINT (" + toPlace + ")");
+	            if (locationGeometry != null && areaGeometry.contains(locationGeometry)) {
+	                locationUpdate[1] = targetGeometry.getCoordinate().x+","+targetGeometry.getCoordinate().y;
+	            }
+            } catch (ParseException pe){}
+	            
         }
+        
+        if(locationUpdate[0] != null || locationUpdate[1] != null)
             LOG.info("New from: {}, New to: {}", locationUpdate[0], locationUpdate[1]);
+
         return locationUpdate;
     }
 }
