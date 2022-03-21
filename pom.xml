@@ -382,6 +382,31 @@
 
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>com.amashchenko.maven.plugin</groupId>
+				<artifactId>gitflow-maven-plugin</artifactId>
+				<version>1.18.0</version>
+				<configuration>
+					<gitFlowConfig>
+						<productionBranch>mta-master</productionBranch>
+						<developmentBranch>mta-develop</developmentBranch>
+						<featureBranchPrefix>mta-feature/</featureBranchPrefix>
+						<releaseBranchPrefix>mta-release/</releaseBranchPrefix>
+						<hotfixBranchPrefix>mta-hotfix/</hotfixBranchPrefix>
+						<supportBranchPrefix>mta-support/</supportBranchPrefix>
+						<versionTagPrefix>otp-</versionTagPrefix>
+						<origin>origin</origin>
+					</gitFlowConfig>
+					<commitMessages>
+						<releaseStartMessage>Update versions to @{version} for release</releaseStartMessage>
+						<releaseFinishMessage>Update for next development version</releaseFinishMessage>
+						<releaseVersionUpdateMessage>Update versions to @{version} for release</releaseVersionUpdateMessage>
+						<hotfixStartMessage>Update versions to @{version}for hotfix</hotfixStartMessage>
+						<hotfixFinishMessage>Update for next development version</hotfixFinishMessage>
+						<hotfixVersionUpdateMessage>Update versions to @{version}for hotfix</hotfixVersionUpdateMessage>
+					</commitMessages>
+				</configuration>
+			</plugin>
 		</plugins>
 
 		<!-- In Maven 3, ssh wagon is no longer enabled by default. Since many
