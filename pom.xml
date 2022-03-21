@@ -401,9 +401,9 @@
 						<releaseStartMessage>Update versions to @{version} for release</releaseStartMessage>
 						<releaseFinishMessage>Update for next development version</releaseFinishMessage>
 						<releaseVersionUpdateMessage>Update versions to @{version} for release</releaseVersionUpdateMessage>
-						<hotfixStartMessage>Update versions to @{version}for hotfix</hotfixStartMessage>
+						<hotfixStartMessage>Update versions to @{version} for hotfix</hotfixStartMessage>
 						<hotfixFinishMessage>Update for next development version</hotfixFinishMessage>
-						<hotfixVersionUpdateMessage>Update versions to @{version}for hotfix</hotfixVersionUpdateMessage>
+						<hotfixVersionUpdateMessage>Update versions to @{version} for hotfix</hotfixVersionUpdateMessage>
 					</commitMessages>
 				</configuration>
 			</plugin>
