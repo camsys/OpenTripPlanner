@@ -162,6 +162,15 @@ public class GraphQLDataFetchers {
     public DataFetcher<String> to();
     public DataFetcher<Object> arriveTime();
     public DataFetcher<String> arriveTimeString();
+    public DataFetcher<String> routeId();
+    public DataFetcher<String> runDate();
+    public DataFetcher<String> tripShortName();
+    public DataFetcher<String> tripId();
+    public DataFetcher<String> direction();
+    public DataFetcher<String> destination();
+    public DataFetcher<String> boardTime();
+    public DataFetcher<String> alightTime();
+    public DataFetcher<Integer> peak();
   }
   
   /**

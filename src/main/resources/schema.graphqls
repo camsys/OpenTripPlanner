@@ -699,6 +699,11 @@ type ScheduleResultLeg {
     """
 	routeLongName: String
 
+    """
+    Route ID of the train serving this leg
+    """
+    routeId: String
+
 	"""
 	From station name
     """
@@ -728,7 +733,47 @@ type ScheduleResultLeg {
     Arrival time. Format: ISO date
     """
 	arriveTimeString: String
-		
+
+    """
+    Run Date is the service date of the trip Format: ISO date
+    """
+    runDate: String
+
+    """
+    Trip short name
+    """
+    tripShortName: String
+
+    """
+    Trip id
+    """
+    tripId: String
+
+    """
+    Direction
+    """
+    direction: String
+
+    """
+    Destination is the final stop of the trip
+    """
+    destination: String
+
+    """
+    Board Time
+    """
+    boardTime: String
+
+    """
+    Alight Time
+    """
+    alightTime: String
+
+    """
+    Peak
+    """
+    peak: Int
+
 }
     
 type KeyValueMap {

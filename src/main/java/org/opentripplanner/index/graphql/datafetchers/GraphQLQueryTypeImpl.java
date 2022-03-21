@@ -530,16 +530,29 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 					for(Leg leg : itin.legs) {
 						HashMap<String, Object> legOut = new HashMap<>();
 
+						// Trip Info
 						legOut.put("routeLongName", leg.routeLongName);
+						legOut.put("routeId", leg.routeId);
 						legOut.put("headsign", leg.headsign);
-					
+						legOut.put("tripShortName", leg.tripShortName);
+						legOut.put("tripId", leg.tripId);
+						legOut.put("direction", leg.tripDirectionId);
+						legOut.put("destination", leg.stopHeadsign);
 						legOut.put("from", leg.from.name);
 						legOut.put("to", leg.to.name);
+
+						// Dates and Times
+						legOut.put("runDate", leg.serviceDate);
 						legOut.put("departTime", leg.startTime.getTime().getTime()/1000);
 						legOut.put("departTimeString", leg.startTimeFmt);
 						legOut.put("arriveTime", leg.endTime.getTime().getTime()/1000);
 						legOut.put("arriveTimeString", leg.endTimeFmt);
-						
+						legOut.put("boardTime", leg.scheduledArrivalTimeFmt);
+						legOut.put("alightTime", leg.scheduledDepartureTimeFmt);
+
+						// Additional Info
+						legOut.put("peak", leg.peakOffpeak);
+
 						legs.add(legOut);
 					}
 					
@@ -547,6 +560,7 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 					r.add(itineraryOut);
 				}
 			}
+
 			return r;
 		};
 	
