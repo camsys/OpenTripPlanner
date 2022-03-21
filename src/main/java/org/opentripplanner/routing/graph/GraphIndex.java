@@ -691,7 +691,7 @@ public class GraphIndex {
 
                     	if (tripHeadsign != null && !tripHeadsign.equals(t.trip.getTripHeadsign())) continue;
                         if (headsign != null && !headsign.equals(t.getHeadsign(sidx))) continue;
-                        if (trackIds != null && t.getTrack(sidx) != null && !trackIds.contains(t.getTrack(sidx))) continue;
+                        if (trackIds != null && !trackIds.contains(t.getTrack(sidx))) continue;
                         if (hideScheduledInfo(signMode, t.isScheduled(), t.trip.getId().getAgencyId())) continue;
                         if (shouldShowDeparture(t.getDepartureTime(sidx), secondsSinceMidnight)
                                 || (showCancelledTrips && shouldShowDeparture(t.getScheduledDepartureTime(sidx), secondsSinceMidnight))) {
