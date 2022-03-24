@@ -32,12 +32,14 @@ public class GraphQLNearbyStopResultImpl implements GraphQLDataFetchers.GraphQLN
 	    return environment -> {
 	    	StopTimesByStop e = environment.getSource();
 
-			List<AgencyAndId> ids = new ArrayList<AgencyAndId>();
+			Set<AgencyAndId> ids = new HashSet<AgencyAndId>();
 			ids.addAll(getGraphIndex(environment).stopsForParentStation
 					.get(e.getStop().id)
 					.stream()
 					.map(it -> { return it.getId(); })
 					.collect(Collectors.toList()));
+			
+			ids.add(e.getStop().id);
 			
 		    return getGraphIndex(environment).stopForId.values().stream()
 					.filter(c -> ids.stream().anyMatch(inputItem -> c.getId().equals(inputItem)))
