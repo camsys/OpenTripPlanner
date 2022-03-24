@@ -599,9 +599,13 @@ public class GraphIndex {
      * @return
      */
     // TODO: Refactor this existing mess
-    public List<StopTimesInPattern> stopTimesForStop(Stop stop, long startTime, int timeRange, int numberOfDepartures, boolean omitNonPickups,
-                                                     RouteMatcher routeMatcher, Integer direction, String headsign, String tripHeadsign, Stop requiredStop, Set<String> bannedAgencies, Set<Integer> bannedRouteTypes,
-                                                     Collection<String> trackIds, boolean showCancelledTrips, boolean includeStopsForTrip, boolean signMode) {
+    public List<StopTimesInPattern> stopTimesForStop(Stop stop, long startTime, int timeRange, int numberOfDepartures,
+                                                     boolean omitNonPickups, RouteMatcher routeMatcher,
+                                                     Integer direction, String headsign, String tripHeadsign,
+                                                     Stop requiredStop, Set<String> bannedAgencies,
+                                                     Set<Integer> bannedRouteTypes, Collection<String> trackIds,
+                                                     boolean showCancelledTrips, boolean includeStopsForTrip,
+                                                     boolean signMode) {
 
     	List<StopTimesInPattern> ret = new ArrayList<>();
         
@@ -652,9 +656,11 @@ public class GraphIndex {
     }
     
     // TODO: Refactor this existing mess
-    public StopTimesInPattern getStopTimesForPattern(TripPattern pattern, Date date, TimetableSnapshot snapshot, Stop stop, 
-    		int timeRange, int numberOfDepartures, boolean omitNonPickups,
-            String headsign, String tripHeadsign, Collection<String> trackIds, boolean showCancelledTrips, boolean includeStopsForTrip, boolean signMode) {
+    public StopTimesInPattern getStopTimesForPattern(TripPattern pattern, Date date, TimetableSnapshot snapshot,
+                                                     Stop stop, int timeRange, int numberOfDepartures,
+                                                     boolean omitNonPickups, String headsign, String tripHeadsign,
+                                                     Collection<String> trackIds, boolean showCancelledTrips,
+                                                     boolean includeStopsForTrip, boolean signMode) {
 
     	ServiceDate[] serviceDates = {new ServiceDate(date).previous(), new ServiceDate(date), new ServiceDate(date).next()};
 

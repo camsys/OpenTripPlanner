@@ -31,7 +31,6 @@ type Feed {
 
 }
 
-
 """Alert of a current or upcoming disruption in public transportation"""
 type Alert {
 
@@ -93,7 +92,6 @@ type Alert {
     """
     effectiveEndDate: Long
 }
-
 
 """Cause of a alert"""
 enum AlertCauseType {
@@ -774,6 +772,77 @@ type ScheduleResultLeg {
     """
     peak: Int
 
+    """
+    Track
+    """
+    track: String
+
+    """
+    Stops
+    """
+    stops: [String]
+
+    """
+    stopNote
+    """
+    stopNote: String
+
+    """
+    occupancy
+    """
+    occupancy: String
+
+    """
+    carriages
+    """
+    carriages: [CarriageInfo]
+
+    """
+    ArrivalDelay
+    """
+    arrivalDelay: Int
+
+    """
+    DepartureDelay
+    """
+    departureDelay: Int
+
+    """
+    Cancelled
+    """
+    cancelled: Boolean
+
+    """
+    Alerts
+    """
+    alerts: [ScheduleAlert]
+}
+
+"""Alert of a current or upcoming disruption in public transportation"""
+type ScheduleAlert {
+    id: String
+    alertHeaderText: String
+    alertDescriptionText: String
+    alertUrl: String
+    alertType: String
+    humanReadableActivePeriod: String,
+    effectiveStartDateFmt: String,
+    effectiveEndDateFmt: String,
+    createdAtDateFmt: String,
+    updatedAtDateFmt: String
+}
+
+type CarriageInfo {
+    id: String
+    label: String
+    occupancyStatus: String
+    bicyclesAllowed: Int
+    carriageClass: String
+}
+
+type AgencyAndId {
+    agencyId: String
+    id: String
 }
     
 type KeyValueMap {
