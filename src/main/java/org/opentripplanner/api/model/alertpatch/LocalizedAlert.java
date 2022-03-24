@@ -2,6 +2,7 @@ package org.opentripplanner.api.model.alertpatch;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.opentripplanner.routing.alertpatch.Alert;
 import org.opentripplanner.routing.alertpatch.AlertAlternateStation;
 
@@ -60,18 +61,50 @@ public class LocalizedAlert {
         return alert.effectiveStartDate;
     }
 
+    @JsonIgnore
+    public String getEffectiveStartDateFmt() {
+        if(alert.effectiveStartDate != null){
+            return DateFormatUtils.format(alert.effectiveStartDate, "yyyy-MM-dd HH:mm:SS");
+        }
+        return null;
+    }
+
     @JsonSerialize
     public Date getEffectiveEndDate() {
         return alert.effectiveEndDate;
+    }
+
+    @JsonIgnore
+    public String getEffectiveEndDateFmt() {
+        if(alert.effectiveEndDate != null){
+            return DateFormatUtils.format(alert.effectiveEndDate, "yyyy-MM-dd HH:mm:SS");
+        }
+        return null;
     }
 
     @JsonSerialize
     /** non-standard mercury extension **/
     public Date getCreatedAtDate() { return alert.createdDate; }
 
+    @JsonIgnore
+    public String getCreatedAtDateFmt() {
+        if(alert.createdDate != null){
+            return DateFormatUtils.format(alert.createdDate, "yyyy-MM-dd HH:mm:SS");
+        }
+        return null;
+    }
+
     @JsonSerialize
     /** non-standard mercury extension **/
     public Date getUpdatedAtDate() { return alert.updatedAt; }
+
+    @JsonIgnore
+    public String getUpdatedAtDateFmt() {
+        if(alert.updatedAt != null){
+            return DateFormatUtils.format(alert.updatedAt, "yyyy-MM-dd HH:mm:SS");
+        }
+        return null;
+    }
 
     @JsonSerialize
     /** non-standard mercury extension **/

@@ -3,6 +3,8 @@ package org.opentripplanner.index.graphql.generated;
 
 import graphql.schema.DataFetcher;
 
+import java.util.Date;
+
 public class GraphQLDataFetchers {
   public interface GraphQLAccessibleResult {
     public DataFetcher<Iterable<Object>> pairs();
@@ -162,6 +164,25 @@ public class GraphQLDataFetchers {
     public DataFetcher<String> to();
     public DataFetcher<Object> arriveTime();
     public DataFetcher<String> arriveTimeString();
+    public DataFetcher<String> routeId();
+    public DataFetcher<String> runDate();
+    public DataFetcher<String> tripShortName();
+    public DataFetcher<String> tripId();
+    public DataFetcher<String> direction();
+    public DataFetcher<String> destination();
+    public DataFetcher<String> boardTime();
+    public DataFetcher<String> alightTime();
+    public DataFetcher<Integer> peak();
+    public DataFetcher<String> track();
+    public DataFetcher<Iterable<String>> stops();
+    public DataFetcher<String> stopNote();
+    public DataFetcher<String> occupancy();
+    public DataFetcher<Iterable<Object>> carriages();
+    public DataFetcher<Integer> arrivalDelay();
+    public DataFetcher<Integer> departureDelay();
+    public DataFetcher<String> createdDate();
+    public DataFetcher<Boolean> cancelled();
+    public DataFetcher<Iterable<Object>> alerts();
   }
   
   /**
