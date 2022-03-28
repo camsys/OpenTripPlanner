@@ -27,6 +27,7 @@ import org.opentripplanner.common.model.P2;
 import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.index.model.FrequencyDetail;
 import org.opentripplanner.index.model.StopTimesByStop;
+import org.opentripplanner.index.model.StopTimesForPatternsQuery;
 import org.opentripplanner.index.model.StopTimesInPattern;
 import org.opentripplanner.profile.BikeRentalStationInfo;
 import org.opentripplanner.routing.alertpatch.Alert;
@@ -1027,8 +1028,23 @@ public abstract class GraphPathToTripPlanConverter {
         Stop stop = pattern.getStop(stopIndex);
         RouteMatcher matcher = RouteMatcher.emptyMatcher();
         matcher.addRouteId(pattern.route.getId());
-        List<StopTimesInPattern> stips = index.stopTimesForStop(stop, time + 60, options.nextDepartureWindow, options.numberOfDepartures, true, matcher,
-                pattern.directionId, leg.headsign, null, null, false);
+
+        long startTime = time + 60;
+        int nextDepartureWindow = options.nextDepartureWindow;
+        int numberOfDepartures = options.numberOfDepartures;
+        boolean omitNonPickups = true;
+
+        StopTimesForPatternsQuery query = new StopTimesForPatternsQuery
+                                            .Builder(stop, startTime,  nextDepartureWindow, numberOfDepartures, omitNonPickups)
+                                            .numberOfDepartures(options.numberOfDepartures)
+                                            .routeMatcher(matcher)
+                                            .direction(pattern.directionId)
+                                            .headsign(leg.headsign)
+                                            .ignoreRealtimeUpdates(false)
+                                            .build();
+
+        List<StopTimesInPattern> stips = index.stopTimesForStop(query);
+
         StopTimesByStop stbs = new StopTimesByStop(stop, stips);
         stbs.limitTimes(time, options.nextDepartureWindow, options.numberOfDepartures);
 

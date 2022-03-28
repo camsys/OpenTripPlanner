@@ -46,6 +46,8 @@ import org.onebusaway.gtfs.model.Stop;
 import org.opentripplanner.api.util.StopFinder;
 import org.opentripplanner.common.model.T2;
 import org.opentripplanner.index.model.StopTimesByStop;
+import org.opentripplanner.index.model.StopTimesForPatternQuery;
+import org.opentripplanner.index.model.StopTimesForPatternsQuery;
 import org.opentripplanner.index.model.StopTimesInPattern;
 import org.opentripplanner.routing.alertpatch.AlertPatch;
 import org.opentripplanner.routing.algorithm.AStar;
@@ -328,9 +330,21 @@ public class NearbySchedulesResource {
                 }
 
                 // schedule/RT arrivals
-                List<StopTimesInPattern> stopTimesPerPattern = index.stopTimesForStop(
-                        stop, startTime, timeRange, numberOfDepartures, omitNonPickups, routeMatcher, direction, null, tripHeadsign, requiredStop,
-                    bannedAgencies, bannedRouteTypes, getTrackIds(), showCancelledTrips, includeStopsForTrip, signMode);
+                StopTimesForPatternsQuery scheduleRtQuery = new StopTimesForPatternsQuery
+                                                        .Builder(stop, startTime, timeRange, numberOfDepartures, omitNonPickups)
+                                                        .routeMatcher(routeMatcher)
+                                                        .direction(direction)
+                                                        .tripHeadsign(tripHeadsign)
+                                                        .requiredStop(requiredStop)
+                                                        .bannedAgencies(bannedAgencies)
+                                                        .bannedRouteTypes(bannedRouteTypes)
+                                                        .trackIds(getTrackIds())
+                                                        .showCancelledTrips(showCancelledTrips)
+                                                        .includeStopsForTrip(includeStopsForTrip)
+                                                        .signMode(signMode)
+                                                        .build();
+
+                List<StopTimesInPattern> stopTimesPerPattern = index.stopTimesForStop(scheduleRtQuery);
 
                 // arrivals from Solari
             	List<Entry<T2<String, String>, JsonNode>> solariMessages = this.lirrSolari.solariDataByTripAndStop.entrySet()
@@ -377,9 +391,10 @@ public class NearbySchedulesResource {
 
         	        		// TODO: what a mess... 
         	        		// NOTE: filters disabled so we don't filter trips Solari is showing
-        	        		StopTimesInPattern stopTimesForPattern = index.getStopTimesForPattern(
-                            		p, date, router.graph.timetableSnapshotSource.getTimetableSnapshot(), stop, 
-                            		Integer.MAX_VALUE, 1, true, null, null, null, true, includeStopsForTrip, false); 
+                            StopTimesForPatternQuery solariQuery = new StopTimesForPatternQuery.Builder(p, date,
+                                    router.graph.timetableSnapshotSource.getTimetableSnapshot(), stop).build();
+
+        	        		StopTimesInPattern stopTimesForPattern = index.getStopTimesForPattern(solariQuery);
                 			
         	        		if(stopTimesForPattern != null)
         	        			stopTimes.addPatternWithSolariPacket(stopTimesForPattern, solariPacket, index);

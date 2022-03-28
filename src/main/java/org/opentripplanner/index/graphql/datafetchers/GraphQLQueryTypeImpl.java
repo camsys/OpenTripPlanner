@@ -1,18 +1,8 @@
 package org.opentripplanner.index.graphql.datafetchers;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -20,7 +10,7 @@ import java.util.stream.StreamSupport;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.opentripplanner.api.model.*;
 import org.opentripplanner.api.model.alertpatch.LocalizedAlert;
-import org.opentripplanner.index.model.StopTimesByRouteAndHeadsign;
+import org.opentripplanner.index.model.*;
 import org.opentripplanner.routing.alertpatch.Alert;
 import org.opentripplanner.routing.algorithm.EarliestArrivalSearch;
 import org.opentripplanner.routing.spt.GraphPath;
@@ -460,13 +450,15 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 			}
 
 			// Get all the stopTimes starting from the fromStop
-			List<StopTimesInPattern> stips =
-					getRouter(environment).graph.index.stopTimesForStop(
-							fromStop, 
-							time/1000,
-							2 * 60 * 60,
-							10,
-							true);
+			long startTime = TimeUnit.MILLISECONDS.toSeconds(time);
+			int timeRange = (int) TimeUnit.MINUTES.toSeconds(120);
+			int numberOfDepartures = 10;
+			boolean omitNonPickups = true;
+
+			StopTimesForPatternsQuery query = new StopTimesForPatternsQuery
+					.Builder(fromStop, startTime, timeRange, numberOfDepartures, omitNonPickups).build();
+
+			List<StopTimesInPattern> stips = getRouter(environment).graph.index.stopTimesForStop(query);
 
 			// Get all the scheduled departure times after the current time
 			TreeSet<Long> uniqueDepartureTimes = new TreeSet<>();
