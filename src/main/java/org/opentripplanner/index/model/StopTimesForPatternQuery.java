@@ -37,13 +37,14 @@ public class StopTimesForPatternQuery {
         this.showCancelledTrips = builder.showCancelledTrips;
         this.includeStopsForTrip = builder.includeStopsForTrip;
         this.signMode = builder.signMode;
+        this.includeTripPatterns = builder.includeTripPatterns;
     }
     public TripPattern getPattern() {
         return pattern;
     }
 
     public Date getStartTime() {
-        return getStartTime();
+        return startTime;
     }
 
     public TimetableSnapshot getSnapshot() {
