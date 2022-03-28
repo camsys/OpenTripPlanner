@@ -147,13 +147,6 @@ public class StopTimesForPatternsQuery {
         private boolean ignoreRealtimeUpdates = false;
         private boolean includeTripPatterns = false;
 
-        public Builder(Stop stop, long startTime, int timeRange, boolean omitNonPickups){
-            this.startTime = startTime;
-            this.stop = stop;
-            this.timeRange = timeRange;
-            this.omitNonPickups = omitNonPickups;
-        }
-
         public Builder(Stop stop, long startTime, int timeRange, int numberOfDepartures, boolean omitNonPickups){
             this.startTime = startTime;
             this.stop = stop;

@@ -462,7 +462,10 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 
 			// Get all the scheduled departure times after the current time
 			TreeSet<Long> uniqueDepartureTimes = new TreeSet<>();
+
 			Map <String, Set<AgencyAndId>> cancelledTripsByDepartureTime = new HashMap<>();
+			Set<Edge> stopEdges = new HashSet<>();
+
 			for(StopTimesInPattern stip : stips) {
 				for(TripTimeShort tts : stip.times) {
 					long departureTime = (tts.serviceDay + tts.scheduledDeparture) * 1000;
@@ -478,6 +481,10 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 						tripIds.add(tts.tripId);
 					}
 					uniqueDepartureTimes.add(departureTime);
+				}
+				for(TransitStop transitStop : stip.patternFull.stopVertices){
+					stopEdges.addAll(transitStop.getIncoming());
+					stopEdges.addAll(transitStop.getOutgoing());
 				}
 			}
 
@@ -497,8 +504,11 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 			// Loop through first several results using a parallel stream for speed
 			uniqueDepartureTimes.parallelStream().limit(searchLimit).forEach(departureTime -> {
 				// Loop through all of the unique departure times and find itineraries for each departure time
-				processItinerariesForDepartureTime(itinerariesByDepartureTime, environment, departureTime,
-						fromStop, toStop);
+				processItinerariesForDepartureTime(itinerariesByDepartureTime,
+													environment,
+													departureTime,
+													fromStop,
+													toStop);
 			});
 
 			// If not enough results are found, then revert to using a non multi-threaded approach to preserve order
@@ -506,8 +516,11 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 				if(itinerariesByDepartureTime.size() >= maxResults) {
 					return;
 				}
-				processItinerariesForDepartureTime(itinerariesByDepartureTime, environment, departureTime,
-													fromStop, toStop);
+				processItinerariesForDepartureTime(itinerariesByDepartureTime,
+													environment,
+													departureTime,
+													fromStop,
+													toStop);
 			});
 
 			List<String> departuresSorted = itinerariesByDepartureTime.keySet()
@@ -599,10 +612,13 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 	}
 
 	private void processItinerariesForDepartureTime(Map<String, Set<Itinerary>> itinerariesByDepartureTime,
-						 DataFetchingEnvironment environment,
-						 Long departureTime,
-						 Stop fromStop,
-						 Stop toStop){
+													 DataFetchingEnvironment environment,
+													 Long departureTime,
+													 Stop fromStop,
+													 Stop toStop){
+
+
+
 
 		// New Routing Request
 		// Get 2 itineraries for each request
@@ -615,7 +631,8 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 				getRouter(environment).graph.index.stopVertexForStop.get(toStop));
 
 		GenericDijkstra gd = new GenericDijkstra(rr);
-		gd.skipEdgeStrategy = new OneAgencySkipEdgeStrategy(fromStop.getId().getAgencyId());
+
+		gd.setSkipEdgeStrategy(getScheduleSkipEdgeStrategy(null, fromStop.getId().getAgencyId()));
 
 		State initialState = new State(rr);
 		ShortestPathTree spt = gd.getShortestPathTree(initialState);
@@ -649,13 +666,40 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 		}
 
 	}
-	
+
+	private SkipEdgeStrategy getScheduleSkipEdgeStrategy(Set<Edge> edges, String agencyId){
+		return new MatchPatternSkipEdgeStrategy(edges, agencyId);
+	}
+
+	private Set<Edge> getEdgesForItineraries(GraphPath path) {
+		return path.edges.stream().collect(Collectors.toSet());
+	}
+
 	private String itineraryHash(Itinerary itin) {
 		return String.join("", itin.legs.stream()
 				.map(leg -> leg.startTimeFmt + leg.endTimeFmt + leg.from.stopId + leg.to.stopId)
 				.collect(Collectors.toList()));
 	}
-	
+
+	private class MatchPatternSkipEdgeStrategy extends OneAgencySkipEdgeStrategy implements SkipEdgeStrategy {
+		private Set<Edge> edges;
+
+		MatchPatternSkipEdgeStrategy(Set<Edge> edges, String agencyId) {
+			super(agencyId);
+			this.edges = edges;
+		}
+
+		@Override
+		public boolean shouldSkipEdge(Vertex origin, Vertex target, State current, Edge edge, ShortestPathTree spt,
+									  RoutingRequest traverseOptions) {
+			if(super.shouldSkipEdge(origin, target, current, edge, spt, traverseOptions) || (edges != null && !edges.contains(edge)))
+				return true;
+
+			return false;
+		}
+
+	}
+
 	private class OneAgencySkipEdgeStrategy implements SkipEdgeStrategy {
 		private String agencyId;
 		
@@ -683,7 +727,7 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 						return true;					
 				}
 			}
-
+			//System.out.println(edge.toString());
 			return false;
 		}
 		
