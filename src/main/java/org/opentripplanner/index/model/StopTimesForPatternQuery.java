@@ -22,6 +22,7 @@ public class StopTimesForPatternQuery {
     private boolean showCancelledTrips;
     private boolean includeStopsForTrip;
     private boolean signMode;
+    private boolean includeTripPatterns;
 
     private StopTimesForPatternQuery(Builder builder){
         this.pattern = builder.pattern;
@@ -91,6 +92,8 @@ public class StopTimesForPatternQuery {
         return signMode;
     }
 
+    public boolean includeTripPatterns() { return includeTripPatterns; }
+
     public static class Builder{
         private TripPattern pattern;
         private Date startTime;
@@ -105,6 +108,7 @@ public class StopTimesForPatternQuery {
         private boolean showCancelledTrips = true;
         private boolean includeStopsForTrip = false;
         private boolean signMode = false;
+        private boolean includeTripPatterns = false;
 
         public Builder(TripPattern pattern, Date startTime, TimetableSnapshot snapshot, Stop stop){
             this.pattern = pattern;
@@ -155,6 +159,11 @@ public class StopTimesForPatternQuery {
 
         public Builder signMode(boolean signMode) {
             this.signMode = signMode;
+            return this;
+        }
+
+        public Builder includeTripPatterns(boolean includeTripPatterns){
+            this.includeTripPatterns = includeTripPatterns;
             return this;
         }
 

@@ -632,15 +632,12 @@ public class GraphIndex {
 
         TimetableSnapshot snapshot = getTimetableSnapshot();
 
-        List<TripPattern> tripPatterns = null;
-        if(tripPatterns == null) {
+        // patterns from schedule
+        List<TripPattern> tripPatterns = new ArrayList<>(patternsForStop.get(query.getStop()));
 
-            // patterns from schedule
-            tripPatterns = new ArrayList<>(patternsForStop.get(query.getStop()));
-
-            // paterns added via RT
-            if (snapshot != null)
-                tripPatterns.addAll(snapshot.getTripPatternsForStop(query.getStop()));
+        // paterns added via RT
+        if (snapshot != null) {
+            tripPatterns.addAll(snapshot.getTripPatternsForStop(query.getStop()));
         }
 
         for (TripPattern pattern : tripPatterns) {
@@ -664,7 +661,6 @@ public class GraphIndex {
                 continue;
             }
 
-            // TODO: Refactor this existing mess
             StopTimesForPatternQuery patternQuery = new StopTimesForPatternQuery.Builder(pattern, date, snapshot, query.getStop())
                                                     .timeRange(query.getTimeRange())
                                                     .numberOfDepartures(query.getNumberOfDepartures())
@@ -675,6 +671,7 @@ public class GraphIndex {
                                                     .showCancelledTrips(query.isShowCancelledTrips())
                                                     .includeStopsForTrip(query.isIncludeStopsForTrip())
                                                     .signMode(query.isSignMode())
+                                                    .includeTripPatterns(query.includeTripPatterns())
                                                     .build();
 
             StopTimesInPattern stip = getStopTimesForPattern(patternQuery);
@@ -757,7 +754,7 @@ public class GraphIndex {
         }
 
         if (pq.size() != 0) {
-            StopTimesInPattern stopTimes = new StopTimesInPattern(query.getPattern());
+            StopTimesInPattern stopTimes = new StopTimesInPattern(query.getPattern(), query.includeTripPatterns());
             while (pq.size() != 0) {
                 stopTimes.times.add(0, pq.pop());
             }

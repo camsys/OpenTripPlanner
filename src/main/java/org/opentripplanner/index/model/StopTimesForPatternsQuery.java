@@ -29,6 +29,7 @@ public class StopTimesForPatternsQuery {
     private boolean includeStopsForTrip;
     private boolean signMode;
     private boolean ignoreRealtimeUpdates;
+    private boolean includeTripPatterns;
 
     private StopTimesForPatternsQuery(Builder builder){
         this.startTime = builder.startTime;
@@ -49,6 +50,7 @@ public class StopTimesForPatternsQuery {
         this.includeStopsForTrip = builder.includeStopsForTrip;
         this.signMode = builder.signMode;
         this.ignoreRealtimeUpdates = builder.ignoreRealtimeUpdates;
+        this.includeTripPatterns = builder.includeTripPatterns;
 
     }
 
@@ -120,6 +122,10 @@ public class StopTimesForPatternsQuery {
         return signMode;
     }
 
+    public boolean includeTripPatterns(){
+        return includeTripPatterns;
+    }
+
     public static class Builder{
         private long startTime;
         private Stop stop;
@@ -139,6 +145,7 @@ public class StopTimesForPatternsQuery {
         private boolean includeStopsForTrip;
         private boolean signMode;
         private boolean ignoreRealtimeUpdates = false;
+        private boolean includeTripPatterns = false;
 
         public Builder(Stop stop, long startTime, int timeRange, boolean omitNonPickups){
             this.startTime = startTime;
@@ -223,6 +230,11 @@ public class StopTimesForPatternsQuery {
 
         public Builder ignoreRealtimeUpdates(boolean ignoreRealtimeUpdates){
             this.ignoreRealtimeUpdates = ignoreRealtimeUpdates;
+            return this;
+        }
+
+        public Builder includeTripPatterns(boolean includeTripPatterns){
+            this.includeTripPatterns = includeTripPatterns;
             return this;
         }
 

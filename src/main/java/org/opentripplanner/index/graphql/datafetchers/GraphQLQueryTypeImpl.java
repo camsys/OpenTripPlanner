@@ -29,9 +29,6 @@ import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLQueryTypeInputs.*;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
 import org.opentripplanner.index.graphql.generated.GraphQLTypes.GraphQLNyMtaAdaFlag;
-import org.opentripplanner.index.model.StopShort;
-import org.opentripplanner.index.model.StopTimesInPattern;
-import org.opentripplanner.index.model.TripTimeShort;
 import org.opentripplanner.routing.algorithm.GenericDijkstra;
 import org.opentripplanner.routing.algorithm.strategies.SkipEdgeStrategy;
 import org.opentripplanner.routing.core.OptimizeType;
@@ -456,7 +453,10 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 			boolean omitNonPickups = true;
 
 			StopTimesForPatternsQuery query = new StopTimesForPatternsQuery
-					.Builder(fromStop, startTime, timeRange, numberOfDepartures, omitNonPickups).build();
+											.Builder(fromStop, startTime, timeRange, numberOfDepartures, omitNonPickups)
+											.showCancelledTrips(true)
+											.includeTripPatterns(true)
+											.build();
 
 			List<StopTimesInPattern> stips = getRouter(environment).graph.index.stopTimesForStop(query);
 
