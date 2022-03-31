@@ -24,6 +24,30 @@ public class GraphQLAlertImpl implements GraphQLDataFetchers.GraphQLAlert {
 	}
 
 	@Override
+	public DataFetcher<String> id() {
+		return environment -> {
+			AlertPatch e = environment.getSource();
+			return e.getAlert().id;
+		};
+	}
+
+	@Override
+	public DataFetcher<String> alertType() {
+		return environment -> {
+			AlertPatch e = environment.getSource();
+			return e.getAlert().alertType.toString();
+		};
+	}
+
+	@Override
+	public DataFetcher<String> humanReadableActivePeriod() {
+		return environment -> {
+			AlertPatch e = environment.getSource();
+			return e.getAlert().humanReadableActivePeriod.toString();
+		};
+	}
+
+	@Override
 	public DataFetcher<String> feed() {
 		 return environment -> {
 			AlertPatch e = environment.getSource();

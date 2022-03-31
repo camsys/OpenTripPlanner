@@ -40,6 +40,15 @@ type Alert {
     """The feed in which this alert was published"""
     feed: String
 
+    """id"""
+    id: String
+
+    """Type of alert"""
+    alertType: String
+
+    """Human readable"""
+    humanReadableActivePeriod: String
+
     """
     Agency affected by the disruption. Note that this value is present only if the
     disruption has an effect on all operations of the agency.

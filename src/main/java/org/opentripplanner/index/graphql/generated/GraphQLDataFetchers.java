@@ -37,6 +37,9 @@ public class GraphQLDataFetchers {
   /** Alert of a current or upcoming disruption in public transportation */
   public interface GraphQLAlert {
     public DataFetcher<Integer> alertHash();
+    public DataFetcher<String> id();
+    public DataFetcher<String> alertType();
+    public DataFetcher<String> humanReadableActivePeriod();
     public DataFetcher<String> feed();
     public DataFetcher<Object> agency();
     public DataFetcher<Object> route();
