@@ -451,7 +451,7 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 
 			// Get all the stopTimes starting from the fromStop
 			long startTime = TimeUnit.MILLISECONDS.toSeconds(time);
-			int timeRange = (int) TimeUnit.MINUTES.toSeconds(120);
+			int timeRange = (int) TimeUnit.HOURS.toSeconds(8);
 			int numberOfDepartures = 10;
 			boolean omitNonPickups = true;
 
