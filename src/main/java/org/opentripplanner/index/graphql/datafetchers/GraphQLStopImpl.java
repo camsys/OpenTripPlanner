@@ -5,6 +5,7 @@ import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -22,9 +23,7 @@ import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
 import org.opentripplanner.index.graphql.generated.GraphQLTypes.GraphQLLocationType;
 import org.opentripplanner.index.graphql.generated.GraphQLTypes.GraphQLNyMtaAdaFlag;
 import org.opentripplanner.index.graphql.generated.GraphQLTypes.GraphQLWheelchairBoarding;
-import org.opentripplanner.index.model.EquipmentShort;
-import org.opentripplanner.index.model.StopTimesInPattern;
-import org.opentripplanner.index.model.TripTimeShort;
+import org.opentripplanner.index.model.*;
 import org.opentripplanner.routing.alertpatch.Alert;
 import org.opentripplanner.routing.alertpatch.AlertPatch;
 import org.opentripplanner.routing.core.TransferTable;
@@ -244,10 +243,21 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 					int stopIndex = pattern.getStops().indexOf(e);
 					long ourArrivalEpochSeconds = (new ServiceDate().getAsDate().getTime()/1000) + tripTimes.getArrivalTime(stopIndex);
 
+					Stop stop = e;
+					long startTime = ourArrivalEpochSeconds;
+					int timeRange = (int) TimeUnit.MINUTES.toSeconds(30);
+					int numberOfDepartures = 1000;
+					boolean omitNonPickups = true;
+					boolean isSignMode = environment.<GraphQLRequestContext>getContext().getSignMode();
+
 		    		// get arrivals at this stop within the following 30m of our arrival
+					StopTimesForPatternsQuery query = new StopTimesForPatternsQuery
+														.Builder(stop, startTime, timeRange, numberOfDepartures, omitNonPickups)
+														.signMode(isSignMode)
+														.build();
+
 					Collection<StopTimesInPattern> stip = 
-								getGraphIndex(environment).stopTimesForStop(e, ourArrivalEpochSeconds, 30 * 60, 1000, 
-										true, environment.<GraphQLRequestContext>getContext().getSignMode());
+								getGraphIndex(environment).stopTimesForStop(query);
 
 					return stip.stream()
 							.map(r -> { return getGraphIndex(environment).routeForId.get(r.route.id); })
@@ -291,8 +301,19 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 								Stop stop = (Stop)_stop;
 
 								// get arrivals at this stop within the following 30m of our arrival
-								Collection<StopTimesInPattern> stip = getGraphIndex(environment).stopTimesForStop(stop, ourArrivalEpochSeconds, 30 * 60, 1000,
-										true, environment.<GraphQLRequestContext>getContext().getSignMode());
+								long startTime = ourArrivalEpochSeconds;
+								int timeRange = (int) TimeUnit.MINUTES.toSeconds(30);
+								int numberOfDepartures = 1000;
+								boolean omitNonPickups = true;
+								boolean isSignMode = environment.<GraphQLRequestContext>getContext().getSignMode();
+
+								// get arrivals at this stop within the following 30m of our arrival
+								StopTimesForPatternsQuery query = new StopTimesForPatternsQuery
+										.Builder(stop, startTime, timeRange, numberOfDepartures, omitNonPickups)
+										.signMode(isSignMode)
+										.build();
+
+								Collection<StopTimesInPattern> stip = getGraphIndex(environment).stopTimesForStop(query);
 
 								routes.addAll(stip.stream()
 										.map(r -> { return getGraphIndex(environment).routeForId.get(r.route.id); })

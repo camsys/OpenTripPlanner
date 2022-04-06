@@ -25,6 +25,7 @@ import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -36,6 +37,7 @@ import org.onebusaway.gtfs.services.GtfsRelationalDao;
 import org.opentripplanner.ConstantsForTests;
 import org.opentripplanner.gtfs.GtfsContext;
 import org.opentripplanner.gtfs.GtfsLibrary;
+import org.opentripplanner.index.model.StopTimesForPatternsQuery;
 import org.opentripplanner.index.model.StopTimesInPattern;
 import org.opentripplanner.index.model.TripTimeShort;
 import org.opentripplanner.routing.edgetype.Timetable;
@@ -328,7 +330,14 @@ public class TimetableSnapshotSourceTest {
         assertEquals("Added trip should not be found in scheduled time table", -1, scheduleTripIndex);
 
         // find next trip time at stop A, ensure it is correct
-        List<StopTimesInPattern> stopTimes = graph.index.stopTimesForStop(stopA, midnightSecondsSinceEpoch + (8 * 3600) + (25 * 60), 10 * 60, 1, false);
+        long startTime = midnightSecondsSinceEpoch + (8 * 3600) + (25 * 60);
+        int timeRange = (int) TimeUnit.MINUTES.toSeconds(10);
+        int numberOfDepartures = 1;
+        boolean omitNonPickups = false;
+
+        StopTimesForPatternsQuery query = new StopTimesForPatternsQuery
+                                    .Builder(stopA, startTime, timeRange, numberOfDepartures, omitNonPickups).build();
+        List<StopTimesInPattern> stopTimes = graph.index.stopTimesForStop(query);
         assertFalse(stopTimes.isEmpty());
         StopTimesInPattern stip = stopTimes.get(0);
         assertFalse(stip.times.isEmpty());

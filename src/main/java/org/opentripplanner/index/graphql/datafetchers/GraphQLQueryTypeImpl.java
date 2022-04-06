@@ -1,18 +1,8 @@
 package org.opentripplanner.index.graphql.datafetchers;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -20,7 +10,7 @@ import java.util.stream.StreamSupport;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.opentripplanner.api.model.*;
 import org.opentripplanner.api.model.alertpatch.LocalizedAlert;
-import org.opentripplanner.index.model.StopTimesByRouteAndHeadsign;
+import org.opentripplanner.index.model.*;
 import org.opentripplanner.routing.alertpatch.Alert;
 import org.opentripplanner.routing.algorithm.EarliestArrivalSearch;
 import org.opentripplanner.routing.spt.GraphPath;
@@ -39,9 +29,6 @@ import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLQueryTypeInputs.*;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
 import org.opentripplanner.index.graphql.generated.GraphQLTypes.GraphQLNyMtaAdaFlag;
-import org.opentripplanner.index.model.StopShort;
-import org.opentripplanner.index.model.StopTimesInPattern;
-import org.opentripplanner.index.model.TripTimeShort;
 import org.opentripplanner.routing.algorithm.GenericDijkstra;
 import org.opentripplanner.routing.algorithm.strategies.SkipEdgeStrategy;
 import org.opentripplanner.routing.core.OptimizeType;
@@ -445,13 +432,16 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 	@Override
 	public DataFetcher<Iterable<Object>> schedule() {
 		return environment -> {
+
+			Graph graph = getRouter(environment).graph;
+
 			GraphQLQueryTypeScheduleArgsInput input = 
 					new GraphQLQueryTypeScheduleArgsInput(environment.getArguments());
 
-			Stop fromStop = getRouter(environment).graph.index.stopForId.get(
+			Stop fromStop = graph.index.stopForId.get(
 					AgencyAndId.convertFromString(input.getGraphQLFromGtfsId()));
 
-			Stop toStop = getRouter(environment).graph.index.stopForId.get(
+			Stop toStop = graph.index.stopForId.get(
 					AgencyAndId.convertFromString(input.getGraphQLToGtfsId()));
 						
 			long time = System.currentTimeMillis();
@@ -460,17 +450,33 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 			}
 
 			// Get all the stopTimes starting from the fromStop
-			List<StopTimesInPattern> stips =
-					getRouter(environment).graph.index.stopTimesForStop(
-							fromStop, 
-							time/1000,
-							2 * 60 * 60,
-							10,
-							true);
+			long startTime = TimeUnit.MILLISECONDS.toSeconds(time);
+			int timeRange = (int) TimeUnit.HOURS.toSeconds(8);
+			int numberOfDepartures = 10;
+			boolean omitNonPickups = true;
+
+			StopTimesForPatternsQuery query = new StopTimesForPatternsQuery
+											.Builder(fromStop, startTime, timeRange, numberOfDepartures, omitNonPickups)
+											.showCancelledTrips(true)
+											.includeTripPatterns(true)
+											.build();
+
+			List<StopTimesInPattern> stips = graph.index.stopTimesForStop(query);
 
 			// Get all the scheduled departure times after the current time
 			TreeSet<Long> uniqueDepartureTimes = new TreeSet<>();
+
+			// Store cancelled trips info
 			Map <String, Set<AgencyAndId>> cancelledTripsByDepartureTime = new HashMap<>();
+
+			// Try to filter list of stips
+			List<StopTimesInPattern> filteredStipsFrom = filterPatternStops(stips, fromStop, toStop, graph);
+
+			if(!filteredStipsFrom.isEmpty()){
+				stips = filteredStipsFrom;
+			}
+
+			// Loop through stop times in pattern and get departure times and cancelled trip info
 			for(StopTimesInPattern stip : stips) {
 				for(TripTimeShort tts : stip.times) {
 					long departureTime = (tts.serviceDay + tts.scheduledDeparture) * 1000;
@@ -500,13 +506,17 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 			}
 
 			Map<String, Set<Itinerary>> itinerariesByDepartureTime = new ConcurrentHashMap<>();
-			int searchLimit = maxResults*2;
+			int searchLimit = maxResults;
 
 			// Loop through first several results using a parallel stream for speed
 			uniqueDepartureTimes.parallelStream().limit(searchLimit).forEach(departureTime -> {
 				// Loop through all of the unique departure times and find itineraries for each departure time
-				processItinerariesForDepartureTime(itinerariesByDepartureTime, environment, departureTime,
-						fromStop, toStop);
+				processItinerariesForDepartureTime( graph,
+													itinerariesByDepartureTime,
+													environment,
+													departureTime,
+													fromStop,
+													toStop);
 			});
 
 			// If not enough results are found, then revert to using a non multi-threaded approach to preserve order
@@ -514,8 +524,12 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 				if(itinerariesByDepartureTime.size() >= maxResults) {
 					return;
 				}
-				processItinerariesForDepartureTime(itinerariesByDepartureTime, environment, departureTime,
-													fromStop, toStop);
+				processItinerariesForDepartureTime( graph,
+													itinerariesByDepartureTime,
+													environment,
+													departureTime,
+													fromStop,
+													toStop);
 			});
 
 			List<String> departuresSorted = itinerariesByDepartureTime.keySet()
@@ -578,6 +592,71 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 	
 	}
 
+	private List<StopTimesInPattern> filterPatternStops(List<StopTimesInPattern> stips,
+														Stop fromStop,
+														Stop toStop,
+														Graph graph) {
+		List<StopTimesInPattern> filteredStipsFrom = new ArrayList();
+
+		// Loop through all from stop patterns
+		for(StopTimesInPattern stip : stips) {
+			List<Stop> stops = stip.patternFull.getStops();
+			if(shouldAddStopPatternStops(stip.patternFull.getTrips(), stops, fromStop, toStop, graph)){
+				filteredStipsFrom.add(stip);
+			}
+		}
+		return filteredStipsFrom;
+	}
+
+
+	private boolean shouldAddStopPatternStops(List<Trip> patternTrips,
+											  List<Stop> stops,
+											  Stop fromStop,
+											  Stop destinationStop,
+											  Graph graph){
+		// Found Stop Flag
+		boolean foundStop = false;
+
+		// Go through all the stops in the pattern/trip
+		for(Stop stop : stops){
+			// if the BOARDING stop is found then we start working from there
+			if(!foundStop && stop.getId().equals(fromStop.getId())){
+				foundStop = true;
+			}
+			// else process stops after the BOARDING stop
+			else if(foundStop){
+				// if DESTINATION stop is on same pattern then return true
+				if(stop.getId().equals(destinationStop.getId())){
+					return true;
+				}
+				else {
+					// check to see if one of the stops after the BOARDING stop has any transfers
+					boolean hasStopTransfer = graph.getTransferTable().hasStopTransfer(stop, stop);
+					// if a stop is found with a process check to see if it leads to our DESTINATION stop
+					if (hasStopTransfer) {
+						// check all pattern trips to see which trip(s) have a transfer
+						// if any of them have a transfer then recurse
+						for (Trip patternTrip : patternTrips) {
+							// Get list of trips that you can transfer to
+							List<AgencyAndId> transferTripIds = graph.getTransferTable()
+									.getPreferredTransfers(stop.getId(), stop.getId(), patternTrip, fromStop);
+							// Recurse through transfer trips to see if any of them lead to the DESTINATION stop
+							for (AgencyAndId transferTripId : transferTripIds) {
+								Trip transferTrip = graph.index.tripForId.get(transferTripId);
+								List<Stop> tripStops = graph.index.patternForTrip.get(transferTrip).getStops();
+								List<Trip> trips = (Collections.singletonList(transferTrip));
+								if(shouldAddStopPatternStops(trips, tripStops, stop, destinationStop, graph)){
+									return true;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
+
 	private Boolean isTripCancelled(String serviceDate, AgencyAndId tripId,
 									Map<String, Set<AgencyAndId>> cancelledTripsByDepartureTime) {
 		if(serviceDate != null && cancelledTripsByDepartureTime.get(serviceDate) != null){
@@ -606,11 +685,13 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 		return null;
 	}
 
-	private void processItinerariesForDepartureTime(Map<String, Set<Itinerary>> itinerariesByDepartureTime,
-						 DataFetchingEnvironment environment,
-						 Long departureTime,
-						 Stop fromStop,
-						 Stop toStop){
+	private void processItinerariesForDepartureTime( Graph graph,
+													 Map<String, Set<Itinerary>> itinerariesByDepartureTime,
+													 DataFetchingEnvironment environment,
+													 Long departureTime,
+													 Stop fromStop,
+													 Stop toStop){
+
 
 		// New Routing Request
 		// Get 2 itineraries for each request
@@ -618,12 +699,11 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 		rr.setDateTime(new Date(departureTime - 1));
 		rr.setNumItineraries(2);
 		rr.setMode(TraverseMode.TRANSIT);
-		rr.setRoutingContext(getRouter(environment).graph,
-				getRouter(environment).graph.index.stopVertexForStop.get(fromStop),
-				getRouter(environment).graph.index.stopVertexForStop.get(toStop));
+		rr.setRoutingContext(graph, graph.index.stopVertexForStop.get(fromStop), graph.index.stopVertexForStop.get(toStop));
 
 		GenericDijkstra gd = new GenericDijkstra(rr);
-		gd.skipEdgeStrategy = new OneAgencySkipEdgeStrategy(fromStop.getId().getAgencyId());
+
+		gd.setSkipEdgeStrategy(getScheduleSkipEdgeStrategy(null, fromStop.getId().getAgencyId()));
 
 		State initialState = new State(rr);
 		ShortestPathTree spt = gd.getShortestPathTree(initialState);
@@ -657,13 +737,40 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 		}
 
 	}
-	
+
+	private SkipEdgeStrategy getScheduleSkipEdgeStrategy(Set<Edge> edges, String agencyId){
+		return new MatchPatternSkipEdgeStrategy(edges, agencyId);
+	}
+
+	private Set<Edge> getEdgesForItineraries(GraphPath path) {
+		return path.edges.stream().collect(Collectors.toSet());
+	}
+
 	private String itineraryHash(Itinerary itin) {
 		return String.join("", itin.legs.stream()
 				.map(leg -> leg.startTimeFmt + leg.endTimeFmt + leg.from.stopId + leg.to.stopId)
 				.collect(Collectors.toList()));
 	}
-	
+
+	private class MatchPatternSkipEdgeStrategy extends OneAgencySkipEdgeStrategy implements SkipEdgeStrategy {
+		private Set<Edge> edges;
+
+		MatchPatternSkipEdgeStrategy(Set<Edge> edges, String agencyId) {
+			super(agencyId);
+			this.edges = edges;
+		}
+
+		@Override
+		public boolean shouldSkipEdge(Vertex origin, Vertex target, State current, Edge edge, ShortestPathTree spt,
+									  RoutingRequest traverseOptions) {
+			if(super.shouldSkipEdge(origin, target, current, edge, spt, traverseOptions) || (edges != null && !edges.contains(edge)))
+				return true;
+
+			return false;
+		}
+
+	}
+
 	private class OneAgencySkipEdgeStrategy implements SkipEdgeStrategy {
 		private String agencyId;
 		
@@ -691,7 +798,7 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 						return true;					
 				}
 			}
-
+			//System.out.println(edge.toString());
 			return false;
 		}
 		

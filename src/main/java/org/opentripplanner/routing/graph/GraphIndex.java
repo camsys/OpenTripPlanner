@@ -31,6 +31,8 @@ import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.common.model.P2;
 import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.index.IndexGraphQLSchema;
+import org.opentripplanner.index.model.StopTimesForPatternQuery;
+import org.opentripplanner.index.model.StopTimesForPatternsQuery;
 import org.opentripplanner.index.model.StopTimesInPattern;
 import org.opentripplanner.index.model.TripTimeShort;
 import org.opentripplanner.model.StopPattern;
@@ -111,7 +113,7 @@ public class GraphIndex {
 	public RemoteCSVBackedHashMap mtaSubwayComplexes = null;
 
 	public LIRRSolariDataService lirrSolari = null;
-	
+
     /* Should eventually be replaced with new serviceId indexes. */
     private final CalendarService calendarService;
     private final Map<AgencyAndId,Integer> serviceCodes;
@@ -139,7 +141,7 @@ public class GraphIndex {
 
     public GraphIndex (Graph graph) {
     	LOG.info("Indexing graph...");
-        
+
         for (String feedId : graph.getFeedIds()) {
             for (Agency agency : graph.getAgencies(feedId)) {
                 Map<String, Agency> agencyForId = agenciesForFeedId.getOrDefault(feedId, new HashMap<>());
@@ -151,7 +153,7 @@ public class GraphIndex {
 
         Collection<Edge> edges = graph.getEdges();
 
-        /* We will keep a separate set of all vertices in case some have the same label. 
+        /* We will keep a separate set of all vertices in case some have the same label.
          * Maybe we should just guarantee unique labels. */
         Set<Vertex> vertices = Sets.newHashSet();
         for (Edge edge : edges) {
@@ -180,13 +182,13 @@ public class GraphIndex {
                 stopsForParentStation.put(parent, stop);
             }
         }
-        
+
         for (TransitStop stopVertex : stopVertexForStop.values()) {
             Envelope envelope = new Envelope(stopVertex.getCoordinate());
-            
+
             if(stopVertex.getLat() == StopTime.MISSING_VALUE && stopVertex.getLon() == StopTime.MISSING_VALUE)
             	continue;
-            
+
             stopSpatialIndex.insert(envelope, stopVertex);
         }
         for (TripPattern pattern : patternForId.values()) {
@@ -210,7 +212,7 @@ public class GraphIndex {
         serviceCodes = graph.serviceCodes;
         this.graph = graph;
         graphQL = GraphQL.newGraphQL(new IndexGraphQLSchema(this).indexSchema).build();
-/*        
+/*
         graphQL = new GraphQL(
                 new IndexGraphQLSchema(this).indexSchema,
                 new ExecutorServiceExecutionStrategy(Executors.newCachedThreadPool(
@@ -218,11 +220,11 @@ public class GraphIndex {
                 )));
 */
         LOG.info("Done indexing graph.");
-        
+
 
         // go through all vertices and for each entrance, walk all the outgoing edges--
-        // if there's at least one accessible path to a platform (defined by a location type that isn't 
-        // connected via a pathway), mark this entrance "accessible". 
+        // if there's at least one accessible path to a platform (defined by a location type that isn't
+        // connected via a pathway), mark this entrance "accessible".
         //
         // Also, only change falses to true--if a prior process (e.g. GTFS) has marked a stop accessible, don't
         // second guess that assessment
@@ -236,17 +238,17 @@ public class GraphIndex {
 //        	System.out.println("Starting pathway walk from " + v.getLabel());
 
         	TransitStationStop tss = (TransitStationStop)v;
-        	
+
         	if(v.getLabel() == null || v.getLabel().isEmpty())
         		continue;
-        	
+
         	Stop thisStop = this.stopForId.get(GtfsLibrary.convertIdFromString(v.getLabel()));
 
         	if(thisStop == null)
           		continue;
-  
-          	AgencyAndId parentStopId = (thisStop.getParentStation() != null) 
-        			? new AgencyAndId(thisStop.getId().getAgencyId(), thisStop.getParentStation()) 
+
+          	AgencyAndId parentStopId = (thisStop.getParentStation() != null)
+        			? new AgencyAndId(thisStop.getId().getAgencyId(), thisStop.getParentStation())
         			: thisStop.getId();
 
         	HashSet<PathwayEdge> equipmentAccessFromHere = equipmentEdgesForStationId.get(parentStopId);
@@ -256,13 +258,13 @@ public class GraphIndex {
         	HashSet<Vertex> connectionsFromHere = new HashSet<Vertex>();
         	HashSet<Vertex> visitedList = new HashSet<Vertex>();
         	boolean initialState = graph.stopAccessibilityStrategy.transitStopEvaluateGTFSAccessibilityFlag(tss.getStop());
-        	
-        	Boolean hasAtLeastOneAccessiblePath = walkPathwayEdges(v, connectionsFromHere, equipmentAccessFromHere, visitedList, initialState, 0);       
+
+        	Boolean hasAtLeastOneAccessiblePath = walkPathwayEdges(v, connectionsFromHere, equipmentAccessFromHere, visitedList, initialState, 0);
         	if(hasAtLeastOneAccessiblePath != null && v instanceof TransitStop) {
             	TransitStop ts = (TransitStop)v;
         		ts.setWheelchairEntrance(hasAtLeastOneAccessiblePath);
         	}
-        	
+
         	// change from the two AgencyAndId formats used in this codebase (sigh...)
         	connectionsFromMap.put(v.getLabel().replace(":", "_"), connectionsFromHere);
 
@@ -270,11 +272,11 @@ public class GraphIndex {
         	if(thisStop != null)
 	        	equipmentEdgesForStationId.put(parentStopId, equipmentAccessFromHere);
         }
-        
+
         LOG.info("done");
-        
+
         // MTA specific services only used at runtime, not during bundle building
-    	if(System.getProperty("isBundleBuilder") == null || !System.getProperty("isBundleBuilder").equals("true")) { 	
+    	if(System.getProperty("isBundleBuilder") == null || !System.getProperty("isBundleBuilder").equals("true")) {
 	    	try {
 	    		mtaSubwayStations = new RemoteCSVBackedHashMap("http://web.mta.info/developers/data/nyct/subway/Stations.csv", "MTASBWY");
 	    		mtaSubwayComplexes = new RemoteCSVBackedHashMap("http://web.mta.info/developers/data/nyct/subway/StationComplexes.csv", "MTASBWY");
@@ -306,32 +308,32 @@ public class GraphIndex {
         return null;
     }
 
-	private Boolean walkPathwayEdges(Vertex v, HashSet<Vertex> connectionsFromHere, HashSet<PathwayEdge> equipmentAccessFromHere, 
-			HashSet<Vertex> visitedList, Boolean accessibleToHere, int depth) {    	
+	private Boolean walkPathwayEdges(Vertex v, HashSet<Vertex> connectionsFromHere, HashSet<PathwayEdge> equipmentAccessFromHere,
+			HashSet<Vertex> visitedList, Boolean accessibleToHere, int depth) {
 
 		// stop if we've been here before
         if(visitedList.contains(v))
         	return accessibleToHere;
         visitedList.add(v);
-        
+
 		int newDepth = depth + 1;
-    	
+
 		TransitStationStop tss = (TransitStationStop)v;
         Stop s = tss.getStop();
 
 //    	System.out.println(StringUtils.repeat(">", newDepth) + " Vertex:" + v.getLabel() + " accessibleToHere=" + accessibleToHere);
-    	
+
         if(s.getLocationType() == Stop.LOCATION_TYPE_ENTRANCE_EXIT || s.getLocationType() == Stop.LOCATION_TYPE_STOP)
-        	connectionsFromHere.add(v); 
+        	connectionsFromHere.add(v);
 
         // don't evaluate bus stops or stations with no entrances
-        if(v instanceof TransitStop && !((TransitStop) v).hasEntrances())        
+        if(v instanceof TransitStop && !((TransitStop) v).hasEntrances())
         	return accessibleToHere;
-        
+
         // if there are no pathways to evaluate, stop here
         if(v.getOutgoing().stream().filter(PathwayEdge.class::isInstance).count() == 0)
         	return accessibleToHere;
-        	        
+
     	// don't go out of the station--terminate search
         if(s.getLocationType() == Stop.LOCATION_TYPE_ENTRANCE_EXIT)
         	return accessibleToHere;
@@ -342,7 +344,7 @@ public class GraphIndex {
     		if(!(e instanceof PathwayEdge))
     			continue;
 
-        	PathwayEdge pe = (PathwayEdge)e;   
+        	PathwayEdge pe = (PathwayEdge)e;
 //        	System.out.println(StringUtils.repeat(">", newDepth) + " Pathway Edge:" + pe.getPathwayId() + " accessible=" + e.isWheelchairAccessible() + " mode=" + pe.getPathwayMode());
 
     		boolean newAccessibleToHere = accessibleToHere;
@@ -350,20 +352,20 @@ public class GraphIndex {
     		if(pe.getElevatorId() != null) {
     			equipmentAccessFromHere.add(pe);
     		}
-    		
+
     		// "generic nodes" in GTFS don't have lat/longs, so use the station's coordinate
-    		// to display the node on a map. 
+    		// to display the node on a map.
     		Coordinate toLocation = e.getToVertex().getCoordinate();
     		if(toLocation.x == StopTime.MISSING_VALUE || toLocation.y == StopTime.MISSING_VALUE)
-    			toLocation = v.getCoordinate();    		
+    			toLocation = v.getCoordinate();
     		pe.setGeometry(v.getCoordinate(), toLocation);
-    		
+
     		// false is sticky--that is, once we get one false, the whole result is false
     		if(newAccessibleToHere == true)
     			newAccessibleToHere = e.isWheelchairAccessible();
-    		
+
     		// true is sticky here
-    		if(walkPathwayEdges(e.getToVertex(), connectionsFromHere, equipmentAccessFromHere, visitedList, newAccessibleToHere, newDepth) 
+    		if(walkPathwayEdges(e.getToVertex(), connectionsFromHere, equipmentAccessFromHere, visitedList, newAccessibleToHere, newDepth)
     			&& !hasAtLeastOneAccessiblePath)
     			hasAtLeastOneAccessiblePath = true;
     	}
@@ -371,7 +373,7 @@ public class GraphIndex {
     	return hasAtLeastOneAccessiblePath;
     }
 
-    
+
     /**
      * Stop clustering is slow to perform and only used in profile routing for the moment.
      * Therefore it is not done automatically, and any method requiring stop clusters should call this method
@@ -573,15 +575,37 @@ public class GraphIndex {
      * Fetches two departures for each pattern during the next 24 hours as default
      */
     public Collection<StopTimesInPattern> stopTimesForStop(Stop stop, boolean omitNonPickups) {
-        return stopTimesForStop(stop, System.currentTimeMillis()/1000, 24 * 60 * 60, 2, omitNonPickups);
+        long startTime = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
+        int timeRange = (int) TimeUnit.DAYS.toSeconds(1);
+        int numberOfDepartures = 2;
+
+        StopTimesForPatternsQuery query = new StopTimesForPatternsQuery
+                                        .Builder(stop, startTime,timeRange,numberOfDepartures, omitNonPickups).build();
+
+        return stopTimesForStop(query);
     }
 
+    /*// StopImpl
+    public List<StopTimesInPattern> stopTimesForStop(Stop stop, long startTime, int timeRange, int numberOfDepartures, boolean omitNonPickups, boolean signMode) {
+        return stopTimesForStop(stop, startTime, timeRange, numberOfDepartures, omitNonPickups, RouteMatcher.emptyMatcher(), null, null, null, null, null, null, null, false, false, signMode);
+    }
+
+    // Other Stuff
+    public List<StopTimesInPattern> stopTimesForStop(Stop stop, long startTime, int timeRange, int numberOfDepartures, boolean omitNonPickups) {
+        return stopTimesForStop(stop, startTime, timeRange, numberOfDepartures, omitNonPickups, RouteMatcher.emptyMatcher(), null);
+    }
+
+    public List<StopTimesInPattern> stopTimesForStop(Stop stop, long startTime, int timeRange, int numberOfDepartures, boolean omitNonPickups, RouteMatcher routeMatcher, String headsign) {
+        return stopTimesForStop(stop, startTime, timeRange, numberOfDepartures, omitNonPickups, routeMatcher, null, headsign, null, null, false);
+    }
 
     public List<StopTimesInPattern> stopTimesForStop(Stop stop, long startTime, int timeRange, int numberOfDepartures, boolean omitNonPickups,
                                                      RouteMatcher routeMatcher, Integer direction, String headsign, Set<String> bannedAgencies, Set<Integer> bannedRouteTypes, boolean ignoreRealtimeUpdates) {
         return stopTimesForStop(stop, startTime, timeRange, numberOfDepartures, omitNonPickups, routeMatcher, direction,
                 headsign, null, null, bannedAgencies, bannedRouteTypes, null, false, false, false);
-    }
+    }*/
+
+
 
     /**
      * Fetch upcoming vehicle departures from a stop.
@@ -591,81 +615,84 @@ public class GraphIndex {
      * eg. with sleeper trains.
      *
      * TODO: Add frequency based trips
-     * @param stop Stop object to perform the search for
-     * @param startTime Start time for the search. Seconds from UNIX epoch
-     * @param timeRange Searches forward for timeRange seconds from startTime
-     * @param numberOfDepartures Number of departures to fetch per pattern
-     * @param omitNonPickups If true, do not include vehicles that will not pick up passengers.
-     * @return
+     * @param query object with multiple parameters
+     * @return List
      */
     // TODO: Refactor this existing mess
-    public List<StopTimesInPattern> stopTimesForStop(Stop stop, long startTime, int timeRange, int numberOfDepartures,
-                                                     boolean omitNonPickups, RouteMatcher routeMatcher,
-                                                     Integer direction, String headsign, String tripHeadsign,
-                                                     Stop requiredStop, Set<String> bannedAgencies,
-                                                     Set<Integer> bannedRouteTypes, Collection<String> trackIds,
-                                                     boolean showCancelledTrips, boolean includeStopsForTrip,
-                                                     boolean signMode) {
+    public List<StopTimesInPattern> stopTimesForStop(StopTimesForPatternsQuery query) {
 
     	List<StopTimesInPattern> ret = new ArrayList<>();
-        
+
+    	long startTime = query.getStartTime();
+
     	if (startTime <= 0)
             startTime = System.currentTimeMillis() / 1000;
-    	
+
         Date date = new Date(startTime * 1000);
-    	
-        List<TripPattern> tripPatterns = null;
-    	TimetableSnapshot snapshot = getTimetableSnapshot();
 
-    	// patterns from schedule
-        tripPatterns = new ArrayList<>(patternsForStop.get(stop));
-        	
+        TimetableSnapshot snapshot = getTimetableSnapshot();
+
+        // patterns from schedule
+        List<TripPattern> tripPatterns = new ArrayList<>(patternsForStop.get(query.getStop()));
+
         // paterns added via RT
-        if (snapshot != null)
-        	tripPatterns.addAll(snapshot.getTripPatternsForStop(stop));
-        
+        if (snapshot != null) {
+            tripPatterns.addAll(snapshot.getTripPatternsForStop(query.getStop()));
+        }
+
         for (TripPattern pattern : tripPatterns) {
-            if (!routeMatcher.isEmpty() && !routeMatcher.matches(pattern.route)) {
+            if (!query.getRouteMatcher().isEmpty() && !query.getRouteMatcher().matches(pattern.route)) {
                 continue;
             }
 
-            if (direction != null && direction != pattern.directionId) {
+            if (query.getDirection() != null && query.getDirection() != pattern.directionId) {
                 continue;
             }
 
-            if (bannedRouteTypes != null && bannedRouteTypes.contains(pattern.route.getType())) {
+            if (query.getBannedRouteTypes() != null && query.getBannedRouteTypes().contains(pattern.route.getType())) {
                 continue;
             }
 
-            if (bannedAgencies != null && bannedAgencies.contains(pattern.route.getAgency().getId())) {
+            if (query.getBannedAgencies() != null && query.getBannedAgencies().contains(pattern.route.getAgency().getId())) {
                 continue;
             }
 
-            if (requiredStop != null && !pattern.getStops().contains(requiredStop)) {
+            if (query.getRequiredStop() != null && !pattern.getStops().contains(query.getRequiredStop())) {
                 continue;
             }
 
-            // TODO: Refactor this existing mess
-            StopTimesInPattern stip = getStopTimesForPattern(pattern, date, snapshot, stop, timeRange, numberOfDepartures, omitNonPickups, headsign, 
-            		tripHeadsign, trackIds, showCancelledTrips, includeStopsForTrip, signMode);
+            StopTimesForPatternQuery patternQuery = new StopTimesForPatternQuery.Builder(pattern, date, snapshot, query.getStop())
+                                                    .timeRange(query.getTimeRange())
+                                                    .numberOfDepartures(query.getNumberOfDepartures())
+                                                    .omitNonPickups(query.isOmitNonPickups())
+                                                    .headsign(query.getHeadsign())
+                                                    .tripHeadsign(query.getTripHeadsign())
+                                                    .trackIds(query.getTrackIds())
+                                                    .showCancelledTrips(query.isShowCancelledTrips())
+                                                    .includeStopsForTrip(query.isIncludeStopsForTrip())
+                                                    .signMode(query.isSignMode())
+                                                    .includeTripPatterns(query.includeTripPatterns())
+                                                    .build();
+
+            StopTimesInPattern stip = getStopTimesForPattern(patternQuery);
 
             if(stip != null)
             	ret.add(stip);
         }
         return ret;
     }
-    
-    // TODO: Refactor this existing mess
-    public StopTimesInPattern getStopTimesForPattern(TripPattern pattern, Date date, TimetableSnapshot snapshot,
-                                                     Stop stop, int timeRange, int numberOfDepartures,
-                                                     boolean omitNonPickups, String headsign, String tripHeadsign,
-                                                     Collection<String> trackIds, boolean showCancelledTrips,
-                                                     boolean includeStopsForTrip, boolean signMode) {
 
-    	ServiceDate[] serviceDates = {new ServiceDate(date).previous(), new ServiceDate(date), new ServiceDate(date).next()};
+    // TODO: Refactor this existing mess
+    public StopTimesInPattern getStopTimesForPattern(StopTimesForPatternQuery query) {
+
+    	ServiceDate[] serviceDates = {
+    	        new ServiceDate(query.getStartTime()).previous(),
+                new ServiceDate(query.getStartTime()),
+                new ServiceDate(query.getStartTime()).next()
+    	};
 
         // Use the Lucene PriorityQueue, which has a fixed size
-        PriorityQueue<TripTimeShort> pq = new PriorityQueue<TripTimeShort>(numberOfDepartures) {
+        PriorityQueue<TripTimeShort> pq = new PriorityQueue<>(query.getNumberOfDepartures()) {
             @Override
             protected boolean lessThan(TripTimeShort tripTimeShort, TripTimeShort t1) {
                 // Calculate exact timestamp
@@ -676,29 +703,32 @@ public class GraphIndex {
 
         // Loop through all possible days
         for (ServiceDate serviceDate : serviceDates) {
-            ServiceDay sd = new ServiceDay(graph, serviceDate, calendarService, pattern.route.getAgency().getId());
-            int secondsSinceMidnight = sd.secondsSinceMidnight(date.getTime()/1000);
+            ServiceDay sd = new ServiceDay(graph, serviceDate, calendarService,
+                    query.getPattern().route.getAgency().getId());
+            int secondsSinceMidnight = sd.secondsSinceMidnight(query.getStartTime().getTime()/1000);
 
-            Timetable tt = pattern.scheduledTimetable;
-            if (snapshot != null)
-                tt = snapshot.resolve(pattern, serviceDate);
+            Timetable tt = query.getPattern().scheduledTimetable;
+            if (query.getSnapshot() != null)
+                tt = query.getSnapshot().resolve(query.getPattern(), serviceDate);
 
-            if (!tt.temporallyViable(sd, date.getTime()/1000, timeRange, true)) continue;
+            if (!tt.temporallyViable(sd, query.getStartTime().getTime()/1000,
+                    query.getTimeRange(), true)) continue;
 
             int sidx = 0;
-            for (Stop currStop : pattern.stopPattern.stops) {
-                if (currStop == stop) {
-                    if(omitNonPickups && pattern.stopPattern.pickups[sidx] == StopPattern.PICKDROP_NONE) continue;
+            for (Stop currStop : query.getPattern().stopPattern.stops) {
+                if (currStop == query.getStop()) {
+                    if(query.isOmitNonPickups() && query.getPattern().stopPattern.pickups[sidx] == StopPattern.PICKDROP_NONE) continue;
                     for (TripTimes t : tt.tripTimes) {
                         if (!sd.serviceRunning(t.serviceCode)) continue;
 
-                    	if (tripHeadsign != null && !tripHeadsign.equals(t.trip.getTripHeadsign())) continue;
-                        if (headsign != null && !headsign.equals(t.getHeadsign(sidx))) continue;
-                        if (trackIds != null && !trackIds.contains(t.getTrack(sidx))) continue;
-                        if (hideScheduledInfo(signMode, t.isScheduled(), t.trip.getId().getAgencyId())) continue;
+                    	if (query.getTripHeadsign() != null && !query.getTripHeadsign().equals(t.trip.getTripHeadsign())) continue;
+                        if (query.getHeadsign() != null && !query.getHeadsign().equals(t.getHeadsign(sidx))) continue;
+                        if (query.getTrackIds() != null && !query.getTrackIds().contains(t.getTrack(sidx))) continue;
+                        if (hideScheduledInfo(query.isSignMode(), t.isScheduled(), t.trip.getId().getAgencyId())) continue;
                         if (shouldShowDeparture(t.getDepartureTime(sidx), secondsSinceMidnight)
-                                || (showCancelledTrips && shouldShowDeparture(t.getScheduledDepartureTime(sidx), secondsSinceMidnight))) {
-                            pq.insertWithOverflow(new TripTimeShort(pattern, t, sidx, stop, sd, graph.getTimeZone(), includeStopsForTrip));
+                                || (query.isShowCancelledTrips() && shouldShowDeparture(t.getScheduledDepartureTime(sidx), secondsSinceMidnight))) {
+                            pq.insertWithOverflow(new TripTimeShort(query.getPattern(), t, sidx, query.getStop(), sd,
+                                    graph.getTimeZone(), query.isIncludeStopsForTrip()));
                         }
                     }
 
@@ -710,8 +740,10 @@ public class GraphIndex {
                         int lastDeparture = freq.endTime + freq.tripTimes.getArrivalTime(sidx) -
                                 freq.tripTimes.getDepartureTime(0);
                         int i = 0;
-                        while (departureTime <= lastDeparture && i < numberOfDepartures) {
-                            pq.insertWithOverflow(new TripTimeShort(pattern, freq.materialize(sidx, departureTime, true), sidx, stop, sd, graph.getTimeZone()));
+                        while (departureTime <= lastDeparture && i < query.getNumberOfDepartures()) {
+                            pq.insertWithOverflow(new TripTimeShort(query.getPattern(),
+                                    freq.materialize(sidx, departureTime, true), sidx,
+                                    query.getStop(), sd, graph.getTimeZone()));
                             departureTime += freq.headway;
                             i++;
                         }
@@ -722,14 +754,14 @@ public class GraphIndex {
         }
 
         if (pq.size() != 0) {
-            StopTimesInPattern stopTimes = new StopTimesInPattern(pattern);
+            StopTimesInPattern stopTimes = new StopTimesInPattern(query.getPattern(), query.includeTripPatterns());
             while (pq.size() != 0) {
                 stopTimes.times.add(0, pq.pop());
             }
-            
+
             return stopTimes;
         }
-        
+
         return null;
     }
 
@@ -745,17 +777,6 @@ public class GraphIndex {
         return departureTime != -1 && departureTime >= time;
     }
 
-    public List<StopTimesInPattern> stopTimesForStop(Stop stop, long startTime, int timeRange, int numberOfDepartures, boolean omitNonPickups, RouteMatcher routeMatcher, String headsign) {
-        return stopTimesForStop(stop, startTime, timeRange, numberOfDepartures, omitNonPickups, routeMatcher, null, headsign, null, null, false);
-    }
-
-    public List<StopTimesInPattern> stopTimesForStop(Stop stop, long startTime, int timeRange, int numberOfDepartures, boolean omitNonPickups) {
-        return stopTimesForStop(stop, startTime, timeRange, numberOfDepartures, omitNonPickups, RouteMatcher.emptyMatcher(), null);
-    }
-
-    public List<StopTimesInPattern> stopTimesForStop(Stop stop, long startTime, int timeRange, int numberOfDepartures, boolean omitNonPickups, boolean signMode) {
-        return stopTimesForStop(stop, startTime, timeRange, numberOfDepartures, omitNonPickups, RouteMatcher.emptyMatcher(), null, null, null, null, null, null, null, false, false, signMode);
-    }
 
     /**
      * Get a list of all trips that pass through a stop during a single ServiceDate. Useful when creating complete stop
@@ -796,6 +817,8 @@ public class GraphIndex {
         }
         return ret;
     }
+
+
 
     /**
      * Get parent stop for given stop.
