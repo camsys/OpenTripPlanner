@@ -458,6 +458,9 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	        	if(tripContext != null) {
 	        		List<AgencyAndId> tripIds = tt.getPreferredTransfers(e.getId(), e.getId(), tripContext, requiredStop);
 
+	        		if(tripIds.isEmpty())
+	        			return List.of();
+	        		
 	        		return getGraphIndex(environment).tripForId.values()
 	    	    			.stream()
 	    	    			.filter(it -> tripIds.contains(it.getId()))
