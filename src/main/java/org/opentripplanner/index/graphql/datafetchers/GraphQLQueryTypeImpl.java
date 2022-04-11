@@ -476,11 +476,21 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 				stips = filteredStipsFrom;
 			}
 
+
+
 			// Loop through stop times in pattern and get departure times and cancelled trip info
+			int minutesToMilliseconds = 60 * 1000;
+			final int maxTimeOffset;
+			if (input.getGraphQLMaxTime() != null) {
+				maxTimeOffset = input.getGraphQLMaxTime() * minutesToMilliseconds;
+			} else {
+				//No maxTime param was found
+				maxTimeOffset = 0;
+			}
 			for(StopTimesInPattern stip : stips) {
 				for(TripTimeShort tts : stip.times) {
 					long departureTime = (tts.serviceDay + tts.scheduledDeparture) * 1000;
-					if(departureTime < time)
+					if(departureTime < time || (maxTimeOffset!=0 && departureTime > (maxTimeOffset + time)))
 						continue;
 					if(tts.realtimeState.equals(RealTimeState.CANCELED)){
 						ServiceDate serviceDate = new ServiceDate(new Date(tts.serviceDay));
@@ -496,13 +506,13 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 			}
 
 			// Set max results
-			final int maxResults;
+			int maxResults;
 			if(input.getGraphQLMaxResults() != null
 					&& input.getGraphQLMaxResults() > 0
-					&& input.getGraphQLMaxResults() < 25){
+					&& input.getGraphQLMaxResults() < 100){
 				maxResults = input.getGraphQLMaxResults();
 			} else {
-				maxResults = 10;
+				maxResults = 100;
 			}
 
 			Map<String, Set<Itinerary>> itinerariesByDepartureTime = new ConcurrentHashMap<>();

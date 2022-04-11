@@ -187,6 +187,7 @@ public class GraphQLTypes {
     private String toGtfsId;
     private String time;
     private Integer maxResults;
+    private Integer maxTime;
   
     public GraphQLQueryTypeScheduleArgs() {}
   
@@ -194,10 +195,13 @@ public class GraphQLTypes {
     public String getGraphQLToGtfsId() { return this.toGtfsId; }
     public String getGraphQLTime() { return this.time; }
     public Integer getGraphQLMaxResults() { return this.maxResults; }
+    public Integer getGraphQLMaxTime() { return this.maxTime; }
     public void setGraphQLFromGtfsId(String fromGtfsId) { this.fromGtfsId = fromGtfsId; }
     public void setGraphQLToGtfsId(String toGtfsId) { this.toGtfsId = toGtfsId; }
     public void setGraphQLTime(String time) { this.time = time; }
     public void setGraphQLMaxResults(Integer maxResults) { this.maxResults = maxResults; }
+    public void setGraphQLMaxTime(Integer maxTime) { this.maxTime = maxTime; }
+
   }
   public static class GraphQLQueryTypeNearbyArgs {
     private Double latitude;
