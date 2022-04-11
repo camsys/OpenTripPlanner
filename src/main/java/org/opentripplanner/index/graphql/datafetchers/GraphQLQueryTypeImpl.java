@@ -600,8 +600,10 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 
 		// Loop through all from stop patterns
 		for(StopTimesInPattern stip : stips) {
+			List<Trip> patternTrips = stip.patternFull.getTrips();
 			List<Stop> stops = stip.patternFull.getStops();
-			if(shouldAddStopPatternStops(stip.patternFull.getTrips(), stops, fromStop, toStop, graph)){
+			int transfersCount = 0;
+			if(shouldAddStopPatternStops(patternTrips, stops, fromStop, toStop, graph, transfersCount)){
 				filteredStipsFrom.add(stip);
 			}
 		}
@@ -613,7 +615,8 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 											  List<Stop> stops,
 											  Stop fromStop,
 											  Stop destinationStop,
-											  Graph graph){
+											  Graph graph,
+											  int transferCount){
 		// Found Stop Flag
 		boolean foundStop = false;
 
@@ -629,12 +632,14 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 				if(stop.getId().equals(destinationStop.getId())){
 					return true;
 				}
-				else {
+				// check transfers to see if we find the destination stops there
+				// limit to 3 transfers
+				else if(transferCount < 3) {
 					// check to see if one of the stops after the BOARDING stop has any transfers
 					boolean hasStopTransfer = graph.getTransferTable().hasStopTransfer(stop, stop);
 					// if a stop is found with a process check to see if it leads to our DESTINATION stop
 					if (hasStopTransfer) {
-						// check all pattern trips to see which trip(s) have a transfer
+						// check all pattern trips to see which trips have a transfer for CURRENT STOP
 						// if any of them have a transfer then recurse
 						for (Trip patternTrip : patternTrips) {
 							// Get list of trips that you can transfer to
@@ -645,7 +650,7 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 								Trip transferTrip = graph.index.tripForId.get(transferTripId);
 								List<Stop> tripStops = graph.index.patternForTrip.get(transferTrip).getStops();
 								List<Trip> trips = (Collections.singletonList(transferTrip));
-								if(shouldAddStopPatternStops(trips, tripStops, stop, destinationStop, graph)){
+								if(shouldAddStopPatternStops(trips, tripStops, stop, destinationStop, graph, transferCount+1)){
 									return true;
 								}
 							}
