@@ -391,7 +391,7 @@
 						<productionBranch>mta-master</productionBranch>
 						<developmentBranch>mta-develop</developmentBranch>
 						<featureBranchPrefix>mta-feature/</featureBranchPrefix>
-						<releaseBranchPrefix>mta-release/</releaseBranchPrefix>
+						<releaseBranchPrefix>mta-release</releaseBranchPrefix>
 						<hotfixBranchPrefix>mta-hotfix/</hotfixBranchPrefix>
 						<supportBranchPrefix>mta-support/</supportBranchPrefix>
 						<versionTagPrefix>otp-</versionTagPrefix>
