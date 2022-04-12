@@ -594,7 +594,7 @@ public class GraphQLScheduleImpl {
 					legOut.put("direction", leg.tripDirectionId);
 					legOut.put("destination", leg.stopHeadsign);
 					legOut.put("from", leg.from.stopId);
-					legOut.put("to", leg.to.stopId.getId());
+					legOut.put("to", leg.to.stopId);
 					legOut.put("stops", getStops(leg.stop, leg.from, leg.to));
 					legOut.put("track", leg.from.track);
 					legOut.put("stopNote", leg.from.note);
