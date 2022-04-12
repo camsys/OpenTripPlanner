@@ -21,7 +21,8 @@ public class GraphQLQueryTypeInputs {
 	        	this.setGraphQLFromGtfsId((String)args.get("fromGtfsId"));
 	        	this.setGraphQLToGtfsId((String)args.get("toGtfsId"));
 	        	this.setGraphQLTime((String)args.get("time"));
-	        	this.setGraphQLMaxResults((Integer)args.get("maxResults"));
+				this.setGraphQLMaxResults((Integer)args.get("maxResults"));
+				this.setGraphQLMaxTime((Integer)args.get("maxTime"));
 	        }
 	    }
 	}

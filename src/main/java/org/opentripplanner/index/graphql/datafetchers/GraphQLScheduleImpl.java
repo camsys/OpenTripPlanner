@@ -36,6 +36,9 @@ import java.util.stream.Collectors;
 
 public class GraphQLScheduleImpl {
 
+	private static final int DEFAULT_MAX_RESULTS = 100;
+	private static final int DEFAULT_NUM_DEPARTURES = 10;
+	private static final int DEFAULT_TIME_RANGE_HOURS = 8;
 
 	public List<Object> getSchedule(DataFetchingEnvironment environment) {
 
@@ -44,7 +47,7 @@ public class GraphQLScheduleImpl {
 		GraphQLQueryTypeInputs.GraphQLQueryTypeScheduleArgsInput input =
 				new GraphQLQueryTypeInputs.GraphQLQueryTypeScheduleArgsInput(environment.getArguments());
 
-		// GraphQL Args
+		// GraphQL Arguments
 		Stop fromStop = graph.index.stopForId.get(
 				AgencyAndId.convertFromString(input.getGraphQLFromGtfsId()));
 
@@ -55,6 +58,12 @@ public class GraphQLScheduleImpl {
 		if(input.getGraphQLTime() != null) {
 			time = new DateTime(input.getGraphQLTime()).getMillis();
 		}
+
+		long maxTimeOffset = 0;
+		if (input.getGraphQLMaxTime() != null) {
+			maxTimeOffset = TimeUnit.MINUTES.toMillis(input.getGraphQLMaxTime());
+		}
+
 
 		// Get list of stop times in pattern using from stop
 		List<StopTimesInPattern> stips = getStopTimesInPattern(graph, time, fromStop);
@@ -80,10 +89,10 @@ public class GraphQLScheduleImpl {
 		for(StopTimesInPattern stip : stips) {
 			for(TripTimeShort tts : stip.times) {
 
-				long departureTime = (tts.serviceDay + tts.scheduledDeparture) * 1000;
+				long departureTime = TimeUnit.SECONDS.toMillis(tts.serviceDay + tts.scheduledDeparture);
 
 				// Update filtered departure times
-				updateValidDepartureTimesList(departureTime, time, tts.tripId, departuresByTripId);
+				updateValidDepartureTimesList(departureTime, time, tts.tripId, departuresByTripId, maxTimeOffset);
 
 				// Process Cancelled Trips
 				updateCancelledTripsList(cancelledTripsByDepartureTime, tts.realtimeState, tts.serviceDay,
@@ -99,10 +108,12 @@ public class GraphQLScheduleImpl {
 		final int maxResults;
 		if(input.getGraphQLMaxResults() != null
 				&& input.getGraphQLMaxResults() > 0
-				&& input.getGraphQLMaxResults() < 25){
+				&& input.getGraphQLMaxResults() < DEFAULT_MAX_RESULTS){
+
 			maxResults = input.getGraphQLMaxResults();
+
 		} else {
-			maxResults = 10;
+			maxResults = DEFAULT_MAX_RESULTS;
 		}
 
 		Map<String, Set<Itinerary>> itinerariesByDepartureTime = new ConcurrentHashMap<>();
@@ -151,8 +162,8 @@ public class GraphQLScheduleImpl {
 	private List<StopTimesInPattern> getStopTimesInPattern(Graph graph, long time, Stop fromStop){
 		// Get all the stopTimes starting from the fromStop
 		long startTime = TimeUnit.MILLISECONDS.toSeconds(time);
-		int timeRange = (int) TimeUnit.HOURS.toSeconds(8);
-		int numberOfDepartures = 10;
+		int timeRange = (int) TimeUnit.HOURS.toSeconds(DEFAULT_TIME_RANGE_HOURS);
+		int numberOfDepartures = DEFAULT_NUM_DEPARTURES;
 		boolean omitNonPickups = true;
 
 		StopTimesForPatternsQuery query = new StopTimesForPatternsQuery
@@ -237,11 +248,19 @@ public class GraphQLScheduleImpl {
 		return false;
 	}
 
-	private void updateValidDepartureTimesList(long departureTime, long currentTime,
-											   AgencyAndId tripId, Map<AgencyAndId, Set<Long>> departuresByTripId){
+	private void updateValidDepartureTimesList(long departureTime,
+											   long currentTime,
+											   AgencyAndId tripId,
+											   Map<AgencyAndId,
+											   Set<Long>> departuresByTripId,
+											   long maxTimeOffset){
 
-		if(departureTime < currentTime)
+		boolean departureTimeBeforeCurrentTime = departureTime < currentTime;
+		boolean departureTimeAfterMaxTime = maxTimeOffset!=0 && departureTime > (maxTimeOffset + currentTime);
+
+		if(departureTimeBeforeCurrentTime || departureTimeAfterMaxTime) {
 			return;
+		}
 
 		Set<Long> departureTimes = departuresByTripId.get(tripId);
 		if(departureTimes == null){

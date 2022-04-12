@@ -1008,12 +1008,17 @@ type QueryType {
 		"""
      	Time to return departure times for. Will default to the current time.
      	"""
-     	time: String	
+     	time: String
 
-		"""
-     	Number of results. Defaults to 10.
-     	"""
-     	maxResults: Int
+        """
+        Max number of results
+        """
+        maxResults: Int
+
+        """
+        Maximum time offest in minutes to search past the 'time' parameter. Defaults to 60
+        """
+        maxTime: Int
 
 	): [ScheduleResult]
 	
