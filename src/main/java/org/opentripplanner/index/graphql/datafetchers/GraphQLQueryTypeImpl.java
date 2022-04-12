@@ -477,8 +477,10 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 			}
 
 			// Loop through stop times in pattern and get departure times and cancelled trip info
+			Map<AgencyAndId, String> tripToRealTimeSignText = new HashMap<>();
 			for(StopTimesInPattern stip : stips) {
 				for(TripTimeShort tts : stip.times) {
+					tripToRealTimeSignText.put(tts.tripId,tts.realtimeSignText);
 					long departureTime = (tts.serviceDay + tts.scheduledDeparture) * 1000;
 					if(departureTime < time)
 						continue;
@@ -550,6 +552,8 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 						HashMap<String, Object> legOut = new HashMap<>();
 
 						// Trip Info
+						boolean isHeld = (tripToRealTimeSignText.get(leg.tripId) != null && tripToRealTimeSignText.get(leg.tripId).toUpperCase().equals("HELD"));
+						legOut.put("hold", isHeld);
 						legOut.put("routeLongName", leg.routeLongName);
 						legOut.put("routeId", leg.routeId);
 						legOut.put("headsign", leg.headsign);

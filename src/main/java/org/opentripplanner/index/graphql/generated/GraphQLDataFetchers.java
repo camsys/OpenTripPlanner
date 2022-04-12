@@ -186,6 +186,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<String> createdDate();
     public DataFetcher<Boolean> cancelled();
     public DataFetcher<Iterable<Object>> alerts();
+    public DataFetcher<Boolean> hold();
   }
   
   /**

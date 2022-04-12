@@ -700,6 +700,10 @@ type ScheduleResultLeg {
     """
 	headsign: String
 
+    """
+    Is train being held
+    """
+    hold: Boolean
 
 	"""
 	Route name of the train serving this leg
