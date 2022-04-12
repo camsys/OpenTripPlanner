@@ -485,7 +485,7 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 				maxTimeOffset = input.getGraphQLMaxTime() * minutesToMilliseconds;
 			} else {
 				//No maxTime param was found
-				maxTimeOffset = 0;
+				maxTimeOffset = 60 * minutesToMilliseconds;
 			}
 			for(StopTimesInPattern stip : stips) {
 				for(TripTimeShort tts : stip.times) {
