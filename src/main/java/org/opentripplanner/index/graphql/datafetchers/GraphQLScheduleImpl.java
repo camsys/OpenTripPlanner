@@ -39,6 +39,7 @@ public class GraphQLScheduleImpl {
 	private static final int DEFAULT_MAX_RESULTS = 100;
 	private static final int DEFAULT_NUM_DEPARTURES = 10;
 	private static final int DEFAULT_TIME_RANGE_HOURS = 8;
+	private static final int DEFAULT_MAX_TIME_MINUTES = 120;
 
 	public List<Object> getSchedule(DataFetchingEnvironment environment) {
 
@@ -59,7 +60,7 @@ public class GraphQLScheduleImpl {
 			time = new DateTime(input.getGraphQLTime()).getMillis();
 		}
 
-		long maxTimeOffset = 0;
+		long maxTimeOffset = TimeUnit.MINUTES.toMillis(DEFAULT_MAX_TIME_MINUTES);
 		if (input.getGraphQLMaxTime() != null) {
 			maxTimeOffset = TimeUnit.MINUTES.toMillis(input.getGraphQLMaxTime());
 		}
