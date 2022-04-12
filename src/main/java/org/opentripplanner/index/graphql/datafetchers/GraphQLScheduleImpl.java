@@ -84,6 +84,9 @@ public class GraphQLScheduleImpl {
 		// Store cancelled trip info
 		Map <String, Set<AgencyAndId>> cancelledTripsByDepartureTime = new HashMap<>();
 
+		// Store hold info
+		Map<AgencyAndId, String> tripToRealTimeSignText = new HashMap<>();
+
 
 		// Loop through stop times in pattern and filter departure times that don't fall in range
 		// Also populate cancelled trip info
@@ -95,9 +98,12 @@ public class GraphQLScheduleImpl {
 				// Update filtered departure times
 				updateValidDepartureTimesList(departureTime, time, tts.tripId, departuresByTripId, maxTimeOffset);
 
-				// Process Cancelled Trips
+				// Update Cancelled trips info
 				updateCancelledTripsList(cancelledTripsByDepartureTime, tts.realtimeState, tts.serviceDay,
-											departureTime, tts.tripId);
+						departureTime, tts.tripId);
+
+				// Update Hold text info
+				updateHoldTextInfo(tripToRealTimeSignText, tts.realtimeSignText, tts.tripId);
 
 			}
 		}
@@ -149,16 +155,18 @@ public class GraphQLScheduleImpl {
 		filterItinerariesByArrivalTime(itineraryFilteredByArrival, itinerariesByDepartureTime);
 
 		List<String> departuresSorted = itinerariesByDepartureTime.keySet()
-											.stream()
-											.sorted()
-											.limit(maxResults)
-											.collect(Collectors.toList());
+				.stream()
+				.sorted()
+				.limit(maxResults)
+				.collect(Collectors.toList());
 
 		List<Object> result = generateResultsForItineraries(departuresSorted, itinerariesByDepartureTime,
-															itineraryFilteredByArrival, cancelledTripsByDepartureTime);
+				itineraryFilteredByArrival, cancelledTripsByDepartureTime,
+				tripToRealTimeSignText);
 
 		return result;
 	}
+
 
 	private List<StopTimesInPattern> getStopTimesInPattern(Graph graph, long time, Stop fromStop){
 		// Get all the stopTimes starting from the fromStop
@@ -253,7 +261,7 @@ public class GraphQLScheduleImpl {
 											   long currentTime,
 											   AgencyAndId tripId,
 											   Map<AgencyAndId,
-											   Set<Long>> departuresByTripId,
+													   Set<Long>> departuresByTripId,
 											   long maxTimeOffset){
 
 		boolean departureTimeBeforeCurrentTime = departureTime < currentTime;
@@ -286,6 +294,11 @@ public class GraphQLScheduleImpl {
 			}
 			tripIds.add(cancelledTripId);
 		}
+	}
+
+	private void updateHoldTextInfo(Map<AgencyAndId, String> tripToRealTimeSignText, String realtimeSignText,
+									AgencyAndId tripId) {
+		tripToRealTimeSignText.put(tripId, realtimeSignText);
 	}
 
 	private TreeSet<Long> processUniqueDepartureTimes(List<StopTimesInPattern> filteredStips,
@@ -570,7 +583,8 @@ public class GraphQLScheduleImpl {
 	private List<Object> generateResultsForItineraries(List<String> departuresSorted,
 													   Map<String, Set<Itinerary>> itinerariesByDepartureTime,
 													   Map<Long, Itinerary> itineraryFilteredByArrival,
-													   Map <String, Set<AgencyAndId>> cancelledTripsByDepartureTime) {
+													   Map <String, Set<AgencyAndId>> cancelledTripsByDepartureTime,
+													   Map<AgencyAndId, String> tripToRealTimeSignText) {
 		List<Object> result = new ArrayList<>();
 		for(String key : departuresSorted) {
 			for(Itinerary itin : itinerariesByDepartureTime.get(key)) {
@@ -603,6 +617,7 @@ public class GraphQLScheduleImpl {
 					legOut.put("carriages", getCarriages(leg.vehicleInfo));
 					legOut.put("alerts", leg.alerts);
 					legOut.put("cancelled", isTripCancelled(leg.serviceDate, leg.tripId, cancelledTripsByDepartureTime));
+					legOut.put("hold", isHeld(tripToRealTimeSignText, leg.tripId));
 
 					// Date and Time Info
 					legOut.put("runDate", leg.serviceDate);
@@ -625,6 +640,7 @@ public class GraphQLScheduleImpl {
 		}
 		return result;
 	}
+
 
 	private List<String> getStops(List<Place> stops, Place from, Place to){
 		List<String> stopIds = new ArrayList<>();
@@ -664,6 +680,11 @@ public class GraphQLScheduleImpl {
 			return vehicleInfo.getCarriages();
 		}
 		return null;
+	}
+
+	private boolean isHeld(Map<AgencyAndId, String> tripToRealTimeSignText, AgencyAndId tripId) {
+		return tripToRealTimeSignText.get(tripId) != null
+				&& tripToRealTimeSignText.get(tripId).toUpperCase().equals("HELD");
 	}
 
 	private Router getRouter(DataFetchingEnvironment environment) {
