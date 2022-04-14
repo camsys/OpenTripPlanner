@@ -162,7 +162,7 @@ public class GraphQLScheduleImpl {
 
 		List<Object> result = generateResultsForItineraries(departuresSorted, itinerariesByDepartureTime,
 				itineraryFilteredByArrival, cancelledTripsByDepartureTime,
-				tripToRealTimeSignText);
+				tripToRealTimeSignText, maxTimeOffset);
 
 		return result;
 	}
@@ -584,10 +584,14 @@ public class GraphQLScheduleImpl {
 													   Map<String, Set<Itinerary>> itinerariesByDepartureTime,
 													   Map<Long, Itinerary> itineraryFilteredByArrival,
 													   Map <String, Set<AgencyAndId>> cancelledTripsByDepartureTime,
-													   Map<AgencyAndId, String> tripToRealTimeSignText) {
+													   Map<AgencyAndId, String> tripToRealTimeSignText,
+													   long maxTimeOffset) {
 		List<Object> result = new ArrayList<>();
 		for(String key : departuresSorted) {
 			for(Itinerary itin : itinerariesByDepartureTime.get(key)) {
+				if (maxTimeOffset!=0 && itin.startTime.getTime().getTime() > (maxTimeOffset + System.currentTimeMillis())) {
+					continue;
+				}
 				Itinerary endItinerary = itineraryFilteredByArrival.get(itin.endTime.getTimeInMillis());
 				if(endItinerary != null && !itin.equals(endItinerary) && itin.transfers >= endItinerary.transfers){
 					continue;
