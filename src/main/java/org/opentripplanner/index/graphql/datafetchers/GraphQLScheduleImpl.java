@@ -36,10 +36,12 @@ import java.util.stream.Collectors;
 
 public class GraphQLScheduleImpl {
 
-	private static final int DEFAULT_MAX_RESULTS = 100;
+	private static final int DEFAULT_MAX_RESULTS = 20;
 	private static final int DEFAULT_NUM_DEPARTURES = 10;
 	private static final int DEFAULT_TIME_RANGE_HOURS = 8;
-	private static final int DEFAULT_MAX_TIME_MINUTES = 120;
+	private static final int DEFAULT_MAX_TIME_MINUTES = 8 * 60; // 8 hrs
+	private static final int MAX_TIME_HARD_CAP_MINUTES = 1440; //24hrs
+	private static final int MAX_RESULTS_HARD_CAP = 30;
 
 	private static final Logger LOG = LoggerFactory.getLogger(GraphQLScheduleImpl.class);
 
@@ -65,6 +67,8 @@ public class GraphQLScheduleImpl {
 		long maxTimeOffset = TimeUnit.MINUTES.toMillis(DEFAULT_MAX_TIME_MINUTES);
 		if (input.getGraphQLMaxTime() != null) {
 			maxTimeOffset = TimeUnit.MINUTES.toMillis(input.getGraphQLMaxTime());
+			//Hard cap max time at 24 hours
+			maxTimeOffset = Math.min(maxTimeOffset, TimeUnit.MINUTES.toMillis(MAX_TIME_HARD_CAP_MINUTES));
 		}
 
 		// Get list of stop times in pattern using from stop
@@ -115,17 +119,20 @@ public class GraphQLScheduleImpl {
 		// Set max results
 		final int maxResults;
 		if(input.getGraphQLMaxResults() != null
-				&& input.getGraphQLMaxResults() > 0
-				&& input.getGraphQLMaxResults() < DEFAULT_MAX_RESULTS){
-
-			maxResults = input.getGraphQLMaxResults();
-
+				&& input.getGraphQLMaxResults() > 0) {
+			maxResults = Math.min(input.getGraphQLMaxResults(), MAX_RESULTS_HARD_CAP);
 		} else {
 			maxResults = DEFAULT_MAX_RESULTS;
 		}
 
 		Map<String, Set<Itinerary>> itinerariesByDepartureTime = new ConcurrentHashMap<>();
-		int searchLimit = maxResults;
+		final int searchLimit;
+		if (input.getGraphQLMaxResults() == null && input.getGraphQLMaxTime() != null) {
+			searchLimit = 1000;
+			//arbitrarily large limit for intermediate search
+		} else {
+			searchLimit = maxResults;
+		}
 
 		// Loop through first several results using a parallel stream for speed
 		uniqueDepartureTimes.parallelStream().limit(searchLimit).forEach(departureTime -> {
@@ -140,7 +147,7 @@ public class GraphQLScheduleImpl {
 
 		// If not enough results are found, then revert to using a non multi-threaded approach to preserve order
 		uniqueDepartureTimes.stream().skip(searchLimit).forEach(departureTime -> {
-			if(itinerariesByDepartureTime.size() >= maxResults) {
+			if(itinerariesByDepartureTime.size() >= searchLimit) {
 				return;
 			}
 			processItinerariesForDepartureTime(
@@ -159,12 +166,13 @@ public class GraphQLScheduleImpl {
 		List<String> departuresSorted = itinerariesByDepartureTime.keySet()
 				.stream()
 				.sorted()
-				.limit(maxResults)
 				.collect(Collectors.toList());
 
 		List<Object> result = generateResultsForItineraries(departuresSorted, itinerariesByDepartureTime,
 				itineraryFilteredByArrival, cancelledTripsByDepartureTime,
-				tripToRealTimeSignText);
+				tripToRealTimeSignText, maxTimeOffset);
+
+		result.stream().limit(maxResults).collect(Collectors.toList());
 
 		return result;
 	}
@@ -263,7 +271,7 @@ public class GraphQLScheduleImpl {
 											   long currentTime,
 											   AgencyAndId tripId,
 											   Map<AgencyAndId,
-											   Set<Long>> departuresByTripId,
+													   Set<Long>> departuresByTripId,
 											   long maxTimeOffset){
 
 		boolean departureTimeBeforeCurrentTime = departureTime < currentTime;
@@ -629,11 +637,15 @@ public class GraphQLScheduleImpl {
 													   Map<String, Set<Itinerary>> itinerariesByDepartureTime,
 													   Map<Long, Itinerary> itineraryFilteredByArrival,
 													   Map <String, Set<AgencyAndId>> cancelledTripsByDepartureTime,
-													   Map<AgencyAndId, String> tripToRealTimeSignText) {
+													   Map<AgencyAndId, String> tripToRealTimeSignText,
+													   long maxTimeOffset) {
 		List<Object> result = new ArrayList<>();
 		for(String key : departuresSorted) {
 			for(Itinerary itin : itinerariesByDepartureTime.get(key)) {
 				Itinerary endItinerary = itineraryFilteredByArrival.get(itin.endTime.getTimeInMillis());
+				if (maxTimeOffset!=0 && itin.startTime.getTime().getTime() > (maxTimeOffset + System.currentTimeMillis())) {
+					continue;
+				}
 				if(endItinerary != null && !itin.equals(endItinerary) && itin.transfers >= endItinerary.transfers){
 					continue;
 				}
@@ -655,10 +667,24 @@ public class GraphQLScheduleImpl {
 		return result;
 	}
 
-	private List<Map<String, Object>> getMappedLegProperties(List<Leg> itinLegs,
-													   		 Map <String, Set<AgencyAndId>> cancelledTripsByDepartureTime,
-													  		 Map<AgencyAndId, String> tripToRealTimeSignText) throws Exception {
-		List<Map<String, Object>> legs = new ArrayList<>();
+					// Trip Info
+					legOut.put("routeLongName", leg.routeLongName);
+					legOut.put("routeId", leg.routeId);
+					legOut.put("headsign", leg.headsign);
+					legOut.put("tripShortName", leg.tripShortName);
+					legOut.put("tripId", leg.tripId);
+					legOut.put("direction", leg.tripDirectionId);
+					legOut.put("destination", leg.stopHeadsign);
+					legOut.put("from", leg.from.stopId);
+					legOut.put("to", leg.to.stopId);
+					legOut.put("stops", getStops(leg.stop, leg.from, leg.to));
+					legOut.put("track", leg.from.track);
+					legOut.put("stopNote", leg.from.note);
+					legOut.put("occupancy", getOccupancy(leg.vehicleInfo));
+					legOut.put("carriages", getCarriages(leg.vehicleInfo));
+					legOut.put("alerts", leg.alerts);
+					legOut.put("cancelled", isTripCancelled(leg.serviceDate, leg.tripId, cancelledTripsByDepartureTime));
+					legOut.put("hold", isHeld(tripToRealTimeSignText, leg.tripId));
 
 		for(Leg leg : itinLegs) {
 			Map<String, Object> legOut = new HashMap<>();
