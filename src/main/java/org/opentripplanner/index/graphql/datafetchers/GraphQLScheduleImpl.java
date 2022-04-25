@@ -15,19 +15,19 @@ import org.opentripplanner.index.model.StopTimesInPattern;
 import org.opentripplanner.index.model.TripTimeShort;
 import org.opentripplanner.routing.algorithm.GenericDijkstra;
 import org.opentripplanner.routing.algorithm.strategies.SkipEdgeStrategy;
+import org.opentripplanner.routing.algorithm.strategies.SkipTraverseResultStrategy;
 import org.opentripplanner.routing.core.*;
-import org.opentripplanner.routing.edgetype.LandmarkEdge;
-import org.opentripplanner.routing.edgetype.StreetEdge;
-import org.opentripplanner.routing.edgetype.StreetTransitLink;
-import org.opentripplanner.routing.edgetype.TransferEdge;
+import org.opentripplanner.routing.edgetype.*;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.spt.GraphPath;
 import org.opentripplanner.routing.spt.ShortestPathTree;
 import org.opentripplanner.routing.trippattern.RealTimeState;
-import org.opentripplanner.routing.vertextype.TransitStop;
+import org.opentripplanner.routing.vertextype.*;
 import org.opentripplanner.standalone.Router;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,6 +40,8 @@ public class GraphQLScheduleImpl {
 	private static final int DEFAULT_NUM_DEPARTURES = 10;
 	private static final int DEFAULT_TIME_RANGE_HOURS = 8;
 	private static final int DEFAULT_MAX_TIME_MINUTES = 120;
+
+	private static final Logger LOG = LoggerFactory.getLogger(GraphQLScheduleImpl.class);
 
 	public List<Object> getSchedule(DataFetchingEnvironment environment) {
 
@@ -64,7 +66,6 @@ public class GraphQLScheduleImpl {
 		if (input.getGraphQLMaxTime() != null) {
 			maxTimeOffset = TimeUnit.MINUTES.toMillis(input.getGraphQLMaxTime());
 		}
-
 
 		// Get list of stop times in pattern using from stop
 		List<StopTimesInPattern> stips = getStopTimesInPattern(graph, time, fromStop);
@@ -142,7 +143,8 @@ public class GraphQLScheduleImpl {
 			if(itinerariesByDepartureTime.size() >= maxResults) {
 				return;
 			}
-			processItinerariesForDepartureTime( graph,
+			processItinerariesForDepartureTime(
+					graph,
 					itinerariesByDepartureTime,
 					environment,
 					departureTime,
@@ -261,7 +263,7 @@ public class GraphQLScheduleImpl {
 											   long currentTime,
 											   AgencyAndId tripId,
 											   Map<AgencyAndId,
-													   Set<Long>> departuresByTripId,
+											   Set<Long>> departuresByTripId,
 											   long maxTimeOffset){
 
 		boolean departureTimeBeforeCurrentTime = departureTime < currentTime;
@@ -432,7 +434,7 @@ public class GraphQLScheduleImpl {
 		}
 		// check to see if stop has any transfers
 		// if it does add all the trips
-		/*else if(transferTable.hasStopTransfer(stop, stop)){
+		else if(transferTable.hasStopTransfer(stop, stop)){
 			// get all trips that has that stop
 			Collection<TripPattern> transferTripPatterns = graph.index.patternsForStop.get(stop);
 			// add all trips that have transfers for that pattern
@@ -443,7 +445,7 @@ public class GraphQLScheduleImpl {
 				transferTrips.remove(patternTrip);
 			}
 
-		}*/
+		}
 
 		return transferTrips;
 	}
@@ -474,13 +476,18 @@ public class GraphQLScheduleImpl {
 		// Get 2 itineraries for each request
 		RoutingRequest rr = new RoutingRequest();
 		rr.setDateTime(new Date(departureTime - 1));
-		rr.setNumItineraries(2);
-		rr.setMode(TraverseMode.TRANSIT);
+		rr.setNumItineraries(1);
+		rr.setMode(TraverseMode.RAIL);
+		rr.allowUnknownTransfers = false;
+		rr.setBannedAgencies("MTABC, MTA NYCT, MTASBWY");
+		rr.setBannedRouteTypes("3,702,1");
+		rr.setOptimize(OptimizeType.TRANSFERS);
 		rr.setRoutingContext(graph, graph.index.stopVertexForStop.get(fromStop), graph.index.stopVertexForStop.get(toStop));
 
 		GenericDijkstra gd = new GenericDijkstra(rr);
 
 		gd.setSkipEdgeStrategy(getScheduleSkipEdgeStrategy(null, fromStop.getId().getAgencyId()));
+		gd.setSkipTraverseResultStrategy(getSkipTraverseResultStrategy());
 
 		State initialState = new State(rr);
 		ShortestPathTree spt = gd.getShortestPathTree(initialState);
@@ -513,6 +520,44 @@ public class GraphQLScheduleImpl {
 
 		}
 
+	}
+
+	private SkipTransferTraverseResultStrategy getSkipTraverseResultStrategy(){
+		return new SkipTransferTraverseResultStrategy();
+	}
+
+	private class SkipTransferTraverseResultStrategy implements SkipTraverseResultStrategy {
+
+		@Override
+		public boolean shouldSkipTraversalResult(Vertex origin, Vertex target, State parent, State current,
+												 ShortestPathTree spt, RoutingRequest traverseOptions) {
+
+			try {
+				if (current != null && parent != null) {
+					AgencyAndId currentTripId = current.getTripId();
+					AgencyAndId parentTripId = parent.getTripId();
+
+					boolean bothTripsNull = currentTripId == null && parentTripId == null;
+					boolean tripsNotEqual =  currentTripId != null && parentTripId != null && !currentTripId.equals(parentTripId);
+
+
+					if(!bothTripsNull && (parentTripId == null || tripsNotEqual)) {
+						AgencyAndId currentRoute = current.getRoute();
+						AgencyAndId parentRoute = parent.getRoute();
+
+						boolean hasNullRoute = currentRoute == null || parentRoute == null;
+						boolean routesNotEqual = !hasNullRoute && current.getRoute().getId().equals(parent.getRoute().getId());
+
+						if (routesNotEqual){
+							return true;
+						}
+					}
+				}
+			}catch (Exception e){
+				LOG.error("unable to skip traversale for current trip {} and parent trip {}",current.getTripId(), parent.getTripId(),e);
+			}
+			return false;
+		}
 	}
 
 	private SkipEdgeStrategy getScheduleSkipEdgeStrategy(Set<Edge> edges, String agencyId){
@@ -592,53 +637,80 @@ public class GraphQLScheduleImpl {
 				if(endItinerary != null && !itin.equals(endItinerary) && itin.transfers >= endItinerary.transfers){
 					continue;
 				}
-				HashMap<String, Object> itineraryOut = new HashMap<>();
+				Map<String, Object> itineraryOut = new HashMap<>();
 				itineraryOut.put("transfers", itin.transfers);
 				itineraryOut.put("durationSeconds", itin.duration);
 
-				List<HashMap<String, Object>> legs = new ArrayList<>();
-				for(Leg leg : itin.legs) {
-					HashMap<String, Object> legOut = new HashMap<>();
-
-					// Trip Info
-					legOut.put("routeLongName", leg.routeLongName);
-					legOut.put("routeId", leg.routeId);
-					legOut.put("headsign", leg.headsign);
-					legOut.put("tripShortName", leg.tripShortName);
-					legOut.put("tripId", leg.tripId);
-					legOut.put("direction", leg.tripDirectionId);
-					legOut.put("destination", leg.stopHeadsign);
-					legOut.put("from", leg.from.stopId);
-					legOut.put("to", leg.to.stopId);
-					legOut.put("stops", getStops(leg.stop, leg.from, leg.to));
-					legOut.put("track", leg.from.track);
-					legOut.put("stopNote", leg.from.note);
-					legOut.put("occupancy", getOccupancy(leg.vehicleInfo));
-					legOut.put("carriages", getCarriages(leg.vehicleInfo));
-					legOut.put("alerts", leg.alerts);
-					legOut.put("cancelled", isTripCancelled(leg.serviceDate, leg.tripId, cancelledTripsByDepartureTime));
-					legOut.put("hold", isHeld(tripToRealTimeSignText, leg.tripId));
-
-					// Date and Time Info
-					legOut.put("runDate", leg.serviceDate);
-					legOut.put("departTime", leg.startTime.getTime().getTime()/1000);
-					legOut.put("departTimeString", leg.startTimeFmt);
-					legOut.put("arriveTime", leg.endTime.getTime().getTime()/1000);
-					legOut.put("arriveTimeString", leg.endTimeFmt);
-					legOut.put("boardTime", leg.scheduledDepartureTimeFmt);
-					legOut.put("alightTime", leg.scheduledArrivalTimeFmt);
-					legOut.put("peak", leg.peakOffpeak);
-					legOut.put("arrivalDelay", leg.arrivalDelay);
-					legOut.put("departureDelay", leg.departureDelay);
-
-					legs.add(legOut);
+				try {
+					List<Map<String, Object>> legs = getMappedLegProperties(itin.legs, cancelledTripsByDepartureTime,
+							tripToRealTimeSignText);
+					itineraryOut.put("legs", legs);
+					result.add(itineraryOut);
+				} catch (Exception e){
+					LOG.warn("Unable to add legs to result list");
+					continue;
 				}
-
-				itineraryOut.put("legs", legs);
-				result.add(itineraryOut);
 			}
 		}
 		return result;
+	}
+
+	private List<Map<String, Object>> getMappedLegProperties(List<Leg> itinLegs,
+													   		 Map <String, Set<AgencyAndId>> cancelledTripsByDepartureTime,
+													  		 Map<AgencyAndId, String> tripToRealTimeSignText) throws Exception {
+		List<Map<String, Object>> legs = new ArrayList<>();
+
+		for(Leg leg : itinLegs) {
+			Map<String, Object> legOut = new HashMap<>();
+
+			/*if(hasTransferOnSameRoute(legs, leg)){
+				throw new Exception("Transfer on same route");
+			}
+*/
+			// Trip Info
+			legOut.put("routeLongName", leg.routeLongName);
+			legOut.put("routeId", leg.routeId);
+			legOut.put("headsign", leg.headsign);
+			legOut.put("tripShortName", leg.tripShortName);
+			legOut.put("tripId", leg.tripId);
+			legOut.put("direction", leg.tripDirectionId);
+			legOut.put("destination", leg.stopHeadsign);
+			legOut.put("from", leg.from.stopId);
+			legOut.put("to", leg.to.stopId);
+			legOut.put("stops", getStops(leg.stop, leg.from, leg.to));
+			legOut.put("track", leg.from.track);
+			legOut.put("stopNote", leg.from.note);
+			legOut.put("occupancy", getOccupancy(leg.vehicleInfo));
+			legOut.put("carriages", getCarriages(leg.vehicleInfo));
+			legOut.put("alerts", leg.alerts);
+			legOut.put("cancelled", isTripCancelled(leg.serviceDate, leg.tripId, cancelledTripsByDepartureTime));
+			legOut.put("hold", isHeld(tripToRealTimeSignText, leg.tripId));
+
+			// Date and Time Info
+			legOut.put("runDate", leg.serviceDate);
+			legOut.put("departTime", leg.startTime.getTime().getTime()/1000);
+			legOut.put("departTimeString", leg.startTimeFmt);
+			legOut.put("arriveTime", leg.endTime.getTime().getTime()/1000);
+			legOut.put("arriveTimeString", leg.endTimeFmt);
+			legOut.put("boardTime", leg.scheduledDepartureTimeFmt);
+			legOut.put("alightTime", leg.scheduledArrivalTimeFmt);
+			legOut.put("peak", leg.peakOffpeak);
+			legOut.put("arrivalDelay", leg.arrivalDelay);
+			legOut.put("departureDelay", leg.departureDelay);
+
+			legs.add(legOut);
+		}
+		return legs;
+	}
+
+	private boolean hasTransferOnSameRoute(List<Map<String, Object>> legs, Leg currentLeg){
+		if(!legs.isEmpty()){
+			AgencyAndId prevRoute = (AgencyAndId) legs.stream().reduce((first, second) -> second).get().get("routeId");
+			if(currentLeg.routeId.equals(prevRoute)){
+				return true;
+			}
+		}
+		return false;
 	}
 
 

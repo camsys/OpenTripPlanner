@@ -340,7 +340,10 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
                 // for LIRR, penalize unknown transfers
                 if(trip.getId().getAgencyId().equals("LI") && transferTime == -999)
                 	transferPenalty = options.nonpreferredTransferPenalty;
-               
+
+                // for MNR, penalize unknown transfers
+                if(trip.getId().getAgencyId().equals("MNR") && transferTime == -999)
+                    transferPenalty = options.nonpreferredTransferPenalty;
                 // check requiredStops (just applies to LIRR)
                 this.requiredStops = transferDetail.getRequiredStops();                
                 if(requiredStops != null) {
