@@ -667,24 +667,12 @@ public class GraphQLScheduleImpl {
 		return result;
 	}
 
-					// Trip Info
-					legOut.put("routeLongName", leg.routeLongName);
-					legOut.put("routeId", leg.routeId);
-					legOut.put("headsign", leg.headsign);
-					legOut.put("tripShortName", leg.tripShortName);
-					legOut.put("tripId", leg.tripId);
-					legOut.put("direction", leg.tripDirectionId);
-					legOut.put("destination", leg.stopHeadsign);
-					legOut.put("from", leg.from.stopId);
-					legOut.put("to", leg.to.stopId);
-					legOut.put("stops", getStops(leg.stop, leg.from, leg.to));
-					legOut.put("track", leg.from.track);
-					legOut.put("stopNote", leg.from.note);
-					legOut.put("occupancy", getOccupancy(leg.vehicleInfo));
-					legOut.put("carriages", getCarriages(leg.vehicleInfo));
-					legOut.put("alerts", leg.alerts);
-					legOut.put("cancelled", isTripCancelled(leg.serviceDate, leg.tripId, cancelledTripsByDepartureTime));
-					legOut.put("hold", isHeld(tripToRealTimeSignText, leg.tripId));
+
+	private List<Map<String, Object>> getMappedLegProperties(List<Leg> itinLegs,
+													   Map <String, Set<AgencyAndId>> cancelledTripsByDepartureTime,
+													   Map<AgencyAndId, String> tripToRealTimeSignText){
+
+		List<Map<String, Object>> legs = new ArrayList<>();
 
 		for(Leg leg : itinLegs) {
 			Map<String, Object> legOut = new HashMap<>();
@@ -692,7 +680,8 @@ public class GraphQLScheduleImpl {
 			/*if(hasTransferOnSameRoute(legs, leg)){
 				throw new Exception("Transfer on same route");
 			}
-*/
+			*/
+
 			// Trip Info
 			legOut.put("routeLongName", leg.routeLongName);
 			legOut.put("routeId", leg.routeId);
