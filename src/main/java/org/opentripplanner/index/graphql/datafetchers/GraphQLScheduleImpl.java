@@ -219,6 +219,10 @@ public class GraphQLScheduleImpl {
 											  Graph graph,
 											  int transferCount){
 
+		if (fromStop.getId().getAgencyId().equals("MNR")) {
+			return true;
+		}
+
 		// Found Stop Flag
 		boolean foundStop = false;
 
@@ -357,7 +361,7 @@ public class GraphQLScheduleImpl {
 			}
 			// if the DEPARTURE stop is on the same pattern then filter out
 			// trips by departure time
-			else if(foundStop && stop.getId().equals(destinationStop.getId())){
+			else if(foundStop && stop.getId().equals(destinationStop.getId()) || stop.getId().getAgencyId().equals("MNR")){
 				for(Trip patternTrip : patternTrips){
 					// Filter trips to make sure they have a valid departure time
 					if(departuresByTripId.containsKey(patternTrip.getId())){
