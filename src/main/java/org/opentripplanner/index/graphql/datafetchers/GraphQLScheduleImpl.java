@@ -499,7 +499,7 @@ public class GraphQLScheduleImpl {
 		GenericDijkstra gd = new GenericDijkstra(rr);
 
 		gd.setSkipEdgeStrategy(getScheduleSkipEdgeStrategy(null, fromStop.getId().getAgencyId()));
-		gd.setSkipTraverseResultStrategy(getSkipTraverseResultStrategy());
+		//gd.setSkipTraverseResultStrategy(getSkipTraverseResultStrategy());
 
 		State initialState = new State(rr);
 		ShortestPathTree spt = gd.getShortestPathTree(initialState);
@@ -675,17 +675,16 @@ public class GraphQLScheduleImpl {
 
 	private List<Map<String, Object>> getMappedLegProperties(List<Leg> itinLegs,
 													   Map <String, Set<AgencyAndId>> cancelledTripsByDepartureTime,
-													   Map<AgencyAndId, String> tripToRealTimeSignText){
+													   Map<AgencyAndId, String> tripToRealTimeSignText) throws Exception {
 
 		List<Map<String, Object>> legs = new ArrayList<>();
 
 		for(Leg leg : itinLegs) {
 			Map<String, Object> legOut = new HashMap<>();
 
-			/*if(hasTransferOnSameRoute(legs, leg)){
+			if(hasTransferOnSameRoute(legs, leg)){
 				throw new Exception("Transfer on same route");
 			}
-			*/
 
 			// Trip Info
 			legOut.put("routeLongName", leg.routeLongName);
@@ -725,8 +724,13 @@ public class GraphQLScheduleImpl {
 
 	private boolean hasTransferOnSameRoute(List<Map<String, Object>> legs, Leg currentLeg){
 		if(!legs.isEmpty()){
-			AgencyAndId prevRoute = (AgencyAndId) legs.stream().reduce((first, second) -> second).get().get("routeId");
-			if(currentLeg.routeId.equals(prevRoute)){
+			Map<String, Object> prevLeg = legs.stream().reduce((first, second) -> second).get();
+			AgencyAndId prevRoute = (AgencyAndId) prevLeg.get("routeId");
+			String prevDirection = (String) prevLeg.get("direction");
+
+			if(prevRoute != null && prevDirection !=null
+					&& currentLeg.routeId.equals(prevRoute)
+					&& !currentLeg.tripDirectionId.equals(prevDirection)){
 				return true;
 			}
 		}
