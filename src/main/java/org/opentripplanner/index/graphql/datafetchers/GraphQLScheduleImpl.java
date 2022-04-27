@@ -252,9 +252,9 @@ public class GraphQLScheduleImpl {
 							// Get list of trips that you can transfer to
 							Set<Trip> transferTrips = getTransferTrips(graph, stop, patternTrip, fromStop);
 
-							/*if (transferTrips.isEmpty() && stop.getId().getAgencyId().equals("MNR")) {
+							if (transferTrips.isEmpty()) {
 								return true;
-							}*/
+							}
 							// Recurse through transfer trips to see if any of them lead to the DESTINATION stop
 							for (Trip transferTrip : transferTrips) {
 								List<Stop> tripStops = graph.index.patternForTrip.get(transferTrip).getStops();
@@ -443,20 +443,6 @@ public class GraphQLScheduleImpl {
 				Trip transferTrip = graph.index.tripForId.get(transferTripId);
 				transferTrips.add(transferTrip);
 			}
-		}
-		// check to see if stop has any transfers
-		// if it does add all the trips
-		else if(transferTable.hasStopTransfer(stop, stop)){
-			// get all trips that has that stop
-			Collection<TripPattern> transferTripPatterns = graph.index.patternsForStop.get(stop);
-			// add all trips that have transfers for that pattern
-			for(TripPattern tripPattern : transferTripPatterns){
-				transferTrips.addAll(tripPattern.getTrips());
-			}
-			if(transferTrips.contains(patternTrip)){
-				transferTrips.remove(patternTrip);
-			}
-
 		}
 
 		return transferTrips;
