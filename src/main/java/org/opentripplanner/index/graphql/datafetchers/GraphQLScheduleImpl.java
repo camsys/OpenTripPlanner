@@ -170,7 +170,7 @@ public class GraphQLScheduleImpl {
 
 		List<Object> result = generateResultsForItineraries(departuresSorted, itinerariesByDepartureTime,
 				itineraryFilteredByArrival, cancelledTripsByDepartureTime,
-				tripToRealTimeSignText, maxTimeOffset);
+				tripToRealTimeSignText, time, maxTimeOffset);
 
 		result.stream().limit(maxResults).collect(Collectors.toList());
 
@@ -219,6 +219,10 @@ public class GraphQLScheduleImpl {
 											  Graph graph,
 											  int transferCount){
 
+		if (fromStop.getId().getAgencyId().equals("MNR")) {
+			return true;
+		}
+
 		// Found Stop Flag
 		boolean foundStop = false;
 
@@ -248,7 +252,7 @@ public class GraphQLScheduleImpl {
 							// Get list of trips that you can transfer to
 							Set<Trip> transferTrips = getTransferTrips(graph, stop, patternTrip, fromStop);
 
-							if (transferTrips.isEmpty() && stop.getId().getAgencyId().equals("MNR")) {
+							if (transferTrips.isEmpty()) {
 								return true;
 							}
 							// Recurse through transfer trips to see if any of them lead to the DESTINATION stop
@@ -357,7 +361,7 @@ public class GraphQLScheduleImpl {
 			}
 			// if the DEPARTURE stop is on the same pattern then filter out
 			// trips by departure time
-			else if(foundStop && stop.getId().equals(destinationStop.getId())){
+			else if(foundStop && stop.getId().equals(destinationStop.getId()) || stop.getId().getAgencyId().equals("MNR")){
 				for(Trip patternTrip : patternTrips){
 					// Filter trips to make sure they have a valid departure time
 					if(departuresByTripId.containsKey(patternTrip.getId())){
@@ -440,20 +444,6 @@ public class GraphQLScheduleImpl {
 				transferTrips.add(transferTrip);
 			}
 		}
-		// check to see if stop has any transfers
-		// if it does add all the trips
-		else if(transferTable.hasStopTransfer(stop, stop)){
-			// get all trips that has that stop
-			Collection<TripPattern> transferTripPatterns = graph.index.patternsForStop.get(stop);
-			// add all trips that have transfers for that pattern
-			for(TripPattern tripPattern : transferTripPatterns){
-				transferTrips.addAll(tripPattern.getTrips());
-			}
-			if(transferTrips.contains(patternTrip)){
-				transferTrips.remove(patternTrip);
-			}
-
-		}
 
 		return transferTrips;
 	}
@@ -495,7 +485,7 @@ public class GraphQLScheduleImpl {
 		GenericDijkstra gd = new GenericDijkstra(rr);
 
 		gd.setSkipEdgeStrategy(getScheduleSkipEdgeStrategy(null, fromStop.getId().getAgencyId()));
-		gd.setSkipTraverseResultStrategy(getSkipTraverseResultStrategy());
+		//gd.setSkipTraverseResultStrategy(getSkipTraverseResultStrategy());
 
 		State initialState = new State(rr);
 		ShortestPathTree spt = gd.getShortestPathTree(initialState);
@@ -638,12 +628,13 @@ public class GraphQLScheduleImpl {
 													   Map<Long, Itinerary> itineraryFilteredByArrival,
 													   Map <String, Set<AgencyAndId>> cancelledTripsByDepartureTime,
 													   Map<AgencyAndId, String> tripToRealTimeSignText,
+													   long currentTime,
 													   long maxTimeOffset) {
 		List<Object> result = new ArrayList<>();
 		for(String key : departuresSorted) {
 			for(Itinerary itin : itinerariesByDepartureTime.get(key)) {
 				Itinerary endItinerary = itineraryFilteredByArrival.get(itin.endTime.getTimeInMillis());
-				if (maxTimeOffset!=0 && itin.startTime.getTime().getTime() > (maxTimeOffset + System.currentTimeMillis())) {
+				if (maxTimeOffset!=0 && itin.startTime.getTime().getTime() > (maxTimeOffset + currentTime)) {
 					continue;
 				}
 				if(endItinerary != null && !itin.equals(endItinerary) && itin.transfers >= endItinerary.transfers){
@@ -670,17 +661,16 @@ public class GraphQLScheduleImpl {
 
 	private List<Map<String, Object>> getMappedLegProperties(List<Leg> itinLegs,
 													   Map <String, Set<AgencyAndId>> cancelledTripsByDepartureTime,
-													   Map<AgencyAndId, String> tripToRealTimeSignText){
+													   Map<AgencyAndId, String> tripToRealTimeSignText) throws Exception {
 
 		List<Map<String, Object>> legs = new ArrayList<>();
 
 		for(Leg leg : itinLegs) {
 			Map<String, Object> legOut = new HashMap<>();
 
-			/*if(hasTransferOnSameRoute(legs, leg)){
+			if(hasTransferOnSameRoute(legs, leg)){
 				throw new Exception("Transfer on same route");
 			}
-			*/
 
 			// Trip Info
 			legOut.put("routeLongName", leg.routeLongName);
@@ -720,8 +710,13 @@ public class GraphQLScheduleImpl {
 
 	private boolean hasTransferOnSameRoute(List<Map<String, Object>> legs, Leg currentLeg){
 		if(!legs.isEmpty()){
-			AgencyAndId prevRoute = (AgencyAndId) legs.stream().reduce((first, second) -> second).get().get("routeId");
-			if(currentLeg.routeId.equals(prevRoute)){
+			Map<String, Object> prevLeg = legs.stream().reduce((first, second) -> second).get();
+			AgencyAndId prevRoute = (AgencyAndId) prevLeg.get("routeId");
+			String prevDirection = (String) prevLeg.get("direction");
+
+			if(prevRoute != null && prevDirection !=null
+					&& currentLeg.routeId.equals(prevRoute)
+					&& !currentLeg.tripDirectionId.equals(prevDirection)){
 				return true;
 			}
 		}
