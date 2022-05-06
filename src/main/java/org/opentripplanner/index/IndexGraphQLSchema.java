@@ -26,6 +26,7 @@ import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.Trip;
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.opentripplanner.gtfs.GtfsLibrary;
+import org.opentripplanner.index.model.StopTimesForPatternsQuery;
 import org.opentripplanner.index.model.StopTimesInPattern;
 import org.opentripplanner.index.model.TripTimeShort;
 import org.opentripplanner.profile.StopCluster;
@@ -342,13 +343,23 @@ public class IndexGraphQLSchema {
             		.type(Scalars.GraphQLBoolean)
             		.defaultValue(false)
             		.build())
-                .dataFetcher(environment ->
-                    index.stopTimesForStop((Stop) environment.getSource(),
-                        Long.parseLong(environment.getArgument("startTime")),
-                        (int) environment.getArgument("timeRange"),
-                        (int) environment.getArgument("numberOfDepartures"),
-                        (boolean) environment.getArgument("omitNonPickups")))
-                .build())
+                .dataFetcher(environment -> {
+                    try {  // TODO: Add our own scalar types for at least serviceDate and AgencyAndId
+                        Stop stop = (Stop) environment.getSource();
+                        Long startTime = Long.parseLong(environment.getArgument("startTime"));
+                        int timeRange = (int) environment.getArgument("timeRange");
+                        int numberOfDepartures = (int) environment.getArgument("numberOfDepartures");
+                        boolean omitNonPickups =(boolean) environment.getArgument("omitNonPickups");
+
+                        StopTimesForPatternsQuery query = new StopTimesForPatternsQuery
+                                .Builder(stop, startTime, timeRange, numberOfDepartures, omitNonPickups).build();
+
+                        return index.stopTimesForStop(query);
+
+                    } catch (Exception e) {
+                        return null;
+                    }
+                 }).build())
             .field(GraphQLFieldDefinition.newFieldDefinition()
                 .name("stoptimesWithoutPatterns")
                 .type(new GraphQLList(stoptimeType))
@@ -372,19 +383,28 @@ public class IndexGraphQLSchema {
             		.type(Scalars.GraphQLBoolean)
             		.defaultValue(false)
             		.build())
-                .dataFetcher(environment ->
-                    index.stopTimesForStop(
-                        (Stop) environment.getSource(),
-                        Long.parseLong(environment.getArgument("startTime")),
-                        (int) environment.getArgument("timeRange"),
-                        (int) environment.getArgument("numberOfDepartures"),
-                        (boolean) environment.getArgument("omitNonPickups"))
-                    .stream()
-                    .flatMap(stoptimesWithPattern -> stoptimesWithPattern.times.stream())
-                    .sorted(Comparator.comparing(t -> t.serviceDay + t.realtimeDeparture))
-                    .limit((long) (int) environment.getArgument("numberOfDepartures"))
-                    .collect(Collectors.toList()))
-                .build())
+                .dataFetcher(environment -> {
+                    try {  // TODO: Add our own scalar types for at least serviceDate and AgencyAndId
+
+                        Stop stop = (Stop) environment.getSource();
+                        Long startTime = Long.parseLong(environment.getArgument("startTime"));
+                        int timeRange = (int) environment.getArgument("timeRange");
+                        int numberOfDepartures = (int) environment.getArgument("numberOfDepartures");
+                        boolean omitNonPickups =(boolean) environment.getArgument("omitNonPickups");
+
+                        StopTimesForPatternsQuery query = new StopTimesForPatternsQuery
+                                .Builder(stop, startTime, timeRange, numberOfDepartures, omitNonPickups).build();
+
+                        return index.stopTimesForStop(query).stream()
+                                .flatMap(stoptimesWithPattern -> stoptimesWithPattern.times.stream())
+                                .sorted(Comparator.comparing(t -> t.serviceDay + t.realtimeDeparture))
+                                .limit((long) (int) environment.getArgument("numberOfDepartures"))
+                                .collect(Collectors.toList());
+
+                    } catch (Exception e) {
+                        return null;
+                    }
+                }).build())
             .build();
 
         stoptimeType = GraphQLObjectType.newObject()

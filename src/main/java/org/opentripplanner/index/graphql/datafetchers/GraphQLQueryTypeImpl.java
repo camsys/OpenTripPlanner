@@ -1,21 +1,17 @@
 package org.opentripplanner.index.graphql.datafetchers;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import org.opentripplanner.api.model.*;
+import org.opentripplanner.common.model.P2;
+import org.opentripplanner.index.model.*;
+import org.opentripplanner.routing.core.*;
+import org.opentripplanner.routing.edgetype.*;
 import org.opentripplanner.routing.spt.GraphPath;
 import org.joda.time.DateTime;
 import org.onebusaway.gtfs.model.AgencyAndId;
@@ -23,10 +19,6 @@ import org.onebusaway.gtfs.model.FeedInfo;
 import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.Trip;
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
-import org.onebusaway.gtfs.services.calendar.CalendarService;
-import org.opentripplanner.api.model.Itinerary;
-import org.opentripplanner.api.model.Leg;
-import org.opentripplanner.api.model.PairwiseAccessibilityShort;
 import org.opentripplanner.api.resource.AccessibilityResource;
 import org.opentripplanner.api.resource.GraphPathToTripPlanConverter;
 import org.opentripplanner.api.resource.NearbySchedulesResource;
@@ -35,47 +27,25 @@ import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.datafetchers.GraphQLQueryTypeInputs.*;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
 import org.opentripplanner.index.graphql.generated.GraphQLTypes.GraphQLNyMtaAdaFlag;
-import org.opentripplanner.index.model.StopShort;
-import org.opentripplanner.index.model.StopTimesInPattern;
-import org.opentripplanner.index.model.TripTimeShort;
 import org.opentripplanner.routing.algorithm.GenericDijkstra;
 import org.opentripplanner.routing.algorithm.strategies.SkipEdgeStrategy;
-import org.opentripplanner.routing.core.OptimizeType;
-import org.opentripplanner.routing.core.RoutingRequest;
-import org.opentripplanner.routing.core.ServiceDay;
-import org.opentripplanner.routing.edgetype.FreeEdge;
-import org.opentripplanner.routing.edgetype.LandmarkEdge;
-import org.opentripplanner.routing.edgetype.StreetEdge;
-import org.opentripplanner.routing.edgetype.StreetTransitLink;
-import org.opentripplanner.routing.edgetype.Timetable;
-import org.opentripplanner.routing.edgetype.TransferEdge;
-import org.opentripplanner.routing.edgetype.TripPattern;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.spt.ShortestPathTree;
-import org.opentripplanner.routing.trippattern.TripTimes;
-import org.opentripplanner.routing.vertextype.TransitStationStop;
+import org.opentripplanner.routing.trippattern.RealTimeState;
 import org.opentripplanner.routing.vertextype.TransitStop;
 import org.opentripplanner.standalone.Router;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Multisets;
-import com.google.common.collect.SetMultimap;
-import com.google.common.collect.TreeMultimap;
-
-import org.opentripplanner.routing.core.State;
-import org.opentripplanner.routing.core.TraverseMode;
-
-import graphql.execution.DataFetcherResult;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryType {
+
+	private static final Logger LOG = LoggerFactory.getLogger(GraphQLQueryTypeImpl.class);
 
 	@Override
 	public DataFetcher<Iterable<Object>> alerts() {
@@ -272,7 +242,7 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 	@Override
 	public DataFetcher<Object> accessibility() {
 		return environment -> {
-			GraphQLQueryTypeStopAccessibilityArgsInput input = 
+			GraphQLQueryTypeStopAccessibilityArgsInput input =
 					new GraphQLQueryTypeStopAccessibilityArgsInput(environment.getArguments());
 
 			String mtaAdaAccessible = null;
@@ -436,160 +406,13 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 	@Override
 	public DataFetcher<Iterable<Object>> schedule() {
 		return environment -> {
-			GraphQLQueryTypeScheduleArgsInput input = 
-					new GraphQLQueryTypeScheduleArgsInput(environment.getArguments());
-
-			Stop fromStop = getRouter(environment).graph.index.stopForId.get(
-					AgencyAndId.convertFromString(input.getGraphQLFromGtfsId()));
-
-			Stop toStop = getRouter(environment).graph.index.stopForId.get(
-					AgencyAndId.convertFromString(input.getGraphQLToGtfsId()));
-						
-			long time = System.currentTimeMillis();
-			if(input.getGraphQLTime() != null)
-				time = new DateTime(input.getGraphQLTime()).getMillis();
-						
-			int maxResults = 10;
-			if(input.getGraphQLMaxResults() != null 
-					&& input.getGraphQLMaxResults() > 0 
-					&& input.getGraphQLMaxResults() < 25)
-				maxResults = input.getGraphQLMaxResults();
-			
-			List<StopTimesInPattern> stips = 
-					getRouter(environment).graph.index.stopTimesForStop(
-							fromStop, 
-							time/1000,
-							2 * 60 * 60,
-							10,
-							true);
-
-			TreeSet<Long> uniqueDepartureTimes = new TreeSet<Long>();
-			for(StopTimesInPattern stip : stips) {
-				for(TripTimeShort tts : stip.times) {
-					long departureTime = (tts.serviceDay + tts.scheduledDeparture) * 1000;
-					if(departureTime < time)
-						continue;
-
-					uniqueDepartureTimes.add(departureTime);
-				}
-			}
-			
-			HashMap<String, Set<Itinerary>> itinerariesByDepartureTime = new HashMap<>();
-			for(Long departureTime : uniqueDepartureTimes) {			
-				RoutingRequest rr = new RoutingRequest();
-				rr.setDateTime(new Date(departureTime - 1));
-				rr.setNumItineraries(2);
-				rr.setMode(TraverseMode.TRANSIT);
-				rr.setRoutingContext(getRouter(environment).graph,
-						getRouter(environment).graph.index.stopVertexForStop.get(fromStop),
-						getRouter(environment).graph.index.stopVertexForStop.get(toStop));
-				
-				GenericDijkstra gd = new GenericDijkstra(rr);
-				gd.skipEdgeStrategy = new OneAgencySkipEdgeStrategy(fromStop.getId().getAgencyId()); 
-				
-				State initialState = new State(rr);
-				ShortestPathTree spt = gd.getShortestPathTree(initialState);
-				
-				if(spt.getPaths().isEmpty())
-					continue;
-				
-				for(GraphPath path : spt.getPaths()) {
-					Itinerary i = GraphPathToTripPlanConverter.generateItinerary(path, false, true, Locale.ENGLISH);
-
-					Set<Itinerary> itineraries = itinerariesByDepartureTime.get(i.startTimeFmt);
-					if(itineraries == null)
-						itineraries = new HashSet<>();
-					
-					// itineraries don't implement Comparable, so a hack: 
-					String thisItineraryHash = itineraryHash(i);
-					List<String> existingItineraryHashes = itineraries.stream()
-							.map(itin -> itineraryHash(itin))
-							.collect(Collectors.toList());
-					
-					if(!existingItineraryHashes.contains(thisItineraryHash))
-						itineraries.add(i);
-					
-					itinerariesByDepartureTime.put(i.startTimeFmt, itineraries);
-				}
-				
-				if(itinerariesByDepartureTime.size() >= maxResults)
-					break;
-			}
-
-			List<String> departuresSorted = new ArrayList<>(itinerariesByDepartureTime.keySet());
-			Collections.sort(departuresSorted);
-			
-			List<Object> r = new ArrayList<>();
-			for(String key : departuresSorted) {
-				for(Itinerary itin : itinerariesByDepartureTime.get(key)) {
-					HashMap<String, Object> itineraryOut = new HashMap<>();
-					itineraryOut.put("transfers", itin.transfers);
-					itineraryOut.put("durationSeconds", itin.duration);
-
-					List<HashMap<String, Object>> legs = new ArrayList<>();
-					for(Leg leg : itin.legs) {
-						HashMap<String, Object> legOut = new HashMap<>();
-
-						legOut.put("routeLongName", leg.routeLongName);
-						legOut.put("headsign", leg.headsign);
-					
-						legOut.put("from", leg.from.name);
-						legOut.put("to", leg.to.name);
-						legOut.put("departTime", leg.startTime.getTime().getTime()/1000);
-						legOut.put("departTimeString", leg.startTimeFmt);
-						legOut.put("arriveTime", leg.endTime.getTime().getTime()/1000);
-						legOut.put("arriveTimeString", leg.endTimeFmt);
-						
-						legs.add(legOut);
-					}
-					
-					itineraryOut.put("legs", legs);
-					r.add(itineraryOut);
-				}
-			}
-			return r;
+			GraphQLScheduleImpl graphQLScheduleImpl = new GraphQLScheduleImpl();
+			return graphQLScheduleImpl.getSchedule(environment);
 		};
-	
-	}
-	
-	private String itineraryHash(Itinerary itin) {
-		return String.join("", itin.legs.stream()
-				.map(leg -> leg.startTimeFmt + leg.endTimeFmt + leg.from.stopId + leg.to.stopId)
-				.collect(Collectors.toList()));
-	}
-	
-	private class OneAgencySkipEdgeStrategy implements SkipEdgeStrategy {
-		private String agencyId;
-		
-		OneAgencySkipEdgeStrategy(String agencyId) {
-			this.agencyId = agencyId;
-		}
-		
-		@Override
-		public boolean shouldSkipEdge(Vertex origin, Vertex target, State current, Edge edge, ShortestPathTree spt,
-				RoutingRequest traverseOptions) {
 
-			if(edge instanceof StreetEdge || edge instanceof StreetTransitLink || origin.equals(target))
-				return true;
-	
-			if(edge instanceof TransferEdge || edge instanceof LandmarkEdge) {
-				if(edge.getFromVertex() instanceof TransitStop) {
-					if(!GtfsLibrary.convertIdFromString(edge.getFromVertex().getLabel())
-							.getAgencyId().equals(agencyId))
-						return true;
-				}
-				
-				if(edge.getToVertex() instanceof TransitStop) {
-					if(!GtfsLibrary.convertIdFromString(edge.getToVertex().getLabel())
-							.getAgencyId().equals(agencyId))
-						return true;					
-				}
-			}
-
-			return false;
-		}
-		
 	}
+
+
 
 	private Router getRouter(DataFetchingEnvironment environment) {
 		return environment.<GraphQLRequestContext>getContext().getRouter();

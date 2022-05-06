@@ -31,7 +31,6 @@ type Feed {
 
 }
 
-
 """Alert of a current or upcoming disruption in public transportation"""
 type Alert {
 
@@ -40,6 +39,15 @@ type Alert {
 
     """The feed in which this alert was published"""
     feed: String
+
+    """id"""
+    id: String
+
+    """Type of alert"""
+    alertType: String
+
+    """Human readable"""
+    humanReadableActivePeriod: String
 
     """
     Agency affected by the disruption. Note that this value is present only if the
@@ -93,7 +101,6 @@ type Alert {
     """
     effectiveEndDate: Long
 }
-
 
 """Cause of a alert"""
 enum AlertCauseType {
@@ -693,11 +700,20 @@ type ScheduleResultLeg {
     """
 	headsign: String
 
+    """
+    Is train being held
+    """
+    hold: Boolean
 
 	"""
 	Route name of the train serving this leg
     """
 	routeLongName: String
+
+    """
+    Route ID of the train serving this leg
+    """
+    routeId: String
 
 	"""
 	From station name
@@ -728,7 +744,118 @@ type ScheduleResultLeg {
     Arrival time. Format: ISO date
     """
 	arriveTimeString: String
-		
+
+    """
+    Run Date is the service date of the trip Format: ISO date
+    """
+    runDate: String
+
+    """
+    Trip short name
+    """
+    tripShortName: String
+
+    """
+    Trip id
+    """
+    tripId: String
+
+    """
+    Direction
+    """
+    direction: String
+
+    """
+    Destination is the final stop of the trip
+    """
+    destination: String
+
+    """
+    Board Time
+    """
+    boardTime: String
+
+    """
+    Alight Time
+    """
+    alightTime: String
+
+    """
+    Peak
+    """
+    peak: Int
+
+    """
+    Track
+    """
+    track: String
+
+    """
+    Stops
+    """
+    stops: [String]
+
+    """
+    stopNote
+    """
+    stopNote: String
+
+    """
+    occupancy
+    """
+    occupancy: String
+
+    """
+    carriages
+    """
+    carriages: [CarriageInfo]
+
+    """
+    ArrivalDelay
+    """
+    arrivalDelay: Int
+
+    """
+    DepartureDelay
+    """
+    departureDelay: Int
+
+    """
+    Cancelled
+    """
+    cancelled: Boolean
+
+    """
+    Alerts
+    """
+    alerts: [ScheduleAlert]
+}
+
+"""Alert of a current or upcoming disruption in public transportation"""
+type ScheduleAlert {
+    id: String
+    alertHeaderText: String
+    alertDescriptionText: String
+    alertUrl: String
+    alertType: String
+    humanReadableActivePeriod: String,
+    effectiveStartDateFmt: String,
+    effectiveEndDateFmt: String,
+    createdAtDateFmt: String,
+    updatedAtDateFmt: String
+}
+
+type CarriageInfo {
+    id: String
+    label: String
+    occupancyStatus: String
+    bicyclesAllowed: Int
+    carriageClass: String
+}
+
+type AgencyAndId {
+    agencyId: String
+    id: String
 }
     
 type KeyValueMap {
@@ -885,12 +1012,17 @@ type QueryType {
 		"""
      	Time to return departure times for. Will default to the current time.
      	"""
-     	time: String	
+     	time: String
 
-		"""
-     	Number of results. Defaults to 10.
-     	"""
-     	maxResults: Int
+        """
+        Max number of results
+        """
+        maxResults: Int
+
+        """
+        Maximum time offest in minutes to search past the 'time' parameter. Defaults to 60
+        """
+        maxTime: Int
 
 	): [ScheduleResult]
 	

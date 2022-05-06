@@ -7,7 +7,7 @@
 
 	<groupId>org.opentripplanner</groupId>
 	<artifactId>otp</artifactId>
-	<version>1.3.0.86-SNAPSHOT</version>
+	<version>1.3.0.88.2</version>
 	<packaging>jar</packaging>
 
 	<licenses>
@@ -391,7 +391,7 @@
 						<productionBranch>mta-master</productionBranch>
 						<developmentBranch>mta-develop</developmentBranch>
 						<featureBranchPrefix>mta-feature/</featureBranchPrefix>
-						<releaseBranchPrefix>mta-release/</releaseBranchPrefix>
+						<releaseBranchPrefix>mta-release</releaseBranchPrefix>
 						<hotfixBranchPrefix>mta-hotfix/</hotfixBranchPrefix>
 						<supportBranchPrefix>mta-support/</supportBranchPrefix>
 						<versionTagPrefix>otp-</versionTagPrefix>

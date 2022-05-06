@@ -15,6 +15,8 @@ public class StopTimesInPattern {
      */
     public PatternShort pattern;
 
+    public TripPattern patternFull = null;
+
     /**
      * Route which these arrival-departures are associated with.
      */
@@ -28,6 +30,14 @@ public class StopTimesInPattern {
     public StopTimesInPattern(TripPattern pattern) {
         this.pattern = new PatternShort(pattern);
         this.route = new RouteShort(pattern.route);
+    }
+
+    public StopTimesInPattern(TripPattern pattern, boolean includePattern){
+        this.pattern = new PatternShort(pattern);
+        this.route = new RouteShort(pattern.route);
+        if(includePattern){
+            this.patternFull = pattern;
+        }
     }
 
 }

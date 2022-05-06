@@ -31,18 +31,7 @@ import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.opentripplanner.api.model.VehicleInfo;
 import org.opentripplanner.common.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.gtfs.GtfsLibrary;
-import org.opentripplanner.index.model.EquipmentShort;
-import org.opentripplanner.index.model.PatternDetail;
-import org.opentripplanner.index.model.PatternShort;
-import org.opentripplanner.index.model.RouteShort;
-import org.opentripplanner.index.model.StopClusterDetail;
-import org.opentripplanner.index.model.StopDetail;
-import org.opentripplanner.index.model.StopShort;
-import org.opentripplanner.index.model.StopTimesInPattern;
-import org.opentripplanner.index.model.TransferShort;
-import org.opentripplanner.index.model.TripDetail;
-import org.opentripplanner.index.model.TripShort;
-import org.opentripplanner.index.model.TripTimeShort;
+import org.opentripplanner.index.model.*;
 import org.opentripplanner.model.Landmark;
 import org.opentripplanner.profile.StopCluster;
 import org.opentripplanner.routing.alertpatch.Alert;
@@ -206,7 +195,7 @@ public class IndexAPI {
         if (agency == null) return Response.status(Status.NOT_FOUND).entity(MSG_404).build();
         Collection<Route> agencyRoutes = new ArrayList<>();
         for (Route route: routes) {
-            if (route.getAgency() == agency) {
+            if (route.getAgency().equals(agency)) {
                 agencyRoutes.add(route);
             }
         }
@@ -405,7 +394,9 @@ public class IndexAPI {
                                          @QueryParam("omitNonPickups") boolean omitNonPickups) {
         Stop stop = index.stopForId.get(GtfsLibrary.convertIdFromString(stopIdString));
         if (stop == null) return Response.status(Status.NOT_FOUND).entity(MSG_404).build();
-        return Response.status(Status.OK).entity(index.stopTimesForStop(stop, startTime, timeRange, numberOfDepartures, omitNonPickups )).build();
+        StopTimesForPatternsQuery query =
+                new StopTimesForPatternsQuery.Builder(stop, startTime, timeRange, numberOfDepartures, omitNonPickups).build();
+        return Response.status(Status.OK).entity(index.stopTimesForStop(query)).build();
     }
 
     /**
