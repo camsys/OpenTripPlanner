@@ -397,13 +397,22 @@ public class NearbySchedulesResource {
                     stopTimes.addPatterns(stopTimesPerPattern);                
                 }
 
-                for (StopTimesByRouteAndHeadsign str : stopTimes.getGroups()) {
-                    Iterator<TripTimeShort> timesIter = str.getTimes().iterator();
-                    while (timesIter.hasNext()) {
-                        TripTimeShort tt = timesIter.next();
-                        TripPattern p = index.getTripPatternForTripId(tt.tripId);
-                        if (p.stopPattern.dropoffs[tt.stopIndex] == StopPattern.PICKDROP_NONE)
-                            timesIter.remove();
+                if (includeStopsForTrip) {
+                    for (StopTimesByRouteAndHeadsign str : stopTimes.getGroups()) {
+                        Set<TripTimeShort> times = str.getTimes();
+                        for (TripTimeShort t : times) {
+                            Iterator<StopShort> stopsIter = t.stopsForTrip.iterator();
+                            int stopIndex = 0;
+                            while (stopsIter.hasNext()) {
+                                StopShort tt = stopsIter.next();
+                                if (!tt.id.equals(stop.getId())) {
+                                    TripPattern p = index.getTripPatternForTripId(t.tripId);
+                                    if (p.stopPattern.dropoffs[stopIndex] == StopPattern.PICKDROP_NONE)
+                                        stopsIter.remove();
+                                }
+                                stopIndex++;
+                            }
+                        }
                     }
                 }
                 	
