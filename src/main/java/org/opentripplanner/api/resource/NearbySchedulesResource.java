@@ -407,6 +407,25 @@ public class NearbySchedulesResource {
                 } else {
                     stopTimes.addPatterns(stopTimesPerPattern);                
                 }
+
+                if (includeStopsForTrip) {
+                    for (StopTimesByRouteAndHeadsign str : stopTimes.getGroups()) {
+                        Set<TripTimeShort> times = str.getTimes();
+                        for (TripTimeShort t : times) {
+                            Iterator<StopShort> stopsIter = t.stopsForTrip.iterator();
+                            int stopIndex = 0;
+                            while (stopsIter.hasNext()) {
+                                StopShort tt = stopsIter.next();
+                                if (!tt.id.equals(stop.getId())) {
+                                    TripPattern p = index.getTripPatternForTripId(t.tripId);
+                                    if (p.stopPattern.dropoffs[stopIndex] == StopPattern.PICKDROP_NONE)
+                                        stopsIter.remove();
+                                }
+                                stopIndex++;
+                            }
+                        }
+                    }
+                }
                 	
                 addAlertsToStopTimes(stop, stopTimes, alertPatchSnapshot);
             }
