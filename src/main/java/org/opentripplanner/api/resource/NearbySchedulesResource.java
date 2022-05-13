@@ -14,19 +14,8 @@ package org.opentripplanner.api.resource;
 
 import static org.opentripplanner.api.resource.ServerInfo.Q;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.DefaultValue;
@@ -45,10 +34,8 @@ import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Stop;
 import org.opentripplanner.api.util.StopFinder;
 import org.opentripplanner.common.model.T2;
-import org.opentripplanner.index.model.StopTimesByStop;
-import org.opentripplanner.index.model.StopTimesForPatternQuery;
-import org.opentripplanner.index.model.StopTimesForPatternsQuery;
-import org.opentripplanner.index.model.StopTimesInPattern;
+import org.opentripplanner.index.model.*;
+import org.opentripplanner.model.StopPattern;
 import org.opentripplanner.routing.alertpatch.AlertPatch;
 import org.opentripplanner.routing.algorithm.AStar;
 import org.opentripplanner.routing.core.RouteMatcher;
@@ -60,6 +47,7 @@ import org.opentripplanner.routing.edgetype.TripPattern;
 import org.opentripplanner.routing.error.VertexNotFoundException;
 import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.routing.graph.LIRRSolariDataService;
+import org.opentripplanner.routing.trippattern.TripTimes;
 import org.opentripplanner.routing.vertextype.TransitStop;
 import org.opentripplanner.standalone.OTPServer;
 import org.opentripplanner.standalone.Router;
@@ -286,7 +274,7 @@ public class NearbySchedulesResource {
             throw new IllegalArgumentException("Must supply lat/lon/radius, or list of stops.");
         }
         
-        Map<AgencyAndId, StopTimesByStop> stopIdAndStopTimesMap = getStopTimesByParentStop(transitStops, startTime, 
+        Map<AgencyAndId, StopTimesByStop> stopIdAndStopTimesMap =  getStopTimesByParentStop(transitStops, startTime,
         		transitStopStates);
         Collection<StopTimesByStop> stopTimesByStops = stopIdAndStopTimesMap.values();
         for (StopTimesByStop stbs : stopTimesByStops) {
@@ -341,6 +329,7 @@ public class NearbySchedulesResource {
                                                         .trackIds(getTrackIds())
                                                         .showCancelledTrips(showCancelledTrips)
                                                         .includeStopsForTrip(includeStopsForTrip)
+                                                        .includeTripPatterns(true)
                                                         .signMode(signMode)
                                                         .build();
 
@@ -406,6 +395,25 @@ public class NearbySchedulesResource {
                 // otherwise use patterns from GTFS/GTFS-RT
                 } else {
                     stopTimes.addPatterns(stopTimesPerPattern);                
+                }
+
+                if (includeStopsForTrip) {
+                    for (StopTimesByRouteAndHeadsign str : stopTimes.getGroups()) {
+                        Set<TripTimeShort> times = str.getTimes();
+                        for (TripTimeShort t : times) {
+                            Iterator<StopShort> stopsIter = t.stopsForTrip.iterator();
+                            int stopIndex = 0;
+                            while (stopsIter.hasNext()) {
+                                StopShort tt = stopsIter.next();
+                                if (!tt.id.equals(stop.getId())) {
+                                    TripPattern p = index.getTripPatternForTripId(t.tripId);
+                                    if (p.stopPattern.dropoffs[stopIndex] == StopPattern.PICKDROP_NONE)
+                                        stopsIter.remove();
+                                }
+                                stopIndex++;
+                            }
+                        }
+                    }
                 }
                 	
                 addAlertsToStopTimes(stop, stopTimes, alertPatchSnapshot);
