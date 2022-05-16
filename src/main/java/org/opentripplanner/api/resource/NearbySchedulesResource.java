@@ -404,12 +404,9 @@ public class NearbySchedulesResource {
                             Iterator<StopShort> stopsIter = t.stopsForTrip.iterator();
                             int stopIndex = 0;
                             while (stopsIter.hasNext()) {
-                                StopShort tt = stopsIter.next();
-                                if (!tt.id.equals(stop.getId())) {
-                                    TripPattern p = index.getTripPatternForTripId(t.tripId);
-                                    if (p.stopPattern.dropoffs[stopIndex] == StopPattern.PICKDROP_NONE)
-                                        stopsIter.remove();
-                                }
+                                TripPattern p = index.getTripPatternForTripId(t.tripId);
+                                if (p.stopPattern.dropoffs[stopIndex] == StopPattern.PICKDROP_NONE)
+                                    stopsIter.remove();
                                 stopIndex++;
                             }
                         }
