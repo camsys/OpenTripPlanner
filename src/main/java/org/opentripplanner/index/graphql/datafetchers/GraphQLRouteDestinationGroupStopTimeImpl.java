@@ -166,7 +166,7 @@ public class GraphQLRouteDestinationGroupStopTimeImpl implements GraphQLDataFetc
 			Trip t = getGraphIndex(environment).getTripForId(e.tripId);			
 			if(t == null)
 				throw new Exception("Trip " + e.tripId + " not found.");
-			
+
 			TripPattern pattern = getGraphIndex(environment).getTripPatternForTripId(t.getId());			
 			Stop s = pattern.getStops().get(e.stopIndex);
 			if(s == null)
@@ -178,8 +178,9 @@ public class GraphQLRouteDestinationGroupStopTimeImpl implements GraphQLDataFetc
 			List<Stop> data = new ArrayList<Stop>();
 			for(int i = 0; i < pattern.getStops().size(); i++) {
 				Stop stop = pattern.getStops().get(i);
-				if(pattern.stopPattern.dropoffs[i] != StopPattern.PICKDROP_NONE)				
+				if (e.stopId.equals(stop.getId()) || pattern.stopPattern.dropoffs[i] != StopPattern.PICKDROP_NONE) {
 					data.add(stop);
+				}
 			}
 			
 			return DataFetcherResult.newResult()
