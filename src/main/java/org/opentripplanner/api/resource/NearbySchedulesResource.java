@@ -363,7 +363,7 @@ public class NearbySchedulesResource {
             	// if solari has trips for the station we're looking for, use those--otherwise use the RT/schedule 
 
             	// use Solari preferentially
-                if(solariMessages != null && !solariMessages.isEmpty()) {
+                if(!solariMessages.isEmpty()) {
                 	stopTimesPerPattern = new ArrayList<StopTimesInPattern>();
 
                     for(Entry<T2<String, String>, JsonNode> e : solariMessages) {
