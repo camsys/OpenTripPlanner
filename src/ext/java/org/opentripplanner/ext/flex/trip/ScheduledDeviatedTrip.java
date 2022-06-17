@@ -71,9 +71,11 @@ public class ScheduledDeviatedTrip extends FlexTrip {
 		  && stopTimes.stream()
 		  	.allMatch(it -> it.getFlexContinuousDropOff() == 1 && it.getFlexContinuousPickup() == 1)
 		  && stopTimes.stream()
+            .filter(it -> it.getStop() != null)
 			.filter(it -> !it.getStop().isArea() && !it.getStop().isLine())
 		  	.allMatch(it -> it.getFlexWindowEnd() == StopTime.MISSING_VALUE && it.getFlexWindowStart() == StopTime.MISSING_VALUE)
 		  && stopTimes.stream()
+            .filter(it -> it.getStop() != null)
 		  	.filter(it -> it.getStop().isArea() || it.getStop().isLine())
 		  	.allMatch(it -> it.getFlexWindowEnd() != StopTime.MISSING_VALUE && it.getFlexWindowStart() != StopTime.MISSING_VALUE);
   }
