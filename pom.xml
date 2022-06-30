@@ -88,14 +88,14 @@
 
     <distributionManagement>
         <repository>
-            <id>nexus.onebusaway.org-releases</id>
-            <name>Nexus Release Repo</name>
-            <url>http://nexus.onebusaway.org/content/repositories/releases/</url>
+            <id>releases-camsys-public-repo</id>
+            <name>Camsys Public Release Repo</name>
+            <url>s3://repo.camsys-apps.com/releases/</url>
         </repository>
         <snapshotRepository>
-            <id>nexus.onebusaway.org-snapshots</id>
-            <name>Nexus Snapshot Repo</name>
-            <url>http://nexus.onebusaway.org/content/repositories/snapshots/</url>
+            <id>snapshots-camsys-public-repo</id>
+            <name>Camsys Public Snapshot Repo</name>
+            <url>s3://repo.camsys-apps.com/snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
 
@@ -184,18 +184,18 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
-            <plugin>
-                <!-- Recommended way to deploy to OSSRH , which allows deferred manual release to Central. -->
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.6.7</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                </configuration>
-            </plugin>
+<!--            <plugin>-->
+<!--                &lt;!&ndash; Recommended way to deploy to OSSRH , which allows deferred manual release to Central. &ndash;&gt;-->
+<!--                <groupId>org.sonatype.plugins</groupId>-->
+<!--                <artifactId>nexus-staging-maven-plugin</artifactId>-->
+<!--                <version>1.6.7</version>-->
+<!--                <extensions>true</extensions>-->
+<!--                <configuration>-->
+<!--                    <serverId>ossrh</serverId>-->
+<!--                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>-->
+<!--                    <autoReleaseAfterClose>true</autoReleaseAfterClose>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
             <plugin>
                 <groupId>com.webcohesion.enunciate</groupId>
                 <artifactId>enunciate-maven-plugin</artifactId>
@@ -369,6 +369,21 @@
                 </executions>
             </plugin>
         </plugins>
+        <!-- In Maven 3, ssh wagon is no longer enabled by default. Since many
+    of our internal deployments use ssh, we enable it here -->
+        <extensions>
+            <extension>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-ssh</artifactId>
+                <version>3.0.0</version>
+            </extension>
+            <extension>
+                <groupId>com.allogy.maven.wagon</groupId>
+                <artifactId>maven-s3-wagon</artifactId>
+                <version>1.2.0</version>
+            </extension>
+        </extensions>
+
     </build>
 
     <reporting>
@@ -412,39 +427,34 @@
     </reporting>
 
     <repositories>
-        <!-- Hack to force maven to check central first. Maven central is inherited from the superpom,
-          but ends up at the end of the list. Though most of the time the artifact is in central,
-          Maven tries to download from every other repository and fails before checking central.
-          Do not change the id from central2 to central, otherwise the entry will be ignored. -->
         <repository>
-            <id>central2</id>
-            <name>check central first to avoid a lot of not found warnings</name>
-            <url>https://repo1.maven.org/maven2</url>
+            <id>repo.camsys-apps.com</id>
+            <url>https://repo.camsys-apps.com/third-party/</url>
         </repository>
         <repository>
-            <id>download.java.net</id>
-            <name>Java.net Repository for Maven</name>
-            <url>http://download.java.net/maven/2/</url>
+            <id>releases-camsys-public-repo</id>
+            <url>https://repo.camsys-apps.com/releases/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
         <repository>
-            <id>osgeo</id>
+            <id>snapshots-camsys-public-repo</id>
+            <url>https://repo.camsys-apps.com/snapshots/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>osgeo-repo</id>
             <name>Open Source Geospatial Foundation Repository</name>
-            <url>http://download.osgeo.org/webdav/geotools/</url>
-        </repository>
-        <repository>
-            <id>axis</id>
-            <name>axis</name>
-            <url>https://people.apache.org/repo/m1-ibiblio-rsync-repository/org.apache.axis2/</url>
-        </repository>
-        <repository>
-            <id>onebusaway-releases</id>
-            <name>Onebusaway Releases Repo</name>
-            <url>http://nexus.onebusaway.org/content/repositories/releases/</url>
-        </repository>
-        <repository>
-            <id>onebusaway-snapshots</id>
-            <name>Onebusaway Snapshots Repo</name>
-            <url>http://nexus.onebusaway.org/content/repositories/snapshots/</url>
+            <url>https://repo.osgeo.org/repository/release/</url>
         </repository>
     </repositories>
 
@@ -626,7 +636,7 @@
         <dependency>
             <groupId>org.onebusaway</groupId>
             <artifactId>onebusaway-gtfs</artifactId>
-            <version>1.3.75-SNAPSHOT</version>
+            <version>1.3.75</version>
         </dependency>
         <!-- Processing is used for the debug GUI (though we could probably use just Java2D) -->
         <dependency>
