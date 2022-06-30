@@ -1,7 +1,6 @@
 package org.opentripplanner.api.resource;
 
 import com.google.common.collect.Maps;
-import com.webcohesion.enunciate.metadata.Ignore;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.linearref.LengthIndexedLine;
 import org.geotools.geojson.geom.GeometryJSON;
@@ -36,7 +35,6 @@ import java.util.*;
  * This is the original Isochrone class provided by Stefan Steineger.
  * Another implementation has been provided by Laurent Grégoire (isochrone2).
  */
-@Ignore
 @Path("/routers/{routerId}/isochroneOld")
 @XmlRootElement
 public class SIsochrone extends RoutingResource {

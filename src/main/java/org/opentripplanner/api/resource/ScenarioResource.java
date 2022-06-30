@@ -1,6 +1,5 @@
 package org.opentripplanner.api.resource;
 
-import com.webcohesion.enunciate.metadata.Ignore;
 import org.opentripplanner.analyst.scenario.Scenario;
 import org.opentripplanner.analyst.scenario.ScenarioStore;
 import org.opentripplanner.standalone.OTPServer;
@@ -16,7 +15,6 @@ import javax.ws.rs.core.Response;
 /**
  * Presents saved non-destructive transit analysis scenarios as a document tree for manipulation via HTTP.
  */
-@Ignore
 @Path("/routers/{routerId}/scenarios")
 @Produces(MediaType.APPLICATION_JSON)
 public class ScenarioResource {

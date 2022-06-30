@@ -27,7 +27,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import com.webcohesion.enunciate.metadata.Ignore;
 import org.opentripplanner.api.model.RouterInfo;
 import org.opentripplanner.api.model.RouterList;
 import org.opentripplanner.graph_builder.GraphBuilder;
@@ -84,7 +83,6 @@ import com.google.common.io.Files;
  * The GET methods are not secured, but all other methods are secured under ROLE_ROUTERS.
  * See documentation for individual methods for additional parameters.
  */
-@Ignore
 @Path("/routers")
 @PermitAll // exceptions on methods
 public class Routers {
