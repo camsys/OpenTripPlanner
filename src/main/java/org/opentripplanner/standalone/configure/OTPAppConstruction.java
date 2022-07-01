@@ -126,6 +126,7 @@ public class OTPAppConstruction {
         projectInfo().otpConfigVersion = config.otpConfig().configVersion;
         projectInfo().buildConfigVersion = config.buildConfig().configVersion;
         projectInfo().routerConfigVersion = config.routerConfig().getConfigVersion();
+        projectInfo().graphVersion = config.graphVersion();
     }
 
     private GraphBuilderDataSources graphBuilderDataSources() {

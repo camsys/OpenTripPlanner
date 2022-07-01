@@ -17,6 +17,9 @@ public class OtpProjectInfo implements Serializable {
     /** Info derived from version string */
     public final MavenProjectVersion version;
 
+    /** arbitrary graph metadata for tracking current data loaded **/
+    public String graphVersion;
+
     /**
      * The graph file header expected for this instance of OTP.
      */

@@ -60,6 +60,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static org.opentripplanner.model.projectinfo.OtpProjectInfo.projectInfo;
+
 // TODO move to org.opentripplanner.api.resource, this is a Jersey resource class
 
 @Path("/routers/{routerId}/index")    // It would be nice to get rid of the final /index.
@@ -86,6 +88,11 @@ public class IndexAPI {
     @Context
     UriInfo uriInfo;
 
+    @GET
+    @Path("/version")
+    public String getVersion() {
+        return projectInfo().graphVersion;
+    }
     @GET
     @Path("/feeds")
     public Collection<String> getFeeds() {

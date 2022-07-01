@@ -55,11 +55,18 @@ public class OTPConfiguration {
      */
     private RouterConfig routerConfig;
 
+    /**
+     * Version metdata for verifying the graph version deployed.
+     * Format it arbitrary and external to OTP.
+     */
+    private String graphVersion;
+
     private OTPConfiguration(CommandLineParameters cli, ConfigLoader configLoader) {
         this.cli = cli;
         this.otpConfig = configLoader.loadOtpConfig();
         this.buildConfig = configLoader.loadBuildConfig();
         this.routerConfig = configLoader.loadRouterConfig();
+        this.graphVersion = configLoader.loadVersionConfig();
     }
 
     /**
@@ -129,6 +136,12 @@ public class OTPConfiguration {
     public RouterConfig routerConfig() {
         return routerConfig;
     }
+
+    /**
+     * Return optional version metadata used for determining the current graph laoded.
+     * @return
+     */
+    public String graphVersion() { return graphVersion; }
 
     /**
      * Create plug in config to the data store.

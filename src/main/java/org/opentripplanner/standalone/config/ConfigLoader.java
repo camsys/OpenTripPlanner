@@ -32,6 +32,7 @@ public class ConfigLoader {
     private static final String OTP_CONFIG_FILENAME = "otp-config.json";
     private static final String BUILD_CONFIG_FILENAME = "build-config.json";
     private static final String ROUTER_CONFIG_FILENAME = "router-config.json";
+    private static final String VERSION_FILENAME = "version.json";
 
     /** When echoing config files to logs, values for these keys will be hidden. */
     private static final Set<String> REDACT_KEYS = Set.of("secretKey", "accessKey", "gsCredentials");
@@ -81,7 +82,8 @@ public class ConfigLoader {
     public static boolean isConfigFile(String filename) {
         return OTP_CONFIG_FILENAME.equals(filename)
                 || BUILD_CONFIG_FILENAME.equals(filename)
-                || ROUTER_CONFIG_FILENAME.equals(filename);
+                || ROUTER_CONFIG_FILENAME.equals(filename)
+                || VERSION_FILENAME.equals(filename);
     }
 
     /**
@@ -124,6 +126,14 @@ public class ConfigLoader {
             return RouterConfig.DEFAULT;
         }
         return new RouterConfig(node, ROUTER_CONFIG_FILENAME, true);
+    }
+
+    public String loadVersionConfig() {
+        JsonNode node = loadJsonByFilename(VERSION_FILENAME);
+        if (node.isMissingNode()) {
+            return "{n/a}";
+        }
+        return node.toPrettyString();
     }
 
     /**
