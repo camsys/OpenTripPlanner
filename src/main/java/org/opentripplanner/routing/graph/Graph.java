@@ -749,7 +749,10 @@ public class Graph implements Serializable {
             toVertex.addIncoming(e);
         }
 
-        LOG.info("Main graph read. |V|={} |E|={}", graph.countVertices(), graph.countEdges());
+        LOG.info("Main graph read. |V|={} |E|={}, version={}",
+                graph.countVertices(),
+                graph.countEdges(),
+                (graph.getGraphVersion()==null?"{n/a}":graph.getGraphVersion().toString()));
         graph.index(new DefaultStreetVertexIndexFactory());
         return graph;
     }
