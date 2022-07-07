@@ -45,7 +45,8 @@ public class GraphVersionDeserializer extends JsonDeserializer<GraphVersion> {
                     token = jsonParser.nextToken();
                     gi.setVersion(jsonParser.getValueAsString());
                 } else {
-                    LOG.info("unexpected token " + jsonParser.getCurrentName() + ":" + jsonParser.getCurrentValue());
+                    LOG.info("unexpected token " + jsonParser.getCurrentName() + ":" + jsonParser.getCurrentValue()
+                    + " for input='" + jsonParser.getValueAsString() + "'");
                 }
             }
         }
