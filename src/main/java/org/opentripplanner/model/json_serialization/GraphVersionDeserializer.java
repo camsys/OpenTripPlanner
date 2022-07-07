@@ -50,6 +50,7 @@ public class GraphVersionDeserializer extends JsonDeserializer<GraphVersion> {
                 }
             }
         }
+        LOG.info("version date=" + gi.getCreatedDate());
         return gi;
     }
 
