@@ -20,12 +20,12 @@ public class OTPServer {
 
     public final CommandLineParameters params;
 
-    private final Router router;
+    private final RouterService routerService;
 
-    public OTPServer (CommandLineParameters params, Router router) {
+    public OTPServer (CommandLineParameters params, RouterService routerService) {
         LOG.info("Wiring up and configuring server.");
         this.params = params;
-        this.router = router;
+        this.routerService = routerService;
     }
 
     /**
@@ -39,7 +39,7 @@ public class OTPServer {
     }
 
     public Router getRouter() {
-        return router;
+        return routerService.getRouter();
     }
 
     /**
@@ -49,7 +49,7 @@ public class OTPServer {
      * will not be visible to the request.
      */
     public RoutingService createRoutingRequestService() {
-        return new RoutingService(router.graph);
+        return new RoutingService(routerService.getRouter().graph);
     }
 
     /**

@@ -10,7 +10,7 @@ import org.opentripplanner.standalone.config.CommandLineParameters;
 import org.opentripplanner.standalone.server.GrizzlyServer;
 import org.opentripplanner.standalone.server.OTPApplication;
 import org.opentripplanner.standalone.server.OTPServer;
-import org.opentripplanner.standalone.server.Router;
+import org.opentripplanner.standalone.server.RouterService;
 import org.opentripplanner.util.OTPFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,8 +67,8 @@ public class OTPAppConstruction {
      * Create a new Grizzly server - call this method once, the new instance is created
      * every time this method is called.
      */
-    public GrizzlyServer createGrizzlyServer(Router router) {
-        return new GrizzlyServer(config.getCli(), createApplication(router));
+    public GrizzlyServer createGrizzlyServer(RouterService routerService) {
+        return new GrizzlyServer(config.getCli(), createApplication(routerService));
     }
 
     public void validateConfigAndDataSources() {
@@ -115,9 +115,9 @@ public class OTPAppConstruction {
      * <p>
      * The method is {@code public} to allow test access.
      */
-    public OTPServer server(Router router) {
+    public OTPServer server(RouterService routerService) {
         if (server == null) {
-            server = new OTPServer(config.getCli(), router);
+            server = new OTPServer(config.getCli(), routerService);
         }
         return server;
     }
@@ -145,7 +145,12 @@ public class OTPAppConstruction {
         OTPFeature.logFeatureSetup();
     }
 
-    private Application createApplication(Router router) {
-        return new OTPApplication(server(router));
+    private Application createApplication(RouterService routerService) {
+        return new OTPApplication(server(routerService));
+    }
+
+    public synchronized void reloadConfig() {
+        config.reload();
+        setOtpConfigVersionsOnServerInfo();
     }
 }

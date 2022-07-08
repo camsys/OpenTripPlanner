@@ -10,6 +10,8 @@ import org.opentripplanner.standalone.config.CommandLineParameters;
 import org.opentripplanner.standalone.configure.OTPAppConstruction;
 import org.opentripplanner.standalone.server.GrizzlyServer;
 import org.opentripplanner.standalone.server.Router;
+import org.opentripplanner.standalone.server.RouterService;
+import org.opentripplanner.util.OTPFeature;
 import org.opentripplanner.util.OtpAppException;
 import org.opentripplanner.util.ThrowableUtils;
 import org.opentripplanner.visualizer.GraphVisualizer;
@@ -165,6 +167,15 @@ public class OTPMain {
 
         Router router = new Router(graph, app.config().routerConfig());
         router.startup();
+        RouterService routerService = new RouterService();
+        routerService.setRouter(router);
+        if (isGraphScanningEnabled()) {
+            DataSource inputGraph = params.doLoadGraph()
+                    ? app.store().getGraph()
+                    : app.store().getStreetGraph();
+            GraphScanner scanner = new GraphScanner(app, routerService, inputGraph);
+            scanner.start();
+        }
 
         /* Start visualizer if requested. */
         if (params.visualize) {
@@ -177,7 +188,7 @@ public class OTPMain {
         // This would also avoid the awkward call to set the router on the appConstruction after it's constructed.
         // However, currently the server runs in a blocking way and waits for shutdown, so has to run last.
         if (params.doServe()) {
-            GrizzlyServer grizzlyServer = app.createGrizzlyServer(router);
+            GrizzlyServer grizzlyServer = app.createGrizzlyServer(routerService);
             // Loop to restart server on uncaught fatal exceptions.
             while (true) {
                 try {
@@ -191,5 +202,9 @@ public class OTPMain {
                 }
             }
         }
+    }
+
+    private static boolean isGraphScanningEnabled() {
+        return OTPFeature.AutoScan.isOn();
     }
 }

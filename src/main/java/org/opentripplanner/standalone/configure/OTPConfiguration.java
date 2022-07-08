@@ -10,6 +10,8 @@ import org.opentripplanner.standalone.config.RouterConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+
 /**
  * This class is responsible for loading OTP configuration files:
  * <ol>
@@ -60,6 +62,10 @@ public class OTPConfiguration {
      * Format it arbitrary and external to OTP.
      */
     private String graphVersion;
+    /**
+     * Store base directory so we can optionally monitor it
+     */
+    private File baseDirectory;
 
     private OTPConfiguration(CommandLineParameters cli, ConfigLoader configLoader) {
         this.cli = cli;
@@ -70,11 +76,21 @@ public class OTPConfiguration {
     }
 
     /**
+     * reload the underlying configuration from the baseDirectory.
+     */
+    public void reload() {
+        ConfigLoader configLoader = new ConfigLoader(baseDirectory);
+        this.buildConfig = configLoader.loadBuildConfig();
+        this.routerConfig = configLoader.loadRouterConfig();
+        this.graphVersion = configLoader.loadVersionConfig();
+    }
+    /**
      * Create a new OTP configuration instance for a given directory. OTP can load
      * multiple graphs with its own configuration.
      */
     public OTPConfiguration(CommandLineParameters cli) {
         this(cli, new ConfigLoader(cli.getBaseDirectory()));
+        baseDirectory = cli.getBaseDirectory();
     }
 
     /**

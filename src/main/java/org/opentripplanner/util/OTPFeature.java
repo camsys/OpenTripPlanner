@@ -32,8 +32,9 @@ public enum OTPFeature {
     SandboxAPIMapboxVectorTilesApi(false),
     SandboxExampleAPIGraphStatistics(false),
     SandboxAPIParkAndRideApi(false),
-    TransferAnalyzer(false);
-
+    TransferAnalyzer(false),
+    // graph scanning -- set to false for upstream merge
+    AutoScan(true);
     private static final Logger LOG = LoggerFactory.getLogger(OTPFeature.class);
 
     OTPFeature(boolean defaultEnabled) {
