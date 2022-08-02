@@ -3,7 +3,7 @@ package org.opentripplanner.index.graphql.generated;
 
 import graphql.schema.DataFetcher;
 
-import java.util.Date;
+import java.util.Set;
 
 public class GraphQLDataFetchers {
   public interface GraphQLAccessibleResult {
@@ -102,6 +102,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<Object> trip();
     public DataFetcher<Object> accessibility();
     public DataFetcher<Iterable<Object>> schedule();
+    public DataFetcher<Iterable<Object>> recentTrips();
     public DataFetcher<Iterable<Object>> nearby();
   }
   
@@ -245,6 +246,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<String> shapeId();
     public DataFetcher<Iterable<Object>> stoptimes();
     public DataFetcher<Iterable<Object>> alerts();
+    public DataFetcher<Set<Long>> tripDateTime();
   }
   
 }

@@ -409,7 +409,14 @@ public class GraphQLQueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryTyp
 			GraphQLScheduleImpl graphQLScheduleImpl = new GraphQLScheduleImpl();
 			return graphQLScheduleImpl.getSchedule(environment);
 		};
+	}
 
+	@Override
+	public DataFetcher<Iterable<Object>> recentTrips() {
+		return environment -> {
+			GraphQLRecentTripsImpl graphQLRecentTripsImpl = new GraphQLRecentTripsImpl();
+			return graphQLRecentTripsImpl.getRecentTrips(environment);
+		};
 	}
 
 
