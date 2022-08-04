@@ -2,6 +2,8 @@ package org.opentripplanner.index.graphql.datafetchers;
 
 import graphql.schema.DataFetchingEnvironment;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.onebusaway.gtfs.model.*;
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.onebusaway.gtfs.services.calendar.CalendarService;
@@ -75,10 +77,13 @@ public class GraphQLRecentTripsImpl {
                     // stop times for all trips that begin within +/- 8 hours of current time
                     Map<String, Object> tripInfo = new HashMap<>();
 
-
                     tripInfo.put("tripId", t.getId());
-                    tripInfo.put("startDate", date);
+
+                    DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd");
+                    tripInfo.put("startDate", new DateTime(date).toString(fmt));
                     tripInfo.put("direction", t.getDirectionId());
+                    tripInfo.put("blockId", t.getBlockId());
+                    tripInfo.put("routeShortName", t.getRouteShortName());
                     tripInfo.put("route", t.getRoute().getId());
                     tripInfo.put("tripShortName", t.getTripShortName());
                     tripInfo.put("stopTimes", stopTimes);
