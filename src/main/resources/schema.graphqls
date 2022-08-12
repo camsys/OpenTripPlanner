@@ -693,6 +693,26 @@ type ScheduleResult {
 
 }
 
+type RecentTrips {
+
+    tripId: String
+
+    startDate: String
+
+    direction: String
+
+    route: String
+
+    routeShortName: String
+
+    blockId: String
+
+    tripShortName: String
+
+    stopTimes: [Stoptime]
+
+}
+
 type ScheduleResultLeg {
 	
 	"""
@@ -877,6 +897,10 @@ type QueryType {
     """
     feed(id: String!): Feed
 
+    """
+    Get data for trips within a certain time window +/- X hr from current time
+    """
+    recentTrips(feedId: String!): [RecentTrips]
 
     """Get all agencies"""
     agencies: [Agency]

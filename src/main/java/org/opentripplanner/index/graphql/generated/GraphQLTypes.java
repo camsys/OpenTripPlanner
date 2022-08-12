@@ -188,9 +188,9 @@ public class GraphQLTypes {
     private String time;
     private Integer maxResults;
     private Integer maxTime;
-  
+
     public GraphQLQueryTypeScheduleArgs() {}
-  
+
     public String getGraphQLFromGtfsId() { return this.fromGtfsId; }
     public String getGraphQLToGtfsId() { return this.toGtfsId; }
     public String getGraphQLTime() { return this.time; }
@@ -201,6 +201,16 @@ public class GraphQLTypes {
     public void setGraphQLTime(String time) { this.time = time; }
     public void setGraphQLMaxResults(Integer maxResults) { this.maxResults = maxResults; }
     public void setGraphQLMaxTime(Integer maxTime) { this.maxTime = maxTime; }
+
+  }
+
+  public static class GraphQLQueryTypeRecentTripsArgs {
+
+    private String feedId;
+    public GraphQLQueryTypeRecentTripsArgs() {}
+
+    public String getGraphQLFeedId() { return this.feedId; }
+    public void setGraphQLFeedId(String feedId) { this.feedId = feedId; }
 
   }
   public static class GraphQLQueryTypeNearbyArgs {
