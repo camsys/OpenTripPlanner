@@ -177,6 +177,8 @@ public class NearbyStopFinder {
     ) {
         List<NearbyStop> stopsFound = Lists.newArrayList();
 
+        if (originVertices == null) return stopsFound;
+
         /* Add the origin vertices if they are stops */
         for (Vertex vertex : originVertices) {
             if (vertex instanceof TransitStopVertex) {
