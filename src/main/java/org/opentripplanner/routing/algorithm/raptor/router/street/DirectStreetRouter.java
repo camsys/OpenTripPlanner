@@ -28,7 +28,7 @@ public class DirectStreetRouter {
     try (RoutingRequest directRequest = request.getStreetSearchRequest(request.modes.directMode)) {
       directRequest.setRoutingContext(router.graph);
 
-      if(!straightLineDistanceIsWithinLimit(directRequest)) { return Collections.emptyList(); }
+      if(!Boolean.TRUE.equals(straightLineDistanceIsWithinLimit(directRequest))) { return Collections.emptyList(); }
 
       // we could also get a persistent router-scoped GraphPathFinder but there's no setup cost here
       GraphPathFinder gpFinder = new GraphPathFinder(router);
@@ -44,7 +44,13 @@ public class DirectStreetRouter {
     }
   }
 
-  private static boolean straightLineDistanceIsWithinLimit(RoutingRequest request) {
+  private static Boolean straightLineDistanceIsWithinLimit(RoutingRequest request) {
+    if (request.rctx == null || request.rctx.fromVertices == null) {
+      // TODO this may mean something fatally wrong and perhaps should have been
+      // caught sooner
+      return null;
+    }
+
     // TODO This currently only calculates the distances between the first fromVertex
     //      and the first toVertex
     double distance = SphericalDistanceLibrary.distance(
