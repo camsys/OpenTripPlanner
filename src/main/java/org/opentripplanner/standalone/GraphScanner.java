@@ -49,6 +49,7 @@ public class GraphScanner {
             graph.index();
             app.setOtpConfigVersionsOnServerInfo();
             Router newRouter = new Router(graph, app.config().routerConfig());
+            newRouter.startup();
             app.reloadConfig();
             routerService.setRouter(newRouter);
             LOG.info("new graph load complete in " + (System.currentTimeMillis()-start) + "ms");
