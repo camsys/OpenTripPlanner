@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.opentripplanner.model.FeedScopedId;
@@ -17,6 +18,7 @@ import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
 
 @ExtendWith(SnapshotExtension.class)
+@Disabled("not testing snapshot at this time")
 public class TransitSnapshotTest
         extends SnapshotTestBase {
 

@@ -3,10 +3,8 @@ package org.opentripplanner.routing.algorithm.mapping;
 import au.com.origin.snapshots.junit5.SnapshotExtension;
 import java.util.Locale;
 import java.util.Set;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.ResourceLock;
 import org.junit.jupiter.api.parallel.Resources;
@@ -18,6 +16,7 @@ import org.opentripplanner.routing.api.request.StreetMode;
 
 @ExtendWith(SnapshotExtension.class)
 @ResourceLock(Resources.LOCALE)
+@Disabled("not testing snapshot at this time")
 public class BikeRentalSnapshotTest
         extends SnapshotTestBase {
 
