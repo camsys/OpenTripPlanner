@@ -520,9 +520,19 @@ public class TripPattern implements Cloneable, Serializable {
                 hopEdges[stop] = new PatternHop(pdv0, pav1, s0, s1, stop);
             }
 
-            /* Get the arrive and depart vertices for the current stop (not pattern stop). */
-            TransitStopDepart stopDepart = ((TransitStop) transitStops.get(s0)).departVertex;
-            TransitStopArrive stopArrive = ((TransitStop) transitStops.get(s1)).arriveVertex;
+            TransitStopDepart stopDepart = null;
+            TransitStopArrive stopArrive = null;
+            try {
+                /* Get the arrive and depart vertices for the current stop (not pattern stop). */
+                stopDepart = ((TransitStop) transitStops.get(s0)).departVertex;
+                stopArrive = ((TransitStop) transitStops.get(s1)).arriveVertex;
+            } catch (ClassCastException cce) {
+                LOG.error("expected TransitStop class, depart={}, arrive={}",
+                        transitStops.get(s0),
+                        transitStops.get(s1),
+                        cce);
+                throw new RuntimeException(cce);
+            }
 
             /* Record the transit stop vertices visited on this pattern. */
             stopVertices[stop] = stopDepart.getStopVertex();
