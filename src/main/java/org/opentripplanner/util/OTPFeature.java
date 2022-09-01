@@ -2,6 +2,7 @@ package org.opentripplanner.util;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,84 +10,137 @@ import org.slf4j.LoggerFactory;
 /**
  * The purpose of this class is to be able to turn features on and off.
  * <p>
- * This configuration is optional an found under "feature" in the top
- * level 'otp-config.json' file.
+ * This configuration is optional and found under "feature" in the top level 'otp-config.json'
+ * file.
  */
 public enum OTPFeature {
-    APIExternalGeocoder(true),
-    APIBikeRental(true),
-    APIServerInfo(true),
-    APIGraphInspectorTile(true),
-    APIUpdaterStatus(true),
-    OptimizeTransfers(true),
-    GuaranteedTransfers(true),
+  APIBikeRental(true),
+  APIServerInfo(true),
+  APIGraphInspectorTile(true),
+  APIUpdaterStatus(true),
+  /**
+   * If this feature flag is switched on, then the minimum transfer time is not the minimum transfer
+   * time, but the definitive transfer time. Use this to override what we think the transfer will
+   * take according to OSM data, for example if you want to set a very low transfer time like 1
+   * minute, when walking the distance take 1m30s.
+   */
+  MinimumTransferTimeIsDefinitive(false),
+  OptimizeTransfers(true),
+  ParallelRouting(false),
+  TransferConstraints(true),
+  FloatingBike(true),
 
-    // Sandbox extension features - Must be turned OFF by default
-    ActuatorAPI(false),
-    FlexRouting(false),
-    FloatingBike(false),
-    GoogleCloudStorage(false),
-    ReportApi(false),
-    SandboxAPITransmodelApi(false),
-    SandboxAPILegacyGraphQLApi(false),
-    SandboxAPIMapboxVectorTilesApi(false),
-    SandboxExampleAPIGraphStatistics(false),
-    SandboxAPIParkAndRideApi(false),
-    TransferAnalyzer(false),
-    // graph scanning -- set to false for upstream merge
-    AutoScan(true);
-    private static final Logger LOG = LoggerFactory.getLogger(OTPFeature.class);
+  // Sandbox extension features - Must be turned OFF by default
+  ActuatorAPI(false),
+  DataOverlay(false),
+  FaresV2(false),
+  FlexRouting(false),
+  GoogleCloudStorage(false),
+  ReportApi(false),
+  SandboxAPIGeocoder(false),
+  SandboxAPILegacyGraphQLApi(false),
+  SandboxAPIMapboxVectorTilesApi(false),
+  SandboxAPITransmodelApi(false),
+  SandboxAPITravelTime(false),
+  SandboxAPIParkAndRideApi(false),
+  TransferAnalyzer(false),
+  VehicleToStopHeuristics(false);
 
-    OTPFeature(boolean defaultEnabled) {
-        this.enabled = defaultEnabled;
+  private static final Object TEST_SEMAPHORE = new Object();
+
+  private static final Logger LOG = LoggerFactory.getLogger(OTPFeature.class);
+  private boolean enabled;
+
+  OTPFeature(boolean defaultEnabled) {
+    this.enabled = defaultEnabled;
+  }
+
+  /**
+   * This method allows the application to initialize each OTP feature. Only use this method at
+   * startup-time.
+   * <p>
+   * THIS METHOD IS NOT THREAD-SAFE!
+   */
+  public static void enableFeatures(Map<OTPFeature, Boolean> map) {
+    map.forEach(OTPFeature::set);
+  }
+
+  public static void logFeatureSetup() {
+    LOG.info("Features turned on: \n\t" + valuesAsString(true));
+    LOG.info("Features turned off: \n\t" + valuesAsString(false));
+  }
+
+  /**
+   * FOR TEST ONLY
+   *
+   * This method will run the given {@code task} with the feature turned ON. When the task complete
+   * the feature is set back to its original value.
+   * <p>
+   * This method is synchronized on the feature. This way calls to this method or the
+   * {@link #testOff(Runnable)} is prevented from running concurrent. It is safe to use these
+   * methods in a unit-test, but IT IS NOT SAFE TO USE IT IN GENERAL, because the main code is NOT
+   * synchronized.
+   */
+  public void testOn(Runnable task) {
+    testEnabled(true, task);
+  }
+
+  /**
+   * FOR TEST ONLY
+   *
+   * See {@link #testOn(Runnable)}
+   */
+  public void testOff(Runnable task) {
+    testEnabled(false, task);
+  }
+
+  /**
+   * Return {@code true} if feature is turned 'on'.
+   */
+  public boolean isOn() {
+    return enabled;
+  }
+
+  /**
+   * Return {@code true} if feature is turned 'off'.
+   */
+  public boolean isOff() {
+    return !enabled;
+  }
+
+  /**
+   * If feature is turned on, then return supplied object if not return {@code null}.
+   */
+  public <T> T isOnElseNull(Supplier<T> supplier) {
+    return isOn() ? supplier.get() : null;
+  }
+
+  /* private members */
+
+  /**
+   * Allow unit test and this class to enable/disable a feature.
+   */
+  private void set(boolean enabled) {
+    this.enabled = enabled;
+  }
+
+  private void testEnabled(boolean enabled, Runnable task) {
+    synchronized (TEST_SEMAPHORE) {
+      boolean originalValue = this.enabled;
+      try {
+        set(enabled);
+        task.run();
+      } finally {
+        set(originalValue);
+      }
     }
+  }
 
-    private boolean enabled;
-
-
-    /**
-     * This method allowes the application to initilize each OTP feature. Only use this
-     * method at startup-time.
-     *
-     * THIS METHOD IS NOT THREAD-SAFE!
-     */
-    public static void enableFeatures(Map<OTPFeature, Boolean> map) {
-        map.forEach(OTPFeature::set);
-    }
-
-    /**
-     * Return {@code true} if feature is turned 'on'.
-     */
-    public boolean isOn() {
-        return enabled;
-    }
-
-    /**
-     * Return {@code true} if feature is turned 'off'.
-     */
-    public boolean isOff() {
-        return !enabled;
-    }
-
-    /**
-     * Allow unit test and this class to enable/disable a feature.
-     */
-    void set(boolean enabled) {
-        this.enabled = enabled;
-    }
-
-
-    /* private members */
-
-    public static void logFeatureSetup() {
-        LOG.info("Features turned on: \n\t" + valuesAsString(true));
-        LOG.info("Features turned off: \n\t" + valuesAsString(false));
-    }
-
-    private static String valuesAsString(boolean enabled) {
-        return Arrays.stream(values())
-                .filter(it -> it.enabled == enabled)
-                .map(Enum::name)
-                .collect(Collectors.joining("\n\t"));
-    }
+  private static String valuesAsString(boolean enabled) {
+    return Arrays
+      .stream(values())
+      .filter(it -> it.enabled == enabled)
+      .map(Enum::name)
+      .collect(Collectors.joining("\n\t"));
+  }
 }
