@@ -1,5 +1,7 @@
 package org.opentripplanner.index.graphql.datafetchers;
 
+import com.beust.jcommander.internal.Lists;
+import com.fasterxml.jackson.databind.JsonNode;
 import graphql.schema.DataFetchingEnvironment;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -11,10 +13,7 @@ import org.opentripplanner.api.model.*;
 import org.opentripplanner.api.resource.GraphPathToTripPlanConverter;
 import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
-import org.opentripplanner.index.model.StopTimesForPatternQuery;
-import org.opentripplanner.index.model.StopTimesForPatternsQuery;
-import org.opentripplanner.index.model.StopTimesInPattern;
-import org.opentripplanner.index.model.TripTimeShort;
+import org.opentripplanner.index.model.*;
 import org.opentripplanner.routing.algorithm.GenericDijkstra;
 import org.opentripplanner.routing.algorithm.strategies.SkipEdgeStrategy;
 import org.opentripplanner.routing.algorithm.strategies.SkipTraverseResultStrategy;
@@ -27,6 +26,7 @@ import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.spt.GraphPath;
 import org.opentripplanner.routing.spt.ShortestPathTree;
 import org.opentripplanner.routing.trippattern.RealTimeState;
+import org.opentripplanner.routing.trippattern.TripTimes;
 import org.opentripplanner.routing.vertextype.TransitStop;
 import org.opentripplanner.standalone.Router;
 import org.slf4j.Logger;
@@ -72,20 +72,21 @@ public class GraphQLRecentTripsImpl {
                 long timeInterval = 8 * 60 * 60 * 1000;
                 long time = stopTimes.get(0).scheduledDeparture * 1000L;
 
-                if (Math.abs((date + time)-currentTimeMillis) < timeInterval ) {
+                if (Math.abs((date + time) - currentTimeMillis) < timeInterval) {
                     //trip ID, start date, direction, route ID, trip short name, and
                     // stop times for all trips that begin within +/- 8 hours of current time
                     Map<String, Object> tripInfo = new HashMap<>();
 
-                    tripInfo.put("tripId", t.getId());
+                    tripInfo.put("tripId", colonFormatAgency(t.getId()));
 
                     DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd");
                     tripInfo.put("startDate", new DateTime(date).toString(fmt));
                     tripInfo.put("direction", t.getDirectionId());
                     tripInfo.put("blockId", t.getBlockId());
                     tripInfo.put("routeShortName", t.getRouteShortName());
-                    tripInfo.put("route", t.getRoute().getId());
+                    tripInfo.put("route", colonFormatAgency(t.getRoute().getId()));
                     tripInfo.put("tripShortName", t.getTripShortName());
+                    tripInfo.put("tripHeadSign", t.getTripHeadsign());
                     tripInfo.put("stopTimes", stopTimes);
                     result.add(tripInfo);
                     break;
@@ -97,6 +98,10 @@ public class GraphQLRecentTripsImpl {
         return result;
     }
 
+    public String colonFormatAgency(AgencyAndId aid) {
+        return aid == null ? null : aid.getAgencyId() + ':' + aid.getId();
+    }
+
     private Router getRouter(DataFetchingEnvironment environment) {
         return environment.<GraphQLRequestContext>getContext().getRouter();
     }
@@ -104,4 +109,44 @@ public class GraphQLRecentTripsImpl {
     private GraphIndex getGraphIndex(DataFetchingEnvironment environment) {
         return environment.<GraphQLRequestContext>getContext().getIndex();
     }
+
+    public static class PostLightAgencyAndId extends AgencyAndId {
+        public PostLightAgencyAndId(AgencyAndId aid) {
+            super(aid.getAgencyId(),  aid.getId());
+        }
+
+        @Override
+        public String toString() {
+            return convertToString(this);
+        }
+
+        public static String convertToString(AgencyAndId aid) {
+            return aid == null ? null : aid.getAgencyId() + ':' + aid.getId();
+        }
+    }
+
+//    private class PostlightStop extends StopShort {
+//
+//        public PostlightStop(Stop s, String cluster) {
+//            super(s, cluster);
+//        }
+//
+//        public PostlightStop makePostlightStop(StopShort s) {
+//            Stop st = new Stop();
+//            st.setId(new AgencyAndId(s.id.getAgencyId(), s.id.getId()));
+//            st.setCode(s.code);
+//            st.setName(s.name);
+//            st.setLat(s.lat);
+//            st.setLon(s.lon);
+//            st.setUrl(s.url);
+//            st.setParentStation(s.parentStation);
+//            return new PostlightStop(st, s.parentStation);
+//        }
+//
+//        @Override
+//        public String toString() {
+//
+//        }
+//    }
 }
+

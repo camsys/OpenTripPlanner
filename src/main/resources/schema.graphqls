@@ -322,6 +322,9 @@ type Stop {
     """ÌD of the station/stop in format `FeedId_StopId`"""
     gtfsId: String!
 
+    """Id with colon (for postlight)"""
+    gtfsIdWithColon: String!
+
     """NY MTA Complex ID (a complex is one or more stations)"""
     mtaComplexId: String
 
@@ -708,6 +711,8 @@ type RecentTrips {
     blockId: String
 
     tripShortName: String
+
+    tripHeadSign: String
 
     stopTimes: [Stoptime]
 

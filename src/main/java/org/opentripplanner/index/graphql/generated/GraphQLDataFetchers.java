@@ -197,6 +197,7 @@ public class GraphQLDataFetchers {
    */
   public interface GraphQLStop {
     public DataFetcher<String> gtfsId();
+    public DataFetcher<String> gtfsIdWithColon();
     public DataFetcher<String> mtaComplexId();
     public DataFetcher<String> mtaStationId();
     public DataFetcher<Iterable<Object>> mtaEquipment();
