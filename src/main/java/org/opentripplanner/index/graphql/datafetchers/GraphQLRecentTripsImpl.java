@@ -1,7 +1,5 @@
 package org.opentripplanner.index.graphql.datafetchers;
 
-import com.beust.jcommander.internal.Lists;
-import com.fasterxml.jackson.databind.JsonNode;
 import graphql.schema.DataFetchingEnvironment;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -98,7 +96,7 @@ public class GraphQLRecentTripsImpl {
         return result;
     }
 
-    public String colonFormatAgency(AgencyAndId aid) {
+    private String colonFormatAgency(AgencyAndId aid) {
         return aid == null ? null : aid.getAgencyId() + ':' + aid.getId();
     }
 
@@ -110,43 +108,5 @@ public class GraphQLRecentTripsImpl {
         return environment.<GraphQLRequestContext>getContext().getIndex();
     }
 
-    public static class PostLightAgencyAndId extends AgencyAndId {
-        public PostLightAgencyAndId(AgencyAndId aid) {
-            super(aid.getAgencyId(),  aid.getId());
-        }
-
-        @Override
-        public String toString() {
-            return convertToString(this);
-        }
-
-        public static String convertToString(AgencyAndId aid) {
-            return aid == null ? null : aid.getAgencyId() + ':' + aid.getId();
-        }
-    }
-
-//    private class PostlightStop extends StopShort {
-//
-//        public PostlightStop(Stop s, String cluster) {
-//            super(s, cluster);
-//        }
-//
-//        public PostlightStop makePostlightStop(StopShort s) {
-//            Stop st = new Stop();
-//            st.setId(new AgencyAndId(s.id.getAgencyId(), s.id.getId()));
-//            st.setCode(s.code);
-//            st.setName(s.name);
-//            st.setLat(s.lat);
-//            st.setLon(s.lon);
-//            st.setUrl(s.url);
-//            st.setParentStation(s.parentStation);
-//            return new PostlightStop(st, s.parentStation);
-//        }
-//
-//        @Override
-//        public String toString() {
-//
-//        }
-//    }
 }
 
