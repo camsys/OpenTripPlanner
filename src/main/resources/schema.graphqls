@@ -606,6 +606,16 @@ type RouteDestinationGroupStopTime {
     stopCount: Int
 
     """
+    Service day in ms
+    """
+    serviceDay: Long
+
+    """
+    Service day in date format
+    """
+    serviceDayFormatted: String
+
+    """
 	Scheduled arrival time
     """
     scheduledArrival: Long
@@ -643,12 +653,17 @@ type RouteDestinationGroupStopTime {
 	"""
 	true if there is realtime data for this arrival/departure; otherwise false.
 	"""
-    realtime: Boolean 
+    realtime: Boolean
 
-	"""
- 	Trip of arrival/departure
- 	"""
+    """
+    Trip Id of arrival/departure
+    """
     tripId: String
+
+    """
+    Trip of arrival/departure
+    """
+    trip: Trip
 
 	"""
 	Track number, if available
