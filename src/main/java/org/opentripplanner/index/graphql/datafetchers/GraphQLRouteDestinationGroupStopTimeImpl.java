@@ -65,7 +65,7 @@ public class GraphQLRouteDestinationGroupStopTimeImpl implements GraphQLDataFetc
 		DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd");
 		return environment -> {
 			TripTimeShort e = environment.getSource();
-			return new DateTime(e.serviceDay).toString(fmt);
+			return new DateTime(e.serviceDay*10000).toString(fmt);
 		};
 	}
 
