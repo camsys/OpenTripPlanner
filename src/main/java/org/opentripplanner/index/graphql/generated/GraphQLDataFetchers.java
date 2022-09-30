@@ -3,6 +3,7 @@ package org.opentripplanner.index.graphql.generated;
 
 import graphql.schema.DataFetcher;
 
+import javax.xml.crypto.Data;
 import java.util.Set;
 
 public class GraphQLDataFetchers {
@@ -137,6 +138,8 @@ public class GraphQLDataFetchers {
   public interface GraphQLRouteDestinationGroupStopTime {
     public DataFetcher<Integer> stopIndex();
     public DataFetcher<Integer> stopCount();
+    public DataFetcher<Object> serviceDay();
+    public DataFetcher<String> serviceDayFormatted();
     public DataFetcher<Object> scheduledArrival();
     public DataFetcher<Object> scheduledDeparture();
     public DataFetcher<Object> realtimeArrival();
@@ -146,6 +149,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<Boolean> timepoint();
     public DataFetcher<Boolean> realtime();
     public DataFetcher<String> tripId();
+    public DataFetcher<Object> trip();
     public DataFetcher<String> track();
     public DataFetcher<Integer> peakOffpeak();
     public DataFetcher<Object> vehicleInfo();
