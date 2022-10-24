@@ -415,6 +415,7 @@ public abstract class GraphPathToItineraryMapper {
                 returnMode = mode;
             }
         }
+
         return returnMode;
     }
 

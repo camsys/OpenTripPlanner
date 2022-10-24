@@ -17,6 +17,7 @@ import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeConstants;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
+import java.sql.Time;
 import java.time.Duration;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -646,14 +647,20 @@ public abstract class RoutingResource {
     @Context
     protected OTPServer otpServer;
 
+    protected RoutingRequest buildRequest() throws ParameterException {
+        Router router = otpServer.getRouter();
+        RoutingRequest request = router.defaultRoutingRequest.clone();
+        TimeZone tz;
+        tz = router.graph.getTimeZone();
+        return buildRequest(request,tz);
+    }
+
     /**
      * Range/sanity check the query parameter fields and build a Request object from them.
      *
      * @throws ParameterException when there is a problem interpreting a query parameter
      */
-    protected RoutingRequest buildRequest() throws ParameterException {
-        Router router = otpServer.getRouter();
-        RoutingRequest request = router.defaultRoutingRequest.clone();
+    protected RoutingRequest buildRequest(RoutingRequest request, TimeZone tz) throws ParameterException {
 
         // The routing request should already contain defaults, which are set when it is initialized or in the JSON
         // router configuration and cloned. We check whether each parameter was supplied before overwriting the default.
@@ -665,8 +672,6 @@ public abstract class RoutingResource {
 
         {
             //FIXME: move into setter method on routing request
-            TimeZone tz;
-            tz = router.graph.getTimeZone();
             if (date == null && time != null) { // Time was provided but not date
                 LOG.debug("parsing ISO datetime {}", time);
                 try {
@@ -798,7 +803,7 @@ public abstract class RoutingResource {
             request.setWhiteListedAgenciesFromSting(whiteListedAgencies);
         }
         HashMap<FeedScopedId, BannedStopSet> bannedTripMap = makeBannedTripMap(bannedTrips);
-      
+
         if (bannedTripMap != null) {
             request.bannedTrips = bannedTripMap;
         }
@@ -879,6 +884,8 @@ public abstract class RoutingResource {
         request.locale = ResourceBundleSingleton.INSTANCE.getLocale(locale);
         return request;
     }
+
+
 
     /**
      * Take a string in the format agency:id or agency:id:1:2:3:4.

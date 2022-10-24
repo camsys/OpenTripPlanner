@@ -137,11 +137,11 @@ public class RoutingWorker {
     private Collection<Itinerary> routeTransit(Router router) {
         if (request.modes.transitModes.isEmpty()) { return Collections.emptyList(); }
 
-        if (!router.graph.transitFeedCovers(request.dateTime)) {
-            throw new RoutingValidationException(List.of(
-                    new RoutingError(RoutingErrorCode.OUTSIDE_SERVICE_PERIOD, InputField.DATE_TIME)
-            ));
-        }
+//        if (!router.graph.transitFeedCovers(request.dateTime)) {
+//            throw new RoutingValidationException(List.of(
+//                    new RoutingError(RoutingErrorCode.OUTSIDE_SERVICE_PERIOD, InputField.DATE_TIME)
+//            ));
+//        }
 
         TransitLayer transitLayer = request.ignoreRealtimeUpdates
             ? router.graph.getTransitLayer()
