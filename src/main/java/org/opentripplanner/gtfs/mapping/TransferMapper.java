@@ -90,8 +90,11 @@ class TransferMapper {
         return TransferPriority.ALLOWED;
       case RECOMMENDED:
         return TransferPriority.RECOMMENDED;
+      default:
+        return TransferPriority.ALLOWED;
+        //TODO FIX THIS
     }
-    throw new IllegalArgumentException("Mapping missing for type: " + type);
+    //throw new IllegalArgumentException("Mapping missing for type: " + type);
   }
 
   Collection<Transfer> map(Collection<org.onebusaway.gtfs.model.Transfer> allTransfers) {
