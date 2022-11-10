@@ -307,7 +307,24 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 
 							// (the triptimes that are used prior are not for the entire trip, so have to refetch here)
 							int stopIndex = pattern.getStops().indexOf(e);
-							long ourArrivalEpochSeconds = (new ServiceDate().getAsDate().getTime()/1000) + tripTimes.getArrivalTime(stopIndex);
+							long ourArrivalEpochSeconds;
+							try {
+								ServiceDate serviceDate = new ServiceDate();
+								Date serviceDateAsDate = serviceDate.getAsDate();
+								long serviceDateAsTime = serviceDateAsDate.getTime();
+								serviceDateAsTime = serviceDateAsTime/1000;
+								if(tripTimes == null){
+									LOG.error("tripTimes is null");
+								}
+								int arrivalTimes = tripTimes.getArrivalTime(stopIndex);
+								ourArrivalEpochSeconds = (serviceDateAsTime) + arrivalTimes;
+							} catch (NullPointerException npe){
+								if(tripTimes == null){
+									LOG.error("tripTimes is null");
+								}
+								LOG.error("our arrival epoch seconds hit an exception", npe);
+								throw npe;
+							}
 
 							for(Object _stop : stopsForMtaComplex().get(environment)) {
 								Stop stop = (Stop)_stop;
