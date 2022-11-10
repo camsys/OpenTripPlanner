@@ -14,10 +14,10 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.stream.Collectors;
 
-import org.onebusaway.gtfs.model.Agency;
-import org.onebusaway.gtfs.model.AgencyAndId;
-import org.onebusaway.gtfs.model.Stop;
-import org.onebusaway.gtfs.model.Trip;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.onebusaway.gtfs.model.*;
 import org.opentripplanner.index.graphql.GraphQLRequestContext;
 import org.opentripplanner.index.graphql.generated.GraphQLDataFetchers;
 import org.opentripplanner.index.model.EquipmentShort;
@@ -53,6 +53,23 @@ public class GraphQLRouteDestinationGroupStopTimeImpl implements GraphQLDataFetc
 	}
 
 	@Override
+	public DataFetcher<Object> serviceDay() {
+		return environment -> {
+			TripTimeShort e = environment.getSource();
+			return e.serviceDay;
+		};
+	}
+
+	@Override
+	public DataFetcher<String> serviceDayFormatted() {
+		DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd");
+		return environment -> {
+			TripTimeShort e = environment.getSource();
+			return new DateTime(e.serviceDay * 1000).toString(fmt);
+		};
+	}
+
+	@Override
 	public DataFetcher<Object> scheduledArrival() {
 		 return environment -> {
 			TripTimeShort e = environment.getSource();
@@ -70,10 +87,10 @@ public class GraphQLRouteDestinationGroupStopTimeImpl implements GraphQLDataFetc
 
 	@Override
 	public DataFetcher<Object> realtimeArrival() {
-		 return environment -> {
+		return environment -> {
 			TripTimeShort e = environment.getSource();
-		    	return e.serviceDay + e.realtimeArrival;
-		    };
+			return e.serviceDay + e.realtimeArrival;
+		};
 	}
 
 	@Override
@@ -118,10 +135,19 @@ public class GraphQLRouteDestinationGroupStopTimeImpl implements GraphQLDataFetc
 
 	@Override
 	public DataFetcher<String> tripId() {
-		 return environment -> {
+		return environment -> {
 			TripTimeShort e = environment.getSource();
-		    	return AgencyAndId.convertToString(e.tripId);
-		    };
+			return AgencyAndId.convertToString(e.tripId);
+		};
+	}
+
+	@Override
+	public DataFetcher<Object> trip() {
+		return environment -> {
+			TripTimeShort e = environment.getSource();
+			AgencyAndId aid = e.tripId;
+			return getGraphIndex(environment).tripForId.get(aid);
+		};
 	}
 
 	@Override
@@ -166,7 +192,7 @@ public class GraphQLRouteDestinationGroupStopTimeImpl implements GraphQLDataFetc
 			Trip t = getGraphIndex(environment).getTripForId(e.tripId);			
 			if(t == null)
 				throw new Exception("Trip " + e.tripId + " not found.");
-			
+
 			TripPattern pattern = getGraphIndex(environment).getTripPatternForTripId(t.getId());			
 			Stop s = pattern.getStops().get(e.stopIndex);
 			if(s == null)
@@ -178,8 +204,9 @@ public class GraphQLRouteDestinationGroupStopTimeImpl implements GraphQLDataFetc
 			List<Stop> data = new ArrayList<Stop>();
 			for(int i = 0; i < pattern.getStops().size(); i++) {
 				Stop stop = pattern.getStops().get(i);
-				if(pattern.stopPattern.dropoffs[i] != StopPattern.PICKDROP_NONE)				
+				if (e.stopId.equals(stop.getId()) || pattern.stopPattern.dropoffs[i] != StopPattern.PICKDROP_NONE) {
 					data.add(stop);
+				}
 			}
 			
 			return DataFetcherResult.newResult()

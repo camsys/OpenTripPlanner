@@ -322,6 +322,9 @@ type Stop {
     """ÌD of the station/stop in format `FeedId_StopId`"""
     gtfsId: String!
 
+    """Id with colon (for postlight)"""
+    gtfsIdWithColon: String!
+
     """NY MTA Complex ID (a complex is one or more stations)"""
     mtaComplexId: String
 
@@ -603,6 +606,16 @@ type RouteDestinationGroupStopTime {
     stopCount: Int
 
     """
+    Service day in ms
+    """
+    serviceDay: Long
+
+    """
+    Service day in date format
+    """
+    serviceDayFormatted: String
+
+    """
 	Scheduled arrival time
     """
     scheduledArrival: Long
@@ -640,12 +653,17 @@ type RouteDestinationGroupStopTime {
 	"""
 	true if there is realtime data for this arrival/departure; otherwise false.
 	"""
-    realtime: Boolean 
+    realtime: Boolean
 
-	"""
- 	Trip of arrival/departure
- 	"""
+    """
+    Trip Id of arrival/departure
+    """
     tripId: String
+
+    """
+    Trip of arrival/departure
+    """
+    trip: Trip
 
 	"""
 	Track number, if available
@@ -690,6 +708,28 @@ type ScheduleResult {
     Legs in this itinerary
     """
 	legs: [ScheduleResultLeg]
+
+}
+
+type RecentTrips {
+
+    tripId: String
+
+    startDate: String
+
+    direction: String
+
+    route: String
+
+    routeShortName: String
+
+    blockId: String
+
+    tripShortName: String
+
+    tripHeadSign: String
+
+    stopTimes: [Stoptime]
 
 }
 
@@ -877,6 +917,10 @@ type QueryType {
     """
     feed(id: String!): Feed
 
+    """
+    Get data for trips within a certain time window +/- X hr from current time
+    """
+    recentTrips(feedId: String!): [RecentTrips]
 
     """Get all agencies"""
     agencies: [Agency]

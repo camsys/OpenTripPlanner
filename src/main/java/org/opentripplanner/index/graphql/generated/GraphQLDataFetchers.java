@@ -3,7 +3,8 @@ package org.opentripplanner.index.graphql.generated;
 
 import graphql.schema.DataFetcher;
 
-import java.util.Date;
+import javax.xml.crypto.Data;
+import java.util.Set;
 
 public class GraphQLDataFetchers {
   public interface GraphQLAccessibleResult {
@@ -102,6 +103,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<Object> trip();
     public DataFetcher<Object> accessibility();
     public DataFetcher<Iterable<Object>> schedule();
+    public DataFetcher<Iterable<Object>> recentTrips();
     public DataFetcher<Iterable<Object>> nearby();
   }
   
@@ -136,6 +138,8 @@ public class GraphQLDataFetchers {
   public interface GraphQLRouteDestinationGroupStopTime {
     public DataFetcher<Integer> stopIndex();
     public DataFetcher<Integer> stopCount();
+    public DataFetcher<Object> serviceDay();
+    public DataFetcher<String> serviceDayFormatted();
     public DataFetcher<Object> scheduledArrival();
     public DataFetcher<Object> scheduledDeparture();
     public DataFetcher<Object> realtimeArrival();
@@ -145,6 +149,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<Boolean> timepoint();
     public DataFetcher<Boolean> realtime();
     public DataFetcher<String> tripId();
+    public DataFetcher<Object> trip();
     public DataFetcher<String> track();
     public DataFetcher<Integer> peakOffpeak();
     public DataFetcher<Object> vehicleInfo();
@@ -196,6 +201,7 @@ public class GraphQLDataFetchers {
    */
   public interface GraphQLStop {
     public DataFetcher<String> gtfsId();
+    public DataFetcher<String> gtfsIdWithColon();
     public DataFetcher<String> mtaComplexId();
     public DataFetcher<String> mtaStationId();
     public DataFetcher<Iterable<Object>> mtaEquipment();
@@ -245,6 +251,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<String> shapeId();
     public DataFetcher<Iterable<Object>> stoptimes();
     public DataFetcher<Iterable<Object>> alerts();
+    public DataFetcher<Set<Long>> tripDateTime();
   }
   
 }

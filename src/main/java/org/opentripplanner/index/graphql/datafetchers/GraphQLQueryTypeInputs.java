@@ -14,17 +14,25 @@ public class GraphQLQueryTypeInputs {
 	        }
 	    }
 	}
-	
+
 	public static class GraphQLQueryTypeScheduleArgsInput extends GraphQLQueryTypeScheduleArgs {
-	    public GraphQLQueryTypeScheduleArgsInput(Map<String, Object> args) {
-	        if (args != null) {
-	        	this.setGraphQLFromGtfsId((String)args.get("fromGtfsId"));
-	        	this.setGraphQLToGtfsId((String)args.get("toGtfsId"));
-	        	this.setGraphQLTime((String)args.get("time"));
+		public GraphQLQueryTypeScheduleArgsInput(Map<String, Object> args) {
+			if (args != null) {
+				this.setGraphQLFromGtfsId((String)args.get("fromGtfsId"));
+				this.setGraphQLToGtfsId((String)args.get("toGtfsId"));
+				this.setGraphQLTime((String)args.get("time"));
 				this.setGraphQLMaxResults((Integer)args.get("maxResults"));
 				this.setGraphQLMaxTime((Integer)args.get("maxTime"));
-	        }
-	    }
+			}
+		}
+	}
+
+	public static class GraphQLQueryTypeRecentTripsArgsInput extends GraphQLQueryTypeRecentTripsArgs {
+		public GraphQLQueryTypeRecentTripsArgsInput(Map<String, Object> args) {
+			if (args != null) {
+				this.setGraphQLFeedId((String)args.get("feedId"));
+			}
+		}
 	}
 	
 	public static class GraphQLQueryTypeAgencyArgsInput extends GraphQLQueryTypeAgencyArgs {

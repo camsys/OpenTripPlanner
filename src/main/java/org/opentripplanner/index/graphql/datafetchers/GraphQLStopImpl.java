@@ -50,6 +50,18 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	}
 
 	@Override
+	public DataFetcher<String> gtfsIdWithColon() {
+		return environment -> {
+			Stop e = environment.getSource();
+			return colonFormatAgency(e.getId());
+		};
+	}
+
+	public String colonFormatAgency(AgencyAndId aid) {
+		return aid == null ? null : aid.getAgencyId() + ':' + aid.getId();
+	}
+
+	@Override
 	public DataFetcher<String> name() {
 	    return environment -> {
 	    	Stop e = environment.getSource();
