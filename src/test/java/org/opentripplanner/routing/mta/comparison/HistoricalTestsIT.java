@@ -12,6 +12,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 package org.opentripplanner.routing.mta.comparison;
 
+import com.amazonaws.auth.*;
 import org.opentripplanner.routing.mta.comparison.test_file_format.Result;
 import org.opentripplanner.routing.mta.comparison.test_file_format.ItinerarySummary;
 
@@ -50,9 +51,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.amazonaws.AmazonClientException;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicSessionCredentials;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.transfer.MultipleFileDownload;
 import com.amazonaws.services.s3.transfer.TransferManager;
@@ -77,37 +75,58 @@ public class HistoricalTestsIT extends RoutingResource {
 	private static void syncS3ToDisk() {
 		
 		LOG.info("Starting sync to disk from S3...");
-		
+		String assumeRoleArn = "arn:aws:iam::347059689224:role/mta-otp-integration-test-bundle";
+
+		if (System.getProperty("assumeRoleArn") != null) {
+			assumeRoleArn = System.getProperty("assumeRoleArn");
+		}
+
+		String bucketName = "mta-otp-integration-test-bundles";
+		if (System.getProperty("bucketName") != null) {
+			bucketName = System.getProperty("bucketName");
+		}
+		String accessKey = System.getProperty("accessKey");
+		String secretKey = System.getProperty("secretKey");
+
 		try {
-            AWSSecurityTokenService stsClient = AWSSecurityTokenServiceClientBuilder.standard()
-                    .withCredentials(new DefaultAWSCredentialsProviderChain())
-                    .withRegion("us-east-1")
-                    .build();
-            
-            AssumeRoleRequest roleRequest = new AssumeRoleRequest()
-            		.withRoleArn("arn:aws:iam::347059689224:role/mta-otp-integration-test-bundle")
-            		.withRoleSessionName(UUID.randomUUID().toString());
+			if (accessKey != null && secretKey != null) {
+				LOG.info("using S3 directly with accessKey '" + accessKey);
+				AWSCredentials awsCredentials = new BasicAWSCredentials(accessKey, secretKey);
+				AmazonS3ClientBuilder.standard()
+						.withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
+						.build();
+			} else {
+				LOG.info("attempting to assume role " + assumeRoleArn + " to bucket " + bucketName);
+				AWSSecurityTokenService stsClient = AWSSecurityTokenServiceClientBuilder.standard()
+						.withCredentials(new DefaultAWSCredentialsProviderChain())
+						.withRegion("us-east-1")
+						.build();
 
-            AssumeRoleResult roleResponse = stsClient.assumeRole(roleRequest);
-            Credentials sessionCredentials = roleResponse.getCredentials();
-            
-            BasicSessionCredentials awsCredentials = new BasicSessionCredentials(
-                    sessionCredentials.getAccessKeyId(),
-                    sessionCredentials.getSecretAccessKey(),
-                    sessionCredentials.getSessionToken());
+				AssumeRoleRequest roleRequest = new AssumeRoleRequest()
+						.withRoleArn(assumeRoleArn)
+						.withRoleSessionName(UUID.randomUUID().toString());
 
-			AmazonS3ClientBuilder.standard()
-		            .withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
-		            .build();
+				AssumeRoleResult roleResponse = stsClient.assumeRole(roleRequest);
+				Credentials sessionCredentials = roleResponse.getCredentials();
+
+				BasicSessionCredentials awsCredentials = new BasicSessionCredentials(
+						sessionCredentials.getAccessKeyId(),
+						sessionCredentials.getSecretAccessKey(),
+						sessionCredentials.getSessionToken());
+
+				AmazonS3ClientBuilder.standard()
+						.withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
+						.build();
+			}
 
 			LOG.info("Got credentials.");
 
 			File f = new File(ALL_TESTS_DIR);
 
-			LOG.info("Starting xfer.");
+			LOG.info("Starting xfer from s3://" + bucketName);
 
 			TransferManager tm = TransferManagerBuilder.standard().build();
-		    MultipleFileDownload x = tm.downloadDirectory("mta-otp-integration-test-bundles", null, f);
+		    MultipleFileDownload x = tm.downloadDirectory(bucketName, null, f);
 		    x.waitForCompletion();
 		    tm.shutdownNow();
 
