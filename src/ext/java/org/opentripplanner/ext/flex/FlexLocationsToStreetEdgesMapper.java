@@ -13,9 +13,8 @@ import org.opentripplanner.util.ProgressTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class FlexLocationsToStreetEdgesMapper implements GraphBuilderModule {
 
@@ -30,74 +29,37 @@ public class FlexLocationsToStreetEdgesMapper implements GraphBuilderModule {
 
     StreetVertexIndex streetIndex = graph.getStreetIndex();
 
-    Collection<FlexStopLocation> flexStopLocations = graph.locationsById.values();
+    ProgressTracker progress = ProgressTracker.track("Add flex locations to street vertices", 1, graph.locationsById.size());
+    LOG.info(progress.startMessage());
+    
+    // TODO: Make this into a parallel stream, first calculate vertices per location and then add them.
+    for (FlexStopLocation flexStopLocation : graph.locationsById.values()) {
+      for (Vertex vertex : streetIndex.getVerticesForEnvelope(flexStopLocation
+          .getGeometry()
+          .getEnvelopeInternal())
+      ) {
 
-    ProgressTracker flexStopMappingProgress = ProgressTracker.track("Mapping flex locations to street vertices", 1, flexStopLocations.size());
+    	// Check that the vertex is connected to both driveable and walkable edges
+        if (!(vertex instanceof StreetVertex)) { continue; }
+        if (!((StreetVertex)vertex).isEligibleForCarPickupDropoff()) { continue; }
 
-    LOG.info(flexStopMappingProgress.startMessage());
+        // The street index overselects, so need to check for exact geometry inclusion
+        Point p = GeometryUtils.getGeometryFactory().createPoint(vertex.getCoordinate());
+        if (flexStopLocation.getGeometry().disjoint(p))
+          continue;
 
-    // Go through each FlexStopLocation and get associated Vertices
-    // Filter vertices that are StreetVertex AND eligible for Car Pickup/Drop-off
-    ConcurrentHashMap<StreetVertex, Set<FlexStopLocation>> flexStopLocationsByVertex = new ConcurrentHashMap();
-    flexStopLocations.parallelStream().forEach(flexStopLocation -> {
-      List<Vertex> vertices = streetIndex.getVerticesForEnvelope(
-              flexStopLocation
-              .getGeometry()
-              .getEnvelopeInternal());
+        StreetVertex streetVertex = (StreetVertex)vertex;
 
-      vertices.parallelStream().forEach(vertex -> {
-        if(!isValidFlexStopVertex(vertex)){
-          return;
-        }
-        StreetVertex streetVertex = (StreetVertex) vertex;
-        // Put if absent forces the first value to be an empty hashset
-        flexStopLocationsByVertex.putIfAbsent(streetVertex, Collections.synchronizedSet(new HashSet<>()));
-        flexStopLocationsByVertex.get(streetVertex).add(flexStopLocation);
-      });
-
-      flexStopMappingProgress.step(m -> LOG.info(m));
-    });
-
-    LOG.info(flexStopMappingProgress.completeMessage());
-
-    ProgressTracker vertixFlexStopUpdateProgress = ProgressTracker.track("Adding filtered flex stop locations to street vertices", 1, flexStopLocationsByVertex.size());
-
-    LOG.info(vertixFlexStopUpdateProgress.startMessage());
-
-    flexStopLocationsByVertex.entrySet().parallelStream().forEach(map -> {
-
-        StreetVertex streetVertex = map.getKey();
-        Set<FlexStopLocation> flexStopLocationsForVertex = map.getValue();
-
-        ConcurrentLinkedQueue<FlexStopLocation> filteredFlexStopLocationsForVertex = new ConcurrentLinkedQueue();
-
-        flexStopLocationsForVertex.parallelStream().forEach(s -> {
-            Point p = GeometryUtils.getGeometryFactory().createPoint(streetVertex.getCoordinate());
-            if (s.getGeometry().disjoint(p))
-              return;
-            filteredFlexStopLocationsForVertex.add(s);
-        });
-
-        if (streetVertex.flexStopLocations == null) {
+        if (streetVertex.flexStopLocations == null)
           streetVertex.flexStopLocations = new HashSet<>();
-        }
-        streetVertex.flexStopLocations.addAll(filteredFlexStopLocationsForVertex);
 
-        vertixFlexStopUpdateProgress.step(m -> LOG.info(m));
-    });
+        streetVertex.flexStopLocations.add(flexStopLocation);
+      }
 
-    LOG.info(vertixFlexStopUpdateProgress.completeMessage());
-
-  }
-
-  private static boolean isValidFlexStopVertex(Vertex vertex){
-    if(!(vertex instanceof StreetVertex)){
-      return false;
+      progress.step(m -> LOG.info(m));
     }
-    if (!((StreetVertex)vertex).isEligibleForCarPickupDropoff()) {
-      return false;
-    }
-    return true;
+
+    LOG.info(progress.completeMessage());
   }
 
   @Override
