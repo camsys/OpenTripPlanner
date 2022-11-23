@@ -25,10 +25,12 @@ import org.opentripplanner.updater.JsonConfigurable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.protobuf.ExtensionRegistry;
 import com.google.transit.realtime.GtfsRealtime;
 import com.google.transit.realtime.GtfsRealtime.FeedEntity;
 import com.google.transit.realtime.GtfsRealtime.FeedMessage;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
+import com.google.transit.realtime.GtfsRealtimeExtensions;
 
 /** Reads the GTFS-RT from a local file. */
 public class GtfsRealtimeFileTripUpdateSource implements TripUpdateSource, JsonConfigurable {
@@ -36,6 +38,8 @@ public class GtfsRealtimeFileTripUpdateSource implements TripUpdateSource, JsonC
             LoggerFactory.getLogger(GtfsRealtimeFileTripUpdateSource.class);
 
     private File file;
+
+    private static final ExtensionRegistry _extensionRegistry;
 
     /**
      * True iff the last list with updates represent all updates that are active right now, i.e. all
@@ -51,6 +55,11 @@ public class GtfsRealtimeFileTripUpdateSource implements TripUpdateSource, JsonC
     private long timestamp;
 
     private boolean matchStopSequence;
+
+    static {
+        _extensionRegistry = ExtensionRegistry.newInstance();
+        GtfsRealtimeExtensions.registerExtensions(_extensionRegistry);
+    }
 
     @Override
     public void configure(Graph graph, JsonNode config) throws Exception {
