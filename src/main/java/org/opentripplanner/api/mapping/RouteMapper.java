@@ -51,6 +51,7 @@ public class RouteMapper {
         api.mode = TraverseModeMapper.mapToApi(domain.getMode());
         api.color = domain.getColor();
         api.agencyName = domain.getAgency().getName();
+        api.agencyId = domain.getAgency().getId().getId();
 
         return api;
     }

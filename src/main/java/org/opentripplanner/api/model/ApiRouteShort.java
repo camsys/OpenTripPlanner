@@ -7,6 +7,7 @@ public class ApiRouteShort {
     public String mode;
     public String color;
     public String agencyName;
+    public String agencyId;
 
     @Override
     public String toString() {
