@@ -37,6 +37,8 @@ public class TransitAlert implements Serializable {
     //null means unknown
     public int priority;
 
+    public String consequenceMessage;
+
     private List<TimePeriod> timePeriods = new ArrayList<>();
 
     private String feedId;

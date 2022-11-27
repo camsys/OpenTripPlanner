@@ -42,6 +42,7 @@ public class AlertMapper {
 
     api.effectiveStartDate = domain.getEffectiveStartDate();
     api.effectiveEndDate = domain.getEffectiveEndDate();
+    api.consequenceMessage = domain.consequenceMessage;
 
     return api;
   }

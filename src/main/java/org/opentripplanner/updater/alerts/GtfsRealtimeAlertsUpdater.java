@@ -1,6 +1,8 @@
 package org.opentripplanner.updater.alerts;
 
+import com.google.protobuf.ExtensionRegistry;
 import com.google.transit.realtime.GtfsRealtime.FeedMessage;
+import com.google.transit.realtime.GtfsRealtimeServiceStatus;
 import org.opentripplanner.routing.RoutingService;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.impl.TransitAlertServiceImpl;
@@ -32,6 +34,11 @@ import java.util.Map;
 public class GtfsRealtimeAlertsUpdater extends PollingGraphUpdater {
     private static final Logger LOG = LoggerFactory.getLogger(GtfsRealtimeAlertsUpdater.class);
 
+    private static final ExtensionRegistry registry = ExtensionRegistry.newInstance();
+
+    static {
+        registry.add(GtfsRealtimeServiceStatus.mercuryAlert);
+    }
     private GraphUpdaterManager updaterManager;
 
     private Long lastTimestamp = Long.MIN_VALUE;
@@ -92,7 +99,7 @@ public class GtfsRealtimeAlertsUpdater extends PollingGraphUpdater {
                 throw new RuntimeException("Failed to get data from url " + url);
             }
 
-            final FeedMessage feed = FeedMessage.PARSER.parseFrom(data);
+            final FeedMessage feed = FeedMessage.PARSER.parseFrom(data, registry);
 
             long feedTimestamp = feed.getHeader().getTimestamp();
             if (feedTimestamp <= lastTimestamp) {
