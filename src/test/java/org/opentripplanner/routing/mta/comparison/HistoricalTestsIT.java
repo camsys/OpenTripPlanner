@@ -129,7 +129,7 @@ public class HistoricalTestsIT extends RoutingResource {
 
 			LOG.info("Starting xfer from s3://" + bucketName);
 
-		    MultipleFileDownload x = tm.downloadDirectory(bucketName, null, f);
+		    MultipleFileDownload x = tm.downloadDirectory(bucketName, "/", f);
 		    x.waitForCompletion();
 		    tm.shutdownNow();
 
