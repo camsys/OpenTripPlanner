@@ -89,12 +89,15 @@ public class HistoricalTestsIT extends RoutingResource {
 		String secretKey = System.getProperty("secretKey");
 
 		try {
+			TransferManager tm;
 			if (accessKey != null && secretKey != null) {
 				LOG.info("using S3 directly with accessKey '" + accessKey);
 				AWSCredentials awsCredentials = new BasicAWSCredentials(accessKey, secretKey);
 				AmazonS3ClientBuilder.standard()
 						.withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
 						.build();
+				tm = TransferManagerBuilder.standard().withS3Client(AmazonS3ClientBuilder.standard()
+						.withCredentials(new AWSStaticCredentialsProvider(awsCredentials)).build()).build();
 			} else {
 				LOG.info("attempting to assume role " + assumeRoleArn + " to bucket " + bucketName);
 				AWSSecurityTokenService stsClient = AWSSecurityTokenServiceClientBuilder.standard()
@@ -117,6 +120,7 @@ public class HistoricalTestsIT extends RoutingResource {
 				AmazonS3ClientBuilder.standard()
 						.withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
 						.build();
+				tm = TransferManagerBuilder.standard().build();
 			}
 
 			LOG.info("Got credentials.");
@@ -125,7 +129,6 @@ public class HistoricalTestsIT extends RoutingResource {
 
 			LOG.info("Starting xfer from s3://" + bucketName);
 
-			TransferManager tm = TransferManagerBuilder.standard().build();
 		    MultipleFileDownload x = tm.downloadDirectory(bucketName, null, f);
 		    x.waitForCompletion();
 		    tm.shutdownNow();
