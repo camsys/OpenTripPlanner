@@ -13,6 +13,8 @@
 package org.opentripplanner.routing.mta.comparison;
 
 import com.amazonaws.auth.*;
+import com.amazonaws.event.ProgressEvent;
+import com.amazonaws.event.ProgressListener;
 import org.opentripplanner.routing.mta.comparison.test_file_format.Result;
 import org.opentripplanner.routing.mta.comparison.test_file_format.ItinerarySummary;
 
@@ -129,7 +131,13 @@ public class HistoricalTestsIT extends RoutingResource {
 
 			LOG.info("Starting xfer from s3://" + bucketName);
 
-		    MultipleFileDownload x = tm.downloadDirectory(bucketName, "/", f);
+		    MultipleFileDownload x = tm.downloadDirectory(bucketName, null, f);
+			x.addProgressListener(new ProgressListener() {
+				@Override
+				public void progressChanged(ProgressEvent progressEvent) {
+					LOG.debug("download: " + progressEvent.toString());
+				}
+			});
 		    x.waitForCompletion();
 		    tm.shutdownNow();
 
