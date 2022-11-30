@@ -14,13 +14,17 @@ package org.opentripplanner.routing.mta.comparison;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.*;
+import com.amazonaws.event.ProgressEvent;
+import com.amazonaws.event.ProgressListener;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.transfer.MultipleFileDownload;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
-import com.google.common.collect.Lists;
+import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
+import com.amazonaws.services.securitytoken.model.AssumeRoleResult;
+import com.amazonaws.services.securitytoken.model.Credentials;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -28,64 +32,30 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
-import org.opentripplanner.ConstantsForTests;
 import org.opentripplanner.api.common.RoutingResource;
-import org.opentripplanner.api.model.error.PlannerError;
 import org.opentripplanner.api.parameter.QualifiedModeSet;
 import org.opentripplanner.datastore.DataSource;
-import org.opentripplanner.datastore.OtpDataStore;
 import org.opentripplanner.graph_builder.GraphBuilder;
-import org.opentripplanner.graph_builder.model.GtfsBundle;
-import org.opentripplanner.graph_builder.module.AddTransitModelEntitiesToGraph;
-import org.opentripplanner.graph_builder.module.GtfsFeedId;
-import org.opentripplanner.graph_builder.module.GtfsModule;
-import org.opentripplanner.graph_builder.module.geometry.GeometryAndBlockProcessor;
-import org.opentripplanner.graph_builder.module.osm.DefaultWayPropertySetSource;
-import org.opentripplanner.graph_builder.module.osm.OpenStreetMapModule;
-import org.opentripplanner.gtfs.GtfsContext;
-import org.opentripplanner.model.GenericLocation;
-import org.opentripplanner.model.calendar.CalendarServiceData;
-import org.opentripplanner.model.calendar.ServiceDateInterval;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.TripPlan;
-import org.opentripplanner.openstreetmap.BinaryOpenStreetMapProvider;
 import org.opentripplanner.routing.RoutingService;
-import org.opentripplanner.routing.algorithm.mapping.GraphPathToItineraryMapper;
-import org.opentripplanner.routing.algorithm.mapping.TripPlanMapper;
 import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.api.response.RoutingResponse;
-import org.opentripplanner.routing.core.BicycleOptimizeType;
-
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.SerializedGraphObject;
-import org.opentripplanner.routing.graph.Vertex;
-import org.opentripplanner.routing.impl.GraphPathFinder;
-import org.opentripplanner.routing.impl.TransitAlertServiceImpl;
 import org.opentripplanner.routing.mta.comparison.test_file_format.ItinerarySummary;
 import org.opentripplanner.routing.mta.comparison.test_file_format.Result;
-import org.opentripplanner.routing.spt.GraphPath;
-
-import org.opentripplanner.standalone.OTPMain;
 import org.opentripplanner.standalone.config.CommandLineParameters;
-import org.opentripplanner.standalone.config.RouterConfig;
 import org.opentripplanner.standalone.configure.OTPAppConstruction;
-import org.opentripplanner.standalone.configure.OTPConfiguration;
 import org.opentripplanner.standalone.server.OTPServer;
 import org.opentripplanner.standalone.server.Router;
-import org.opentripplanner.standalone.server.RouterService;
-import org.opentripplanner.updater.alerts.AlertsUpdateHandler;
-import org.opentripplanner.updater.stoptime.TimetableSnapshotSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Context;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.*;
-
-import static org.opentripplanner.gtfs.GtfsContextBuilder.contextBuilder;
-import static org.opentripplanner.routing.algorithm.mapping.GraphPathToItineraryMapper.generateItinerary;
 
 public class HistoricalTestsIT extends RoutingResource {
 	
@@ -102,42 +72,86 @@ public class HistoricalTestsIT extends RoutingResource {
 	
 	@BeforeAll
 	private static void syncS3ToDisk() {
+
+		// set system flag to bypass certain checks
+		System.setProperty("integration_test", "true");
+
+		if (System.getProperty("skipSync") != null) {
+			LOG.info("configuration bypassing sync from S3, assuming files are on disk!");
+			return;
+		}
 		
 		LOG.info("Starting sync to disk from S3...");
-		
+		String assumeRoleArn = "arn:aws:iam::347059689224:role/mta-otp-integration-test-bundle";
+
+		if (System.getProperty("assumeRoleArn") != null) {
+			assumeRoleArn = System.getProperty("assumeRoleArn");
+		}
+
+		String bucketName = "mta-otp-integration-test-bundles";
+		if (System.getProperty("bucketName") != null) {
+			bucketName = System.getProperty("bucketName");
+		}
+		String accessKey = System.getProperty("accessKey");
+		String secretKey = System.getProperty("secretKey");
+
 		try {
-            AWSSecurityTokenService stsClient = AWSSecurityTokenServiceClientBuilder.standard()
-                    .withCredentials(new DefaultAWSCredentialsProviderChain())
-                    .withRegion("us-east-1")
-                    .build();
-            
-//            AssumeRoleRequest roleRequest = new AssumeRoleRequest()
-//            		.withRoleArn("arn:aws:iam::347059689224:role/mta-otp-integration-test-bundle")
-//            		.withRoleSessionName(UUID.randomUUID().toString());
-//
-//            AssumeRoleResult roleResponse = stsClient.assumeRole(roleRequest);
+			TransferManager tm;
+			if (accessKey != null && secretKey != null) {
+				LOG.info("using S3 directly with accessKey '" + accessKey);
+				AWSCredentials awsCredentials = new BasicAWSCredentials(accessKey, secretKey);
+				AmazonS3ClientBuilder.standard()
+						.withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
+						.build();
+				tm = TransferManagerBuilder.standard().withS3Client(AmazonS3ClientBuilder.standard()
+						.withCredentials(new AWSStaticCredentialsProvider(awsCredentials)).build()).build();
+			} else {
+				LOG.info("attempting to assume role " + assumeRoleArn + " to bucket " + bucketName);
+				AWSSecurityTokenService stsClient = AWSSecurityTokenServiceClientBuilder.standard()
+						.withCredentials(new DefaultAWSCredentialsProviderChain())
+						.withRegion("us-east-1")
+						.build();
 
+				AssumeRoleRequest roleRequest = new AssumeRoleRequest()
+						.withRoleArn(assumeRoleArn)
+						.withRoleSessionName(UUID.randomUUID().toString());
 
-			String apiKey = System.getProperty("apikey");
-			String secret = System.getProperty("secret");
-			BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(apiKey, secret);
+				AssumeRoleResult roleResponse = stsClient.assumeRole(roleRequest);
+				Credentials sessionCredentials = roleResponse.getCredentials();
 
-            
-//            BasicSessionCredentials awsCredentials = new BasicSessionCredentials(
-//					basicAWSCredentials);
+				BasicSessionCredentials awsCredentials = new BasicSessionCredentials(
+						sessionCredentials.getAccessKeyId(),
+						sessionCredentials.getSecretAccessKey(),
+						sessionCredentials.getSessionToken());
 
-			AmazonS3ClientBuilder.standard()
-		            .withCredentials(new AWSStaticCredentialsProvider(basicAWSCredentials))
-		            .build();
+				AmazonS3ClientBuilder.standard()
+						.withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
+						.build();
+				tm = TransferManagerBuilder.standard().build();
+			}
 
 			LOG.info("Got credentials.");
 
 			File f = new File(ALL_TESTS_DIR);
 
-			LOG.info("Starting xfer.");
+			LOG.info("Starting xfer from s3://" + bucketName);
 
-			TransferManager tm = TransferManagerBuilder.standard().build();
-		    MultipleFileDownload x = tm.downloadDirectory("mta-otp-integration-test-bundles", null, f);
+		    MultipleFileDownload x = tm.downloadDirectory(bucketName, null, f);
+			x.addProgressListener(new ProgressListener() {
+				@Override
+				public void progressChanged(ProgressEvent progressEvent) {
+					switch (progressEvent.getEventType()) {
+						case TRANSFER_STARTED_EVENT:
+							LOG.debug("transfer started");
+							break;
+						case TRANSFER_COMPLETED_EVENT:
+							LOG.debug("transfer complete");
+							break;
+						default:
+							// no op
+					}
+				}
+			});
 		    x.waitForCompletion();
 		    tm.shutdownNow();
 
@@ -148,71 +162,52 @@ public class HistoricalTestsIT extends RoutingResource {
 			e.printStackTrace();
 		}
 	}
-
-	public static Graph buildOsmGraph(String osmPath) {
-
-		try {
-			var graph = new Graph();
-			// Add street data from OSM
-			File osmFile = new File(osmPath);
-			BinaryOpenStreetMapProvider osmProvider =
-					new BinaryOpenStreetMapProvider(osmFile, true);
-			OpenStreetMapModule osmModule =
-					new OpenStreetMapModule(Lists.newArrayList(osmProvider));
-			osmModule.setDefaultWayPropertySetSource(new DefaultWayPropertySetSource());
-			osmModule.skipVisibility = true;
-			osmModule.buildGraph(graph, new HashMap<>());
-			return graph;
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
 	
 	private void buildGraph(File graphDir) {
 		LOG.info("Starting graph build for dir=" + graphDir);
 
-		//GraphBuilder builder = GraphBuilder.forDirectory(new CommandLineParameters(), graphDir);
+		CommandLineParameters params = new CommandLineParameters();
+		params.build = true;
+		params.save = true;
+		ArrayList<File> files = new ArrayList<>();
+		files.add(graphDir);
+		params.baseDirectory = files;
+		OTPAppConstruction app = new OTPAppConstruction(params);
 
+		// here is where route-config is pulled in
+		app.validateConfigAndDataSources();
 
 		Graph graph = null;
-		CommandLineParameters params = new CommandLineParameters();
-		params.baseDirectory = Collections.singletonList(new File("/"));
-		OTPAppConstruction app = new OTPAppConstruction(params);
-//
-//		// Validate data sources, command line arguments and config before loading and
-//		// processing input data to fail early
-//		app.validateConfigAndDataSources();
-//
-		/* Load graph from disk if one is not present from build. */
-		//if (params.doLoadGraph() || params.doLoadStreetGraph()) {
-//			DataSource inputGraph = params.doLoadGraph()
-//					? app.store().getGraph()
-//					: app.store().getStreetGraph();
-//		DataSource inputGraph = app.store().getGraph();
-//			SerializedGraphObject obj = SerializedGraphObject.load(inputGraph);
-//			graph = obj.graph;
-//			app.config().updateConfigFromSerializedGraph(obj.buildConfig, obj.routerConfig);
-		//}
-//		try {
-//			graph = Graph.load(new File("src/test/java/org/opentripplanner/routing/mta/graph.obj"));
-//		} catch (IOException e) {
-//			throw new RuntimeException(e);
-//		}
 
-		GraphBuilder builder = app.createGraphBuilder(buildOsmGraph(ConstantsForTests.HERRENBERG_OSM));
+		GraphBuilder builder = app.createGraphBuilder(graph);
 		builder.run();
-		builder.getGraph();
+		graph = builder.getGraph();
+
+		new SerializedGraphObject(graph, app.config().buildConfig(), app.config().routerConfig())
+				.save(app.graphOutputDataSource());
 
 		LOG.info("Success.");
 	}
 	
-	private Graph loadGraph(File path) throws Exception {
-		File file = OtpDataStore.graphFile(path);
-		Graph graph = SerializedGraphObject.load(file);
-		if(graph == null) { throw new IllegalStateException(); }
+	private void loadGraph(File graphDir) throws Exception {
+		CommandLineParameters params = new CommandLineParameters();
+		params.load = true;
+		params.loadStreet = true;
+		ArrayList<File> files = new ArrayList<>();
+		files.add(graphDir);
+		params.baseDirectory = files;
+
+		OTPAppConstruction app = new OTPAppConstruction(params);
+		DataSource inputGraph = app.store().getGraph();
+		SerializedGraphObject obj = SerializedGraphObject.load(inputGraph);
+		graph = obj.graph;
+		app.config().updateConfigFromSerializedGraph(obj.buildConfig, obj.routerConfig);
+
 		graph.index();
-		return graph;
+
+		app.setOtpConfigVersionsOnServerInfo();
+		router = new Router(graph, app.config().routerConfig());
+		router.startup();
 	}
 	
     private List<File> findTestDirs() {
@@ -220,7 +215,6 @@ public class HistoricalTestsIT extends RoutingResource {
     
     	File allTests = new File(ALL_TESTS_DIR);
     	for(String testDirPath : allTests.list()) {
-			//File testDir = new File(ALL_TESTS_DIR + "/" + "03-24-2021-lirr-test");
     		File testDir = new File(ALL_TESTS_DIR + "/" + testDirPath);
     		if(!testDir.isDirectory())
     			continue;
@@ -244,20 +238,7 @@ public class HistoricalTestsIT extends RoutingResource {
 			this.toPlace = result.query.destination;
 			this.wheelchair = result.query.accessible;
 			
-    		long epoch = result.query.time;//1616613120000L
-
-
-    		// shift dates by +1 week to try to match the
-    		// same service period
-    		Calendar c = Calendar.getInstance();
-			c.setTime(new Date(epoch));
-
-			Calendar target = Calendar.getInstance();
-			target.set(2021,3,24);
-    		while(epoch < target.getTimeInMillis()) {
-    			c.add(Calendar.DAY_OF_MONTH, 7);
-        		epoch = c.getTimeInMillis();
-    		}
+    		long epoch = result.query.time;
 
     		DateTimeFormatter dateF = DateTimeFormat.forPattern("MM-dd-YYYY");
     		DateTimeFormatter timeF = DateTimeFormat.forPattern("hh:mm aa");
@@ -268,72 +249,20 @@ public class HistoricalTestsIT extends RoutingResource {
 			this.maxWalkDistance = 8047.0;
 			this.ignoreRealtimeUpdates = true;
 
-			//RoutingRequest request = router.defaultRoutingRequest.clone();
-			RoutingRequest request = super.buildRequest(router.defaultRoutingRequest.clone(),graph.getTimeZone());
-			//request.from = new GenericLocation(40.833427, -73.896773);
-			//request.to = new GenericLocation(40.710923,-73.85347);
-			request.transferCost = 600;
-			request.carReluctance = 15;
-			switch(result.query.optimizeFlag) {
-    			case "W":
-    				this.optimize = BicycleOptimizeType.QUICK;  //?
-					request.walkReluctance = 15;
-    				break;
-    			case "X":
-    				this.optimize = BicycleOptimizeType.TRANSFERS;
-					request.transferCost = 1800;
-    				break;
-    			case "T":
-    				this.optimize = BicycleOptimizeType.QUICK;
-    				break;
-	  		}
+			RoutingRequest request =
+					super.buildRequest(router.defaultRoutingRequest, graph.getTimeZone());
 
-			this.optimize = null;
+			// optimize is no longer supported
+			// remnants in request are for BICYCLE ONLY!
+			// TODO: we need to replace this with a sort instead of optimization
 
-
-
-
-
-			// ##############
-			
-            String optimizeFlag = null;
-    		switch(request.optimize) {
-//			case WALKING:
-//				optimizeFlag = "W";
-//				break;
-			case TRANSFERS:
-				optimizeFlag = "X";
-				break;
-			case QUICK:
-				optimizeFlag = "T";
-				break;
-			default:
-				break;
-    		}
-    		
             resultsFileWriter.write("Q " + ((request.wheelchairAccessible) ? "Y " : "N ") + 
     				request.dateTime*1000 + " " + 
     				request.from.lat + "," + request.from.lng + " " + 
     				request.to.lat + "," + request.to.lng + " " + 
-    				optimizeFlag + 
     				"\n");
             
 	  		try {
-//				RoutingService routingService = new RoutingService(router.graph);
-//				RoutingResponse res = routingService.route(request, router);
-//
-//	  			TripPlan plan = res.getTripPlan();
-
-
-				//V1
-//				GraphPathFinder gpFinder = new GraphPathFinder(router);
-//				List<GraphPath> paths = gpFinder.graphPathFinderEntryPoint(request);
-//
-//
-//
-//				TripPlan plan = TripPlanMapper.mapTripPlan(request, GraphPathToItineraryMapper.mapItineraries(paths,request));
-
-				//v2
 				RoutingService routingService = new RoutingService(router.graph);
 				RoutingResponse res = routingService.route(request, router);
 
@@ -350,8 +279,7 @@ public class HistoricalTestsIT extends RoutingResource {
                      		 		+ " " + is.transitTime + " " + is.routes + "\n");
                 }
 	  		} catch (Exception e) {
-	            //if(!PlannerError.isPlanningError(e.getClass()))
-	                LOG.warn("Error while planning path: ", e);
+				LOG.warn("Error while planning path: ", e);
 
 	  			resultsFileWriter.write("**** NOT FOUND ****\n");
 	  		}
@@ -395,12 +323,7 @@ public class HistoricalTestsIT extends RoutingResource {
     		System.out.println("***************************************************************");
 
     		try {
-
-				graph = loadGraph(new File("/Users/msalvatore/Projects/dev2.xFork/src/test/resources/integration_test_gtfs/" + testDir.getName()));
-				router = new Router(graph, RouterConfig.DEFAULT);
-				graph.index();
-				router.startup();
-
+    			loadGraph(new File(testDir + "/graph"));
     		} catch(Exception e) {
     			System.out.println("Graph failed to load with exception " + e.getMessage() + ". Rebuilding...");
 
@@ -408,9 +331,9 @@ public class HistoricalTestsIT extends RoutingResource {
     			graph = null;
     		} finally {
     			if(graph == null) {
-    				//buildGraph(new File(testDir + "/graph"));
-    				//loadGraph(new File(testDir + "/graph"));
-					System.out.println("graph load failed, exiting");
+					LOG.error("cached graph rejected, building a new one and trying again");
+    				buildGraph(new File(testDir + "/graph"));
+    				loadGraph(new File(testDir + "/graph"));
     			}
     		}
     		
@@ -455,7 +378,7 @@ public class HistoricalTestsIT extends RoutingResource {
 				generatedTests.addAll(t3.getTests());
 			}
 
-			 //free up graph memory
+			// free up graph memory
 			if(router != null)
 				router.shutdown();
 		}

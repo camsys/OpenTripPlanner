@@ -27,8 +27,8 @@ import java.util.List;
  */
 public class CommandLineParameters implements Cloneable {
     private static final String TIP = " Use --help to see available options.";
-    private static final int    DEFAULT_PORT         = 8082;
-    private static final int    DEFAULT_SECURE_PORT  = 8083;
+    private static final int    DEFAULT_PORT         = 8080;
+    private static final int    DEFAULT_SECURE_PORT  = 8081;
     private static final String DEFAULT_CACHE_PATH   = "/var/otp/cache";
     private static final String DEFAULT_BIND_ADDRESS = "0.0.0.0";
 

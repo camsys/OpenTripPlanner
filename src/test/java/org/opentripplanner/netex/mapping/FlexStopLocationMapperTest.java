@@ -144,6 +144,7 @@ public class FlexStopLocationMapperTest {
         null,
         null,
         null,
+        Stop.LocationType.STOP,
         null,
         null
     );

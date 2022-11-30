@@ -20,14 +20,16 @@ public class Query {
 	public Query(String line) throws Exception {
 		String parts[] = line.split(" ");
 		
-		if(parts.length != 6 && parts[0].equals("Q"))
-			throw new Exception("Nope.");
+		if(parts.length < 5 && parts[0].equals("Q")) {
+			throw new Exception("unexpected line format=" + line);
+		}
+
 
 		accessible = parts[1].trim().equals("Y");
 		time = Long.parseLong(parts[2].trim());
 		origin = parts[3].trim();
 		destination = parts[4].trim();
-		optimizeFlag = parts[5].trim();
+		// we silently ignore optimize flag now -- it is no longer supported
 	}
 
     @Override
@@ -39,7 +41,6 @@ public class Query {
     public int hashCode() {
         return (int)(time * 31) * origin.hashCode() 
         		* destination.hashCode() + 
-        		optimizeFlag.hashCode() + 
         		(accessible ? 3 : 0);
     }
         
@@ -67,18 +68,7 @@ public class Query {
 		builder.setParameter("mode", "TRANSIT,WALK");
 		builder.setParameter("maxWalkDistance", "500");
 		builder.setParameter("ignoreRealtimeUpdates", "true");
-		switch(optimizeFlag) {
-			case "W":
-				builder.setParameter("optimize",  "WALKING");
-				break;
-			case "X":
-				builder.setParameter("optimize",  "TRANSFERS");
-				break;
-			case "T":
-				builder.setParameter("optimize",  "QUICK");
-				break;
-		}
-
+		// TODO!!!! with optimze flag removed, we need to SORT based on this instead
 		return builder.build().getQuery();
     }
     

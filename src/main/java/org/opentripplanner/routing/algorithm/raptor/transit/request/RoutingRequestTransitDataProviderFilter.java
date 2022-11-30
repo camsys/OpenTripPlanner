@@ -65,9 +65,10 @@ public class RoutingRequestTransitDataProviderFilter implements TransitDataProvi
       return bikeAccessForTrip(tripTimes.trip) == BikeAccess.ALLOWED;
     }
 
-    if (requireWheelchairAccessible) {
-      return tripTimes.trip.getWheelchairAccessible() == 1;
-    }
+//    TODO!  This field is not set consistently enough to be used in this manner
+//    if (requireWheelchairAccessible) {
+//      return tripTimes.trip.getWheelchairAccessible() == 1;
+//    }
 
     if (!includePlannedCancellations) {
       return !tripTimes.trip.getTripAlteration().isCanceledOrReplaced();

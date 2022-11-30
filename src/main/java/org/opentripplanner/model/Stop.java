@@ -13,6 +13,24 @@ import javax.validation.constraints.NotNull;
  */
 public final class Stop extends StationElement implements StopLocation {
 
+  public static LocationType fromLocationType(int i) {
+    switch (i) {
+      case 0:
+        return LocationType.STOP;
+      case 1:
+        return LocationType.STATION;
+      case 2:
+        return LocationType.ENTRANCE_EXIT;
+      case 3:
+        return LocationType.NODE;
+      case 4:
+        return LocationType.BOARDING_AREA;
+      default:
+        return LocationType.UNSET;
+    }
+  }
+
+  public enum LocationType {UNSET, STOP, STATION, ENTRANCE_EXIT, NODE, BOARDING_AREA};
   private static final long serialVersionUID = 2L;
 
   private final Collection<FareZone> fareZones;
@@ -27,6 +45,8 @@ public final class Stop extends StationElement implements StopLocation {
    * URL to a web page containing information about this particular stop.
    */
   private final String url;
+
+  public LocationType locationType;
 
   private final TimeZone timeZone;
 
@@ -49,6 +69,7 @@ public final class Stop extends StationElement implements StopLocation {
       String platformCode,
       Collection<FareZone> fareZones,
       String url,
+      LocationType locationType,
       TimeZone timeZone,
       TransitMode vehicleType
   ) {
@@ -56,6 +77,7 @@ public final class Stop extends StationElement implements StopLocation {
     this.platformCode = platformCode;
     this.fareZones = fareZones;
     this.url = url;
+    this.locationType = locationType;
     this.timeZone = timeZone;
     this.vehicleType = vehicleType;
   }
@@ -76,6 +98,7 @@ public final class Stop extends StationElement implements StopLocation {
         null,
         null,
         null,
+        LocationType.STOP,
         null,
         null
     );
@@ -108,6 +131,10 @@ public final class Stop extends StationElement implements StopLocation {
 
   public String getUrl() {
     return url;
+  }
+
+  public LocationType getLocationType() {
+    return locationType;
   }
 
   public TimeZone getTimeZone() {

@@ -28,7 +28,7 @@ public class Result {
     	while (resultsReader.hasNextLine()) {
     		String line = resultsReader.nextLine();
 
-			if(line.startsWith("Q N")) {
+			if(line.startsWith("Q")) {
 				canRead = true;
 				if(r != null) {
 					results.add(r);
@@ -38,10 +38,7 @@ public class Result {
 				q = new Query(line);
 				r = new Result();
 				r.query = q;
-			} else if(line.startsWith("Q Y")) {
-				canRead = false;
 			}
-
     		if(line.startsWith("S") && canRead ) {
     			ItinerarySummary s = new ItinerarySummary(line);
     			s.platform = platformTag;

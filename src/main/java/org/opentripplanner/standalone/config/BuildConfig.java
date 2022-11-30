@@ -143,6 +143,11 @@ public class BuildConfig {
     public final CustomNamer customNamer;
 
     /**
+     * A specific stop accessibility strategy to use.
+     */
+    public String stopAccessibilityStrategy;
+
+    /**
      * Custom OSM way properties
      */
     public final WayPropertySetSource osmWayPropertySet;
@@ -348,6 +353,7 @@ public class BuildConfig {
         staticParkAndRide = c.asBoolean("staticParkAndRide", true);
         stationTransfers = c.asBoolean("stationTransfers", false);
         streets = c.asBoolean("streets", true);
+        stopAccessibilityStrategy = c.asText("stopAccessibilityStrategy", "default");
         subwayAccessTime = c.asDouble("subwayAccessTime", DEFAULT_SUBWAY_ACCESS_TIME_MINUTES);
         transit = c.asBoolean("transit", true);
         transitServiceStart = c.asDateOrRelativePeriod("transitServiceStart", "-P1Y");

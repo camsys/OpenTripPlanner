@@ -81,6 +81,8 @@ import org.opentripplanner.model.transfer.TransferService;
 import org.opentripplanner.routing.algorithm.raptor.transit.TransitLayer;
 import org.opentripplanner.routing.algorithm.raptor.transit.mappers.TransitLayerUpdater;
 import org.opentripplanner.routing.bike_rental.BikeRentalStationService;
+import org.opentripplanner.routing.connectivity.DefaultStopAccessibilityStrategy;
+import org.opentripplanner.routing.connectivity.StopAccessibilityStrategy;
 import org.opentripplanner.routing.core.intersection_model.IntersectionTraversalCostModel;
 import org.opentripplanner.routing.core.intersection_model.SimpleIntersectionTraversalCostModel;
 import org.opentripplanner.routing.edgetype.EdgeWithCleanup;
@@ -227,6 +229,9 @@ public class Graph implements Serializable {
 
     /** Parent stops **/
     public Map<FeedScopedId, Station> stationById = new HashMap<>();
+
+    /** Apply more complex stop accessibility rules */
+    public transient StopAccessibilityStrategy stopAccessibilityStrategy = new DefaultStopAccessibilityStrategy(this);
 
     /**
      * Optional level above parent stops (only supported in NeTEx)

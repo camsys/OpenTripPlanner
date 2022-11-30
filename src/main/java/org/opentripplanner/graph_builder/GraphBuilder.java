@@ -32,6 +32,8 @@ import org.opentripplanner.graph_builder.services.GraphBuilderModule;
 import org.opentripplanner.graph_builder.services.ned.ElevationGridCoverageFactory;
 import org.opentripplanner.openstreetmap.BinaryOpenStreetMapProvider;
 import org.opentripplanner.routing.api.request.RoutingRequest;
+import org.opentripplanner.routing.connectivity.DefaultStopAccessibilityStrategy;
+import org.opentripplanner.routing.connectivity.MTAStopAccessibilityStrategy;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.standalone.config.BuildConfig;
 import org.opentripplanner.standalone.config.S3BucketConfig;
@@ -155,6 +157,20 @@ public class GraphBuilder implements Runnable {
             GtfsModule gtfsModule = new GtfsModule(gtfsBundles, config.getTransitServicePeriod());
             gtfsModule.setFareServiceFactory(config.fareServiceFactory);
             graphBuilder.addModule(gtfsModule);
+
+            if (baseGraph != null) {
+                // hook up accessibility
+                switch (config.stopAccessibilityStrategy) {
+                    case "mta":
+                        baseGraph.stopAccessibilityStrategy = new MTAStopAccessibilityStrategy(baseGraph);
+                        break;
+                    default:
+                    case "default":
+                        baseGraph.stopAccessibilityStrategy = new DefaultStopAccessibilityStrategy(baseGraph);
+                        break;
+                }
+            }
+
         }
 
         if( hasNetex ) {
