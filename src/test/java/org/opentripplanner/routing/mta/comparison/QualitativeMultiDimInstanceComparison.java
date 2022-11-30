@@ -450,8 +450,8 @@ public class QualitativeMultiDimInstanceComparison {
 
                 // for each optimization, require our result to be the winner 80% of the time
         		if(m == metricsDim.T.ordinal() || m == metricsDim.W.ordinal() || m == metricsDim.X.ordinal()) {
-            		results.add(DynamicTest.dynamicTest("MultiDim: Metric " + metricsDimLabels[m] + ""
-            				+ " > System under test equal to/greater on optimization vs. baseline >= 95%", new Executable() {
+            		results.add(DynamicTest.dynamicTest("MultiDim: Metric "  + extractTestName(TEST_RESULTS_TXT) + ":" + metricsDimLabels[m] + ""
+            				+ " > System under test equal to/greater on optimization vs. baseline >= 95%, " + ourPercentage, new Executable() {
             			@Override
             			public void execute() throws Throwable {
             				assertTrue(ourPercentage >= 95f);	
@@ -461,8 +461,8 @@ public class QualitativeMultiDimInstanceComparison {
             	} else {
             		// for the other two metrics (has results and matches), require 100% and 80%+ respectively
             		if(m == metricsDim.hasResults.ordinal()) {
-                		results.add(DynamicTest.dynamicTest("MultiDim: Metric " + metricsDimLabels[m] + " "
-                				+ "> System under test provided a result >= 98%", new Executable() {
+                		results.add(DynamicTest.dynamicTest("MultiDim: Metric "  + extractTestName(TEST_RESULTS_TXT) + ":" + metricsDimLabels[m] + " "
+                				+ "> System under test provided a result >= 98%, " + ourPercentage, new Executable() {
                 			@Override
                 			public void execute() throws Throwable {
                 				assertTrue(ourPercentage >= 98f);	
@@ -470,8 +470,8 @@ public class QualitativeMultiDimInstanceComparison {
                        	}));
 
             		} else if(m == metricsDim.topMatch.ordinal()) {
-                		results.add(DynamicTest.dynamicTest("MultiDim: Metric " + metricsDimLabels[m] + " "
-                				+ "> System under test matches baseline >= 90%", new Executable() {
+                		results.add(DynamicTest.dynamicTest("MultiDim: Metric "  + extractTestName(TEST_RESULTS_TXT) + ":" + metricsDimLabels[m] + " "
+                				+ "> System under test matches baseline >= 90%, " + ourPercentage, new Executable() {
                 			@Override
                 			public void execute() throws Throwable {
                 				assertTrue(ourPercentage >= 90);	
@@ -484,7 +484,14 @@ public class QualitativeMultiDimInstanceComparison {
        	return results;
     }
 
-    public static long[] calcHistogram(double[] data, double min, double max, int numBins) {
+	private String extractTestName(String fileName) {
+		String[] parts = fileName.split("/");
+		if (parts.length < 2) return fileName;
+		String accessiblePostFix = (parts[parts.length-1].contains("accessible")? "-ada":"");
+		return parts[parts.length-2] + accessiblePostFix;
+	}
+
+	public static long[] calcHistogram(double[] data, double min, double max, int numBins) {
     	  final long[] result = new long[numBins];
     	  final double binSize = (max - min)/numBins;
 
