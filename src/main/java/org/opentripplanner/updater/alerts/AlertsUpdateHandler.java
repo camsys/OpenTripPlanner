@@ -5,6 +5,7 @@ import com.google.transit.realtime.GtfsRealtime.FeedEntity;
 import com.google.transit.realtime.GtfsRealtime.FeedMessage;
 import com.google.transit.realtime.GtfsRealtime.TimeRange;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
+import com.google.transit.realtime.GtfsRealtimeServiceStatus;
 import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.routing.alertpatch.EntitySelector;
 import org.opentripplanner.routing.alertpatch.TimePeriod;
@@ -131,6 +132,12 @@ public class AlertsUpdateHandler {
             }
         }
 
+        if (alert.hasExtension(GtfsRealtimeServiceStatus.mercuryAlert)) {
+            GtfsRealtimeServiceStatus.MercuryAlert mercuryAlert = alert.getExtension(GtfsRealtimeServiceStatus.mercuryAlert);
+            if (mercuryAlert.hasAlertType()) {
+                alertText.consequenceMessage = mercuryAlert.getAlertType();
+            }
+        }
         return alertText;
     }
 

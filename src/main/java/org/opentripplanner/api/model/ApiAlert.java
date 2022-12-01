@@ -9,4 +9,5 @@ public class ApiAlert {
     /** null means unknown */
     public Date effectiveStartDate;
     public Date effectiveEndDate;
+    public String consequenceMessage;
 }
