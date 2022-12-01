@@ -117,9 +117,10 @@ public class HistoricalTestsIT extends RoutingResource {
 //
 //            AssumeRoleResult roleResponse = stsClient.assumeRole(roleRequest);
 
-			//BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials("AKIAVBTS6S4ENFAZF66V", "o2LGU+RTBtTngPF8TnSMzRwhDPrjhia/pF0AUjVz");
 
-			BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials("AKIAJR6QRHZLCABYKPSQ", "vFNCfEFkm6kd2CuAZbFj2r7RRtbdkBT0lFyC7iWG");
+			String apiKey = System.getProperty("apikey");
+			String secret = System.getProperty("secret");
+			BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(apiKey, secret);
 
             
 //            BasicSessionCredentials awsCredentials = new BasicSessionCredentials(
