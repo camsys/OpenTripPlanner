@@ -19,7 +19,7 @@
         <geotools.version>10.5</geotools.version>
         <jackson.version>2.5.3</jackson.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <aws.version>1.9.39</aws.version>
+        <aws.version>1.12.261</aws.version>
     </properties>
 
     <distributionManagement>
