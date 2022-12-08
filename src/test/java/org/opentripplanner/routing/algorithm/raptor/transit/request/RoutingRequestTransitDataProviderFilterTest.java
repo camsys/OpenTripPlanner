@@ -121,7 +121,9 @@ public class RoutingRequestTransitDataProviderFilterTest {
 
     boolean valid = filter.tripTimesPredicate(tripTimes);
 
-    assertFalse(valid);
+    // we ignore wheelchair accessibility at the trip level
+    // until it has better support
+    assertTrue(valid);
   }
 
   private TripPatternForDate createTestTripPatternForDate() {
