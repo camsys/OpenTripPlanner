@@ -258,8 +258,7 @@ public class RepairStopTimesForEachTripOperation {
 
             /* Interpolate, if necessary, the times of non-timepoint stops */
             /* genuine interpolation needed */
-            boolean isFlexStop = st0.getFlexContinuousDropOff() == 1 || st0.getFlexContinuousPickup() == 1;
-            if (!(st0.isDepartureTimeSet() && st0.isArrivalTimeSet()) && !isFlexStop) {
+            if (!(st0.isDepartureTimeSet() && st0.isArrivalTimeSet())) {
                 // figure out how many such stops there are in a row.
                 int j;
                 StopTime st = null;
