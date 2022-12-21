@@ -25,6 +25,8 @@ public final class Pathway extends TransitEntity {
 
     private boolean isBidirectional;
 
+    private int wheelchairTraversalTime;
+
     public Pathway(FeedScopedId id) {
         super(id);
     }
@@ -109,12 +111,26 @@ public final class Pathway extends TransitEntity {
         this.slope = slope;
     }
 
+    public int getWheelchairTraversalTime() {
+        return wheelchairTraversalTime;
+    }
+
+    public void setWheelchairTraversalTime(int wheelchairTraversalTime) {
+        this.wheelchairTraversalTime = wheelchairTraversalTime;
+    }
+
     @Override
     public String toString() {
         return "<Pathway " + getId() + ">";
     }
 
     public boolean isPathwayModeWheelchairAccessible() {
-        return getPathwayMode() != 2 && getPathwayMode() != 4;
+        final int STAIRS = org.onebusaway.gtfs.model.Pathway.MODE_STAIRS;
+        final int MODE_MOVING_SIDEWALK = org.onebusaway.gtfs.model.Pathway.MODE_MOVING_SIDEWALK;
+        final int ESCALATOR = org.onebusaway.gtfs.model.Pathway.MODE_ESCALATOR;
+
+        // legacy wheelchairTraversalTime asserts stop pathway is accessible!
+        return getPathwayMode() != STAIRS && getPathwayMode() != ESCALATOR && getPathwayMode() != MODE_MOVING_SIDEWALK
+                || getWheelchairTraversalTime() >= 0;
     }
 }

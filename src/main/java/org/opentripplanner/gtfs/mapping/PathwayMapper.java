@@ -52,6 +52,8 @@ class PathwayMapper {
         if (rhs.isStairCountSet()) { lhs.setStairCount(rhs.getStairCount()); }
         if (rhs.isMaxSlopeSet()) { lhs.setSlope(rhs.getMaxSlope()); }
         lhs.setBidirectional(rhs.getIsBidirectional() == 1);
+        // carry forward deprecated wheelchair traversaltime which asserts accessibility
+        lhs.setWheelchairTraversalTime(rhs.getWheelchairTraversalTime());
 
         org.onebusaway.gtfs.model.Stop fromStop = rhs.getFromStop();
         if (fromStop != null) {

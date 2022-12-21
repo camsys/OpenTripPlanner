@@ -22,7 +22,6 @@ import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.edgetype.StreetEdge;
-import org.opentripplanner.routing.edgetype.TemporaryEdge;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.Vertex;
@@ -30,20 +29,18 @@ import org.opentripplanner.routing.graphfinder.DirectGraphFinder;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.routing.location.TemporaryStreetLocation;
 import org.opentripplanner.routing.spt.DominanceFunction;
-import org.opentripplanner.routing.spt.GraphPath;
 import org.opentripplanner.routing.spt.ShortestPathTree;
 import org.opentripplanner.routing.vertextype.StreetVertex;
 import org.opentripplanner.routing.vertextype.TemporaryVertex;
+import org.opentripplanner.routing.vertextype.TransitEntranceVertex;
 import org.opentripplanner.routing.vertextype.TransitStopVertex;
 import org.opentripplanner.util.OTPFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -215,9 +212,18 @@ public class NearbyStopFinder {
             for (State state : spt.getAllStates()) {
                 Vertex targetVertex = state.getVertex();
                 if (originVertices.contains(targetVertex)) continue;
+
                 if (targetVertex instanceof TransitStopVertex && state.isFinal()) {
                     stopsFound.add(NearbyStop.nearbyStopForState(state, ((TransitStopVertex) targetVertex).getStop()));
                 }
+
+                // a stop may be accessible only via its entrances
+                if (targetVertex instanceof TransitEntranceVertex && state.isFinal()) {
+                    for (Stop childStop : targetVertex.getStationElement().getParentStation().getChildStops()) {
+                        stopsFound.add(NearbyStop.nearbyStopForState(state, childStop));
+                    }
+                }
+
                 if (OTPFeature.FlexRouting.isOn() && targetVertex instanceof StreetVertex 
                     && ((StreetVertex) targetVertex).flexStopLocations != null) {
                     for (FlexStopLocation flexStopLocation : ((StreetVertex) targetVertex).flexStopLocations) {

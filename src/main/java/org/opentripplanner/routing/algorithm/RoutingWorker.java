@@ -167,8 +167,6 @@ public class RoutingWorker {
                     request.modes.accessMode,
                     false
             );
-            if (request.wheelchairAccessible)
-                accessStops = filterAccessibility(router.graph.stopAccessibilityStrategy, accessStops, false);
 
             accessList = accessEgressMapper.mapNearbyStops(accessStops, false);
 
@@ -191,8 +189,6 @@ public class RoutingWorker {
                     request.modes.egressMode,
                     true
             );
-            if (request.wheelchairAccessible)
-                egressStops = filterAccessibility(router.graph.stopAccessibilityStrategy, egressStops, false);
 
             egressList = accessEgressMapper.mapNearbyStops(egressStops, true);
 
@@ -286,19 +282,6 @@ public class RoutingWorker {
         this.debugTimingAggregator.finishedItineraryCreation();
 
         return itineraries;
-    }
-
-    private Collection<NearbyStop> filterAccessibility(StopAccessibilityStrategy stopAccessibilityStrategy, Collection<NearbyStop> accessStops, boolean isEgress) {
-        ArrayList<NearbyStop> filtered = new ArrayList<>();
-        for (NearbyStop accessStop : accessStops) {
-            if (accessStop.stop instanceof Stop) {
-                Stop transitStop = (Stop) accessStop.stop;
-                if (stopAccessibilityStrategy.transitStopEvaluateGTFSAccessibilityFlag(transitStop)) {
-                    filtered.add(accessStop);
-                }
-            }
-        }
-        return filtered;
     }
 
     private RaptorRoutingRequestTransitData createRequestTransitDataProvider(
