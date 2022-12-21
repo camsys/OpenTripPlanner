@@ -219,8 +219,11 @@ public class NearbyStopFinder {
 
                 // a stop may be accessible only via its entrances
                 if (targetVertex instanceof TransitEntranceVertex && state.isFinal()) {
-                    for (Stop childStop : targetVertex.getStationElement().getParentStation().getChildStops()) {
-                        stopsFound.add(NearbyStop.nearbyStopForState(state, childStop));
+                    if (targetVertex.getStationElement() != null
+                            && targetVertex.getStationElement().getParentStation() != null) {
+                        for (Stop childStop : targetVertex.getStationElement().getParentStation().getChildStops()) {
+                            stopsFound.add(NearbyStop.nearbyStopForState(state, childStop));
+                        }
                     }
                 }
 
