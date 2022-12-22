@@ -30,6 +30,10 @@ public class Query {
 		origin = parts[3].trim();
 		destination = parts[4].trim();
 		// we silently ignore optimize flag now -- it is no longer supported
+		if (parts.length > 5)
+			optimizeFlag = parts[5].trim();
+		else
+			optimizeFlag = "T"; // the default, best route
 	}
 
     @Override

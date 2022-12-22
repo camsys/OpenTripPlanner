@@ -41,6 +41,7 @@ import org.opentripplanner.model.plan.TripPlan;
 import org.opentripplanner.routing.RoutingService;
 import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.api.response.RoutingResponse;
+import org.opentripplanner.routing.core.OptimizeHint;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.SerializedGraphObject;
 import org.opentripplanner.routing.mta.comparison.test_file_format.ItinerarySummary;
@@ -248,6 +249,18 @@ public class HistoricalTestsIT extends RoutingResource {
 			this.modes = new QualifiedModeSet("TRANSIT,WALK");
 			this.maxWalkDistance = 8047.0;
 			this.ignoreRealtimeUpdates = true;
+
+			switch(result.query.optimizeFlag) {
+				case "W": // optimize for less walking
+					this.hint = OptimizeHint.WALKING;
+					break;
+				case "X": // optimize by fewest transfers
+					this.hint = OptimizeHint.TRANSFERS;
+					break;
+				case "T": // best route
+					this.hint = OptimizeHint.QUICK;
+					break;
+			}
 
 			RoutingRequest request =
 					super.buildRequest(router.defaultRoutingRequest, graph.getTimeZone());

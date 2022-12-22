@@ -5,6 +5,7 @@ import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.routing.core.BicycleOptimizeType;
 import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.api.request.BannedStopSet;
+import org.opentripplanner.routing.core.OptimizeHint;
 import org.opentripplanner.standalone.server.OTPServer;
 import org.opentripplanner.standalone.server.Router;
 import org.opentripplanner.util.ResourceBundleSingleton;
@@ -250,6 +251,22 @@ public abstract class RoutingResource {
     @Deprecated
     @QueryParam("optimize")
     protected BicycleOptimizeType optimize;
+
+    /**
+     * Instead of expecting users to optimize specific query parameters,
+     * allow users to pass a hint that's interpreted per the local configuration.
+     * This hint will be translated to a set of query parameter adjustments.
+     * The possible values are:
+     *
+     *
+     * <ul>
+     *  <li>QUICK</li>
+     *  <li>WALKING</li>
+     *  <li>TRANSFERS</li>
+     *  </ul>
+    */
+     @QueryParam("hint")
+    protected OptimizeHint hint;
     
     /**
      * The set of modes that a user is willing to use, with qualifiers stating whether vehicles
@@ -756,6 +773,21 @@ public abstract class RoutingResource {
                 request.setBikeTriangleSafetyFactor(triangleSafetyFactor);
                 request.setBikeTriangleSlopeFactor(triangleSlopeFactor);
                 request.setBikeTriangleTimeFactor(triangleTimeFactor);
+            }
+        }
+
+        if (hint != null) {
+            // TODO: these should be configurable per deployment
+            switch (hint) {
+                case WALKING:
+                    request.waitReluctance = 40;
+                    break;
+                case TRANSFERS:
+                    request.waitReluctance = 3.0;
+                    request.transferCost = 60;
+                    break;
+                case QUICK:
+                    request.walkReluctance = 3.0;
             }
         }
 
