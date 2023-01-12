@@ -1,5 +1,6 @@
 package org.opentripplanner.routing.algorithm.raptor.transit.mappers;
 
+import org.opentripplanner.common.StreetUtils;
 import org.opentripplanner.ext.flex.FlexAccessEgress;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopLocation;
@@ -7,6 +8,8 @@ import org.opentripplanner.routing.algorithm.raptor.transit.AccessEgress;
 import org.opentripplanner.routing.algorithm.raptor.transit.FlexAccessEgressAdapter;
 import org.opentripplanner.routing.algorithm.raptor.transit.StopIndexForRaptor;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.List;
@@ -15,6 +18,8 @@ import java.util.stream.Collectors;
 
 public class AccessEgressMapper {
 
+  private static Logger LOG = LoggerFactory.getLogger(AccessEgressMapper.class);
+
   private final StopIndexForRaptor stopIndex;
 
   public AccessEgressMapper(StopIndexForRaptor stopIndex) {
@@ -22,11 +27,15 @@ public class AccessEgressMapper {
   }
 
   public AccessEgress mapNearbyStop(NearbyStop nearbyStop, boolean isEgress) {
-    if (!(nearbyStop.stop instanceof StopLocation)) { return null; }
-    return new AccessEgress(
-    	stopIndex.indexByStop.get(nearbyStop.stop),
-        isEgress ? nearbyStop.state.reverse() : nearbyStop.state
-    );
+      if (!(nearbyStop.stop instanceof StopLocation)) {
+        return null;
+      }
+      Integer index = stopIndex.indexByStop.get(nearbyStop.stop);
+      if(index == null){
+        LOG.info("Nearby Stop {} not found in stopIndex map", nearbyStop.stop.getId());
+        return null;
+      }
+      return new AccessEgress(index, isEgress ? nearbyStop.state.reverse() : nearbyStop.state);
   }
 
   public List<AccessEgress> mapNearbyStops(Collection<NearbyStop> accessStops, boolean isEgress) {
