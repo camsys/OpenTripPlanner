@@ -18,7 +18,10 @@
     </licenses>
 
     <scm>
-        <url>http://github.com/opentripplanner/OpenTripPlanner</url>
+        <connection>scm:git:https://github.com/camsys/OpenTripPlanner.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/camsys/OpenTripPlanner.git</developerConnection>
+        <url>http://github.com/camsys/OpenTripPlanner</url>
+        <tag>2.1.0-cs-SNAPSHOT</tag>
     </scm>
 
     <properties>
