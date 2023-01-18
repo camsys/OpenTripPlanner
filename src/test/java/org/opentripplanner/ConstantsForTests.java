@@ -46,8 +46,10 @@ public class ConstantsForTests {
     private static final String OSLO_EAST_OSM = "src/test/resources/oslo-east-filtered.osm.pbf";
 
     public static final String KCM_GTFS = "src/test/resources/kcm_gtfs.zip";
-    
+
     public static final String FAKE_GTFS = "src/test/resources/testagency";
+
+    public static final String INTEGRATION_TEST_GTFS = "src/test/resources/integration_test_gtfs";
 
     public static final String FARE_COMPONENT_GTFS = "src/test/resources/farecomponent_gtfs.zip";
 

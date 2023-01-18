@@ -5,6 +5,7 @@ import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.routing.core.BicycleOptimizeType;
 import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.api.request.BannedStopSet;
+import org.opentripplanner.routing.core.OptimizeHint;
 import org.opentripplanner.standalone.server.OTPServer;
 import org.opentripplanner.standalone.server.Router;
 import org.opentripplanner.util.ResourceBundleSingleton;
@@ -250,6 +251,22 @@ public abstract class RoutingResource {
     @Deprecated
     @QueryParam("optimize")
     protected BicycleOptimizeType optimize;
+
+    /**
+     * Instead of expecting users to optimize specific query parameters,
+     * allow users to pass a hint that's interpreted per the local configuration.
+     * This hint will be translated to a set of query parameter adjustments.
+     * The possible values are:
+     *
+     *
+     * <ul>
+     *  <li>QUICK</li>
+     *  <li>WALKING</li>
+     *  <li>TRANSFERS</li>
+     *  </ul>
+    */
+     @QueryParam("hint")
+    protected OptimizeHint hint;
     
     /**
      * The set of modes that a user is willing to use, with qualifiers stating whether vehicles
@@ -646,14 +663,20 @@ public abstract class RoutingResource {
     @Context
     protected OTPServer otpServer;
 
+    protected RoutingRequest buildRequest() throws ParameterException {
+        Router router = otpServer.getRouter();
+        RoutingRequest request = router.defaultRoutingRequest.clone();
+        TimeZone tz;
+        tz = router.graph.getTimeZone();
+        return buildRequest(request,tz);
+    }
+
     /**
      * Range/sanity check the query parameter fields and build a Request object from them.
      *
      * @throws ParameterException when there is a problem interpreting a query parameter
      */
-    protected RoutingRequest buildRequest() throws ParameterException {
-        Router router = otpServer.getRouter();
-        RoutingRequest request = router.defaultRoutingRequest.clone();
+    protected RoutingRequest buildRequest(RoutingRequest request, TimeZone tz) throws ParameterException {
 
         // The routing request should already contain defaults, which are set when it is initialized or in the JSON
         // router configuration and cloned. We check whether each parameter was supplied before overwriting the default.
@@ -665,8 +688,6 @@ public abstract class RoutingResource {
 
         {
             //FIXME: move into setter method on routing request
-            TimeZone tz;
-            tz = router.graph.getTimeZone();
             if (date == null && time != null) { // Time was provided but not date
                 LOG.debug("parsing ISO datetime {}", time);
                 try {
@@ -755,6 +776,21 @@ public abstract class RoutingResource {
             }
         }
 
+        if (hint != null) {
+            // TODO: these should be configurable per deployment
+            switch (hint) {
+                case WALKING:
+                    request.waitReluctance = 40;
+                    break;
+                case TRANSFERS:
+                    request.waitReluctance = 3.0;
+                    request.transferCost = 60;
+                    break;
+                case QUICK:
+                    request.walkReluctance = 3.0;
+            }
+        }
+
         if (arriveBy != null) {
             request.setArriveBy(arriveBy);
         }
@@ -798,7 +834,7 @@ public abstract class RoutingResource {
             request.setWhiteListedAgenciesFromSting(whiteListedAgencies);
         }
         HashMap<FeedScopedId, BannedStopSet> bannedTripMap = makeBannedTripMap(bannedTrips);
-      
+
         if (bannedTripMap != null) {
             request.bannedTrips = bannedTripMap;
         }
@@ -879,6 +915,8 @@ public abstract class RoutingResource {
         request.locale = ResourceBundleSingleton.INSTANCE.getLocale(locale);
         return request;
     }
+
+
 
     /**
      * Take a string in the format agency:id or agency:id:1:2:3:4.

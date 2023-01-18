@@ -168,9 +168,11 @@ public class DefaultFareServiceFactory implements FareServiceFactory {
         case "san-francisco":
             return new SFBayFareServiceFactory();
         case "new-york":
-            return new NycFareServiceFactory();
+            return new NycFareServiceFactory(); // this is legacy and should be removed at some point
         case "seattle":
             return new SeattleFareServiceFactory();
+        case "new-york-advanced":
+            return new NycFareServiceFactory(); // todo placehoder for NYC fares
         default:
             throw new IllegalArgumentException(String.format("Unknown fare type: '%s'", type));
         }

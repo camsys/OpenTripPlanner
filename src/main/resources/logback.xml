@@ -19,7 +19,7 @@
   </appender>
 
   <!-- Change this to debug to let more messages through. -->
-  <root level="info">
+  <root level="debug">
     <appender-ref ref="stdout" />
   </root>
 

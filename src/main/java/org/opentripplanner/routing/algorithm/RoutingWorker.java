@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.ext.flex.FlexAccessEgress;
+import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.routing.algorithm.filterchain.ItineraryFilter;
 import org.opentripplanner.routing.algorithm.mapping.RaptorPathToItineraryMapper;
@@ -34,6 +35,7 @@ import org.opentripplanner.routing.api.response.RoutingError;
 import org.opentripplanner.routing.api.response.RoutingErrorCode;
 import org.opentripplanner.routing.api.response.RoutingResponse;
 import org.opentripplanner.routing.api.response.TripSearchMetadata;
+import org.opentripplanner.routing.connectivity.StopAccessibilityStrategy;
 import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.routing.framework.DebugTimingAggregator;
 import org.opentripplanner.routing.graph.Graph;
@@ -165,6 +167,7 @@ public class RoutingWorker {
                     request.modes.accessMode,
                     false
             );
+
             accessList = accessEgressMapper.mapNearbyStops(accessStops, false);
 
             // Special handling of flex accesses
@@ -186,6 +189,7 @@ public class RoutingWorker {
                     request.modes.egressMode,
                     true
             );
+
             egressList = accessEgressMapper.mapNearbyStops(egressStops, true);
 
             // Special handling of flex egresses

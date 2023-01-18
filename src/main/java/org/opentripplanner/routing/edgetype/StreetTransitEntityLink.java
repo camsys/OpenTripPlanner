@@ -6,6 +6,8 @@ import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.common.geometry.GeometryUtils;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.routing.api.request.RoutingRequest;
+import org.opentripplanner.routing.connectivity.AccessibilityResult;
+import org.opentripplanner.routing.connectivity.StopAccessibilityStrategy;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.core.StateEditor;
 import org.opentripplanner.routing.graph.Edge;
@@ -81,8 +83,12 @@ public abstract class StreetTransitEntityLink<T extends Vertex> extends Edge imp
         }
 
         RoutingRequest req = s0.getOptions();
-        if (s0.getOptions().wheelchairAccessible && !wheelchairAccessible) {
-            return null;
+        if (s0.getOptions().wheelchairAccessible) {
+            StopAccessibilityStrategy strategy = s0.getOptions().getRoutingContext().graph.stopAccessibilityStrategy;
+            AccessibilityResult accessibilityResult = strategy.stopIsAccessible(s0, transitEntityVertex.getStationElement());
+            if (!accessibilityResult.isAccessible()) {
+                return null;
+            }
         }
 
         StateEditor s1 = s0.edit(this);

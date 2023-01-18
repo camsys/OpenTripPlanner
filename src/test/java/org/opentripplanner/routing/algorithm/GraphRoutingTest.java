@@ -215,6 +215,7 @@ public abstract class GraphRoutingTest {
                     null,
                     null,
                     null,
+                    Stop.LocationType.STOP,
                     null,
                     null
             );

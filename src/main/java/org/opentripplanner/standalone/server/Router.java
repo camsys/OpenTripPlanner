@@ -12,6 +12,8 @@ import org.opentripplanner.routing.algorithm.raptor.transit.TripSchedule;
 import org.opentripplanner.routing.algorithm.raptor.transit.mappers.TransitLayerMapper;
 import org.opentripplanner.routing.algorithm.raptor.transit.mappers.TransitLayerUpdater;
 import org.opentripplanner.routing.api.request.RoutingRequest;
+import org.opentripplanner.routing.connectivity.DefaultStopAccessibilityStrategy;
+import org.opentripplanner.routing.connectivity.MTAStopAccessibilityStrategy;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.standalone.config.RouterConfig;
 import org.opentripplanner.transit.raptor.rangeraptor.configure.RaptorConfig;
@@ -99,6 +101,19 @@ public class Router {
             this.graph,
             routerConfig.updaterConfig()
         );
+
+        if (graph != null) {
+            switch (routerConfig.stopAccessibilityStrategy) {
+                case "mta":
+                    graph.stopAccessibilityStrategy = new MTAStopAccessibilityStrategy(graph);
+                    break;
+                default:
+                case "default":
+                    graph.stopAccessibilityStrategy = new DefaultStopAccessibilityStrategy(graph);
+                    break;
+            }
+
+        }
 
         /* Compute ellipsoidToGeoidDifference for this Graph */
         try {

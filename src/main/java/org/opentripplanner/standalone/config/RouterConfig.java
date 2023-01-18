@@ -37,6 +37,9 @@ public class RouterConfig implements Serializable {
     private final TransitRoutingConfig transitConfig;
     private final UpdatersParameters updatersParameters;
     private final VectorTileConfig vectorTileLayers;
+    public String stopAccessibilityStrategy;
+
+
 
     public RouterConfig(JsonNode node, String source, boolean logUnusedParams) {
         NodeAdapter adapter = new NodeAdapter(node, source);
@@ -51,6 +54,7 @@ public class RouterConfig implements Serializable {
         this.routingRequestDefaults = mapRoutingRequest(adapter.path("routingDefaults"));
         this.updatersParameters = new UpdatersConfig(adapter);
         this.vectorTileLayers = new VectorTileConfig(adapter.path("vectorTileLayers").asList());
+        this.stopAccessibilityStrategy = adapter.asText("stopAccessibilityStrategy", "default");
 
         if(logUnusedParams) {
             adapter.logAllUnusedParameters(LOG);

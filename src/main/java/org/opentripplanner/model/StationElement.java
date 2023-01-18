@@ -130,4 +130,8 @@ public abstract class StationElement extends TransitEntity {
   public void setParentStation(Station parentStation) {
     this.parentStation = parentStation;
   }
+
+  public FeedScopedId getStopId() {
+    return getId();
+  }
 }

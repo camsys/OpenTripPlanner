@@ -47,6 +47,7 @@ class StopMapper {
         null,
         null, fareZones,
         null,
+        Stop.LocationType.STOP,
         null,
         null
     );
