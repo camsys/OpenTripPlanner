@@ -134,25 +134,28 @@ public class FlexTripEdge extends Edge {
 
   @Override
   public LineString getGeometry() {
-	  if(flexTemplate.getFlexTrip() instanceof UnscheduledTrip)
-		  return getFlexPath().geometry;
-	  else if(flexTemplate.getFlexTrip() instanceof ScheduledDeviatedTrip) {
-		    
-		  LineString geometry = GeometryUtils.makeLineString(((ScheduledDeviatedTrip)getFlexTrip()).geometryCoords);		    
+      if(flexTemplate.getFlexTrip() instanceof UnscheduledTrip)
+          return getFlexPath().geometry;
+      else if(flexTemplate.getFlexTrip() instanceof ScheduledDeviatedTrip) {
 
-		  Coordinate from = getClosestPointOnLine(geometry, flexTemplate.request.from.getCoordinate());
-		  Coordinate to = getClosestPointOnLine(geometry, flexTemplate.request.to.getCoordinate());
-		  
-		  LineString l = GeometryUtils.getInteriorSegment(geometry, from, to);
-		 
-		  // from needs to be after to for this method to work, 
-		  // this seems like a cheap way to find out? HACK FIXME
-		  if(l.getLength() > 0)
-			  return l;
-		  else
-			  return GeometryUtils.getInteriorSegment(geometry, to, from);
-	  } else
-		  return null;
+          LineString geometry = GeometryUtils.makeLineString(((ScheduledDeviatedTrip)getFlexTrip()).geometryCoords);
+
+          if(flexTemplate.request.from.getCoordinate() != null && flexTemplate.request.to.getCoordinate() != null) {
+
+              Coordinate from = getClosestPointOnLine(geometry, flexTemplate.request.from.getCoordinate());
+              Coordinate to = getClosestPointOnLine(geometry, flexTemplate.request.to.getCoordinate());
+
+              LineString l = GeometryUtils.getInteriorSegment(geometry, from, to);
+
+              // from needs to be after to for this method to work,
+              // this seems like a cheap way to find out? HACK FIXME
+              if (l.getLength() > 0)
+                  return l;
+              else
+                  return GeometryUtils.getInteriorSegment(geometry, to, from);
+          }
+      }
+      return null;
   }
   
   private Coordinate getClosestPointOnLine(Geometry line, Coordinate coord) {
