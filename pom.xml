@@ -27,7 +27,7 @@
     <properties>
         <otp.serialization.version.id>8</otp.serialization.version.id>
         <!-- Lib versions - keep list sorted on property name -->
-        <geotools.version>21.2</geotools.version>
+        <geotools.version>27.1</geotools.version>
         <geotools.wfs.version>16.5</geotools.wfs.version>
         <jackson.version>2.12.3</jackson.version>
         <jersey.version>2.18</jersey.version>
@@ -631,6 +631,11 @@
             <groupId>org.geotools</groupId>
             <artifactId>gt-wfs</artifactId>
             <version>${geotools.wfs.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.geotools</groupId>
+            <artifactId>gt-geojson-core</artifactId>
+            <version>${geotools.version}</version>
         </dependency>
         <!-- provides EPSG database for projections (shapefile loading) -->
         <dependency>
