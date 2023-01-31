@@ -18,6 +18,7 @@ import org.opentripplanner.ext.transmodelapi.model.TripTimeShortHelper;
 import org.opentripplanner.ext.transmodelapi.support.GqlUtil;
 import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.model.plan.StopArrival;
+import org.opentripplanner.util.PolylineEncoder;
 
 public class LegType {
   public static GraphQLObjectType create(
@@ -106,9 +107,9 @@ public class LegType {
         .field(GraphQLFieldDefinition
             .newFieldDefinition()
             .name("pointsOnLink")
-            .description("The legs's geometry.")
+            .description("The leg's geometry.")
             .type(linkGeometryType)
-            .dataFetcher(env -> leg(env).legGeometry)
+            .dataFetcher(env -> PolylineEncoder.createEncodings(leg(env).getLegGeometry()))
             .build())
         .field(GraphQLFieldDefinition
             .newFieldDefinition()

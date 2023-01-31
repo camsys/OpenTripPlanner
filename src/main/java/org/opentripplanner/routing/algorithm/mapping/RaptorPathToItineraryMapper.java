@@ -13,6 +13,7 @@ import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.model.TripPattern;
 import org.opentripplanner.model.calendar.ServiceDate;
+import org.opentripplanner.common.geometry.GeometryUtils;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.model.plan.Place;
@@ -40,7 +41,6 @@ import org.opentripplanner.transit.raptor.api.path.PathLeg;
 import org.opentripplanner.transit.raptor.api.path.TransferPathLeg;
 import org.opentripplanner.transit.raptor.api.path.TransitPathLeg;
 import org.opentripplanner.transit.raptor.api.transit.RaptorCostConverter;
-import org.opentripplanner.util.PolylineEncoder;
 
 /**
  * This maps the paths found by the Raptor search algorithm to the itinerary structure currently used by OTP. The paths,
@@ -186,7 +186,7 @@ public class RaptorPathToItineraryMapper {
         leg.from = mapStopToPlace(boardStop, boardStopIndexInPattern, tripTimes);
         leg.to = mapStopToPlace(alightStop, alightStopIndexInPattern, tripTimes);
         List<Coordinate> transitLegCoordinates = extractTransitLegCoordinates(pathLeg, boardStopIndexInPattern, alightStopIndexInPattern);
-        leg.legGeometry = PolylineEncoder.createEncodings(transitLegCoordinates);
+        leg.setLegGeometry(GeometryUtils.makeLineString(transitLegCoordinates));
         leg.distanceMeters = getDistanceFromCoordinates(transitLegCoordinates);
 
         if (request.showIntermediateStops) {
@@ -267,7 +267,7 @@ public class RaptorPathToItineraryMapper {
             leg.to = to;
             leg.startTime = createCalendar(pathLeg.fromTime());
             leg.endTime = createCalendar(pathLeg.toTime());
-            leg.legGeometry = PolylineEncoder.createEncodings(transfer.getCoordinates());
+            leg.setLegGeometry(GeometryUtils.makeLineString(transfer.getCoordinates()));
             leg.distanceMeters = (double) transfer.getDistanceMeters();
             leg.walkSteps = Collections.emptyList();
             leg.generalizedCost = pathLeg.otpDomainCost();

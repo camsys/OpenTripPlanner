@@ -14,7 +14,7 @@ import org.opentripplanner.routing.graphfinder.PatternAtStop;
 import org.opentripplanner.common.model.P2;
 import java.util.Map;
 import org.opentripplanner.routing.core.FareComponent;
-import org.opentripplanner.util.model.EncodedPolylineBean;
+import org.locationtech.jts.geom.Geometry;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.model.TripPattern;
@@ -332,8 +332,6 @@ public class LegacyGraphQLDataFetchers {
 
         public DataFetcher<Integer> generalizedCost();
 
-        public DataFetcher<EncodedPolylineBean> legGeometry();
-
         public DataFetcher<Agency> agency();
 
         public DataFetcher<Boolean> realTime();
@@ -341,6 +339,7 @@ public class LegacyGraphQLDataFetchers {
         public DataFetcher<String> realtimeState();
 
         public DataFetcher<Double> distance();
+        public DataFetcher<Geometry> legGeometry();
 
         public DataFetcher<Boolean> transitLeg();
 
@@ -460,8 +459,6 @@ public class LegacyGraphQLDataFetchers {
         public DataFetcher<Iterable<Object>> stops();
 
         public DataFetcher<Iterable<Coordinate>> geometry();
-
-        public DataFetcher<EncodedPolylineBean> patternGeometry();
 
         public DataFetcher<String> semanticHash();
 
@@ -754,6 +751,7 @@ public class LegacyGraphQLDataFetchers {
         public DataFetcher<Object> stop();
 
         public DataFetcher<Integer> distance();
+        public DataFetcher<Iterable<Geometry>> googleEncoded();
     }
 
     /**
@@ -872,6 +870,7 @@ public class LegacyGraphQLDataFetchers {
         public DataFetcher<String> routeShortName();
 
         public DataFetcher<String> directionId();
+        public DataFetcher<Geometry> tripGeometry();
 
         public DataFetcher<String> blockId();
 
@@ -896,8 +895,6 @@ public class LegacyGraphQLDataFetchers {
         public DataFetcher<Iterable<TripTimeShort>> stoptimesForDate();
 
         public DataFetcher<Iterable<Iterable<Double>>> geometry();
-
-        public DataFetcher<EncodedPolylineBean> tripGeometry();
 
         public DataFetcher<Iterable<TransitAlert>> alerts();
     }

@@ -3,6 +3,13 @@ package org.opentripplanner.ext.legacygraphqlapi.datafetchers;
 import graphql.relay.Relay;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.ext.legacygraphqlapi.LegacyGraphQLRequestContext;
 import org.opentripplanner.ext.legacygraphqlapi.generated.LegacyGraphQLDataFetchers;
@@ -18,13 +25,6 @@ import org.opentripplanner.routing.RoutingService;
 import org.opentripplanner.routing.alertpatch.TransitAlert;
 import org.opentripplanner.routing.core.ServiceDay;
 import org.opentripplanner.routing.trippattern.TripTimes;
-import org.opentripplanner.util.PolylineEncoder;
-import org.opentripplanner.util.model.EncodedPolylineBean;
-
-import java.text.ParseException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class LegacyGraphQLTripImpl implements LegacyGraphQLDataFetchers.LegacyGraphQLTrip {
 
@@ -258,13 +258,11 @@ public class LegacyGraphQLTripImpl implements LegacyGraphQLDataFetchers.LegacyGr
   }
 
   @Override
-  public DataFetcher<EncodedPolylineBean> tripGeometry() {
+  public DataFetcher<Geometry> tripGeometry() {
     return environment -> {
       TripPattern tripPattern = getTripPattern(environment);
       if (tripPattern == null) { return null; }
-      LineString geometry = tripPattern.getGeometry();
-      if (geometry == null) { return null; }
-      return PolylineEncoder.createEncodings(Arrays.asList(geometry.getCoordinates()));
+      return tripPattern.getGeometry();
     };
   }
 

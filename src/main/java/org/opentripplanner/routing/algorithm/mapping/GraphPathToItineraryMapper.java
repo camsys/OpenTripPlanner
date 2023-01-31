@@ -50,7 +50,6 @@ import org.opentripplanner.routing.vertextype.ExitVertex;
 import org.opentripplanner.routing.vertextype.StreetVertex;
 import org.opentripplanner.routing.vertextype.TransitStopVertex;
 import org.opentripplanner.util.OTPFeature;
-import org.opentripplanner.util.PolylineEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -282,9 +281,9 @@ public abstract class GraphPathToItineraryMapper {
         addPlaces(leg, states, requestedLocale);
 
         CoordinateArrayListSequence coordinates = makeCoordinates(edges);
-        Geometry geometry = GeometryUtils.getGeometryFactory().createLineString(coordinates);
+        LineString geometry = GeometryUtils.getGeometryFactory().createLineString(coordinates);
 
-        leg.legGeometry = PolylineEncoder.createEncodings(geometry);
+        leg.setLegGeometry(geometry);
 
         leg.generalizedCost = (int) (states[states.length - 1].getWeight() - states[0].getWeight());
 

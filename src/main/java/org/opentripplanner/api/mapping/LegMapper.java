@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
+import org.opentripplanner.util.PolylineEncoder;
 
 public class LegMapper {
     private final WalkStepMapper walkStepMapper;
@@ -94,8 +95,8 @@ public class LegMapper {
         api.serviceDate = ServiceDateMapper.mapToApi(domain.serviceDate);
         api.routeBrandingUrl = domain.routeBrandingUrl;
         api.intermediateStops = PlaceMapper.mapStopArrivals(domain.intermediateStops);
-        api.legGeometry = domain.legGeometry;
         api.steps = walkStepMapper.mapWalkSteps(domain.walkSteps);
+        api.legGeometry = PolylineEncoder.createEncodings(domain.getLegGeometry());
         api.alerts = concatenateAlerts(
             streetNoteMaperMapper.mapToApi(domain.streetNotes),
             alertMapper.mapToApi(domain.transitAlerts)
