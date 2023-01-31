@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
+import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.model.Agency;
 import org.opentripplanner.model.BookingInfo;
 import org.opentripplanner.model.FeedScopedId;
@@ -19,7 +20,6 @@ import org.opentripplanner.model.calendar.ServiceDate;
 import org.opentripplanner.model.transfer.Transfer;
 import org.opentripplanner.routing.alertpatch.TransitAlert;
 import org.opentripplanner.routing.core.TraverseMode;
-import org.opentripplanner.util.model.EncodedPolylineBean;
 
 /**
 * One leg of a trip -- that is, a temporally continuous piece of the journey that takes place on a
@@ -147,6 +147,7 @@ public class Leg {
     * The Place where the leg begins.
     */
    public Place to = null;
+    private LineString legGeometry;
 
     /**
      * For transit legs, intermediate stops between the Place where the leg originates and the Place
@@ -155,11 +156,6 @@ public class Leg {
      * planner request.
      */
     public List<StopArrival> intermediateStops;
-
-   /**
-    * The leg's geometry.
-    */
-   public EncodedPolylineBean legGeometry;
 
    /**
     * A series of turn by turn instructions used for walking, biking and driving.
@@ -311,6 +307,17 @@ public class Leg {
   /** For transit legs, the the trip. For non-transit legs, null. */
   public Trip getTrip() {  return trip; }
 
+    /**
+     * The leg's geometry.
+     */
+    public LineString getLegGeometry() {
+        return legGeometry;
+    }
+
+    public void setLegGeometry(LineString legGeometry) {
+        this.legGeometry = legGeometry;
+    }
+
   /** Should be used for debug logging only */
     @Override
     public String toString() {
@@ -350,4 +357,5 @@ public class Leg {
                 .addCol("bikeRentalNetworks", bikeRentalNetworks)
                 .toString();
     }
+
 }

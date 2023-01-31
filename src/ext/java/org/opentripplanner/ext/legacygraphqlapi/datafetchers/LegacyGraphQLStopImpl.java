@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.opentripplanner.model.StopLocation;
 
 public class LegacyGraphQLStopImpl implements LegacyGraphQLDataFetchers.LegacyGraphQLStop {
 
@@ -68,6 +69,11 @@ public class LegacyGraphQLStopImpl implements LegacyGraphQLDataFetchers.LegacyGr
   }
 
   @Override
+  public DataFetcher<Object> geometries() {
+    return environment -> getValue(environment, StopLocation::getGeometry, Station::getGeometry);
+  }
+
+  @Override
   public DataFetcher<String> gtfsId() {
     return environment -> getValue(
         environment,
@@ -78,7 +84,7 @@ public class LegacyGraphQLStopImpl implements LegacyGraphQLDataFetchers.LegacyGr
 
   @Override
   public DataFetcher<String> name() {
-    return environment -> getValue(environment, Stop::getName, Station::getName);
+    return environment -> getValue(environment, StopLocation::getName, Station::getName);
   }
 
   @Override
