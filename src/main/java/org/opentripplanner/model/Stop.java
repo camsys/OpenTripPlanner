@@ -1,10 +1,14 @@
 /* This file is based on code copied from project OneBusAway, see the LICENSE file for further information. */
 package org.opentripplanner.model;
 
+import org.locationtech.jts.geom.Geometry;
+import org.opentripplanner.common.geometry.GeometryUtils;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.TimeZone;
+import javax.annotation.Nonnull;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -170,5 +174,11 @@ public final class Stop extends StationElement implements StopLocation {
   @Override
   public boolean isArea() {
 	return false;
+  }
+
+  @Override
+  @Nonnull
+  public Geometry getGeometry() {
+    return GeometryUtils.getGeometryFactory().createPoint(getCoordinate().asJtsCoordinate());
   }
 }

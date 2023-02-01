@@ -1,5 +1,9 @@
 package org.opentripplanner.model;
 
+import org.locationtech.jts.geom.Geometry;
+
+import javax.annotation.Nullable;
+
 /**
  * A StopLocation describes a place where a vehicle can be boarded or alighted, which is not
  * necessarily a marked stop, but can be of other shapes, such as a service area for flexible
@@ -21,6 +25,9 @@ public interface StopLocation {
    * the centroid of an area or line.
    */
   WgsCoordinate getCoordinate();
+
+  @Nullable
+  Geometry getGeometry();
   
   boolean isLine();
 

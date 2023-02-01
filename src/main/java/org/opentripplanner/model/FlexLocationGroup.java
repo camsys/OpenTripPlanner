@@ -49,6 +49,10 @@ public class FlexLocationGroup extends TransitEntity implements StopLocation {
     return new WgsCoordinate(centroid.getY(), centroid.getX());
   }
 
+  public Geometry getGeometry() {
+    return geometry;
+  }
+
   @Override
   public boolean isArea() {
     return geometry.getArea() > 0;

@@ -1,9 +1,15 @@
 package org.opentripplanner.model;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.TimeZone;
+import org.locationtech.jts.algorithm.ConvexHull;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryCollection;
+import org.locationtech.jts.geom.Point;
+
+import javax.annotation.Nonnull;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.opentripplanner.common.geometry.GeometryUtils.getGeometryFactory;
 
 /**
  * A grouping of stops in GTFS or the lowest level grouping in NeTEx. It can be a train station, a
@@ -34,6 +40,8 @@ public class Station extends TransitEntity implements StopCollection {
 
   private final Set<Stop> childStops = new HashSet<>();
 
+  private GeometryCollection geometry;
+
   public Station(
       FeedScopedId id,
       String name,
@@ -52,10 +60,15 @@ public class Station extends TransitEntity implements StopCollection {
     this.url = url;
     this.timezone = timezone;
     this.priority = priority == null ? DEFAULT_PRIORITY : priority;
+
+    // Initialize the geometry with an empty set of children
+    this.geometry = computeGeometry(coordinate, Set.of());
+
   }
 
   public void addChildStop(Stop stop) {
     this.childStops.add(stop);
+    this.geometry = computeGeometry(coordinate, childStops);
   }
 
   @Override
@@ -112,5 +125,38 @@ public class Station extends TransitEntity implements StopCollection {
 
   public double getLon() {
     return coordinate.longitude();
+  }
+
+  /**
+   * A geometry collection that contains the center point and the convex hull of all the child
+   * stops.
+   */
+  @Nonnull
+  public GeometryCollection getGeometry() {
+    return geometry;
+  }
+
+  private static GeometryCollection computeGeometry(
+          WgsCoordinate coordinate,
+          Set<Stop> childStops
+  ) {
+    Point stationPoint = null;
+    var childGeometries = childStops
+            .stream()
+            .map(StopLocation::getGeometry)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+    if (coordinate != null) {
+      stationPoint = getGeometryFactory().createPoint(coordinate.asJtsCoordinate());
+      childGeometries.add(stationPoint);
+    }
+    var geometryCollection = getGeometryFactory()
+            .createGeometryCollection(childGeometries.toArray(new Geometry[] {}));
+    var convexHull = new ConvexHull(geometryCollection).getConvexHull();
+
+    var geometries = stationPoint != null
+            ? new Geometry[] { stationPoint, convexHull }
+            : new Geometry[] { convexHull };
+    return getGeometryFactory().createGeometryCollection(geometries);
   }
 }

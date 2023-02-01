@@ -49,6 +49,7 @@ class LegacyGraphQLIndex {
       RuntimeWiring runtimeWiring = RuntimeWiring
           .newRuntimeWiring()
           .scalar(LegacyGraphQLScalars.polylineScalar)
+          .scalar(LegacyGraphQLScalars.geoJsonScalar)
           .scalar(LegacyGraphQLScalars.graphQLIDScalar)
           .type("Node", type -> type.typeResolver(new LegacyGraphQLNodeTypeResolver()))
           .type("PlaceInterface", type -> type.typeResolver(new LegacyGraphQLPlaceInterfaceTypeResolver()))
@@ -77,6 +78,7 @@ class LegacyGraphQLIndex {
           .type(IntrospectionTypeWiring.build(LegacyGraphQLstepImpl.class))
           .type(IntrospectionTypeWiring.build(LegacyGraphQLStopImpl.class))
           .type(IntrospectionTypeWiring.build(LegacyGraphQLstopAtDistanceImpl.class))
+          .type(IntrospectionTypeWiring.build(LegacyGraphQLStopGeometriesImpl.class))
           .type(IntrospectionTypeWiring.build(LegacyGraphQLStoptimeImpl.class))
           .type(IntrospectionTypeWiring.build(LegacyGraphQLStoptimesInPatternImpl.class))
           .type(IntrospectionTypeWiring.build(LegacyGraphQLTranslatedStringImpl.class))

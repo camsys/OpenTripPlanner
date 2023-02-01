@@ -63,7 +63,7 @@ public class JSONObjectMapperProvider implements ContextResolver<ObjectMapper> {
 
         // to serialize LocalDateTime
         mapper.registerModule(new JavaTimeModule());
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        mapper.enable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 
     /**

@@ -1,5 +1,7 @@
 package org.opentripplanner.ext.legacygraphqlapi;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import graphql.language.StringValue;
 import graphql.relay.Relay;
 import graphql.schema.Coercing;
@@ -7,9 +9,14 @@ import graphql.schema.CoercingParseLiteralException;
 import graphql.schema.CoercingParseValueException;
 import graphql.schema.CoercingSerializeException;
 import graphql.schema.GraphQLScalarType;
+import org.locationtech.jts.geom.Geometry;
+import org.opentripplanner.common.geometry.GeometryUtils;
+import com.bedatadriven.jackson.datatype.jts.JtsModule;
 
 public class LegacyGraphQLScalars {
 
+    private static final ObjectMapper geoJsonMapper = new ObjectMapper()
+            .registerModule(new JtsModule(GeometryUtils.getGeometryFactory()));
   public static GraphQLScalarType polylineScalar = GraphQLScalarType
       .newScalar()
       .name("Polyline")
@@ -33,6 +40,34 @@ public class LegacyGraphQLScalars {
         }
       })
       .build();
+
+    public static GraphQLScalarType geoJsonScalar = GraphQLScalarType
+        .newScalar()
+        .name("GeoJson")
+        .description("Geographic data structures in JSON format. See: https://geojson.org/")
+        .coercing(
+                new Coercing<Geometry, JsonNode>() {
+                    @Override
+                    public JsonNode serialize(Object dataFetcherResult) throws CoercingSerializeException {
+                        if (dataFetcherResult instanceof Geometry) {
+                            var geom = (Geometry) dataFetcherResult;
+                            return geoJsonMapper.valueToTree(geom);
+                        }
+                        return null;
+                    }
+
+                    @Override
+                    public Geometry parseValue(Object input) throws CoercingParseValueException {
+                        return null;
+                    }
+
+                    @Override
+                    public Geometry parseLiteral(Object input) throws CoercingParseLiteralException {
+                        return null;
+                    }
+                }
+        )
+        .build();
 
   public static GraphQLScalarType graphQLIDScalar = GraphQLScalarType
       .newScalar()
