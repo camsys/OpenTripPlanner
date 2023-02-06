@@ -58,8 +58,8 @@ public class JSONObjectMapperProvider implements ContextResolver<ObjectMapper> {
         // Constructors are available for both unnamed, unversioned throwaway modules
         // and named, versioned reusable modules.
         mapper = new ObjectMapper()
-                .registerModule(FeedScopedIdSerializer.makeModule());
-                //.setSerializationInclusion(Include.NON_NULL); // skip null fields
+                .registerModule(FeedScopedIdSerializer.makeModule())
+                .setSerializationInclusion(Include.NON_NULL); // skip null fields
 
         // to serialize LocalDateTime
         mapper.registerModule(new JavaTimeModule());
