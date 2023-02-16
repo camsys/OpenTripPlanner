@@ -15,6 +15,7 @@ import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.spt.DominanceFunction;
 import org.opentripplanner.routing.spt.GraphPath;
 import org.opentripplanner.routing.spt.ShortestPathTree;
+import org.opentripplanner.standalone.config.OtpConfig;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -36,7 +37,7 @@ import java.util.Map;
  */
 public class StreetFlexPathCalculator implements FlexPathCalculator {
 
-  private static final long MAX_FLEX_TRIP_DURATION_SECONDS = Duration.ofMinutes(45).toSeconds();
+  private static long MAX_FLEX_TRIP_DURATION_SECONDS = Duration.ofHours(OtpConfig.flexMaxTripDurationInHours).toSeconds();;//Duration.ofHours(projectInfo().flexMaxTripDurationInHours).toSeconds();
 
   private final Graph graph;
 
