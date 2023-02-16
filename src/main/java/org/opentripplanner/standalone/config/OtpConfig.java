@@ -14,6 +14,11 @@ import java.util.Map;
 public class OtpConfig {
     private static final Logger LOG = LoggerFactory.getLogger(OtpConfig.class);
 
+    /**
+     * This is used to add a configurable way to change flexMaxTripDurationInHours
+     */
+    public static int flexMaxTripDurationInHours = 1;
+
     public final JsonNode rawConfig;
 
     public final Map<OTPFeature, Boolean> otpFeatures;
@@ -36,6 +41,7 @@ public class OtpConfig {
         NodeAdapter adapter = new NodeAdapter(otpConfig, source);
 
         this.configVersion = adapter.asText("configVersion", null);
+        flexMaxTripDurationInHours = adapter.asInt("flexMaxTripDurationInHours", 1);
         this.otpFeatures = adapter.asEnumMap(
                 "otpFeatures",
                 OTPFeature.class,
