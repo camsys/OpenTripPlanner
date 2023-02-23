@@ -5,6 +5,7 @@ import org.opentripplanner.routing.algorithm.filterchain.GroupBySimilarity;
 import org.opentripplanner.routing.algorithm.filterchain.ItineraryFilter;
 import org.opentripplanner.routing.algorithm.filterchain.ItineraryFilterChainBuilder;
 import org.opentripplanner.routing.api.request.RoutingRequest;
+import org.opentripplanner.routing.api.request.StreetMode;
 
 import java.time.Instant;
 import java.util.function.Consumer;
@@ -59,11 +60,14 @@ public class RoutingRequestToFilterChainMapper {
         .withParkAndRideDurationRatio(p.parkAndRideDurationRatio)
         .withNonTransitGeneralizedCostLimit(p.nonTransitGeneralizedCostLimit)
         .withRemoveTransitWithHigherCostThanBestOnStreetOnly(true)
-        .withFlexFilter(request.maxWalkDistance)
 //        .withLatestDepartureTimeLimit(filterOnLatestDepartureTime)
         .withMaxLimitReachedSubscriber(maxLimitReachedSubscriber)
         .withRemoveWalkAllTheWayResults(removeWalkAllTheWayResults)
         .withDebugEnabled(p.debug);
+
+    if(request.modes.contains(StreetMode.FLEXIBLE)){
+      builder.withFlexFilter(request.maxWalkDistance);
+    }
 
     return builder.build();
   }
