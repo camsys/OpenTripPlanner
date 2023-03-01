@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import static org.opentripplanner.model.StopPattern.PICKDROP_NONE;
 
 import org.opentripplanner.common.model.T2;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
@@ -27,6 +27,7 @@ import org.opentripplanner.ext.flex.flexpathcalculator.StreetFlexPathCalculator;
 import org.opentripplanner.ext.flex.template.FlexAccessTemplate;
 import org.opentripplanner.ext.flex.template.FlexEgressTemplate;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
+import org.opentripplanner.ext.flex.trip.FlexTripStopTime;
 import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.model.calendar.ServiceDate;
 import org.opentripplanner.model.plan.Itinerary;
@@ -125,23 +126,37 @@ public class FlexRouter {
       StopLocation transferStop = template.getTransferStop();
 
       List<FlexEgressTemplate> egressTemplates = 
-    		  this.flexEgressTemplates.parallelStream().distinct().filter(t -> t.getTransferStop().equals(transferStop)).distinct().collect(Collectors.toList());
+    		  this.flexEgressTemplates.parallelStream().distinct().filter(t -> t.getTransferStop().equals(transferStop)).collect(Collectors.toList());
 
       if (!egressTemplates.isEmpty()) {
         for(FlexEgressTemplate egressTemplate : egressTemplates) {
-          Itinerary itinerary = template.createDirectItinerary(egressTemplate.getAccessEgress(), arriveBy, departureTime, startOfTime);
-  
-          if (itinerary != null) {
-              LOG.info("Creating itin for trip " + egressTemplate.getFlexTrip()+"/" +template.getFlexTrip() + " from:" + template.getAccessEgressStop() + " to:" + 
-                		egressTemplate.getAccessEgressStop() + " xfr=" + template.getTransferStop() + " itin=" + itinerary);
-                
-            itineraries.add(itinerary);
-          }
+          itineraries.add(makeItinerary(template, egressTemplate));
         }
+      } else {
+          for (FlexEgressTemplate flexEgressTemplate : this.flexEgressTemplates){
+              FlexTripStopTime[] accessStopTimes = flexEgressTemplate.getFlexTrip().getStopTimes();
+              for (FlexTripStopTime st : accessStopTimes) {
+                  StopLocation sl = st.stop;
+                  if (sl.equals(transferStop) && st.dropOffType!=PICKDROP_NONE) {
+                      itineraries.add(makeItinerary(template, flexEgressTemplate));
+                  }
+              }
+          }
       }
     }
     
     return itineraries;
+  }
+
+  public Itinerary makeItinerary(FlexAccessTemplate template, FlexEgressTemplate egressTemplate) {
+      Itinerary itinerary = template.createDirectItinerary(egressTemplate.getAccessEgress(), arriveBy, departureTime, startOfTime);
+
+      if (itinerary != null) {
+          LOG.info("Creating itin for trip " + egressTemplate.getFlexTrip()+"/" +template.getFlexTrip() + " from:" + template.getAccessEgressStop() + " to:" +
+                  egressTemplate.getAccessEgressStop() + " xfr=" + template.getTransferStop() + " itin=" + itinerary);
+      }
+
+      return itinerary;
   }
 
   public static <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor) {

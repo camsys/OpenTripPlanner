@@ -43,7 +43,11 @@ public abstract class FlexTrip extends TransitEntity {
   );
 
   public FlexTripStopTime getStopTime(int i) {
-  	return stopTimes[i];
+    return stopTimes[i];
+  }
+
+  public FlexTripStopTime[] getStopTimes() {
+    return stopTimes;
   }
 
   public Trip getTrip() {
