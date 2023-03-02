@@ -130,7 +130,10 @@ public class FlexRouter {
 
       if (!egressTemplates.isEmpty()) {
         for(FlexEgressTemplate egressTemplate : egressTemplates) {
-          itineraries.add(makeItinerary(template, egressTemplate));
+            Itinerary itin = makeItinerary(template, egressTemplate);
+            if (itin != null) {
+                itineraries.add(itin);
+            }
         }
       } else {
           for (FlexEgressTemplate flexEgressTemplate : this.flexEgressTemplates){
@@ -138,7 +141,10 @@ public class FlexRouter {
               for (FlexTripStopTime st : accessStopTimes) {
                   StopLocation sl = st.stop;
                   if (sl.equals(transferStop) && st.dropOffType!=PICKDROP_NONE) {
-                      itineraries.add(makeItinerary(template, flexEgressTemplate));
+                      Itinerary itin = makeItinerary(template, flexEgressTemplate);
+                      if (itin != null) {
+                          itineraries.add(itin);
+                      }
                   }
               }
           }
