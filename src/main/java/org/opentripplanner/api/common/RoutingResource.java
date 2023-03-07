@@ -710,6 +710,8 @@ public abstract class RoutingResource {
 
         if(searchWindow != null) {
             request.searchWindow = Duration.ofSeconds(searchWindow);
+        } else {
+            request.searchWindow = Duration.ofSeconds(3600);
         }
         if(timetableView != null) {
             request.timetableView = timetableView;
