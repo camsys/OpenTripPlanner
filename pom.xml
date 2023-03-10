@@ -7,11 +7,7 @@
     <url>http://opentripplanner.org</url>
     <groupId>org.opentripplanner</groupId>
     <artifactId>otp</artifactId>
-<<<<<<< HEAD
-    <version>2.1.4-cs</version>
-=======
     <version>2.1.5-cs</version>
->>>>>>> otp-2.1.5-cs
     <packaging>jar</packaging>
 
     <licenses>
