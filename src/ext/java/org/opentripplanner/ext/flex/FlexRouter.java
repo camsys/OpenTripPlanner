@@ -174,7 +174,7 @@ public class FlexRouter {
     calculateFlexAccessTemplates();
 
     return this.flexAccessTemplates
-        .parallelStream()
+        .stream()
         .distinct()
         .flatMap(template -> template.createFlexAccessEgressStream(graph))
         .filter(e -> e != null)
@@ -186,7 +186,7 @@ public class FlexRouter {
     calculateFlexEgressTemplates();
 
     return this.flexEgressTemplates
-        .parallelStream()
+        .stream()
         .distinct()
         .flatMap(template -> template.createFlexAccessEgressStream(graph))
         .filter(e -> e != null)
