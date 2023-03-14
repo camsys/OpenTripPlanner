@@ -56,6 +56,7 @@ public class StreetFlexPathCalculator implements FlexPathCalculator {
 
 	// These are the origin and destination vertices from the perspective of the one-to-many search,
     // which may be reversed
+
     Vertex originVertex = reverseDirection ? tov : fromv;
     Vertex destinationVertex = reverseDirection ? fromv : tov;
 
@@ -63,11 +64,13 @@ public class StreetFlexPathCalculator implements FlexPathCalculator {
     if (cache.containsKey(originVertex)) {
       shortestPathTree = cache.get(originVertex);
     } else {
-      shortestPathTree = routeToMany(originVertex);
+      shortestPathTree = routeToMany(originVertex, destinationVertex);
+
       cache.put(originVertex, shortestPathTree);
     }
 
     GraphPath path = shortestPathTree.getPath(destinationVertex, false);
+
     if(path == null)
     	return null;
     
@@ -77,28 +80,30 @@ public class StreetFlexPathCalculator implements FlexPathCalculator {
     return new FlexPath(distance, duration, path.getGeometry());
   }
 
-  private ShortestPathTree routeToMany(Vertex vertex) {
+  private ShortestPathTree routeToMany(Vertex vertex, Vertex destinationVertex) {
+
     RoutingRequest routingRequest = new RoutingRequest(TraverseMode.CAR);
 
     routingRequest.arriveBy = reverseDirection;
     
     if (reverseDirection) {
-      routingRequest.setRoutingContext(graph, null, vertex);
+      routingRequest.setRoutingContext(graph, destinationVertex, vertex);
     } else {
-      routingRequest.setRoutingContext(graph, vertex, null);
+      routingRequest.setRoutingContext(graph, vertex, destinationVertex);
     }
     
     routingRequest.disableRemainingWeightHeuristic = true;
     routingRequest.rctx.remainingWeightHeuristic = new TrivialRemainingWeightHeuristic();
     routingRequest.dominanceFunction = new DominanceFunction.EarliestArrival();
     routingRequest.oneToMany = true;
-    
+
     AStar search = new AStar();
     search.setSkipEdgeStrategy(new DurationSkipEdgeStrategy(MAX_FLEX_TRIP_DURATION_SECONDS));
-    
+
+
     ShortestPathTree spt = search.getShortestPathTree(routingRequest);
     routingRequest.cleanup();
-    
+
     return spt;
   }
 }
