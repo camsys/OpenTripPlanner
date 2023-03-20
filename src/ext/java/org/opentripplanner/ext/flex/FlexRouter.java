@@ -155,6 +155,10 @@ public class FlexRouter {
   }
 
   public Itinerary makeItinerary(FlexAccessTemplate template, FlexEgressTemplate egressTemplate) {
+      if (!template.getFlexTrip().equals(egressTemplate.getFlexTrip())) {
+          LOG.debug("Trip mismatch found " + template.getFlexTrip() + " != " + egressTemplate.getFlexTrip());
+          return null;
+      }
       Itinerary itinerary = template.createDirectItinerary(egressTemplate.getAccessEgress(), arriveBy, departureTime, startOfTime);
 
       if (itinerary != null) {
