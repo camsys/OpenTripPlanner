@@ -111,7 +111,12 @@ public class WalkStep {
 
     public BikeRentalStationInfo bikeRentalOffStation;
 
-    public void setDirections(double lastAngle, double thisAngle, boolean roundabout) {
+    /**
+     * Instruction for this step, as text
+     */
+    public String instructionText;
+
+  public void setDirections(double lastAngle, double thisAngle, boolean roundabout) {
         relativeDirection = getRelativeDirection(lastAngle, thisAngle, roundabout);
         setAbsoluteDirection(thisAngle);
     }

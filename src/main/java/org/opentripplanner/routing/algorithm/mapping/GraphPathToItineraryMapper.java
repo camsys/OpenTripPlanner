@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.commons.lang3.StringUtils;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
@@ -19,10 +19,7 @@ import org.opentripplanner.common.geometry.PackedCoordinateSequence;
 import org.opentripplanner.common.model.P2;
 import org.opentripplanner.ext.flex.FlexLegMapper;
 import org.opentripplanner.ext.flex.edgetype.FlexTripEdge;
-import org.opentripplanner.model.BikeRentalStationInfo;
-import org.opentripplanner.model.Stop;
-import org.opentripplanner.model.StreetNote;
-import org.opentripplanner.model.WgsCoordinate;
+import org.opentripplanner.model.*;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.model.plan.Place;
@@ -33,22 +30,13 @@ import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.core.RoutingContext;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.core.TraverseMode;
-import org.opentripplanner.routing.edgetype.AreaEdge;
-import org.opentripplanner.routing.edgetype.BikeRentalEdge;
-import org.opentripplanner.routing.edgetype.ElevatorAlightEdge;
-import org.opentripplanner.routing.edgetype.FreeEdge;
-import org.opentripplanner.routing.edgetype.PathwayEdge;
-import org.opentripplanner.routing.edgetype.StreetEdge;
+import org.opentripplanner.routing.edgetype.*;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.location.TemporaryStreetLocation;
 import org.opentripplanner.routing.spt.GraphPath;
-import org.opentripplanner.routing.vertextype.BikeParkVertex;
-import org.opentripplanner.routing.vertextype.BikeRentalStationVertex;
-import org.opentripplanner.routing.vertextype.ExitVertex;
-import org.opentripplanner.routing.vertextype.StreetVertex;
-import org.opentripplanner.routing.vertextype.TransitStopVertex;
+import org.opentripplanner.routing.vertextype.*;
 import org.opentripplanner.util.OTPFeature;
 import org.opentripplanner.util.PolylineEncoder;
 import org.slf4j.Logger;
@@ -338,6 +326,113 @@ public abstract class GraphPathToItineraryMapper {
             } else {
                 previousStep = null;
             }
+            // add walk step instructions - adapted from otp.js
+            boolean first = true;
+            State nextState = i < legsStates.length - 1 ? legsStates[i + 1][0] : null;
+            for (WalkStep step : walkSteps) {
+                step.instructionText = generateWalkStepInstruction(step, first, nextState);
+                first = false;
+            }
+        }
+    }
+
+    private static String generateWalkStepInstruction(WalkStep step, boolean start, State nextState) {
+        for (Edge e : step.edges) {
+            // station into transit
+            if (e instanceof StreetTransitEntityLink) {
+                String relDir = relativeDirStr(step.relativeDirection);
+                String transition = null;
+                String extraInstr = null;
+
+                // are we entering or existing the stop?
+                if (!(e.getToVertex() instanceof ExitVertex)) {
+                    transition = "Enter station at " + e.getToVertex().getName();
+                    extraInstr = ", follow signs for " + getHeadsignInstruction(nextState);
+                } else {
+                    transition = "Exit " + e.getFromVertex().getName();
+                }
+
+                if (transition != null) {
+                    String instr = transition;
+
+                    if (relDir != null)
+                        instr += " " + relDir;
+                    if (extraInstr != null) {
+                        instr += extraInstr;
+                    }
+                    return instr;
+                }
+            }
+
+            if (e instanceof PathwayEdge) {
+                PathwayEdge p = (PathwayEdge) e;
+                String relDir = relativeDirStr(step.relativeDirection);
+                String transition = null;
+                String extraInstr = null;
+
+                transition = "Continue";
+                // todo pathways name doesn't seem correct
+                extraInstr = " to " + p.getFromVertex().getName();
+//                extraInstr = " via the " + p.getName() + " to " + p.getFromVertex().getName();
+
+                if (transition != null) {
+                    String instr = transition;
+                    if (relDir != null)
+                        instr += " " + relDir;
+                    if (extraInstr != null) {
+                        instr += extraInstr;
+                    }
+                    return instr;
+                }
+            }
+            if (nextState != null && nextState.getBackState() != null
+                    && nextState.backEdge != null && nextState.backEdge.getTrip() != null) {
+                Route route = nextState.backEdge.getTrip().getRoute();
+                String routeName = route.getShortName() != null ? route.getShortName() : route.getLongName();
+                String sign = getHeadsignInstruction(nextState);
+                return "Continue to " + routeName + (sign != null ? " [" + sign + "]" : "");
+            }
+        }
+        if (step.relativeDirection.isCircle()) {
+            String dir = step.relativeDirection == RelativeDirection.CIRCLE_CLOCKWISE ? "clockwise" : "counterclockwise";
+            return String.format("Take roundabout %s to exit %s on %s",
+                    dir, step.exit, step.streetName);
+        }
+        if (start) {
+            String absDir = StringUtils.lowerCase(step.absoluteDirection.toString());
+            return String.format("Start on %s heading %s", step.streetName, absDir);
+        }
+        String relDir = StringUtils.capitalize(StringUtils.lowerCase(step.relativeDirection.toString()));
+        relDir = relDir.replace("_", " ");
+        if (step.stayOn) {
+            return String.format("%s to continue on %s", relDir, step.streetName);
+        } else {
+            return String.format("%s on to %s", relDir, step.streetName);
+        }
+    }
+
+    private static String getHeadsignInstruction(State state) {
+        if (state == null || state.backEdge == null || state.backEdge.getTrip() == null) {
+            return null;
+        }
+        return state.backEdge.getTrip().getTripHeadsign();
+    }
+
+    // todo localize this!
+    public static String relativeDirStr(RelativeDirection dir) {
+        switch(dir) {
+            case HARD_LEFT:
+            case LEFT:
+                return "on left";
+            case SLIGHTLY_LEFT:
+                return "slightly left";
+            case SLIGHTLY_RIGHT:
+                return "slightly right";
+            case RIGHT:
+            case HARD_RIGHT:
+                return "on right";
+            default:
+                return null;
         }
     }
 
