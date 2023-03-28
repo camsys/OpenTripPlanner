@@ -7,7 +7,7 @@ import org.opentripplanner.ext.transmodelapi.support.GqlUtil;
 import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.standalone.server.OTPServer;
-import org.opentripplanner.standalone.server.Router;
+import org.opentripplanner.standalone.server.RouterService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +43,7 @@ public class TransmodelAPI {
     private static GqlUtil gqlUtil;
     private static GraphQLSchema schema;
 
-    private final Router router;
+    private final RouterService routerService;
 
     private final TransmodelGraph index;
     private final ObjectMapper deserializer = new ObjectMapper();
@@ -56,7 +56,7 @@ public class TransmodelAPI {
     private String ignoreRouterId;
 
     public TransmodelAPI(@Context OTPServer otpServer) {
-        this.router = otpServer.getRouter();
+        this.routerService = otpServer.getRouterService();
         this.index = new TransmodelGraph(schema);
     }
 
@@ -110,14 +110,14 @@ public class TransmodelAPI {
         } else {
             variables = new HashMap<>();
         }
-        return index.getGraphQLResponse(query, router, variables, operationName, maxResolves);
+        return index.getGraphQLResponse(query, routerService, variables, operationName, maxResolves);
     }
 
     @POST
     @Path("/graphql")
     @Consumes("application/graphql")
     public Response getGraphQL(String query, @HeaderParam("OTPMaxResolves") @DefaultValue("1000000") int maxResolves) {
-        return index.getGraphQLResponse(query, router, null, null, maxResolves);
+        return index.getGraphQLResponse(query, routerService, null, null, maxResolves);
     }
 
     @POST
@@ -142,7 +142,7 @@ public class TransmodelAPI {
             }
             String operationName = (String) query.getOrDefault("operationName", null);
 
-            futures.add(() -> index.getGraphQLExecutionResult((String) query.get("query"), router,
+            futures.add(() -> index.getGraphQLExecutionResult((String) query.get("query"), routerService,
                     variables, operationName, maxResolves));
         }
 

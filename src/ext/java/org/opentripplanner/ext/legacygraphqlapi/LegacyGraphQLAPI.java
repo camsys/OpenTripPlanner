@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.opentripplanner.standalone.server.OTPServer;
 import org.opentripplanner.standalone.server.Router;
+import org.opentripplanner.standalone.server.RouterService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +41,7 @@ public class LegacyGraphQLAPI {
   @SuppressWarnings("unused")
   private static final Logger LOG = LoggerFactory.getLogger(LegacyGraphQLAPI.class);
 
-  private final Router router;
+  private final RouterService routerService;
   private final ObjectMapper deserializer = new ObjectMapper();
 
   public LegacyGraphQLAPI(
@@ -48,7 +49,7 @@ public class LegacyGraphQLAPI {
       @Context Providers providers,
       @PathParam("routerId") String routerId
   ) {
-    this.router = otpServer.getRouter();
+    this.routerService = otpServer.getRouterService();
 
     ContextResolver<ObjectMapper> resolver =
         providers.getContextResolver(ObjectMapper.class, MediaType.APPLICATION_JSON_TYPE);
@@ -65,6 +66,7 @@ public class LegacyGraphQLAPI {
       @HeaderParam("OTPMaxResolves") @DefaultValue("1000000") int maxResolves,
       @Context HttpHeaders headers
   ) {
+    Router router = routerService.getRouter();
     if (queryParameters == null || !queryParameters.containsKey("query")) {
       LOG.debug("No query found in body");
       return Response
@@ -102,7 +104,7 @@ public class LegacyGraphQLAPI {
     }
     return LegacyGraphQLIndex.getGraphQLResponse(
         query,
-        router,
+        routerService,
         variables,
         operationName,
         maxResolves,
@@ -120,12 +122,13 @@ public class LegacyGraphQLAPI {
       @HeaderParam("OTPMaxResolves") @DefaultValue("1000000") int maxResolves,
       @Context HttpHeaders headers
   ) {
+    Router router = routerService.getRouter();
     Locale locale = headers.getAcceptableLanguages().size() > 0
         ? headers.getAcceptableLanguages().get(0)
         : router.defaultRoutingRequest.locale;
     return LegacyGraphQLIndex.getGraphQLResponse(
         query,
-        router,
+        routerService,
         null,
         null,
         maxResolves,
@@ -142,6 +145,7 @@ public class LegacyGraphQLAPI {
       @HeaderParam("OTPMaxResolves") @DefaultValue("1000000") int maxResolves,
       @Context HttpHeaders headers
   ) {
+    Router router = routerService.getRouter();
     List<Map<String, Object>> responses = new ArrayList<>();
     List<Callable<Map>> futures = new ArrayList();
 
@@ -173,7 +177,7 @@ public class LegacyGraphQLAPI {
       String operationName = (String) query.getOrDefault("operationName", null);
 
       futures.add(() -> LegacyGraphQLIndex.getGraphQLExecutionResult((String) query.get("query"),
-          router,
+          routerService,
           variables,
           operationName,
           maxResolves,
