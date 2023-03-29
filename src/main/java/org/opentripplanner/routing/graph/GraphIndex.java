@@ -258,7 +258,7 @@ public class GraphIndex {
         return flexIndex;
     }
 
-    public void reset() {
+    public void resetGraphIndex() {
         agencyForId.clear();
         operatorForId.clear();
         stopForId.clear();
