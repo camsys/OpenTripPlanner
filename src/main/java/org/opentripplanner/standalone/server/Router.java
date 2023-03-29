@@ -168,7 +168,7 @@ public class Router {
 
     public void reset() {
         shutdown();
-        graph.reset();
+        graph.resetGraph();
         requestLogger = null;
         tileRendererManager = null;
         defaultRoutingRequest = null;

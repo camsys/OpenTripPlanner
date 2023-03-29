@@ -34,7 +34,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
@@ -1067,7 +1066,7 @@ public class Graph implements Serializable {
         return stopLocations;
     }
 
-    public void reset() {
+    public void resetGraph() {
         routerId = null;
         turnRestrictions.clear();
         noticesByElement.clear();
@@ -1077,7 +1076,7 @@ public class Graph implements Serializable {
         vertices.clear();
         calendarService = null;
         streetIndex = null;
-        index.reset();
+        index.resetGraphIndex();
         deduplicator.reset();
         serviceCodes.clear();
         timetableSnapshotProvider = null;
