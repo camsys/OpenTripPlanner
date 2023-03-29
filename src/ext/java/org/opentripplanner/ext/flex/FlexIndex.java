@@ -64,4 +64,13 @@ public class FlexIndex {
   public Stream<FlexTrip> getFlexTripsByStop(StopLocation stopLocation) {
     return flexTripsByStop.get(stopLocation).stream();
   }
+
+  public void reset() {
+    transfersToStop.clear();
+    flexTripsByStop.clear();
+    locationGroupsByStop.clear();
+    locationIndex.reset();
+    routeById.clear();
+    tripById.clear();
+  }
 }

@@ -165,4 +165,14 @@ public class Router {
     public double streetRoutingTimeoutSeconds() {
         return  routerConfig.streetRoutingTimeoutSeconds();
     }
+
+    public void reset() {
+        shutdown();
+        graph.reset();
+        requestLogger = null;
+        tileRendererManager = null;
+        defaultRoutingRequest = null;
+        graphVisualizer = null;
+    }
+
 }

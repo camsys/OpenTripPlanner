@@ -51,7 +51,13 @@ public class GraphScanner {
             Router newRouter = new Router(graph, app.config().routerConfig());
             newRouter.startup();
             app.reloadConfig();
+            Router oldRouter = routerService.getRouter();
             routerService.setRouter(newRouter);
+            if (oldRouter != null) {
+                oldRouter.reset();
+            }
+            oldRouter = null;
+            System.gc(); // give a hint to JVM to clean up now
             LOG.info("new graph load complete in " + (System.currentTimeMillis()-start) + "ms");
         } else {
             LOG.debug("graph stable");
