@@ -31,9 +31,9 @@ import org.slf4j.LoggerFactory;
 public class Router {
 
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(Router.class);
-    public final Graph graph;
-    public final RouterConfig routerConfig;
-    public final RaptorConfig<TripSchedule> raptorConfig;
+    public  Graph graph;
+    public  RouterConfig routerConfig;
+    public  RaptorConfig<TripSchedule> raptorConfig;
 
     /**
      *  Separate logger for incoming requests. This should be handled with a Logback logger
@@ -169,6 +169,9 @@ public class Router {
     public void reset() {
         shutdown();
         graph.resetGraph();
+        graph = null;
+        routerConfig = null;
+        raptorConfig = null;
         requestLogger = null;
         tileRendererManager = null;
         defaultRoutingRequest = null;
