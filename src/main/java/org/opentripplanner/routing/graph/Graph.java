@@ -113,35 +113,35 @@ public class Graph implements Serializable {
     public static final IntersectionTraversalCostModel DEFAULT_INTERSECTION_TRAVERSAL_COST_MODEL
         = new SimpleIntersectionTraversalCostModel(DEFAULT_DRIVING_DIRECTION);
 
-    private final OtpProjectInfo projectInfo = projectInfo();
+    private OtpProjectInfo projectInfo = projectInfo();
 
     // TODO Remove this field, use Router.routerId ?
     public String routerId;
 
-    private final Map<Edge, List<TurnRestriction>> turnRestrictions = Maps.newHashMap();
+    private Map<Edge, List<TurnRestriction>> turnRestrictions = Maps.newHashMap();
 
-    public final StreetNotesService streetNotesService = new StreetNotesService();
+    public StreetNotesService streetNotesService = new StreetNotesService();
 
     /**
      * Allows a notice element to be attached to an object in the OTP model by its id and then
      * retrieved by the API when navigating from that object. The map key is entity id:
      * {@link TransitEntity#getId()}. The notice is part of the static transit data.
      */
-    private final Multimap<TransitEntity, Notice> noticesByElement = HashMultimap.create();
+    private Multimap<TransitEntity, Notice> noticesByElement = HashMultimap.create();
 
     // transit feed validity information in seconds since epoch
     private long transitServiceStarts = Long.MAX_VALUE;
 
     private long transitServiceEnds = 0;
 
-    private final Map<Class<?>, Serializable> services = new HashMap<>();
+    private Map<Class<?>, Serializable> services = new HashMap<>();
 
-    private final TransferService transferService = new TransferService();
+    private TransferService transferService = new TransferService();
 
     private GraphBundle bundle;
 
     /* Ideally we could just get rid of vertex labels, but they're used in tests and graph building. */
-    private final Map<String, Vertex> vertices = new ConcurrentHashMap<>();
+    private Map<String, Vertex> vertices = new ConcurrentHashMap<>();
 
     private transient CalendarService calendarService;
 
@@ -149,23 +149,23 @@ public class Graph implements Serializable {
 
     public transient GraphIndex index;
 
-    public final transient Deduplicator deduplicator = new Deduplicator();
+    public transient Deduplicator deduplicator = new Deduplicator();
 
     /**
      * Map from GTFS ServiceIds to integers close to 0. Allows using BitSets instead of {@code Set<Object>}.
      * An empty Map is created before the Graph is built to allow registering IDs from multiple feeds.   
      */
-    private final Map<FeedScopedId, Integer> serviceCodes = Maps.newHashMap();
+    private Map<FeedScopedId, Integer> serviceCodes = Maps.newHashMap();
 
     private transient TimetableSnapshotProvider timetableSnapshotProvider = null;
 
-    private final Collection<Agency> agencies = new ArrayList<>();
+    private Collection<Agency> agencies = new ArrayList<>();
 
-    private final Collection<Operator> operators = new ArrayList<>();
+    private Collection<Operator> operators = new ArrayList<>();
 
-    private final Collection<String> feedIds = new HashSet<>();
+    private Collection<String> feedIds = new HashSet<>();
 
-    private final Map<String, FeedInfo> feedInfoForId = new HashMap<>();
+    private Map<String, FeedInfo> feedInfoForId = new HashMap<>();
 
     private transient TimeZone timeZone = null;
 
@@ -182,7 +182,7 @@ public class Graph implements Serializable {
     public Preferences preferences = null;
 
     /** List of transit modes that are availible in GTFS data used in this graph**/
-    private final HashSet<TransitMode> transitModes = new HashSet<>();
+    private HashSet<TransitMode> transitModes = new HashSet<>();
 
     public boolean hasBikeSharing = false;
 
@@ -250,10 +250,10 @@ public class Graph implements Serializable {
     public Map<FeedScopedId, TripPattern> tripPatternForId = Maps.newHashMap();
 
     /** Interlining relationships between trips. */
-    public final BiMap<Trip,Trip> interlinedTrips = HashBiMap.create();
+    public BiMap<Trip,Trip> interlinedTrips = HashBiMap.create();
 
     /** Pre-generated transfers between all stops. */
-    public final Multimap<StopLocation, SimpleTransfer> transfersByStop = HashMultimap.create();
+    public Multimap<StopLocation, SimpleTransfer> transfersByStop = HashMultimap.create();
 
     public Map<FeedScopedId, FlexStopLocation> locationsById = new HashMap<>();
 
@@ -268,7 +268,7 @@ public class Graph implements Serializable {
     private transient TransitLayer transitLayer;
 
     /** Data model for Raptor routing, with realtime updates applied (if any). */
-    private final transient ConcurrentPublished<TransitLayer> realtimeTransitLayer =
+    private  transient ConcurrentPublished<TransitLayer> realtimeTransitLayer =
         new ConcurrentPublished<>();
 
     public transient TransitLayerUpdater transitLayerUpdater;
@@ -1067,40 +1067,64 @@ public class Graph implements Serializable {
     }
 
     public void resetGraph() {
+        projectInfo = null;
         routerId = null;
         turnRestrictions.clear();
+        turnRestrictions = null;
+        streetNotesService = null;
         noticesByElement.clear();
+        noticesByElement = null;
         services.clear();
+        services = null;
         transferService.reset();
+        transferService = null;
         bundle = null;
         vertices.clear();
+        vertices = null;
         calendarService = null;
         streetIndex = null;
         index.resetGraphIndex();
+        index = null;
         deduplicator.reset();
+        deduplicator = null;
         serviceCodes.clear();
+        serviceCodes = null;
         timetableSnapshotProvider = null;
         agencies.clear();
+        agencies = null;
         operators.clear();
+        operators = null;
         feedIds.clear();
+        feedIds = null;
         feedInfoForId.clear();
+        feedInfoForId = null;
         timeZone = null;
         envelope = null;
         convexHull = null;
         center = null;
         preferences = null;
         transitModes.clear();
+        transitModes = null;
         updaterManager = null;
         stationById.clear();
         multiModalStationById.clear();
+        multiModalStationById = null;
         groupOfStationsById.clear();
+        groupOfStationsById = null;
         tripPatternForId.clear();
+        tripPatternForId = null;
         interlinedTrips.clear();
+        interlinedTrips = null;
         transfersByStop.clear();
+        transfersByStop = null;
         locationsById.clear();
+        locationsById = null;
         locationGroupsById.clear();
+        locationGroupsById = null;
         flexTripsById.clear();
+        flexTripsById = null;
         transitLayer = null;
+        realtimeTransitLayer = null;
         transitLayerUpdater = null;
         transitAlertService = null;
     }

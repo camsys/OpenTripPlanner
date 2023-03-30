@@ -40,19 +40,19 @@ public class GraphIndex {
     private static final Logger LOG = LoggerFactory.getLogger(GraphIndex.class);
 
     // TODO: consistently key on model object or id string
-    private final Map<FeedScopedId, Agency> agencyForId = Maps.newHashMap();
-    private final Map<FeedScopedId, Operator> operatorForId = Maps.newHashMap();
-    private final Map<FeedScopedId, Stop> stopForId = Maps.newHashMap();
-    private final Map<FeedScopedId, Trip> tripForId = Maps.newHashMap();
-    private final Map<FeedScopedId, Route> routeForId = Maps.newHashMap();
-    private final Map<Stop, TransitStopVertex> stopVertexForStop = Maps.newHashMap();
-    private final Map<Trip, TripPattern> patternForTrip = Maps.newHashMap();
-    private final Multimap<String, TripPattern> patternsForFeedId = ArrayListMultimap.create();
-    private final Multimap<Route, TripPattern> patternsForRoute = ArrayListMultimap.create();
-    private final Multimap<StopLocation, TripPattern> patternsForStopId = ArrayListMultimap.create();
-    private final Map<Station, MultiModalStation> multiModalStationForStations = Maps.newHashMap();
-    private final HashGridSpatialIndex<TransitStopVertex> stopSpatialIndex = new HashGridSpatialIndex<>();
-    private final Map<ServiceDate, TIntSet> serviceCodesRunningForDate = new HashMap<>();
+    private Map<FeedScopedId, Agency> agencyForId = Maps.newHashMap();
+    private Map<FeedScopedId, Operator> operatorForId = Maps.newHashMap();
+    private Map<FeedScopedId, Stop> stopForId = Maps.newHashMap();
+    private Map<FeedScopedId, Trip> tripForId = Maps.newHashMap();
+    private Map<FeedScopedId, Route> routeForId = Maps.newHashMap();
+    private Map<Stop, TransitStopVertex> stopVertexForStop = Maps.newHashMap();
+    private Map<Trip, TripPattern> patternForTrip = Maps.newHashMap();
+    private Multimap<String, TripPattern> patternsForFeedId = ArrayListMultimap.create();
+    private Multimap<Route, TripPattern> patternsForRoute = ArrayListMultimap.create();
+    private Multimap<StopLocation, TripPattern> patternsForStopId = ArrayListMultimap.create();
+    private Map<Station, MultiModalStation> multiModalStationForStations = Maps.newHashMap();
+    private HashGridSpatialIndex<TransitStopVertex> stopSpatialIndex = new HashGridSpatialIndex<>();
+    private Map<ServiceDate, TIntSet> serviceCodesRunningForDate = new HashMap<>();
     private FlexIndex flexIndex = null;
 
     public GraphIndex(Graph graph) {
@@ -260,20 +260,33 @@ public class GraphIndex {
 
     public void resetGraphIndex() {
         agencyForId.clear();
+        agencyForId = null;
         operatorForId.clear();
+        operatorForId = null;
         stopForId.clear();
+        stopForId = null;
         tripForId.clear();
+        tripForId = null;
         routeForId.clear();
+        routeForId = null;
         stopVertexForStop.clear();
+        stopVertexForStop = null;
         patternForTrip.clear();
+        patternForTrip = null;
         patternsForFeedId.clear();
+        patternsForFeedId = null;
         patternsForRoute.clear();
+        patternsForRoute = null;
         patternsForStopId.clear();
+        patternsForStopId = null;
         multiModalStationForStations.clear();
+        multiModalStationForStations = null;
         stopSpatialIndex.reset();
+        stopSpatialIndex = null;
         serviceCodesRunningForDate.clear();
         if (flexIndex != null) {
             flexIndex.reset();
         }
+        flexIndex = null;
     }
 }
