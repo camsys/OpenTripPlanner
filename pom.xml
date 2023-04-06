@@ -565,21 +565,33 @@
             <version>1.7.6</version>
         </dependency>
 
-
+    <!-- aws dependencies are excluded in favour of onebusaway-cloud-services -->
+    <!-- if they are added in the future, they need to match the onebusaway-cloud-aws version -->
+<!--        <dependency>-->
+<!--            <groupId>com.amazonaws</groupId>-->
+<!--            <artifactId>aws-java-sdk-core</artifactId>-->
+<!--            <version>1.11.602</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.amazonaws</groupId>-->
+<!--            <artifactId>aws-java-sdk-s3</artifactId>-->
+<!--            <version>1.11.602</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.amazonaws</groupId>-->
+<!--            <artifactId>aws-java-sdk-sts</artifactId>-->
+<!--            <version>1.11.602</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.amazonaws</groupId>-->
+<!--            <artifactId>aws-java-sdk-cloudwatch</artifactId>-->
+<!--            <version>1.11.602</version>-->
+<!--        </dependency>-->
+        <!-- encapsulate AWS/GCP/Azure usage -->
         <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-core</artifactId>
-            <version>1.11.916</version>
-        </dependency>
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.11.916</version>
-        </dependency>
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-sts</artifactId>
-            <version>1.11.916</version>
+            <groupId>org.onebusaway</groupId>
+            <artifactId>onebusaway-cloud-aws</artifactId>
+            <version>0.0.12</version>
         </dependency>
 
         <!-- GEOTOOLS AND JTS TOPOLOGY: geometry, rasters and projections. -->
