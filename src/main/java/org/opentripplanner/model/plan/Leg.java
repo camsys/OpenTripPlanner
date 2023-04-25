@@ -150,6 +150,11 @@ public class Leg {
     private LineString legGeometry;
 
     /**
+     * The line string
+     */
+    public List<LineString> interStopGeometry;
+
+    /**
      * For transit legs, intermediate stops between the Place where the leg originates and the Place
      * where the leg ends. For non-transit legs, {@code null}. This field is optional i.e. it is
      * always {@code null} unless {@code showIntermediateStops} parameter is set to "true" in the

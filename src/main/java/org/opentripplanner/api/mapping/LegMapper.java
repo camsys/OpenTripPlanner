@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
+
 import org.opentripplanner.util.PolylineEncoder;
 
 public class LegMapper {
@@ -97,6 +99,7 @@ public class LegMapper {
         api.intermediateStops = PlaceMapper.mapStopArrivals(domain.intermediateStops);
         api.steps = walkStepMapper.mapWalkSteps(domain.walkSteps);
         api.legGeometry = PolylineEncoder.createEncodings(domain.getLegGeometry());
+        api.interStopGeometry = domain.interStopGeometry.stream().map(PolylineEncoder::createEncodings).collect(Collectors.toList());
         api.alerts = concatenateAlerts(
             streetNoteMaperMapper.mapToApi(domain.streetNotes),
             alertMapper.mapToApi(domain.transitAlerts)

@@ -189,6 +189,11 @@ public class ApiLeg {
      */
     public EncodedPolylineBean legGeometry;
 
+     /**
+      * A list of geometries between each stop
+      */
+     public List<EncodedPolylineBean> interStopGeometry;
+
     /**
      * A series of turn by turn instructions used for walking, biking and driving.
      */
