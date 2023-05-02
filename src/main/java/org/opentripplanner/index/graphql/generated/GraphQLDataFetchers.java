@@ -152,6 +152,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<Object> trip();
     public DataFetcher<String> track();
     public DataFetcher<Integer> peakOffpeak();
+    public DataFetcher<String> stopHeadSign();
     public DataFetcher<Object> vehicleInfo();
     public DataFetcher<Iterable<Object>> stopsForTrip();
     public DataFetcher<String> realtimeSignText();

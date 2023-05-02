@@ -152,10 +152,18 @@ public class GraphQLRouteDestinationGroupStopTimeImpl implements GraphQLDataFetc
 
 	@Override
 	public DataFetcher<String> track() {
-		 return environment -> {
+		return environment -> {
 			TripTimeShort e = environment.getSource();
-		    	return e.track;
-		    };
+			return e.track;
+		};
+	}
+
+	@Override
+	public DataFetcher<String> stopHeadSign() {
+		return environment -> {
+			TripTimeShort e = environment.getSource();
+			return e.stopHeadsign;
+		};
 	}
 
 	@Override
