@@ -661,6 +661,11 @@ type RouteDestinationGroupStopTime {
     tripId: String
 
     """
+    Stop head sign
+    """
+    stopHeadSign: String
+
+    """
     Trip of arrival/departure
     """
     trip: Trip
