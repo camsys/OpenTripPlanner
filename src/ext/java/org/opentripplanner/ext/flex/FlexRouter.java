@@ -162,7 +162,9 @@ public class FlexRouter {
           LOG.debug("Trip mismatch found " + template.getFlexTrip() + " != " + egressTemplate.getFlexTrip());
           return null;
       }
-      Itinerary itinerary = template.createDirectItinerary(egressTemplate.getAccessEgress(), arriveBy, departureTime, startOfTime);
+
+      ZonedDateTime departureServiceDate= template.serviceDate.serviceDate.toZonedDateTime(startOfTime.getZone(),startOfTime.getSecond());
+      Itinerary itinerary = template.createDirectItinerary(egressTemplate.getAccessEgress(), arriveBy, departureTime,departureServiceDate);
 
       if (itinerary != null) {
           LOG.info("Creating itin for trip " + egressTemplate.getFlexTrip()+"/" +template.getFlexTrip() + " from:" + template.getAccessEgressStop() + " to:" +
