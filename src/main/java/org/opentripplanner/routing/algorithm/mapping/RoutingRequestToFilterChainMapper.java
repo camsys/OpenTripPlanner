@@ -9,6 +9,9 @@ import org.opentripplanner.routing.api.request.RoutingRequest;
 import java.time.Instant;
 import java.util.function.Consumer;
 
+
+import static org.opentripplanner.routing.api.request.StreetMode.FLEXIBLE;
+
 public class RoutingRequestToFilterChainMapper {
   private static final int KEEP_ONE = 1;
 
@@ -58,10 +61,20 @@ public class RoutingRequestToFilterChainMapper {
         .withBikeRentalDistanceRatio(p.bikeRentalDistanceRatio)
         .withParkAndRideDurationRatio(p.parkAndRideDurationRatio)
         .withNonTransitGeneralizedCostLimit(p.nonTransitGeneralizedCostLimit)
-        .withRemoveTransitWithHigherCostThanBestOnStreetOnly(true)
-        .withFlexFilter(request.maxWalkDistance)
-//        .withLatestDepartureTimeLimit(filterOnLatestDepartureTime)
-        .withMaxLimitReachedSubscriber(maxLimitReachedSubscriber)
+        .withRemoveTransitWithHigherCostThanBestOnStreetOnly(true);
+
+    //add flex filter if at least one of the modes is FLEX
+    //this is breaking up the pretty method chaining because I didn't want to change the order the filters are added
+    if (FLEXIBLE.equals(request.modes.directMode) ||
+            FLEXIBLE.equals(request.modes.accessMode) ||
+            FLEXIBLE.equals(request.modes.egressMode)) {
+
+      builder.withFlexFilter(request.maxWalkDistance);
+    }
+
+    //finish adding filters
+//        builder.withLatestDepartureTimeLimit(filterOnLatestDepartureTime)
+    builder.withMaxLimitReachedSubscriber(maxLimitReachedSubscriber)
         .withRemoveWalkAllTheWayResults(removeWalkAllTheWayResults)
         .withDebugEnabled(p.debug);
 

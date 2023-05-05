@@ -42,7 +42,7 @@ public class ItineraryFilterChainBuilder {
     private boolean removeTransitWithHigherCostThanBestOnStreetOnly = true;
     private double minSafeTransferTimeFactor;
     private boolean removeWalkAllTheWayResults;
-    private boolean flexFilter = true;
+    private boolean flexFilter = false;
     private DoubleFunction<Double> transitGeneralizedCostLimit;
     private double bikeRentalDistanceRatio;
     private double parkAndRideDurationRatio;
