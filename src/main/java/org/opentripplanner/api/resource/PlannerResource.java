@@ -1,13 +1,19 @@
 package org.opentripplanner.api.resource;
 
 import org.glassfish.grizzly.http.server.Request;
+import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.api.common.Message;
 import org.opentripplanner.api.common.RoutingResource;
 import org.opentripplanner.api.mapping.PlannerErrorMapper;
 import org.opentripplanner.api.mapping.TripPlanMapper;
 import org.opentripplanner.api.mapping.TripSearchMetadataMapper;
 import org.opentripplanner.api.model.error.PlannerError;
+import org.opentripplanner.api.parameter.BoundingBox;
+import org.opentripplanner.common.geometry.SphericalDistanceLibrary;
+import org.opentripplanner.model.GenericLocation;
+import org.opentripplanner.model.WgsCoordinate;
 import org.opentripplanner.model.plan.Itinerary;
+import org.opentripplanner.model.plan.WalkStep;
 import org.opentripplanner.routing.RoutingService;
 import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.api.response.RoutingResponse;
@@ -71,6 +77,17 @@ public class PlannerResource extends RoutingResource {
             /* Fill in request fields from query parameters via shared superclass method, catching any errors. */
             request = super.buildRequest();
             router = otpServer.getRouter();
+
+            //Nebraska trip planner denver airport trip specific logic
+            double distFromAirportInMeters = SphericalDistanceLibrary
+                    .fastDistance(
+                            request.to.getCoordinate().y,
+                            request.to.getCoordinate().x,
+                            39.85864006245686,
+                            -104.67361269199368);
+            if ( distFromAirportInMeters < 777 ) {
+                request.to = new GenericLocation(39.846889,-104.674013);
+            }
 
             // Route
             RoutingService routingService = new RoutingService(router.graph);
