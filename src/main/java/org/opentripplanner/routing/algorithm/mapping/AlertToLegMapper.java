@@ -46,7 +46,7 @@ public class AlertToLegMapper {
         if (leg.intermediateStops != null) {
             for (StopArrival visit : leg.intermediateStops) {
                 Place place = visit.place;
-                if (place.stopId != null) {
+                if (place.stopId != null && visit.arrival != null && visit.departure !=null) {
                     Collection<TransitAlert> alerts = getAlertsForStopAndRoute(graph, place.stopId, routeId);
                     Date stopArrival = visit.arrival.getTime();
                     Date stopDepature = visit.departure.getTime();
@@ -66,7 +66,7 @@ public class AlertToLegMapper {
             if (leg.intermediateStops != null) {
                 for (StopArrival visit : leg.intermediateStops) {
                     Place place = visit.place;
-                    if (place.stopId != null) {
+                    if (place.stopId != null  && visit.arrival != null && visit.departure !=null) {
                         Collection<TransitAlert> alerts = getAlertsForStopAndTrip(graph, place.stopId, tripId);
                         Date stopArrival = visit.arrival.getTime();
                         Date stopDepature = visit.departure.getTime();
@@ -79,7 +79,7 @@ public class AlertToLegMapper {
         if (leg.intermediateStops != null) {
             for (StopArrival visit : leg.intermediateStops) {
                 Place place = visit.place;
-                if (place.stopId != null) {
+                if (place.stopId != null  && visit.arrival != null && visit.departure !=null) {
                     Collection<TransitAlert> alerts = getAlertsForStop(graph, place.stopId);
                     Date stopArrival = visit.arrival.getTime();
                     Date stopDepature = visit.departure.getTime();
