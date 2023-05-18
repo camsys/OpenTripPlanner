@@ -863,7 +863,7 @@ public class RoutingRequest implements AutoCloseable, Cloneable, Serializable {
         preferredRoutes = RouteMatcher.idMatcher(routeIds);
     }
 
-    public void setPreferredRoutesFromSting(String s) {
+    public void setPreferredRoutesFromString(String s) {
         if (!s.isEmpty()) {
             preferredRoutes = RouteMatcher.parse(s);
         }

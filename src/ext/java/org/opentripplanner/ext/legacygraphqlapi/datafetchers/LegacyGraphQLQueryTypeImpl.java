@@ -636,7 +636,7 @@ public class LegacyGraphQLQueryTypeImpl
       callWith.argument("arriveBy", request::setArriveBy);
       request.showIntermediateStops = true;
       callWith.argument("intermediatePlaces", (List<Map<String, Object>> v) -> request.intermediatePlaces = v.stream().map(LegacyGraphQLQueryTypeImpl::toGenericLocation).collect(Collectors.toList()));
-      callWith.argument("preferred.routes", request::setPreferredRoutesFromSting);
+      callWith.argument("preferred.routes", request::setPreferredRoutesFromString);
       callWith.argument("preferred.otherThanPreferredRoutesPenalty", request::setOtherThanPreferredRoutesPenalty);
       callWith.argument("preferred.agencies", request::setPreferredAgenciesFromString);
       callWith.argument("unpreferred.routes", request::setUnpreferredRoutesFromSting);
