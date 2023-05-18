@@ -88,19 +88,20 @@ public class FlexLegMapper {
 		  leg.endTime = calendar;
 
 		  FlexTripStopTime[] sts = sdt.getStopTimes();
+		  int interStopGeometriesShift = leg.from.stopIndex > leg.to.stopIndex ? 1 : 0;
 		  List<FlexTripStopTime> nonFlexStopTimes = Arrays.stream(sts).filter(s -> s.flexWindowStart == StopTime.MISSING_VALUE && s.flexWindowEnd == StopTime.MISSING_VALUE).collect(Collectors.toList());
 		  if (leg.to.stopIndex >= leg.from.stopIndex) {
 			  for (int i=leg.from.stopIndex; i < leg.to.stopIndex; i++) {
 				  FlexTripStopTime target = sts[i];
 				  if (target.flexWindowStart == StopTime.MISSING_VALUE && target.flexWindowEnd == StopTime.MISSING_VALUE) {
-					  addFixedDeviatedIntermediateProps(leg,target,nonFlexStopTimes,graph,flexTripEdge);
+					  addFixedDeviatedIntermediateProps(leg,target,nonFlexStopTimes,graph,flexTripEdge,interStopGeometriesShift);
 				  }
 			  }
 		  } else {
 			  for (int i=leg.from.stopIndex; i >= leg.to.stopIndex; i--) {
 				  FlexTripStopTime target = sts[i];
 				  if (target.flexWindowStart == StopTime.MISSING_VALUE && target.flexWindowEnd == StopTime.MISSING_VALUE) {
-					  addFixedDeviatedIntermediateProps(leg,target,nonFlexStopTimes,graph,flexTripEdge);
+					  addFixedDeviatedIntermediateProps(leg,target,nonFlexStopTimes,graph,flexTripEdge,interStopGeometriesShift);
 				  }
 			  }
 		  }
@@ -127,7 +128,7 @@ public class FlexLegMapper {
       leg.pickupBookingInfo = flexTripEdge.getFlexTrip().getPickupBookingInfo(leg.from.stopIndex);
   }
 
-  static private void addFixedDeviatedIntermediateProps(Leg leg, FlexTripStopTime target, List<FlexTripStopTime> nonFlexStopTimes, Graph graph, FlexTripEdge flexTripEdge) {
+  static private void addFixedDeviatedIntermediateProps(Leg leg, FlexTripStopTime target, List<FlexTripStopTime> nonFlexStopTimes, Graph graph, FlexTripEdge flexTripEdge, int interStopGeometryShift) {
 	  int nonFlexStopIndex = nonFlexStopTimes.indexOf(target);
 	  double latitude = target.stop.getCoordinate().latitude();
 	  double longitude = target.stop.getCoordinate().longitude();
@@ -136,8 +137,10 @@ public class FlexLegMapper {
 	  interStopPlace.stopId = target.stop.getId();
 	  //for now, we don't need arrival times below for intermediate stops
 	  leg.intermediateStops.add(new StopArrival(interStopPlace,null,null));
-	  if (nonFlexStopIndex + 1 != nonFlexStopTimes.size() - 1 ) {
-		  leg.interStopGeometry.add(graph.index.getPatternForTrip().get(flexTripEdge.getTrip()).getHopGeometry(nonFlexStopIndex));
+	  if (nonFlexStopIndex - interStopGeometryShift < 0) {
+		  leg.interStopGeometry.add(null);//add dummy geom
+	  } else {
+		  leg.interStopGeometry.add(graph.index.getPatternForTrip().get(flexTripEdge.getTrip()).getHopGeometry(nonFlexStopIndex - interStopGeometryShift));
 	  }
   }
 
