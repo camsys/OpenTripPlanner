@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
+import org.opentripplanner.api.model.ApiPlace;
 import org.opentripplanner.api.resource.CoordinateArrayListSequence;
 import org.opentripplanner.common.geometry.DirectionUtils;
 import org.opentripplanner.common.geometry.GeometryUtils;
@@ -269,6 +270,21 @@ public abstract class GraphPathToItineraryMapper {
         addPlaces(leg, states, requestedLocale);
 
         CoordinateArrayListSequence coordinates = makeCoordinates(edges);
+
+        ApiPlace pathstart = new ApiPlace();
+        pathstart.name = "Path Start";
+        pathstart.lat = coordinates.getY(0);
+        pathstart.lon = coordinates.getX(0);
+        leg.pathStart = pathstart;
+
+        ApiPlace pathEnd = new ApiPlace();
+        pathEnd.name = "Path End";
+        pathEnd.lat = coordinates.getY(coordinates.size()-1);
+        pathEnd.lon = coordinates.getX(coordinates.size()-1);
+        leg.pathEnd = pathEnd;
+
+
+
         LineString geometry = GeometryUtils.getGeometryFactory().createLineString(coordinates);
 
         leg.setLegGeometry(geometry);

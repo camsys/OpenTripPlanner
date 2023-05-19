@@ -194,6 +194,16 @@ public class ApiLeg {
       */
      public List<EncodedPolylineBean> interStopGeometry;
 
+     /**
+      * The coordinates of the start of LegGeometry (closest point along a route to the origin)
+      */
+     public ApiPlace pathStart;
+
+     /**
+      * The coordinates of the end of LegGeometry (closest point along a route to the destination)
+      */
+     public ApiPlace pathEnd;
+
     /**
      * A series of turn by turn instructions used for walking, biking and driving.
      */

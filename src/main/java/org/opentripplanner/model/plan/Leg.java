@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
 import org.locationtech.jts.geom.LineString;
+import org.opentripplanner.api.model.ApiPlace;
 import org.opentripplanner.model.Agency;
 import org.opentripplanner.model.BookingInfo;
 import org.opentripplanner.model.FeedScopedId;
@@ -161,6 +162,16 @@ public class Leg {
      * planner request.
      */
     public List<StopArrival> intermediateStops;
+
+    /**
+     * The coordinates of the start of LegGeometry (closest point along a route to the origin)
+     */
+    public ApiPlace pathStart;
+
+    /**
+     * The coordinates of the end of LegGeometry (closest point along a route to the destination)
+     */
+    public ApiPlace pathEnd;
 
    /**
     * A series of turn by turn instructions used for walking, biking and driving.
