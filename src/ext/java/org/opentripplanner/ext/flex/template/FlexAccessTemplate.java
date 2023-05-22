@@ -59,9 +59,9 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 		    if (arriveBy) {
 		    	FlexTripStopTime ftst = this.trip.getStopTime(this.toStopIndex);
 	
-		    	int newTime = time - (int)flexEdge.getTripTimeInSeconds();
+		    	int newTime = time - itinerary.durationSeconds;
 		    	if(time > ftst.flexWindowEnd)
-		    		newTime = ftst.flexWindowEnd - (int)flexEdge.getTripTimeInSeconds();
+		    		newTime = time - itinerary.durationSeconds;
 	
 				ZonedDateTime zdt = departureServiceDate.plusSeconds(newTime);
 				Calendar c = Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone()));
