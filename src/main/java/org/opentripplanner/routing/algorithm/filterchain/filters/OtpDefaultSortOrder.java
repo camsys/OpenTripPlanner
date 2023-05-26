@@ -51,8 +51,9 @@ public class OtpDefaultSortOrder extends SortFilter {
   static final Comparator<Itinerary> NUM_OF_TRANSFERS = comparingInt(a -> a.nTransfers);
 
   public OtpDefaultSortOrder(boolean arriveBy) {
-    // Put walking first - encourage healthy lifestyle
-    super(new CompositeComparator<>(STREET_ONLY_FIRST,
+    // to put walking first & encourage healthy lifestyle, start with:
+    // STREET_ONLY_FIRST,
+    super(new CompositeComparator<>(
         arriveBy ? DEPARTURE_TIME : ARRIVAL_TIME,
         GENERALIZED_COST,
         NUM_OF_TRANSFERS,
