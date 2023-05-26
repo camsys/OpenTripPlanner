@@ -28,7 +28,10 @@ import org.opentripplanner.ext.flex.template.FlexAccessTemplate;
 import org.opentripplanner.ext.flex.template.FlexEgressTemplate;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
 import org.opentripplanner.ext.flex.trip.FlexTripStopTime;
+import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.model.StopLocation;
+import org.opentripplanner.model.StopPattern;
+import org.opentripplanner.model.StopTime;
 import org.opentripplanner.model.calendar.ServiceDate;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.routing.algorithm.raptor.transit.mappers.DateMapper;
@@ -125,7 +128,7 @@ public class FlexRouter {
     for (FlexAccessTemplate template : this.flexAccessTemplates.stream().distinct().collect(Collectors.toList())) {
       StopLocation transferStop = template.getTransferStop();
 
-      List<FlexEgressTemplate> egressTemplates = 
+      List<FlexEgressTemplate> egressTemplates =
     		  this.flexEgressTemplates.parallelStream().distinct().filter(t -> t.getTransferStop().equals(transferStop)).collect(Collectors.toList());
 
       if (!egressTemplates.isEmpty()) {
@@ -159,7 +162,9 @@ public class FlexRouter {
           LOG.debug("Trip mismatch found " + template.getFlexTrip() + " != " + egressTemplate.getFlexTrip());
           return null;
       }
-      Itinerary itinerary = template.createDirectItinerary(egressTemplate.getAccessEgress(), arriveBy, departureTime, startOfTime);
+
+      ZonedDateTime departureServiceDate= template.serviceDate.serviceDate.toZonedDateTime(startOfTime.getZone(),startOfTime.getSecond());
+      Itinerary itinerary = template.createDirectItinerary(egressTemplate.getAccessEgress(), arriveBy, departureTime,departureServiceDate);
 
       if (itinerary != null) {
           LOG.info("Creating itin for trip " + egressTemplate.getFlexTrip()+"/" +template.getFlexTrip() + " from:" + template.getAccessEgressStop() + " to:" +
@@ -231,12 +236,18 @@ public class FlexRouter {
   }
 
   private Set<Entry<NearbyStop, Collection<FlexTrip>>> getClosestFlexTrips(Collection<NearbyStop> nearbyStops) {
-	  
+
 	// Find all trips reachable from the nearbyStops
     Collection<T2<NearbyStop, FlexTrip>> flexTripsReachableFromNearbyStops = nearbyStops
         .parallelStream()
         .flatMap(accessEgress -> flexIndex
-            .getFlexTripsByStop(accessEgress.stop)            
+            .getFlexTripsByStop(accessEgress.stop)
+                .filter(flexTrip -> {
+                    FeedScopedId stopId = accessEgress.stop.getId();
+                    List<FeedScopedId> tripIds = Arrays.stream(flexTrip.getStopTimes()).map(st -> st.stop.getId()).collect(Collectors.toList());
+                    int stopIndex = tripIds.indexOf(stopId);
+                    return !(flexTrip.getStopTime(stopIndex).pickupType == PICKDROP_NONE);
+                })
             .map(flexTrip -> new T2<>(accessEgress, flexTrip)))
         .collect(Collectors.toList());
 
@@ -258,7 +269,7 @@ public class FlexRouter {
             .min(Comparator.comparingLong(t2 -> t2.first.state.getElapsedTimeSeconds())))
         .flatMap(Optional::stream)
         .forEach(it -> {
-        	r.put(it.first, it.second);        	
+        	r.put(it.first, it.second);
         });
     
     // ...and then get the same (least from each group) for both lines and areas
@@ -274,9 +285,9 @@ public class FlexRouter {
                 .min(Comparator.comparingLong(t2 -> t2.first.state.getElapsedTimeSeconds())))
             .flatMap(Optional::stream)
             .forEach(it -> {
-            	r.put(it.first, it.second);        	
+            	r.put(it.first, it.second);
             });
-    	        
+
     return r.asMap().entrySet();
   }
 

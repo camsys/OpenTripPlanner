@@ -803,7 +803,7 @@ public abstract class RoutingResource {
             request.setIntermediatePlacesFromStrings(intermediatePlaces);
         }
         if (preferredRoutes != null) {
-            request.setPreferredRoutesFromSting(preferredRoutes);
+            request.setPreferredRoutesFromString(preferredRoutes);
         }
         if (otherThanPreferredRoutesPenalty != null) {
             request.setOtherThanPreferredRoutesPenalty(otherThanPreferredRoutesPenalty);

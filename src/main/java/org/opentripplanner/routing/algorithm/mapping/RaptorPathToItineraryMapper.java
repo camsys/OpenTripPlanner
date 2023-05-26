@@ -188,6 +188,7 @@ public class RaptorPathToItineraryMapper {
         List<Coordinate> transitLegCoordinates = extractTransitLegCoordinates(pathLeg, boardStopIndexInPattern, alightStopIndexInPattern);
         leg.setLegGeometry(GeometryUtils.makeLineString(transitLegCoordinates));
         leg.distanceMeters = getDistanceFromCoordinates(transitLegCoordinates);
+        leg.setTimeZone(TimeZone.getTimeZone(startOfTime.getZone()));
 
         if (request.showIntermediateStops) {
             leg.intermediateStops = extractIntermediateStops(pathLeg, boardStopIndexInPattern, alightStopIndexInPattern);

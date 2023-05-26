@@ -42,6 +42,7 @@ public class WalkStepMapper {
         }
         api.elevation = mapElevation(domain.elevation);
         api.alerts = alertsMapper.mapToApi(domain.streetNotes);
+        api.instructionText = domain.instructionText;
 
         return api;
     }

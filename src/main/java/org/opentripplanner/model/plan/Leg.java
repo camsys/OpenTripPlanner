@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
 import org.locationtech.jts.geom.LineString;
+import org.opentripplanner.api.model.ApiPlace;
 import org.opentripplanner.model.Agency;
 import org.opentripplanner.model.BookingInfo;
 import org.opentripplanner.model.FeedScopedId;
@@ -150,12 +151,27 @@ public class Leg {
     private LineString legGeometry;
 
     /**
+     * The line string
+     */
+    public List<LineString> interStopGeometry;
+
+    /**
      * For transit legs, intermediate stops between the Place where the leg originates and the Place
      * where the leg ends. For non-transit legs, {@code null}. This field is optional i.e. it is
      * always {@code null} unless {@code showIntermediateStops} parameter is set to "true" in the
      * planner request.
      */
     public List<StopArrival> intermediateStops;
+
+    /**
+     * The coordinates of the start of LegGeometry (closest point along a route to the origin)
+     */
+    public ApiPlace pathStart;
+
+    /**
+     * The coordinates of the end of LegGeometry (closest point along a route to the destination)
+     */
+    public ApiPlace pathEnd;
 
    /**
     * A series of turn by turn instructions used for walking, biking and driving.

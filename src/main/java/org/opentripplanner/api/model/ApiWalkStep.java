@@ -90,6 +90,11 @@ public class ApiWalkStep {
 
     public List<ApiAlert> alerts;
 
+    /**
+     * Instruction for this step, as text
+     */
+    public String instructionText;
+
     public String toString() {
         String direction = absoluteDirection.toString();
         if (relativeDirection != null) {

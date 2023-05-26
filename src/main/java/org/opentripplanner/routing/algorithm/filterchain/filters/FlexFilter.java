@@ -73,10 +73,11 @@ public class FlexFilter implements ItineraryFilter {
 	  }	 
 	  
 	  // remove walking all the way options
-      return itinerariesByRoutePath.values()
-              .stream()
-              .filter(it -> !it.isWalkingAllTheWay())
-              .collect(Collectors.toList());            
+//      return itinerariesByRoutePath.values()
+//              .stream()
+//              .filter(it -> !it.isWalkingAllTheWay())
+//              .collect(Collectors.toList());
+	        return itinerariesByRoutePath.values().stream().collect(Collectors.toList());
   }
 
   @Override
