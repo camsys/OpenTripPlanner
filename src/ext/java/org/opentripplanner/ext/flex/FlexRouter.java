@@ -28,10 +28,7 @@ import org.opentripplanner.ext.flex.template.FlexAccessTemplate;
 import org.opentripplanner.ext.flex.template.FlexEgressTemplate;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
 import org.opentripplanner.ext.flex.trip.FlexTripStopTime;
-import org.opentripplanner.model.FeedScopedId;
-import org.opentripplanner.model.StopLocation;
-import org.opentripplanner.model.StopPattern;
-import org.opentripplanner.model.StopTime;
+import org.opentripplanner.model.*;
 import org.opentripplanner.model.calendar.ServiceDate;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.routing.algorithm.raptor.transit.mappers.DateMapper;
@@ -243,10 +240,8 @@ public class FlexRouter {
         .flatMap(accessEgress -> flexIndex
             .getFlexTripsByStop(accessEgress.stop)
                 .filter(flexTrip -> {
-                    FeedScopedId stopId = accessEgress.stop.getId();
-                    List<FeedScopedId> tripIds = Arrays.stream(flexTrip.getStopTimes()).map(st -> st.stop.getId()).collect(Collectors.toList());
-                    int stopIndex = tripIds.indexOf(stopId);
-                    return !(flexTrip.getStopTime(stopIndex).pickupType == PICKDROP_NONE);
+                    boolean hasStopThatAllowsPickup = flexIndex.hasStopThatAllowsPickup(flexTrip, accessEgress.stop);
+                    return hasStopThatAllowsPickup;
                 })
             .map(flexTrip -> new T2<>(accessEgress, flexTrip)))
         .collect(Collectors.toList());
