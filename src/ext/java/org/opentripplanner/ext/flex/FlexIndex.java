@@ -5,6 +5,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import org.opentripplanner.common.geometry.HashGridSpatialIndex;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
+import org.opentripplanner.ext.flex.trip.FlexTripStopTime;
 import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.model.FlexStopLocation;
 import org.opentripplanner.model.FlexLocationGroup;
@@ -18,6 +19,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static org.opentripplanner.model.StopPattern.PICKDROP_NONE;
+
 public class FlexIndex {
   public Multimap<StopLocation, SimpleTransfer> transfersToStop = ArrayListMultimap.create();
 
@@ -30,6 +33,8 @@ public class FlexIndex {
   public Map<FeedScopedId, Route> routeById = new HashMap<>();
 
   public Map<FeedScopedId, Trip> tripById = new HashMap<>();
+
+  public Multimap<String, String> flexTripStopsWithPickup = HashMultimap.create();
 
   public FlexIndex(Graph graph) {
     for (SimpleTransfer transfer : graph.transfersByStop.values()) {
@@ -48,6 +53,18 @@ public class FlexIndex {
           flexTripsByStop.put(stop, flexTrip);
         }
       }
+      // Adding map to track stops that allow pickups
+      for(FlexTripStopTime flexTripStopTime : flexTrip.getStopTimes()){
+        if(flexTripStopTime.pickupType != PICKDROP_NONE){
+          StopLocation flexStopLocation = flexTripStopTime.stop;
+          flexTripStopsWithPickup.put(flexTrip.getId().toString(), flexStopLocation.getId().toString());
+          if(flexStopLocation instanceof FlexLocationGroup){
+            for (StopLocation stopElement : ((FlexLocationGroup) flexStopLocation).getLocations()) {
+              flexTripStopsWithPickup.put(flexTrip.getId().toString(), stopElement.getId().toString());
+            }
+          }
+        }
+      }
     }
     
     for (FlexLocationGroup flexLocationGroup : graph.locationGroupsById.values()) {
@@ -64,4 +81,12 @@ public class FlexIndex {
   public Stream<FlexTrip> getFlexTripsByStop(StopLocation stopLocation) {
     return flexTripsByStop.get(stopLocation).stream();
   }
+
+  public boolean hasStopThatAllowsPickup(FlexTrip trip, StopLocation stopLocation){
+    if(flexTripStopsWithPickup.containsKey(trip.getId().toString())){
+      return flexTripStopsWithPickup.get(trip.getId().toString()).contains(stopLocation.getId().toString());
+    }
+    return false;
+  }
+
 }
