@@ -22,7 +22,9 @@ public class CompositeComparator<T> implements Comparator<T> {
     int v = 0;
     for (Comparator<T> c : compareVector) {
       v = c.compare(o1, o2);
-      if(v != 0) { return v; }
+      if(v != 0) {
+        return v;
+      }
     }
     return 0;
   }

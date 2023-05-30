@@ -31,7 +31,9 @@ public class RemoveTransitIfStreetOnlyIsBetterFilter implements ItineraryFilter 
             return itineraries;
         }
 
-        final long limit = bestStreetOp.get().generalizedCost;
+//        a mild bump to the limit to prevent situations where short trips with a transfer
+//        walking to the bus, are a "worse choice" than just walking
+        final long limit = bestStreetOp.get().generalizedCost+50;
 
         // Filter away itineraries that have higher cost than the best non-transit option.
         return itineraries.stream()
