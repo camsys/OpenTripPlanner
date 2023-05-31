@@ -15,7 +15,7 @@ public class OtpDefaultSortOrderTest implements PlanTestConstants {
     private List<Itinerary> result;
 
 
-    @Test
+// this test is no longer relevant as of 6393df3abae6772f0f04e367485ca7036f0f152b
     public void sortStreetBeforeTransitThenTime() {
         Itinerary walk = newItinerary(A, 0).walk(5, G).build();
         Itinerary bicycle = newItinerary(B).bicycle(4, 6, G).build();
