@@ -43,7 +43,7 @@ public class RemoveTransitIfStreetOnlyIsBetterFilterTest implements PlanTestCons
 
         // When:
         List<Itinerary> result = new RemoveTransitIfStreetOnlyIsBetterFilter()
-            .filter(List.of(i2, bicycle, walk, i1));
+            .setStreetOnlyGenCostBuffer(0).filter(List.of(i2, bicycle, walk, i1));
 
         // Then:
         assertEquals(toStr(List.of(bicycle, walk, i1)), toStr(result));

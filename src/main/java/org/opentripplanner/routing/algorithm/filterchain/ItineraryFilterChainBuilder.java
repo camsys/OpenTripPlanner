@@ -20,7 +20,6 @@ import org.opentripplanner.routing.algorithm.filterchain.filters.TransitGenerali
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.DoubleFunction;
@@ -49,6 +48,7 @@ public class ItineraryFilterChainBuilder {
     private DoubleFunction<Double> nonTransitGeneralizedCostLimit;
     private Instant latestDepartureTimeLimit = null;
     private Consumer<Itinerary> maxLimitReachedSubscriber;
+    private int streetOnlyGenCostBuffer =0;
 
 
     /**
@@ -212,6 +212,17 @@ public class ItineraryFilterChainBuilder {
         return this;
     }
 
+    /**
+     this is used by RemoveTransitIfStreetOnlyIsBetterFilter to
+     determine whether to remove a trip. This buffer is added to the
+     lowest street trip generalized cost to determine the maxiumum
+     generalized cost permitted for itteneraries to pass through this
+     filter
+     */
+    public void setStreetOnlyGenCostBuffer(int buffer) {
+        this.streetOnlyGenCostBuffer = buffer;
+    }
+
     public ItineraryFilter build() {
         List<ItineraryFilter> filters = new ArrayList<>();
 
@@ -263,7 +274,7 @@ public class ItineraryFilterChainBuilder {
         // what we want, since both itineraries are none optimal.
         {
         	if (removeTransitWithHigherCostThanBestOnStreetOnly) {
-                filters.add(new RemoveTransitIfStreetOnlyIsBetterFilter());
+                filters.add(new RemoveTransitIfStreetOnlyIsBetterFilter().setStreetOnlyGenCostBuffer(streetOnlyGenCostBuffer));
             }
 
             if(removeWalkAllTheWayResults) {
