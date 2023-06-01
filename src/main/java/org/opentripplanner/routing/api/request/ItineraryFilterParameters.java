@@ -93,6 +93,15 @@ public class ItineraryFilterParameters {
    */
   public DoubleFunction<Double> nonTransitGeneralizedCostLimit;
 
+  /**
+   * this is used by RemoveTransitIfStreetOnlyIsBetterFilter to
+   * determine whether to remove a trip. This buffer is added to the
+   * lowest street trip generalized cost to determine the maxiumum
+   * generalized cost permitted for itteneraries to pass through this
+   * filter
+   */
+  public int streetOnlyGenCostBuffer;
+
 
   private ItineraryFilterParameters() {
     this.debug = false;
@@ -105,6 +114,7 @@ public class ItineraryFilterParameters {
         RequestFunctions.createLinearFunction(3600, 2);
     this.nonTransitGeneralizedCostLimit =
         RequestFunctions.createLinearFunction(3600, 2);
+    this.streetOnlyGenCostBuffer = 0;
   }
 
   public static ItineraryFilterParameters createDefault() {
@@ -119,7 +129,8 @@ public class ItineraryFilterParameters {
       DoubleFunction<Double> transitGeneralizedCostLimit,
       DoubleFunction<Double> nonTransitGeneralizedCostLimit,
       double bikeRentalDistanceRatio,
-      double parkAndRideDurationRatio
+      double parkAndRideDurationRatio,
+      int streetOnlyGenCostBuffer
   ) {
     this.debug = debug;
     this.groupSimilarityKeepOne = groupSimilarityKeepOne;
@@ -129,5 +140,6 @@ public class ItineraryFilterParameters {
     this.nonTransitGeneralizedCostLimit = nonTransitGeneralizedCostLimit;
     this.bikeRentalDistanceRatio = bikeRentalDistanceRatio;
     this.parkAndRideDurationRatio = parkAndRideDurationRatio;
+    this.streetOnlyGenCostBuffer = streetOnlyGenCostBuffer;
   }
 }

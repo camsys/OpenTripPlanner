@@ -53,6 +53,8 @@ public class OtpDefaultSortOrder extends SortFilter {
   public OtpDefaultSortOrder(boolean arriveBy) {
     // to put walking first & encourage healthy lifestyle, start with:
     // STREET_ONLY_FIRST,
+    // if adding street back in please turn on these tests:
+    // sortStreetBeforeTransitThenTime &
     super(new CompositeComparator<>(
         arriveBy ? DEPARTURE_TIME : ARRIVAL_TIME,
         GENERALIZED_COST,
