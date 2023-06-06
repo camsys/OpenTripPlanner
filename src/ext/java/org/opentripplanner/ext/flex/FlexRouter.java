@@ -204,7 +204,7 @@ public class FlexRouter {
     if (this.flexAccessTemplates != null) { return; }
 
     this.flexAccessTemplates = new ArrayList<>();
-    for(Entry<NearbyStop, Collection<FlexTrip>> e : getClosestFlexTrips(streetAccesses)) {
+    for(Entry<NearbyStop, Collection<FlexTrip>> e : getClosestFlexTrips(streetAccesses, true)) {
     	for(FlexTrip trip : e.getValue()) {
         	for(int i = 0; i < dates.length - 1; i++) {
         		FlexServiceDate date = dates[i];
@@ -220,7 +220,7 @@ public class FlexRouter {
     if (this.flexEgressTemplates != null) { return; }
 
     this.flexEgressTemplates = new ArrayList<>();
-    for(Entry<NearbyStop, Collection<FlexTrip>> e : getClosestFlexTrips(streetEgresses)) {
+    for(Entry<NearbyStop, Collection<FlexTrip>> e : getClosestFlexTrips(streetEgresses, false)) {
     	for(FlexTrip trip : e.getValue()) {
         	for(int i = 0; i < dates.length - 1; i++) {
         		FlexServiceDate date = dates[i];
@@ -232,7 +232,7 @@ public class FlexRouter {
     }
   }
 
-  private Set<Entry<NearbyStop, Collection<FlexTrip>>> getClosestFlexTrips(Collection<NearbyStop> nearbyStops) {
+  private Set<Entry<NearbyStop, Collection<FlexTrip>>> getClosestFlexTrips(Collection<NearbyStop> nearbyStops, boolean isAccess) {
 
 	// Find all trips reachable from the nearbyStops
     Collection<T2<NearbyStop, FlexTrip>> flexTripsReachableFromNearbyStops = nearbyStops
@@ -240,8 +240,13 @@ public class FlexRouter {
         .flatMap(accessEgress -> flexIndex
             .getFlexTripsByStop(accessEgress.stop)
                 .filter(flexTrip -> {
-                    boolean hasStopThatAllowsPickup = flexIndex.hasStopThatAllowsPickup(flexTrip, accessEgress.stop);
-                    return hasStopThatAllowsPickup;
+                    boolean hasStopThatAllowsPickupDropoff;
+                    if(isAccess) {
+                        hasStopThatAllowsPickupDropoff = flexIndex.hasStopThatAllowsPickup(flexTrip, accessEgress.stop);
+                    } else {
+                        hasStopThatAllowsPickupDropoff = flexIndex.hasStopThatAllowsDropoff(flexTrip, accessEgress.stop);
+                    }
+                    return hasStopThatAllowsPickupDropoff;
                 })
             .map(flexTrip -> new T2<>(accessEgress, flexTrip)))
         .collect(Collectors.toList());

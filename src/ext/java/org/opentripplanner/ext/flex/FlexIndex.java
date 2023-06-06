@@ -36,6 +36,8 @@ public class FlexIndex {
 
   public Multimap<String, String> flexTripStopsWithPickup = HashMultimap.create();
 
+  public Multimap<String, String> flexTripStopsWithDropoff = HashMultimap.create();
+
   public FlexIndex(Graph graph) {
     for (SimpleTransfer transfer : graph.transfersByStop.values()) {
       transfersToStop.put(transfer.to, transfer);
@@ -55,12 +57,20 @@ public class FlexIndex {
       }
       // Adding map to track stops that allow pickups
       for(FlexTripStopTime flexTripStopTime : flexTrip.getStopTimes()){
+        StopLocation flexStopLocation = flexTripStopTime.stop;
         if(flexTripStopTime.pickupType != PICKDROP_NONE){
-          StopLocation flexStopLocation = flexTripStopTime.stop;
           flexTripStopsWithPickup.put(flexTrip.getId().toString(), flexStopLocation.getId().toString());
           if(flexStopLocation instanceof FlexLocationGroup){
             for (StopLocation stopElement : ((FlexLocationGroup) flexStopLocation).getLocations()) {
               flexTripStopsWithPickup.put(flexTrip.getId().toString(), stopElement.getId().toString());
+            }
+          }
+        }
+        if(flexTripStopTime.dropOffType != PICKDROP_NONE){
+          flexTripStopsWithDropoff.put(flexTrip.getId().toString(), flexStopLocation.getId().toString());
+          if(flexStopLocation instanceof FlexLocationGroup){
+            for (StopLocation stopElement : ((FlexLocationGroup) flexStopLocation).getLocations()) {
+              flexTripStopsWithDropoff.put(flexTrip.getId().toString(), stopElement.getId().toString());
             }
           }
         }
@@ -85,6 +95,13 @@ public class FlexIndex {
   public boolean hasStopThatAllowsPickup(FlexTrip trip, StopLocation stopLocation){
     if(flexTripStopsWithPickup.containsKey(trip.getId().toString())){
       return flexTripStopsWithPickup.get(trip.getId().toString()).contains(stopLocation.getId().toString());
+    }
+    return false;
+  }
+
+  public boolean hasStopThatAllowsDropoff(FlexTrip trip, StopLocation stopLocation){
+    if(flexTripStopsWithDropoff.containsKey(trip.getId().toString())){
+      return flexTripStopsWithDropoff.get(trip.getId().toString()).contains(stopLocation.getId().toString());
     }
     return false;
   }
