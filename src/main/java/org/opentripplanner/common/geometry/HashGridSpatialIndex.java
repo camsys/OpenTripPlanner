@@ -232,4 +232,8 @@ public class HashGridSpatialIndex<T> implements SpatialIndex, Serializable {
                 this.xBinSize, this.yBinSize, this.nBins, this.nObjects, this.nEntries,
                 this.nEntries * 1.0 / this.nBins, this.nEntries * 1.0 / this.nObjects);
     }
+
+    public void reset() {
+        bins.clear();
+    }
 }

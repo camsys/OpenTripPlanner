@@ -257,4 +257,23 @@ public class GraphIndex {
     public FlexIndex getFlexIndex() {
         return flexIndex;
     }
+
+    public void reset() {
+        agencyForId.clear();
+        operatorForId.clear();
+        stopForId.clear();
+        tripForId.clear();
+        routeForId.clear();
+        stopVertexForStop.clear();
+        patternForTrip.clear();
+        patternsForFeedId.clear();
+        patternsForRoute.clear();
+        patternsForStopId.clear();
+        multiModalStationForStations.clear();
+        stopSpatialIndex.reset();
+        serviceCodesRunningForDate.clear();
+        if (flexIndex != null) {
+            flexIndex.reset();
+        }
+    }
 }

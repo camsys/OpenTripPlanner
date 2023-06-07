@@ -1066,4 +1066,43 @@ public class Graph implements Serializable {
 
         return stopLocations;
     }
+
+    public void reset() {
+        routerId = null;
+        turnRestrictions.clear();
+        noticesByElement.clear();
+        services.clear();
+        transferService.reset();
+        bundle = null;
+        vertices.clear();
+        calendarService = null;
+        streetIndex = null;
+        index.reset();
+        deduplicator.reset();
+        serviceCodes.clear();
+        timetableSnapshotProvider = null;
+        agencies.clear();
+        operators.clear();
+        feedIds.clear();
+        feedInfoForId.clear();
+        timeZone = null;
+        envelope = null;
+        convexHull = null;
+        center = null;
+        preferences = null;
+        transitModes.clear();
+        updaterManager = null;
+        stationById.clear();
+        multiModalStationById.clear();
+        groupOfStationsById.clear();
+        tripPatternForId.clear();
+        interlinedTrips.clear();
+        transfersByStop.clear();
+        locationsById.clear();
+        locationGroupsById.clear();
+        flexTripsById.clear();
+        transitLayer = null;
+        transitLayerUpdater = null;
+        transitAlertService = null;
+    }
 }
