@@ -134,4 +134,15 @@ public class FlexIndex {
     return false;
   }
 
+
+  public void reset() {
+    transfersToStop.clear();
+    flexTripsByStop.clear();
+    locationGroupsByStop.clear();
+    locationIndex.reset();
+    routeById.clear();
+    tripById.clear();
+    flexTripStopsWithPickup.clear();
+    flexTripStopsWithDropoff.clear();
+  }
 }

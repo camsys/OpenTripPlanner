@@ -1,7 +1,7 @@
 package org.opentripplanner.api.resource;
 
 import org.opentripplanner.standalone.server.OTPServer;
-import org.opentripplanner.standalone.server.Router;
+import org.opentripplanner.standalone.server.RouterService;
 import org.opentripplanner.updater.GraphUpdater;
 import org.opentripplanner.updater.GraphUpdaterManager;
 import org.slf4j.Logger;
@@ -30,16 +30,17 @@ public class UpdaterStatusResource {
      */
     @Deprecated @PathParam("ignoreRouterId")
     private String ignoreRouterId;
-    Router router;
+
+    RouterService routerService;
 
     public UpdaterStatusResource (@Context OTPServer otpServer) {
-        router = otpServer.getRouter();
+        routerService = otpServer.getRouterService();
     }
 
     /** Return a list of all agencies in the graph. */
     @GET
     public Response getUpdaters () {
-        GraphUpdaterManager updaterManager = router.graph.updaterManager;
+        GraphUpdaterManager updaterManager = routerService.getRouter().graph.updaterManager;
         if (updaterManager == null) {
             return Response.status(Response.Status.NOT_FOUND).entity("No updaters running.").build();
         }
@@ -50,7 +51,7 @@ public class UpdaterStatusResource {
     @GET
     @Path("/{updaterId}")
     public Response getUpdaters (@PathParam("updaterId") int updaterId) {
-        GraphUpdaterManager updaterManager = router.graph.updaterManager;
+        GraphUpdaterManager updaterManager = routerService.getRouter().graph.updaterManager;
         if (updaterManager == null) {
             return Response.status(Response.Status.NOT_FOUND).entity("No updaters running.").build();
         }

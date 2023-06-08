@@ -9,6 +9,7 @@ import graphql.analysis.MaxQueryComplexityInstrumentation;
 import graphql.schema.GraphQLSchema;
 import org.opentripplanner.routing.RoutingService;
 import org.opentripplanner.standalone.server.Router;
+import org.opentripplanner.standalone.server.RouterService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,11 +40,12 @@ class TransmodelGraph {
 
     HashMap<String, Object> getGraphQLExecutionResult(
             String query,
-            Router router,
+            RouterService routerService,
             Map<String, Object> variables,
             String operationName,
             int maxResolves
     ) {
+        Router router = routerService.getRouter();
         MaxQueryComplexityInstrumentation instrumentation = new MaxQueryComplexityInstrumentation(maxResolves);
         GraphQL graphQL = GraphQL.newGraphQL(indexSchema).instrumentation(instrumentation).build();
 
@@ -52,7 +54,7 @@ class TransmodelGraph {
         }
 
         TransmodelRequestContext transmodelRequestContext =
-            new TransmodelRequestContext(router, new RoutingService(router.graph));
+            new TransmodelRequestContext(routerService.getRouter(), new RoutingService(router.graph));
 
         ExecutionInput executionInput = ExecutionInput.newExecutionInput()
                                                 .query(query)
@@ -78,10 +80,10 @@ class TransmodelGraph {
         return content;
     }
 
-    Response getGraphQLResponse(String query, Router router, Map<String, Object> variables, String operationName, int maxResolves) {
+    Response getGraphQLResponse(String query, RouterService routerService, Map<String, Object> variables, String operationName, int maxResolves) {
         Response.ResponseBuilder res = Response.status(Response.Status.OK);
         HashMap<String, Object> content = getGraphQLExecutionResult(
-                query, router, variables, operationName, maxResolves
+                query, routerService, variables, operationName, maxResolves
         );
         return res.entity(content).build();
     }

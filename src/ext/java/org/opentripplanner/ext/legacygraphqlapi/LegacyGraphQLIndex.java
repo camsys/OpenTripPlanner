@@ -15,7 +15,7 @@ import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import org.opentripplanner.ext.legacygraphqlapi.datafetchers.*;
 import org.opentripplanner.routing.RoutingService;
-import org.opentripplanner.standalone.server.Router;
+import org.opentripplanner.standalone.server.RouterService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,8 +98,8 @@ class LegacyGraphQLIndex {
   }
 
   static HashMap<String, Object> getGraphQLExecutionResult(
-      String query, Router router, Map<String, Object> variables, String operationName,
-      int maxResolves, int timeoutMs, Locale locale
+          String query, RouterService routerService, Map<String, Object> variables, String operationName,
+          int maxResolves, int timeoutMs, Locale locale
   ) {
     MaxQueryComplexityInstrumentation instrumentation = new MaxQueryComplexityInstrumentation(
         maxResolves);
@@ -110,8 +110,8 @@ class LegacyGraphQLIndex {
     }
 
     LegacyGraphQLRequestContext requestContext = new LegacyGraphQLRequestContext(
-        router,
-        new RoutingService(router.graph)
+        routerService.getRouter(),
+        new RoutingService(routerService.getRouter().graph)
     );
 
     ExecutionInput executionInput = ExecutionInput
@@ -119,7 +119,7 @@ class LegacyGraphQLIndex {
         .query(query)
         .operationName(operationName)
         .context(requestContext)
-        .root(router)
+        .root(routerService.getRouter())
         .variables(variables)
         .locale(locale)
         .build();
@@ -144,13 +144,13 @@ class LegacyGraphQLIndex {
   }
 
   static Response getGraphQLResponse(
-      String query, Router router, Map<String, Object> variables, String operationName,
+      String query, RouterService routerService, Map<String, Object> variables, String operationName,
       int maxResolves, int timeoutMs, Locale locale
   ) {
     Response.ResponseBuilder res = Response.status(Response.Status.OK);
     HashMap<String, Object> content = getGraphQLExecutionResult(
         query,
-        router,
+        routerService,
         variables,
         operationName,
         maxResolves,

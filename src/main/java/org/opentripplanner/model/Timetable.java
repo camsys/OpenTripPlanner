@@ -220,7 +220,7 @@ public class Timetable implements Serializable {
      */
     public TripTimes createUpdatedTripTimes(TripUpdate tripUpdate, TimeZone timeZone, ServiceDate updateServiceDate) {
         if (tripUpdate == null) {
-            LOG.error("A null TripUpdate pointer was passed to the Timetable class update method.");
+            LOG.trace("A null TripUpdate pointer was passed to the Timetable class update method.");
             return null;
         }
         
@@ -228,19 +228,19 @@ public class Timetable implements Serializable {
         // the dynamic addition of unscheduled trips.
         // However, we want to apply trip updates on top of *scheduled* times
         if (!tripUpdate.hasTrip()) {
-            LOG.error("TripUpdate object has no TripDescriptor field.");
+            LOG.trace("TripUpdate object has no TripDescriptor field.");
             return null;
         }
 
         TripDescriptor tripDescriptor = tripUpdate.getTrip();
         if (!tripDescriptor.hasTripId()) {
-            LOG.error("TripDescriptor object has no TripId field");
+            LOG.trace("TripDescriptor object has no TripId field");
             return null;
         }
         String tripId = tripDescriptor.getTripId();
         int tripIndex = getTripIndex(tripId);
         if (tripIndex == -1) {
-            LOG.info("tripId {} not found in pattern.", tripId);
+            LOG.trace("tripId {} not found in pattern.", tripId);
             return null;
         } else {
             LOG.trace("tripId {} found at index {} in timetable.", tripId, tripIndex);
@@ -255,7 +255,7 @@ public class Timetable implements Serializable {
             // The GTFS-RT reference specifies that StopTimeUpdates are sorted by stop_sequence.
             Iterator<StopTimeUpdate> updates = tripUpdate.getStopTimeUpdateList().iterator();
             if (!updates.hasNext()) {
-                LOG.warn("Won't apply zero-length trip update to trip {}.", tripId);
+                LOG.trace("Won't apply zero-length trip update to trip {}.", tripId);
                 return null;
             }
             StopTimeUpdate update = updates.next();
@@ -280,7 +280,7 @@ public class Timetable implements Serializable {
                             update.hasScheduleRelationship() ? update.getScheduleRelationship()
                             : StopTimeUpdate.ScheduleRelationship.SCHEDULED;
                     if (scheduleRelationship == StopTimeUpdate.ScheduleRelationship.SKIPPED) {
-                        LOG.warn("Partially canceled trips are unsupported by this method." +
+                        LOG.trace("Partially canceled trips are unsupported by this method." +
                                 " Skipping TripUpdate.");
                         return null;
                     } else if (scheduleRelationship ==
@@ -304,7 +304,7 @@ public class Timetable implements Serializable {
                                         (int) (arrival.getTime() - today));
                                 delay = newTimes.getArrivalDelay(i);
                             } else {
-                                LOG.error("Arrival time at index {} is erroneous.", i);
+                                LOG.trace("Arrival time at index {} is erroneous.", i);
                                 return null;
                             }
                         } else {
@@ -330,7 +330,7 @@ public class Timetable implements Serializable {
                                         (int) (departure.getTime() - today));
                                 delay = newTimes.getDepartureDelay(i);
                             } else {
-                                LOG.error("Departure time at index {} is erroneous.", i);
+                                LOG.trace("Departure time at index {} is erroneous.", i);
                                 return null;
                             }
                         } else {
@@ -358,12 +358,12 @@ public class Timetable implements Serializable {
                 }
             }
             if (update != null) {
-                LOG.error("Part of a TripUpdate object could not be applied successfully to trip {}.", tripId);
+                LOG.trace("Part of a TripUpdate object could not be applied successfully to trip {}.", tripId);
                 return null;
             }
         }
         if (!newTimes.timesIncreasing()) {
-            LOG.error("TripTimes are non-increasing after applying GTFS-RT delay propagation to trip {}.", tripId);
+            LOG.trace("TripTimes are non-increasing after applying GTFS-RT delay propagation to trip {}.", tripId);
             return null;
         }
 
