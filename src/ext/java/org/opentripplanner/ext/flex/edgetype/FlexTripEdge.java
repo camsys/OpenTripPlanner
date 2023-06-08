@@ -55,8 +55,8 @@ public class FlexTripEdge extends Edge {
     
     FlexTrip trip = flexTemplate.getFlexTrip();
     if(trip instanceof ScheduledDeviatedTrip) {
-    	FlexTripStopTime fromST = trip.getStopTime(fromIndex);
-    	FlexTripStopTime toST = trip.getStopTime(toIndex);
+        FlexTripStopTime fromST = trip.getStopTime(fromIndex);
+        FlexTripStopTime toST = trip.getStopTime(toIndex);
 
     	int newFromST = 0;
     	int newToST = 0;
@@ -142,8 +142,19 @@ public class FlexTripEdge extends Edge {
 
           if(flexTemplate.request.from.getCoordinate() != null && flexTemplate.request.to.getCoordinate() != null) {
 
-              Coordinate from = getClosestPointOnLine(geometry, flexTemplate.request.from.getCoordinate());
-              Coordinate to = getClosestPointOnLine(geometry, flexTemplate.request.to.getCoordinate());
+              Coordinate from = null;
+              Coordinate to = null;
+              if (this.getOriginStop().isArea() || this.getOriginStop().isLine()) {
+                  from = getClosestPointOnLine(geometry, flexTemplate.request.from.getCoordinate());
+              } else {
+                  from = flexTemplate.request.from.getCoordinate();
+              }
+
+              if (this.getDestinationStop().isArea() || this.getDestinationStop().isLine()) {
+                  to = getClosestPointOnLine(geometry, flexTemplate.request.to.getCoordinate());
+              } else {
+                  to = flexTemplate.request.to.getCoordinate();
+              }
 
               LineString l = GeometryUtils.getInteriorSegment(geometry, from, to);
 
@@ -159,29 +170,29 @@ public class FlexTripEdge extends Edge {
   }
   
   private Coordinate getClosestPointOnLine(Geometry line, Coordinate coord) {
-	  Geometry g = line.getGeometryN(0);
-	  GeometryFactory gf = g.getFactory();
-		  
-	  Point p = gf.createPoint(coord);
-		  
-	  Coordinate[] nearestCoords = DistanceOp.nearestPoints(g, p.getGeometryN(0));
-	  return nearestCoords[0];
+      Geometry g = line.getGeometryN(0);
+      GeometryFactory gf = g.getFactory();
+
+      Point p = gf.createPoint(coord);
+
+      Coordinate[] nearestCoords = DistanceOp.nearestPoints(g, p.getGeometryN(0));
+      return nearestCoords[0];
   }
   
   
 
   public StopLocation getOriginStop() {
-	  return this.from;
+      return this.from;
 //	  return flexTemplate.getFlexTrip().getStops().get(flexTemplate.fromStopIndex);
   }
 
   public StopLocation getDestinationStop() {
-	  return this.to;	  
+      return this.to;
 //	  return flexTemplate.getFlexTrip().getStops().get(flexTemplate.toStopIndex);
   }
 
   public FlexPath getFlexPath() {
-	  return this.flexPath;
+      return this.flexPath;
   }
   
   public FlexTrip getFlexTrip() {
@@ -201,6 +212,6 @@ public class FlexTripEdge extends Edge {
 
   @Override
   public String getName(Locale locale) {
- 	return getName();
+      return getName();
   }
 }
