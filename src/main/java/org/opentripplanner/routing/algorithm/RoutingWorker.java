@@ -178,8 +178,7 @@ public class RoutingWorker {
                                 accessRequest,
                                 false
                         );
-                FlexIndex flexIndex = router.graph.index.getFlexIndex();
-                Collection<AccessEgress> mappedFlexAccessList = accessEgressMapper.mapFlexAccessEgresses(flexAccessList, flexIndex,  false);
+                Collection<AccessEgress> mappedFlexAccessList = accessEgressMapper.mapFlexAccessEgresses(flexAccessList,false);
                 accessList.addAll(mappedFlexAccessList);
             }
         }
@@ -202,8 +201,7 @@ public class RoutingWorker {
                                 egressRequest,
                                 true
                         );
-                FlexIndex flexIndex = router.graph.index.getFlexIndex();
-                Collection<AccessEgress> mappedFlexEgressList = accessEgressMapper.mapFlexAccessEgresses(flexEgressList, flexIndex,  true);
+                Collection<AccessEgress> mappedFlexEgressList = accessEgressMapper.mapFlexAccessEgresses(flexEgressList, true);
                 egressList.addAll(mappedFlexEgressList);
             }
         }
