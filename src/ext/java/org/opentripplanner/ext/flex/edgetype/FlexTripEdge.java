@@ -120,7 +120,7 @@ public class FlexTripEdge extends Edge {
 	    if(wait < 0)
 	    	return null; // missed it
     }
-    else if(getFlexTrip() instanceof UnscheduledTrip && (allowPickup || !allowDropoff)){
+    else if(getFlexTrip() instanceof UnscheduledTrip && (!allowPickup || !allowDropoff)){
         return null;
     }
     
