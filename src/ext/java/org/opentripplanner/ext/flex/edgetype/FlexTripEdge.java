@@ -28,6 +28,8 @@ import org.opentripplanner.routing.graph.Vertex;
 import java.util.Date;
 import java.util.Locale;
 
+import static org.opentripplanner.model.StopPattern.PICKDROP_NONE;
+
 public class FlexTripEdge extends Edge {
 
   private static final long serialVersionUID = 3478869956635040033L;
@@ -107,6 +109,14 @@ public class FlexTripEdge extends Edge {
 	    wait = departureTime - offsetFromMidnight;    
 	    if(wait < 0)
 	    	return null; // missed it
+    }
+    else if(getFlexTrip() instanceof UnscheduledTrip){
+        FlexTripStopTime fromStopTime = getFlexTrip().getStopTime(this.flexTemplate.fromStopIndex);
+        FlexTripStopTime toStopTime = getFlexTrip().getStopTime(this.flexTemplate.toStopIndex);
+
+        if(fromStopTime.pickupType == PICKDROP_NONE || toStopTime.dropOffType == PICKDROP_NONE){
+            return null;
+        }
     }
     
     if(getFlexPath() == null)
