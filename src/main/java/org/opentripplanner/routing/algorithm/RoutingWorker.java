@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.ext.flex.FlexAccessEgress;
+import org.opentripplanner.ext.flex.FlexIndex;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.routing.algorithm.filterchain.ItineraryFilter;
@@ -177,7 +178,9 @@ public class RoutingWorker {
                                 accessRequest,
                                 false
                         );
-                accessList.addAll(accessEgressMapper.mapFlexAccessEgresses(flexAccessList, false));
+                FlexIndex flexIndex = router.graph.index.getFlexIndex();
+                Collection<AccessEgress> mappedFlexAccessList = accessEgressMapper.mapFlexAccessEgresses(flexAccessList, flexIndex,  false);
+                accessList.addAll(mappedFlexAccessList);
             }
         }
 
@@ -199,7 +202,9 @@ public class RoutingWorker {
                                 egressRequest,
                                 true
                         );
-                egressList.addAll(accessEgressMapper.mapFlexAccessEgresses(flexEgressList, true));
+                FlexIndex flexIndex = router.graph.index.getFlexIndex();
+                Collection<AccessEgress> mappedFlexEgressList = accessEgressMapper.mapFlexAccessEgresses(flexEgressList, flexIndex,  true);
+                egressList.addAll(mappedFlexEgressList);
             }
         }
             

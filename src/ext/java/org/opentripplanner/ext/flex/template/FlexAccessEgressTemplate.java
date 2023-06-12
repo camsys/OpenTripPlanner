@@ -1,6 +1,7 @@
 package org.opentripplanner.ext.flex.template;
 
 import org.opentripplanner.ext.flex.FlexAccessEgress;
+import org.opentripplanner.ext.flex.FlexIndex;
 import org.opentripplanner.ext.flex.FlexServiceDate;
 import org.opentripplanner.ext.flex.edgetype.FlexTripEdge;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
@@ -116,12 +117,13 @@ public abstract class FlexAccessEgressTemplate {
   /**
    * Get the FlexTripEdge for the flex ride.
    */
-  abstract protected FlexTripEdge getFlexEdge(Vertex flexFromVertex, StopLocation transferStop);
+  abstract protected FlexTripEdge getFlexEdge(Vertex flexFromVertex, StopLocation transferStop, FlexIndex flexIndex);
 
   public Stream<FlexAccessEgress> createFlexAccessEgressStream(Graph graph) {
+    FlexIndex flexIndex = graph.index.getFlexIndex();
     if (transferStop instanceof Stop) {
       TransitStopVertex flexVertex = graph.index.getStopVertexForStop().get(transferStop);
-      return Stream.of(getFlexAccessEgress(new ArrayList<>(), flexVertex, (Stop) transferStop));
+      return Stream.of(getFlexAccessEgress(new ArrayList<>(), flexVertex, (Stop) transferStop, flexIndex));
 
     } else {
       // transferStop is Location Area/Line
@@ -132,7 +134,8 @@ public abstract class FlexAccessEgressTemplate {
             List<Edge> edges = getTransferEdges(simpleTransfer);
             return getFlexAccessEgress(edges,
                 getFlexVertex(edges.get(0)),
-                getFinalStop(simpleTransfer)
+                getFinalStop(simpleTransfer),
+                flexIndex
             );
           })
           .collect(Collectors.toList());
@@ -141,8 +144,8 @@ public abstract class FlexAccessEgressTemplate {
     }
   }
 
-  protected FlexAccessEgress getFlexAccessEgress(List<Edge> transferEdges, Vertex flexVertex, Stop stop) {
-    FlexTripEdge flexEdge = getFlexEdge(flexVertex, transferStop);
+  protected FlexAccessEgress getFlexAccessEgress(List<Edge> transferEdges, Vertex flexVertex, Stop stop, FlexIndex flexIndex) {
+    FlexTripEdge flexEdge = getFlexEdge(flexVertex, transferStop, flexIndex);
 
     State state = flexEdge.traverse(accessEgress.state);
     if(state == null) return null;

@@ -1,5 +1,6 @@
 package org.opentripplanner.ext.flex.template;
 
+import org.opentripplanner.ext.flex.FlexIndex;
 import org.opentripplanner.ext.flex.FlexServiceDate;
 import org.opentripplanner.ext.flex.edgetype.FlexTripEdge;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
@@ -34,12 +35,12 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 	}
 	  
 	public Itinerary createDirectItinerary(NearbyStop egress, boolean arriveBy, int time,
-			ZonedDateTime departureServiceDate) {
+			ZonedDateTime departureServiceDate, FlexIndex flexIndex) {
 
 		List<Edge> egressEdges = egress.edges;
 				  
 		Vertex flexToVertex = egress.state.getVertex();
-		FlexTripEdge flexEdge = getFlexEdge(flexToVertex, egress.stop);
+		FlexTripEdge flexEdge = getFlexEdge(flexToVertex, egress.stop, flexIndex);
 		
 		State state = flexEdge.traverse(accessEgress.state);
 	    if(state == null) 
@@ -111,7 +112,10 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 		return new int[] { preFlexTime, edgeTimeInSeconds, postFlexTime };
 	}
 	
-	protected FlexTripEdge getFlexEdge(Vertex flexToVertex, StopLocation transferStop) {
+	protected FlexTripEdge getFlexEdge(Vertex flexToVertex, StopLocation transferStop, FlexIndex flexIndex) {
+		boolean allowPickup = flexIndex.hasStopThatAllowsPickup(trip, trip.getStopTime(fromStopIndex).stop);
+		boolean allowDropoff = flexIndex.hasStopThatAllowsDropoff(trip, trip.getStopTime(toStopIndex).stop);
+
 		return new FlexTripEdge(accessEgress.state.getVertex(), 
 				flexToVertex, 
 				accessEgress.stop,
@@ -119,6 +123,8 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 				this.fromStopIndex,
 				this.toStopIndex,
 				this, 
-				calculator);
+				calculator,
+				allowPickup,
+				allowDropoff);
 	}
 }

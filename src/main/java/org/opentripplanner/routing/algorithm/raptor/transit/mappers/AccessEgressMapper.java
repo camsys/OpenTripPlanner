@@ -2,6 +2,7 @@ package org.opentripplanner.routing.algorithm.raptor.transit.mappers;
 
 import org.opentripplanner.common.StreetUtils;
 import org.opentripplanner.ext.flex.FlexAccessEgress;
+import org.opentripplanner.ext.flex.FlexIndex;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.routing.algorithm.raptor.transit.AccessEgress;
@@ -48,10 +49,12 @@ public class AccessEgressMapper {
 
   public Collection<AccessEgress> mapFlexAccessEgresses(
           Collection<FlexAccessEgress> flexAccessEgresses,
+          FlexIndex flexIndex,
           boolean isEgress
   ) {
+
     return flexAccessEgresses.stream()
-        .map(flexAccessEgress -> new FlexAccessEgressAdapter(flexAccessEgress, isEgress, stopIndex))
+        .map(flexAccessEgress -> new FlexAccessEgressAdapter(flexAccessEgress, flexIndex, isEgress, stopIndex))
         .collect(Collectors.toList());
   }
 

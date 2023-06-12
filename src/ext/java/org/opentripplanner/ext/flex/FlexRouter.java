@@ -130,7 +130,7 @@ public class FlexRouter {
 
       if (!egressTemplates.isEmpty()) {
         for(FlexEgressTemplate egressTemplate : egressTemplates) {
-            Itinerary itin = makeItinerary(template, egressTemplate);
+            Itinerary itin = makeItinerary(template, egressTemplate, flexIndex);
             if (itin != null) {
                 itineraries.add(itin);
             }
@@ -141,7 +141,7 @@ public class FlexRouter {
               for (FlexTripStopTime st : accessStopTimes) {
                   StopLocation sl = st.stop;
                   if (sl.equals(transferStop) && st.dropOffType!=PICKDROP_NONE) {
-                      Itinerary itin = makeItinerary(template, flexEgressTemplate);
+                      Itinerary itin = makeItinerary(template, flexEgressTemplate, flexIndex);
                       if (itin != null) {
                           itineraries.add(itin);
                       }
@@ -154,14 +154,15 @@ public class FlexRouter {
     return itineraries;
   }
 
-  public Itinerary makeItinerary(FlexAccessTemplate template, FlexEgressTemplate egressTemplate) {
+  public Itinerary makeItinerary(FlexAccessTemplate template, FlexEgressTemplate egressTemplate, FlexIndex flexIndex) {
       if (!template.getFlexTrip().equals(egressTemplate.getFlexTrip())) {
           LOG.debug("Trip mismatch found " + template.getFlexTrip() + " != " + egressTemplate.getFlexTrip());
           return null;
       }
 
       ZonedDateTime departureServiceDate= template.serviceDate.serviceDate.toZonedDateTime(startOfTime.getZone(),startOfTime.getSecond());
-      Itinerary itinerary = template.createDirectItinerary(egressTemplate.getAccessEgress(), arriveBy, departureTime,departureServiceDate);
+      Itinerary itinerary = template.createDirectItinerary(egressTemplate.getAccessEgress(), arriveBy,
+              departureTime,departureServiceDate, flexIndex);
 
       if (itinerary != null) {
           LOG.info("Creating itin for trip " + egressTemplate.getFlexTrip()+"/" +template.getFlexTrip() + " from:" + template.getAccessEgressStop() + " to:" +

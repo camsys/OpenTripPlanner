@@ -10,6 +10,7 @@ import org.onebusaway.gtfs.model.StopTime;
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.opentripplanner.common.geometry.GeometryUtils;
 import org.opentripplanner.common.model.P2;
+import org.opentripplanner.ext.flex.FlexIndex;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPath;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
 import org.opentripplanner.ext.flex.template.FlexAccessEgressTemplate;
@@ -42,13 +43,17 @@ public class FlexTripEdge extends Edge {
   public final StopLocation to;  // resolved stops in the case of groups
 
   public final FlexAccessEgressTemplate flexTemplate;
+
+  public final boolean allowPickup;
+
+  public final boolean allowDropoff;
   
   public FlexPath flexPath = null;
 
   @SuppressWarnings("serial")
   public FlexTripEdge(
           Vertex v1, Vertex v2, StopLocation s1, StopLocation s2, int fromIndex, int toIndex,
-          FlexAccessEgressTemplate flexTemplate, FlexPathCalculator calculator
+          FlexAccessEgressTemplate flexTemplate, FlexPathCalculator calculator, boolean allowPickup, boolean allowDropoff
   ) {
       // null graph because we don't want this edge to be added to the edge lists.
     super(new Vertex(null, null, 0.0, 0.0) {}, new Vertex(null, null, 0.0, 0.0) {});
@@ -57,6 +62,8 @@ public class FlexTripEdge extends Edge {
     this.fromv = v1;
     this.tov = v2;
     this.flexTemplate = flexTemplate;
+    this.allowPickup = allowPickup;
+    this.allowDropoff = allowDropoff;
     
     FlexTrip trip = flexTemplate.getFlexTrip();
     if(trip instanceof ScheduledDeviatedTrip) {
@@ -113,13 +120,8 @@ public class FlexTripEdge extends Edge {
 	    if(wait < 0)
 	    	return null; // missed it
     }
-    else if(getFlexTrip() instanceof UnscheduledTrip){
-        FlexTripStopTime fromStopTime = getFlexTrip().getStopTime(this.flexTemplate.fromStopIndex);
-        FlexTripStopTime toStopTime = getFlexTrip().getStopTime(this.flexTemplate.toStopIndex);
-
-        if(fromStopTime.pickupType == PICKDROP_NONE || toStopTime.dropOffType == PICKDROP_NONE){
-            return null;
-        }
+    else if(getFlexTrip() instanceof UnscheduledTrip && (allowPickup || !allowDropoff)){
+        return null;
     }
     
     if(getFlexPath() == null)
