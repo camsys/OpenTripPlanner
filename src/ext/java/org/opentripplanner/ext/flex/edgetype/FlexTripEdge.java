@@ -25,8 +25,11 @@ import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 public class FlexTripEdge extends Edge {
 
@@ -42,10 +45,10 @@ public class FlexTripEdge extends Edge {
 
   @SuppressWarnings("serial")
   public FlexTripEdge(
-	Vertex v1, Vertex v2, StopLocation s1, StopLocation s2, int fromIndex, int toIndex,
-	FlexAccessEgressTemplate flexTemplate, FlexPathCalculator calculator
-  ) {	    
-    // null graph because we don't want this edge to be added to the edge lists.
+          Vertex v1, Vertex v2, StopLocation s1, StopLocation s2, int fromIndex, int toIndex,
+          FlexAccessEgressTemplate flexTemplate, FlexPathCalculator calculator
+  ) {
+      // null graph because we don't want this edge to be added to the edge lists.
     super(new Vertex(null, null, 0.0, 0.0) {}, new Vertex(null, null, 0.0, 0.0) {});
     this.from = s1;
     this.to = s2;
@@ -137,23 +140,29 @@ public class FlexTripEdge extends Edge {
       if(flexTemplate.getFlexTrip() instanceof UnscheduledTrip)
           return getFlexPath().geometry;
       else if(flexTemplate.getFlexTrip() instanceof ScheduledDeviatedTrip) {
-
           LineString geometry = GeometryUtils.makeLineString(((ScheduledDeviatedTrip)getFlexTrip()).geometryCoords);
 
           if(flexTemplate.request.from.getCoordinate() != null && flexTemplate.request.to.getCoordinate() != null) {
 
               Coordinate from = null;
               Coordinate to = null;
-              if (this.getOriginStop().isArea() || this.getOriginStop().isLine()) {
+
+              List<String> stIds = Arrays.stream(this.flexTemplate.getFlexTrip().getStopTimes()).map(st->st.stop.getId().getId()).collect(Collectors.toList());
+
+              int stopIndex = stIds.indexOf(this.getOriginStop().getId().getId());
+              StopLocation originStopLocation = flexTemplate.getFlexTrip().getStopTime(stopIndex).stop;
+              if (originStopLocation.isArea() || originStopLocation.isLine()) {
                   from = getClosestPointOnLine(geometry, flexTemplate.request.from.getCoordinate());
               } else {
-                  from = flexTemplate.request.from.getCoordinate();
+                  from = originStopLocation.getCoordinate().asJtsCoordinate();
               }
 
-              if (this.getDestinationStop().isArea() || this.getDestinationStop().isLine()) {
+              stopIndex = stIds.indexOf(this.getDestinationStop().getId().getId());
+              StopLocation destinationStopLocation = flexTemplate.getFlexTrip().getStopTime(stopIndex).stop;
+              if (destinationStopLocation.isArea() || destinationStopLocation.isLine()) {
                   to = getClosestPointOnLine(geometry, flexTemplate.request.to.getCoordinate());
               } else {
-                  to = flexTemplate.request.to.getCoordinate();
+                  to = destinationStopLocation.getCoordinate().asJtsCoordinate();
               }
 
               LineString l = GeometryUtils.getInteriorSegment(geometry, from, to);
