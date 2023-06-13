@@ -52,7 +52,7 @@ public class RoutingRequestToFilterChainMapper {
       }
     }
 
-    builder
+      builder
         .withMaxNumberOfItineraries(Math.min(request.numItineraries, MAX_NUMBER_OF_ITINERARIES))
         .withMinSafeTransferTimeFactor(p.minSafeTransferTimeFactor)
         .withTransitGeneralizedCostLimit(p.transitGeneralizedCostLimit)
@@ -60,8 +60,12 @@ public class RoutingRequestToFilterChainMapper {
         .withParkAndRideDurationRatio(p.parkAndRideDurationRatio)
         .withNonTransitGeneralizedCostLimit(p.nonTransitGeneralizedCostLimit)
         .withRemoveTransitWithHigherCostThanBestOnStreetOnly(true)
-//        .withLatestDepartureTimeLimit(filterOnLatestDepartureTime)
-        .withMaxLimitReachedSubscriber(maxLimitReachedSubscriber)
+
+      if(request.modes.contains(StreetMode.FLEXIBLE)){
+        builder.withFlexFilter(request.maxWalkDistance);
+      }
+
+      builder.withMaxLimitReachedSubscriber(maxLimitReachedSubscriber)
         .withRemoveWalkAllTheWayResults(removeWalkAllTheWayResults)
         .withDebugEnabled(p.debug)
         .setStreetOnlyGenCostBuffer(p.streetOnlyGenCostBuffer)
@@ -69,9 +73,7 @@ public class RoutingRequestToFilterChainMapper {
         .setTargetTime(request.dateTime*1000);;
 
 
-    if(request.modes.contains(StreetMode.FLEXIBLE)){
-      builder.withFlexFilter(request.maxWalkDistance);
-    }
+
 
     return builder.build();
   }

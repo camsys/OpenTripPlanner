@@ -44,8 +44,6 @@ public class FlexFilter implements ItineraryFilter {
 			  totalWalk += l.distanceMeters;
 		  }
 
-		  if(maxWalkDistance != null && totalWalk > maxWalkDistance)
-			  continue;
 		  
 		  Leg flexLeg = itin.legs.stream()
 				  .filter(it -> it.flexibleTrip == true)
@@ -57,6 +55,9 @@ public class FlexFilter implements ItineraryFilter {
 			  itinerariesByRoutePath.put(routePathKey, itin);
 			  continue;
 		  }
+
+		  if(maxWalkDistance != null && totalWalk > maxWalkDistance)
+			  continue;
 
 		  Itinerary existingItin = itinerariesByRoutePath.get(routePathKey);
 		  
