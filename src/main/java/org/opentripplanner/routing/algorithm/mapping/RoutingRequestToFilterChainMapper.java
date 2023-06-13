@@ -64,7 +64,10 @@ public class RoutingRequestToFilterChainMapper {
         .withMaxLimitReachedSubscriber(maxLimitReachedSubscriber)
         .withRemoveWalkAllTheWayResults(removeWalkAllTheWayResults)
         .withDebugEnabled(p.debug)
-        .setStreetOnlyGenCostBuffer(p.streetOnlyGenCostBuffer);
+        .setStreetOnlyGenCostBuffer(p.streetOnlyGenCostBuffer)
+        .setMaxHoursBetweenArrivalAndTarget(p.maxHoursBetweenArrivalAndTarget)
+        .setTargetTime(request.dateTime*1000);;
+
 
     if(request.modes.contains(StreetMode.FLEXIBLE)){
       builder.withFlexFilter(request.maxWalkDistance);
