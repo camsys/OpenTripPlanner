@@ -2,6 +2,7 @@ package org.opentripplanner.ext.flex.template;
 
 import com.google.common.collect.Lists;
 
+import org.opentripplanner.ext.flex.FlexIndex;
 import org.opentripplanner.ext.flex.FlexServiceDate;
 import org.opentripplanner.ext.flex.edgetype.FlexTripEdge;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
@@ -48,7 +49,10 @@ public class FlexEgressTemplate extends FlexAccessEgressTemplate {
 		return new int[] { preFlexTime, edgeTimeInSeconds, postFlexTime };
 	}
 
-	protected FlexTripEdge getFlexEdge(Vertex flexFromVertex, StopLocation transferStop) {
+	protected FlexTripEdge getFlexEdge(Vertex flexFromVertex, StopLocation transferStop, FlexIndex flexIndex) {
+		boolean allowPickup = flexIndex.hasStopThatAllowsPickup(trip, trip.getStopTime(fromStopIndex).stop);
+		boolean allowDropoff = flexIndex.hasStopThatAllowsDropoff(trip, trip.getStopTime(toStopIndex).stop);
+
 		return new FlexTripEdge(flexFromVertex,
 				accessEgress.state.getVertex(), 
 				transferStop, 
@@ -56,6 +60,8 @@ public class FlexEgressTemplate extends FlexAccessEgressTemplate {
 				this.fromStopIndex,
 				this.toStopIndex,
 				this, 
-				calculator);
+				calculator,
+				allowPickup,
+				allowDropoff);
 	}
 }
