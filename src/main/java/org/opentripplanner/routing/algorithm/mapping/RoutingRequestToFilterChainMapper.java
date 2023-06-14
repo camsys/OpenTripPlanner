@@ -52,23 +52,22 @@ public class RoutingRequestToFilterChainMapper {
       }
     }
 
-      builder
-        .withMaxNumberOfItineraries(Math.min(request.numItineraries, MAX_NUMBER_OF_ITINERARIES))
-        .withMinSafeTransferTimeFactor(p.minSafeTransferTimeFactor)
-        .withTransitGeneralizedCostLimit(p.transitGeneralizedCostLimit)
-        .withBikeRentalDistanceRatio(p.bikeRentalDistanceRatio)
-        .withParkAndRideDurationRatio(p.parkAndRideDurationRatio)
-        .withNonTransitGeneralizedCostLimit(p.nonTransitGeneralizedCostLimit)
-        .withRemoveTransitWithHigherCostThanBestOnStreetOnly(true)
+    builder
+      .withMaxNumberOfItineraries(Math.min(request.numItineraries, MAX_NUMBER_OF_ITINERARIES))
+      .withMinSafeTransferTimeFactor(p.minSafeTransferTimeFactor)
+      .withTransitGeneralizedCostLimit(p.transitGeneralizedCostLimit)
+      .withBikeRentalDistanceRatio(p.bikeRentalDistanceRatio)
+      .withParkAndRideDurationRatio(p.parkAndRideDurationRatio)
+      .withNonTransitGeneralizedCostLimit(p.nonTransitGeneralizedCostLimit)
+      .withRemoveTransitWithHigherCostThanBestOnStreetOnly(true);
 
-      if(request.modes.contains(StreetMode.FLEXIBLE)){
-        builder.withFlexFilter(request.maxWalkDistance);
-      }
+    if(request.modes.contains(StreetMode.FLEXIBLE)){
+      builder.withFlexFilter(request.maxWalkDistance);
+    }
 
       builder.withMaxLimitReachedSubscriber(maxLimitReachedSubscriber)
         .withRemoveWalkAllTheWayResults(removeWalkAllTheWayResults)
         .withDebugEnabled(p.debug);
-
 
 
     return builder.build();
