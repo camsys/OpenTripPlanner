@@ -59,14 +59,14 @@ public class RoutingRequestToFilterChainMapper {
       .withBikeRentalDistanceRatio(p.bikeRentalDistanceRatio)
       .withParkAndRideDurationRatio(p.parkAndRideDurationRatio)
       .withNonTransitGeneralizedCostLimit(p.nonTransitGeneralizedCostLimit)
-      .withRemoveTransitWithHigherCostThanBestOnStreetOnly(true);
+      .withRemoveTransitWithHigherCostThanBestOnStreetOnly(false);
 
     if(request.modes.contains(StreetMode.FLEXIBLE)){
       builder.withFlexFilter(request.maxWalkDistance);
     }
 
     builder.withMaxLimitReachedSubscriber(maxLimitReachedSubscriber)
-      .withRemoveWalkAllTheWayResults(removeWalkAllTheWayResults)
+      .withRemoveWalkAllTheWayResults(true)
       .withDebugEnabled(p.debug)
       .setStreetOnlyGenCostBuffer(p.streetOnlyGenCostBuffer)
       .setMaxHoursBetweenArrivalAndTarget(p.maxHoursBetweenArrivalAndTarget)
