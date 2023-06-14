@@ -288,7 +288,7 @@ public class ItineraryFilterChainBuilder {
             }
 
             if(removeWalkAllTheWayResults) {
-                filters.add(new RemoveWalkOnlyFilter());
+                filters.add(new RemoveWalkOnlyFilter(true));
             }
 
             if (latestDepartureTimeLimit != null) {

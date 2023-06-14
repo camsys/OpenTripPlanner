@@ -23,6 +23,8 @@ public class RemoveWalkOnlyFilterTest {
 
   private final RemoveWalkOnlyFilter subject = new RemoveWalkOnlyFilter();
 
+  private final RemoveWalkOnlyFilter subject2 = new RemoveWalkOnlyFilter(true);
+
   @Test
   public void name() {
     assertEquals("remove-walk-only-filter", subject.name());
@@ -41,6 +43,17 @@ public class RemoveWalkOnlyFilterTest {
     var expected = List.of(t1, t2, t3, t4);
 
     assertEquals(Itinerary.toStr(expected), Itinerary.toStr(subject.filter(input)));
+  }
+
+  @Test
+  public void doNotFilterIfOnlyWalk() {
+    Itinerary w1 = newItinerary(A, T10_10).walk(20, E).build();
+    Itinerary w2 = newItinerary(A, T10_10).walk(20, B).walk(12, E).build();
+
+    var input = List.of(w1, w2);
+    var expected = List.of(w1, w2);
+
+    assertEquals(Itinerary.toStr(expected), Itinerary.toStr(subject2.filter(input)));
   }
 
   @Test
