@@ -72,7 +72,7 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 		    } else {		
 		    	FlexTripStopTime ftst = this.trip.getStopTime(this.fromStopIndex);
 	
-		    	if(time > ftst.flexWindowStart && time < ftst.flexWindowEnd) {
+		    	if(time > ftst.flexWindowStart && time +itinerary.durationSeconds < ftst.flexWindowEnd) {
 			    	ZonedDateTime zdt = departureServiceDate.plusSeconds(time);
 					Calendar c = Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone()));
 					c.setTimeInMillis(zdt.toInstant().toEpochMilli());
