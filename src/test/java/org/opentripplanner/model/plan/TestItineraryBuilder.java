@@ -109,6 +109,10 @@ public class TestItineraryBuilder implements PlanTestConstants {
     return transit(BUS_ROUTE, tripId, startTime, endTime, to);
   }
 
+  public TestItineraryBuilder flex(int tripId, int startTime, int endTime, Place to) {
+    return transit(BUS_ROUTE, tripId, startTime, endTime, to, true);
+  }
+
   /**
    * Add a rail/train leg to the itinerary
    */
@@ -141,12 +145,17 @@ public class TestItineraryBuilder implements PlanTestConstants {
   /* private methods */
 
   private TestItineraryBuilder transit(Route route, int tripId, int start, int end, Place to) {
+    return transit(route, tripId, start, end, to, false);
+  }
+
+  private TestItineraryBuilder transit(Route route, int tripId, int start, int end, Place to, boolean isFlex) {
     if(lastPlace == null) { throw new IllegalStateException("Trip from place is unknown!"); }
     int waitTime = start - lastEndTime(start);
     cost += cost(WAIT_RELUCTANCE_FACTOR, waitTime);
     cost += cost(1.0f, end - start) + BOARD_COST;
     Leg leg = leg(new Leg(trip(tripId, route)), start, end, to);
     leg.serviceDate = SERVICE_DATE;
+    leg.flexibleTrip = isFlex;
     return this;
   }
 

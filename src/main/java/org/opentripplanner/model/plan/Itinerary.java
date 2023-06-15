@@ -97,6 +97,9 @@ public class Itinerary {
     /** TRUE if mode is a non transit move from start ot end (all legs are non-transit). */
     public final boolean streetOnly;
 
+    /** TRUE if at least one leg is a Flex trip **/
+    public final boolean hasFlex;
+
 
     /**
      * System notices is used to tag itineraries with system information. For example if you run the
@@ -134,6 +137,7 @@ public class Itinerary {
         this.waitingTimeSeconds = totals.waitingTimeSeconds;
         this.walkOnly = totals.walkOnly;
         this.streetOnly = totals.streetOnly;
+        this.hasFlex = totals.hasFlex;
     }
 
     /**
@@ -194,6 +198,8 @@ public class Itinerary {
     public boolean isOnStreetAllTheWay() {
         return streetOnly;
     }
+
+    public boolean hasFlex() { return hasFlex; }
 
     /** TRUE if alt least one leg is a transit leg. */
     public boolean hasTransit() {
