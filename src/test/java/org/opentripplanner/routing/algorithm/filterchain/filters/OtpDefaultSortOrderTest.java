@@ -28,11 +28,11 @@ public class OtpDefaultSortOrderTest implements PlanTestConstants {
 
         // Depart-after-sort
         result = departAfterSort().filter(List.of(walk, bicycle, bus, rail));
-        assertEquals(toStr(walk, bicycle, bus, rail), toStr(result));
+        assertEquals(toStr(bus, rail, walk, bicycle), toStr(result));
 
         // Arrive-by-sort
         result = arriveBySort().filter(List.of(walk, bicycle, bus, rail));
-        assertEquals(toStr(bicycle, walk, rail, bus), toStr(result));
+        assertEquals(toStr(rail, bus, bicycle, walk), toStr(result));
     }
 
     @Test
