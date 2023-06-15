@@ -59,17 +59,16 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 		if(trip instanceof UnscheduledTrip) {
 		    if (arriveBy) {
 		    	FlexTripStopTime ftst = this.trip.getStopTime(this.toStopIndex);
-	
 		    	int newTime = time - itinerary.durationSeconds;
-		    	if(time > ftst.flexWindowEnd)
-		    		newTime = time - itinerary.durationSeconds;
-	
-				ZonedDateTime zdt = departureServiceDate.plusSeconds(newTime);
-				Calendar c = Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone()));
-				c.setTimeInMillis(zdt.toInstant().toEpochMilli());
-				itinerary.timeShiftToStartAt(c);
-				itinerary.generalizedCost += Math.abs(time - newTime);
-	
+				if(newTime > ftst.flexWindowStart && newTime < ftst.flexWindowEnd) {
+					ZonedDateTime zdt = departureServiceDate.plusSeconds(newTime);
+					Calendar c = Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone()));
+					c.setTimeInMillis(zdt.toInstant().toEpochMilli());
+					itinerary.timeShiftToStartAt(c);
+					itinerary.generalizedCost += Math.abs(time - newTime);
+				} else{
+					return null;
+				}
 		    } else {		
 		    	FlexTripStopTime ftst = this.trip.getStopTime(this.fromStopIndex);
 	
