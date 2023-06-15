@@ -19,6 +19,8 @@ class ItinerariesCalculateLegTotals {
     boolean walkOnly = true;
     boolean streetOnly = true;
 
+    boolean hasFlex = false;
+
     public ItinerariesCalculateLegTotals(List<Leg> legs) {
         if (legs.isEmpty()) { return; }
         calculate(legs);
@@ -41,8 +43,11 @@ class ItinerariesCalculateLegTotals {
                 nonTransitTimeSeconds += dt;
                 nonTransitDistanceMeters += leg.distanceMeters;
             }
+            if(leg.flexibleTrip){
+                this.hasFlex = true;
+            }
             if (!leg.isWalkingLeg()) {
-                walkOnly = false;
+                this.walkOnly = false;
             }
             if (!leg.isOnStreetNonTransit()) {
                 this.streetOnly = false;

@@ -16,7 +16,8 @@ public class OtpDefaultSortOrderTest implements PlanTestConstants {
 
 
 // this test is no longer relevant as of 6393df3abae6772f0f04e367485ca7036f0f152b
-    public void sortStreetBeforeTransitThenTime() {
+    @Test
+    public void sortStreetAfterTransitThenTime() {
         Itinerary walk = newItinerary(A, 0).walk(5, G).build();
         Itinerary bicycle = newItinerary(B).bicycle(4, 6, G).build();
         Itinerary bus  = newItinerary(C).bus(21, 1, 4, G).build();
@@ -32,6 +33,25 @@ public class OtpDefaultSortOrderTest implements PlanTestConstants {
         // Arrive-by-sort
         result = arriveBySort().filter(List.of(walk, bicycle, bus, rail));
         assertEquals(toStr(bicycle, walk, rail, bus), toStr(result));
+    }
+
+    @Test
+    public void sortFlexAfterTransitThenTime() {
+        Itinerary walk = newItinerary(A, 0).walk(5, G).build();
+        Itinerary bus  = newItinerary(C).bus(21, 1, 4, G).build();
+        Itinerary rail  = newItinerary(D).rail(21, 3, 7, G).build();
+        Itinerary flex = newItinerary(E).flex(21, 7, 8, G).build();
+
+        // Eliminate cost
+        flex.generalizedCost = bus.generalizedCost = rail.generalizedCost = 0;
+
+        // Depart-after-sort
+        result = departAfterSort().filter(List.of(walk,flex, bus, rail));
+        assertEquals(toStr(bus, rail, flex, walk), toStr(result));
+
+        // Arrive-by-sort
+        result = arriveBySort().filter(List.of(walk, flex, bus, rail));
+        assertEquals(toStr(rail, bus, flex, walk), toStr(result));
     }
 
     @Test

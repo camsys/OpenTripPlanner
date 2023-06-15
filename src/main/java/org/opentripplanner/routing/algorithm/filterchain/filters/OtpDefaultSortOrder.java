@@ -39,9 +39,9 @@ public class OtpDefaultSortOrder extends SortFilter {
    * with walking/bicycle/car from origin all the way to the destination, than it will be sorted
    * before any itineraries with one or more transit legs.
    */
-  static final Comparator<Itinerary> STREET_ONLY_FIRST = (a, b) -> Boolean.compare(
-      b.isOnStreetAllTheWay(),
-      a.isOnStreetAllTheWay()
+  static final Comparator<Itinerary> STREET_ONLY_LAST = (a, b) -> Boolean.compare(
+      a.isOnStreetAllTheWay(),
+      b.isOnStreetAllTheWay()
   );
 
   /** Sort latest arrival-time first */
@@ -50,12 +50,19 @@ public class OtpDefaultSortOrder extends SortFilter {
   static final Comparator<Itinerary> GENERALIZED_COST = comparingInt(a -> a.generalizedCost);
   static final Comparator<Itinerary> NUM_OF_TRANSFERS = comparingInt(a -> a.nTransfers);
 
+  static final Comparator<Itinerary> NON_FLEX_FIRST = (a, b) -> Boolean.compare(
+      a.hasFlex(),
+      b.hasFlex()
+  );
+
   public OtpDefaultSortOrder(boolean arriveBy) {
     // to put walking first & encourage healthy lifestyle, start with:
     // STREET_ONLY_FIRST,
     // if adding street back in please turn on these tests:
     // sortStreetBeforeTransitThenTime &
     super(new CompositeComparator<>(
+        STREET_ONLY_LAST,
+        NON_FLEX_FIRST,
         arriveBy ? DEPARTURE_TIME : ARRIVAL_TIME,
         GENERALIZED_COST,
         NUM_OF_TRANSFERS,
