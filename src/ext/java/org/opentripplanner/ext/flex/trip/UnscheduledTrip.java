@@ -35,201 +35,208 @@ import org.slf4j.LoggerFactory;
  * trip is possible.
  */
 public class UnscheduledTrip extends FlexTrip {
-	
-  private static final long serialVersionUID = -3994562856996189076L;
 
-  private final BookingInfo[] dropOffBookingInfos;
-  private final BookingInfo[] pickupBookingInfos;
+    private static final long serialVersionUID = -3994562856996189076L;
 
-  private static final Logger LOG = LoggerFactory.getLogger(UnscheduledTrip.class);
+    private final BookingInfo[] dropOffBookingInfos;
+    private final BookingInfo[] pickupBookingInfos;
 
-  public static boolean isUnscheduledTrip(List<StopTime> stopTimes) {
-	stopTimes.stream()
-		.filter(it -> it.getStop() == null)
-		.forEach(it -> {
-			LOG.error("Stop time for trip " + it.getTrip() + ", sequence=" + it.getStopSequence() + " has a stop that could not be found. This may cause errors...");
-		});
-	  
-	// all areas, all time ranges	  
-	return stopTimes.stream().allMatch(it -> it.getStop().isArea() && it.getStop().isLine())
-			&& stopTimes.stream().allMatch(it -> it.getArrivalTime() == StopTime.MISSING_VALUE 
-			&& it.getDepartureTime() == StopTime.MISSING_VALUE);	  
-  }
+    private static final Logger LOG = LoggerFactory.getLogger(UnscheduledTrip.class);
 
-  public UnscheduledTrip(Trip trip, List<StopTime> stopTimes) {
-    super(trip);
+    public static boolean isUnscheduledTrip(List<StopTime> stopTimes) {
+        stopTimes.stream()
+                .filter(it -> it.getStop() == null)
+                .forEach(it -> {
+                    LOG.error("Stop time for trip " + it.getTrip() + ", sequence=" + it.getStopSequence() + " has a stop that could not be found. This may cause errors...");
+                });
 
-    if (!isUnscheduledTrip(stopTimes)) {
-      throw new IllegalArgumentException("Incompatible stopTimes for unscheduled trip");
+        // all areas, all time ranges
+        return stopTimes.stream().allMatch(it -> it.getStop().isArea() && it.getStop().isLine())
+                && stopTimes.stream().allMatch(it -> it.getArrivalTime() == StopTime.MISSING_VALUE
+                && it.getDepartureTime() == StopTime.MISSING_VALUE);
     }
 
-    this.stopTimes = new FlexTripStopTime[stopTimes.size()];
-    this.dropOffBookingInfos = new BookingInfo[stopTimes.size()];
-    this.pickupBookingInfos = new BookingInfo[stopTimes.size()];
+    public UnscheduledTrip(Trip trip, List<StopTime> stopTimes) {
+        super(trip);
 
-    for (int i = 0; i < stopTimes.size(); i++) {
-      this.stopTimes[i] = new FlexTripStopTime(stopTimes.get(i));
-      this.dropOffBookingInfos[i] = stopTimes.get(0).getDropOffBookingInfo();
-      this.pickupBookingInfos[i] = stopTimes.get(0).getPickupBookingInfo();
-    }
-  }
+        if (!isUnscheduledTrip(stopTimes)) {
+            throw new IllegalArgumentException("Incompatible stopTimes for unscheduled trip");
+        }
 
-  @Override
-  public List<FlexAccessTemplate> getFlexAccessTemplates(
-      NearbyStop access, FlexServiceDate serviceDate, FlexPathCalculator calculator, RoutingRequest request
-  ) {
-	List<Integer> fromIndices = getFromIndex(access.stop, null);
-    if (fromIndices.isEmpty()) { return List.of(); }
-//    if (stopTimes[1].dropOffType == PICKDROP_NONE) { return Stream.empty(); }
+        this.stopTimes = new FlexTripStopTime[stopTimes.size()];
+        this.dropOffBookingInfos = new BookingInfo[stopTimes.size()];
+        this.pickupBookingInfos = new BookingInfo[stopTimes.size()];
 
-    ArrayList<FlexAccessTemplate> res = new ArrayList<>();
-
-	for(Integer fromIndex : fromIndices) 
-		for (StopLocation stop : expandStops(stopTimes[fromIndex].stop)) {
-    		res.add(new FlexAccessTemplate(access, this, fromIndex, fromIndex, stop, serviceDate, calculator, request));
+        for (int i = 0; i < stopTimes.size(); i++) {
+            this.stopTimes[i] = new FlexTripStopTime(stopTimes.get(i));
+            this.dropOffBookingInfos[i] = stopTimes.get(0).getDropOffBookingInfo();
+            this.pickupBookingInfos[i] = stopTimes.get(0).getPickupBookingInfo();
+        }
     }
 
-    return res;
-  }
+    @Override
+    public List<FlexAccessTemplate> getFlexAccessTemplates(
+            NearbyStop access, FlexServiceDate serviceDate, FlexPathCalculator calculator, RoutingRequest request
+    ) {
+        List<Integer> fromIndices = getFromIndex(access.stop, null);
+        if (fromIndices.isEmpty()) { return List.of(); }
 
-  @Override
-  public List<FlexEgressTemplate> getFlexEgressTemplates(
-      NearbyStop egress, FlexServiceDate serviceDate, FlexPathCalculator calculator, RoutingRequest request
-  ) {
-    List<Integer> toIndices = getToIndex(egress.stop, null);
-    if (toIndices.isEmpty()) { return List.of(); }
-//    if (stopTimes[0].pickupType == PICKDROP_NONE) { return Stream.empty(); }
+        ArrayList<FlexAccessTemplate> res = new ArrayList<>();
 
-    ArrayList<FlexEgressTemplate> res = new ArrayList<>();
+        for(Integer fromIndex : fromIndices) {
+            for(int i= fromIndex; i< stopTimes.length; i++){
+                for (StopLocation stop : expandStops(stopTimes[i].stop)) {
+                    if(stopTimes[i].dropOffType != PICKDROP_NONE){
+                        res.add(new FlexAccessTemplate(access, this, fromIndex, i, stop, serviceDate, calculator, request));
+                    }
+                }
+            }
+        }
 
-	for(Integer toIndex : toIndices) 
-		for (StopLocation stop : expandStops(stopTimes[toIndex].stop)) {
-    		res.add(new FlexEgressTemplate(egress, this, toIndex, toIndex, stop, serviceDate, calculator, request));
+        return res;
     }
 
-    return res;
-  }
+    @Override
+    public List<FlexEgressTemplate> getFlexEgressTemplates(
+            NearbyStop egress, FlexServiceDate serviceDate, FlexPathCalculator calculator, RoutingRequest request
+    ) {
+        List<Integer> toIndices = getToIndex(egress.stop, null);
+        if (toIndices.isEmpty()) { return List.of(); }
 
-  // See RaptorTransfer for definitions/semantics
-  @Override
-  public int earliestDepartureTime(int departureTime, int fromStopIndex, int toStopIndex) {
-	FlexTripStopTime ftst = stopTimes[fromStopIndex];
-	    
-	if (departureTime < ftst.flexWindowEnd) // latest possible time bus will leave stop 
-		return -1;
+        ArrayList<FlexEgressTemplate> res = new ArrayList<>();
 
-	return departureTime;
-  }
+        for(Integer toIndex : toIndices)
+            for(int i= 0; i< toIndex; i++) {
+                if (stopTimes[i].pickupType != PICKDROP_NONE) {
+                    for (StopLocation stop : expandStops(stopTimes[toIndex].stop)) {
+                        res.add(new FlexEgressTemplate(egress, this, i, toIndex, stop, serviceDate, calculator, request));
+                    }
+                }
+            }
 
-  // See RaptorTransfer for definitions/semantics
-  @Override
-  public int latestArrivalTime(int arrivalTime, int fromStopIndex, int toStopIndex) {
-	FlexTripStopTime ftst = stopTimes[toStopIndex];
-	    
-  if (arrivalTime < ftst.flexWindowStart) // earliest possible arrival time
-        return -1;
-
-	return arrivalTime;
-  }
-
-  @Override
-  public List<StopLocation> getStops() {
-    return Arrays
-        .stream(stopTimes)
-        .map(scheduledDeviatedStopTime -> scheduledDeviatedStopTime.stop)
-        .collect(Collectors.toList());
-  }
-  
-  @Override
-  public BookingInfo getDropOffBookingInfo(int i) {
-    return dropOffBookingInfos[i];
-  }
-
-  @Override
-  public BookingInfo getPickupBookingInfo(int i) {
-    return pickupBookingInfos[i];
-  }
-
-  private static Collection<StopLocation> expandStops(StopLocation stop) {
-    return stop instanceof FlexLocationGroup
-        ? ((FlexLocationGroup) stop).getLocations()
-        : Collections.singleton(stop);
-  }
-
-  private List<Integer> getFromIndex(StopLocation accessEgress, Integer time) {
-	ArrayList<Integer> r = new ArrayList<Integer>();
-    for (int i = 0; i < stopTimes.length; i++) {
-      if (stopTimes[i].pickupType == PICKDROP_NONE) continue;
-      if(time != null) {
-    	  if(!(time >= stopTimes[i].flexWindowStart && time <= stopTimes[i].flexWindowEnd))
-    		  continue;
-      }
-
-      StopLocation stop = stopTimes[i].stop;
-      if (stop instanceof FlexLocationGroup) {
-        if (((FlexLocationGroup) stop).getLocations().contains(accessEgress))
-          r.add(i);
-      } else {
-        if (stop.equals(accessEgress))
-          r.add(i);
-      }
+        return res;
     }
-	return r;
-  }
 
-  private List<Integer> getToIndex(StopLocation accessEgress, Integer time) {
-	ArrayList<Integer> r = new ArrayList<Integer>();
-    for (int i = 0; i < stopTimes.length; i++) {
-      if (stopTimes[i].dropOffType == PICKDROP_NONE) continue;
-      if(time != null) {
-    	  if(!(time >= stopTimes[i].flexWindowStart && time <= stopTimes[i].flexWindowEnd))
-    		  continue;
-      }
+    // See RaptorTransfer for definitions/semantics
+    @Override
+    public int earliestDepartureTime(int departureTime, int fromStopIndex, int toStopIndex) {
+        FlexTripStopTime ftst = stopTimes[fromStopIndex];
 
-      StopLocation stop = stopTimes[i].stop;
-      if (stop instanceof FlexLocationGroup) {
-        if (((FlexLocationGroup) stop).getLocations().contains(accessEgress))
-          r.add(i);
-      } else {
-        if (stop.equals(accessEgress))
-          r.add(i);
-      }
+        if (departureTime < ftst.flexWindowEnd) // latest possible time bus will leave stop
+            return -1;
+
+        return departureTime;
     }
-	return r;
-  }
 
-  @Override
-  public float getSafeTotalTime(FlexPath streetPath, int fromStopIndex, int toStopIndex) {
-	  	if(streetPath == null)
-	  		return -1;
-	  	
-	  	FlexTripStopTime fromStopTime = this.stopTimes[fromStopIndex];
-	  	FlexTripStopTime toStopTime = this.stopTimes[toStopIndex];
-		
-		if(fromStopTime.stop.isArea() || toStopTime.stop.isArea()) {
-			double safeFactor = fromStopTime.safeFactor;
-			double safeOffset = fromStopTime.safeOffset;
-			if(safeFactor != MISSING_VALUE && safeOffset != MISSING_VALUE)
-				return (float)(safeFactor * streetPath.durationSeconds) + (float)(safeOffset * 60);
-		}
-		return streetPath.durationSeconds;					
-  }
+    // See RaptorTransfer for definitions/semantics
+    @Override
+    public int latestArrivalTime(int arrivalTime, int fromStopIndex, int toStopIndex) {
+        FlexTripStopTime ftst = stopTimes[toStopIndex];
 
-  @Override
-  public float getMeanTotalTime(FlexPath streetPath, int fromStopIndex, int toStopIndex) {
-	  	if(streetPath == null)
-	  		return -1;
-	  	
-	  	FlexTripStopTime fromStopTime = this.stopTimes[fromStopIndex];
-	  	FlexTripStopTime toStopTime = this.stopTimes[toStopIndex];
-		
-		if(fromStopTime.stop.isArea() || toStopTime.stop.isArea()) {
-			double meanFactor = fromStopTime.meanFactor;
-			double meanOffset = fromStopTime.meanOffset;
-			if(meanFactor != MISSING_VALUE && meanOffset != MISSING_VALUE)
-				return (float)(meanFactor * streetPath.durationSeconds) + (float)(meanOffset * 60);
-		}
-		return streetPath.durationSeconds;
-  }
+        if (arrivalTime < ftst.flexWindowStart) // earliest possible arrival time
+            return -1;
+
+        return arrivalTime;
+    }
+
+    @Override
+    public List<StopLocation> getStops() {
+        return Arrays
+                .stream(stopTimes)
+                .map(scheduledDeviatedStopTime -> scheduledDeviatedStopTime.stop)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public BookingInfo getDropOffBookingInfo(int i) {
+        return dropOffBookingInfos[i];
+    }
+
+    @Override
+    public BookingInfo getPickupBookingInfo(int i) {
+        return pickupBookingInfos[i];
+    }
+
+    private static Collection<StopLocation> expandStops(StopLocation stop) {
+        return stop instanceof FlexLocationGroup
+                ? ((FlexLocationGroup) stop).getLocations()
+                : Collections.singleton(stop);
+    }
+
+    private List<Integer> getFromIndex(StopLocation accessEgress, Integer time) {
+        ArrayList<Integer> r = new ArrayList<Integer>();
+        for (int i = 0; i < stopTimes.length; i++) {
+            if (stopTimes[i].pickupType == PICKDROP_NONE) continue;
+            if(time != null) {
+                if(!(time >= stopTimes[i].flexWindowStart && time <= stopTimes[i].flexWindowEnd))
+                    continue;
+            }
+
+            StopLocation stop = stopTimes[i].stop;
+            if (stop instanceof FlexLocationGroup) {
+                if (((FlexLocationGroup) stop).getLocations().contains(accessEgress))
+                    r.add(i);
+            } else {
+                if (stop.equals(accessEgress))
+                    r.add(i);
+            }
+        }
+        return r;
+    }
+
+    private List<Integer> getToIndex(StopLocation accessEgress, Integer time) {
+        ArrayList<Integer> r = new ArrayList<Integer>();
+        for (int i = 0; i < stopTimes.length; i++) {
+            if (stopTimes[i].dropOffType == PICKDROP_NONE) continue;
+            if(time != null) {
+                if(!(time >= stopTimes[i].flexWindowStart && time <= stopTimes[i].flexWindowEnd))
+                    continue;
+            }
+
+            StopLocation stop = stopTimes[i].stop;
+            if (stop instanceof FlexLocationGroup) {
+                if (((FlexLocationGroup) stop).getLocations().contains(accessEgress))
+                    r.add(i);
+            } else {
+                if (stop.equals(accessEgress))
+                    r.add(i);
+            }
+        }
+        return r;
+    }
+
+    @Override
+    public float getSafeTotalTime(FlexPath streetPath, int fromStopIndex, int toStopIndex) {
+        if(streetPath == null)
+            return -1;
+
+        FlexTripStopTime fromStopTime = this.stopTimes[fromStopIndex];
+        FlexTripStopTime toStopTime = this.stopTimes[toStopIndex];
+
+        if(fromStopTime.stop.isArea() || toStopTime.stop.isArea()) {
+            double safeFactor = fromStopTime.safeFactor;
+            double safeOffset = fromStopTime.safeOffset;
+            if(safeFactor != MISSING_VALUE && safeOffset != MISSING_VALUE)
+                return (float)(safeFactor * streetPath.durationSeconds) + (float)(safeOffset * 60);
+        }
+        return streetPath.durationSeconds;
+    }
+
+    @Override
+    public float getMeanTotalTime(FlexPath streetPath, int fromStopIndex, int toStopIndex) {
+        if(streetPath == null)
+            return -1;
+
+        FlexTripStopTime fromStopTime = this.stopTimes[fromStopIndex];
+        FlexTripStopTime toStopTime = this.stopTimes[toStopIndex];
+
+        if(fromStopTime.stop.isArea() || toStopTime.stop.isArea()) {
+            double meanFactor = fromStopTime.meanFactor;
+            double meanOffset = fromStopTime.meanOffset;
+            if(meanFactor != MISSING_VALUE && meanOffset != MISSING_VALUE)
+                return (float)(meanFactor * streetPath.durationSeconds) + (float)(meanOffset * 60);
+        }
+        return streetPath.durationSeconds;
+    }
 
 }
