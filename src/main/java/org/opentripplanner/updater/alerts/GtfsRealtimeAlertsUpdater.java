@@ -38,6 +38,7 @@ public class GtfsRealtimeAlertsUpdater extends PollingGraphUpdater {
 
     static {
         registry.add(GtfsRealtimeServiceStatus.mercuryAlert);
+        registry.add(GtfsRealtimeServiceStatus.mercuryEntitySelector);
     }
     private GraphUpdaterManager updaterManager;
 

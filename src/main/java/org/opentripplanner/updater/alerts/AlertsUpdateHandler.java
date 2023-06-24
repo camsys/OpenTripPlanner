@@ -84,6 +84,11 @@ public class AlertsUpdateHandler {
                 routeId = informed.getRouteId();
             }
 
+            if (informed.hasExtension(GtfsRealtimeServiceStatus.mercuryEntitySelector)) {
+                GtfsRealtimeServiceStatus.MercuryEntitySelector mercuryEntitySelector = informed.getExtension(GtfsRealtimeServiceStatus.mercuryEntitySelector);
+                alertText.sortOrders.add(mercuryEntitySelector.getSortOrder());
+            }
+
             int direction;
             if (informed.hasTrip() && informed.getTrip().hasDirectionId()) {
                 direction = informed.getTrip().getDirectionId();
@@ -136,6 +141,7 @@ public class AlertsUpdateHandler {
             GtfsRealtimeServiceStatus.MercuryAlert mercuryAlert = alert.getExtension(GtfsRealtimeServiceStatus.mercuryAlert);
             if (mercuryAlert.hasAlertType()) {
                 alertText.consequenceMessage = mercuryAlert.getAlertType();
+                alertText.alertType = mercuryAlert.getAlertType();
             }
         }
         return alertText;

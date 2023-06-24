@@ -28,6 +28,8 @@ public class AlertMapper {
 
   ApiAlert mapToApi(TransitAlert domain) {
     ApiAlert api = new ApiAlert();
+    api.alertId = domain.getId();
+
     if (domain.alertHeaderText != null) {
       api.alertHeaderText = domain.alertHeaderText.toString(locale);
     }
@@ -43,6 +45,11 @@ public class AlertMapper {
     api.effectiveStartDate = domain.getEffectiveStartDate();
     api.effectiveEndDate = domain.getEffectiveEndDate();
     api.consequenceMessage = domain.consequenceMessage;
+    api.alertType = domain.alertType;
+    for (String sortOrder: domain.sortOrders) {
+      api.sortOrders.add(sortOrder);
+    }
+
 
     return api;
   }

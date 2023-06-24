@@ -32,6 +32,9 @@ public class TransitAlert implements Serializable {
     public String alertType;
 
     //null means unknown
+    public List<String> sortOrders = new ArrayList<>();
+
+    //null means unknown
     public String severity;
 
     //null means unknown
