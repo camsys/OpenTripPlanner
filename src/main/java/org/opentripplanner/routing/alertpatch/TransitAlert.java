@@ -42,6 +42,9 @@ public class TransitAlert implements Serializable {
 
     public String consequenceMessage;
 
+    //null means not present on alert
+    public String elevatorId;
+
     private List<TimePeriod> timePeriods = new ArrayList<>();
 
     private String feedId;

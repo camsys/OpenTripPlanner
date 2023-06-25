@@ -5,6 +5,7 @@ import com.google.transit.realtime.GtfsRealtime.FeedEntity;
 import com.google.transit.realtime.GtfsRealtime.FeedMessage;
 import com.google.transit.realtime.GtfsRealtime.TimeRange;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
+import com.google.transit.realtime.GtfsRealtimeOneBusAway;
 import com.google.transit.realtime.GtfsRealtimeServiceStatus;
 import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.routing.alertpatch.EntitySelector;
@@ -87,6 +88,13 @@ public class AlertsUpdateHandler {
             if (informed.hasExtension(GtfsRealtimeServiceStatus.mercuryEntitySelector)) {
                 GtfsRealtimeServiceStatus.MercuryEntitySelector mercuryEntitySelector = informed.getExtension(GtfsRealtimeServiceStatus.mercuryEntitySelector);
                 alertText.sortOrders.add(mercuryEntitySelector.getSortOrder());
+            }
+
+            if (informed.hasExtension(GtfsRealtimeOneBusAway.obaEntitySelector)) {
+                GtfsRealtimeOneBusAway.OneBusAwayEntitySelector obaEntitySelector = informed.getExtension(GtfsRealtimeOneBusAway.obaEntitySelector);
+                if (obaEntitySelector.getElevatorId() != null) {
+                    alertText.elevatorId = obaEntitySelector.getElevatorId().split("-")[0];
+                }
             }
 
             int direction;

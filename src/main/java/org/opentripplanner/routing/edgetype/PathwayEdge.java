@@ -2,6 +2,7 @@ package org.opentripplanner.routing.edgetype;
 
 import org.opentripplanner.common.geometry.GeometryUtils;
 import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.routing.alertpatch.TransitAlert;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.core.StateEditor;
 import org.opentripplanner.routing.graph.Edge;
@@ -10,6 +11,8 @@ import org.opentripplanner.routing.graph.Vertex;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.routing.core.TraverseMode;
+import org.opentripplanner.routing.vertextype.ElevatorVertex;
+
 import java.util.Locale;
 
 /**
@@ -114,6 +117,10 @@ public class PathwayEdge extends Edge implements BikeWalkableEdge {
             if (!this.wheelchairAccessible) {
                 return null;
             }
+            else if (realtimeElevatorAlertExists(s0)) {
+                return null;//can't use this pathway since there is a realtime alert
+            }
+
             if (this.angle > s0.getOptions().maxWheelchairSlope) {
                 return null;
             }
@@ -138,5 +145,25 @@ public class PathwayEdge extends Edge implements BikeWalkableEdge {
         s1.incrementTimeInSeconds(time);
         s1.incrementWeight(weight);
         return s1.makeState();
+    }
+
+    private boolean realtimeElevatorAlertExists(State s0) {
+        if (s0.getOptions().ignoreRealtimeUpdates) return false;//ignoring realtime so no alerts to worry about
+
+        String fromVElevatorId = null;
+        String toVElevatorId = null;
+
+        if (fromv instanceof ElevatorVertex) fromVElevatorId = ((ElevatorVertex) fromv).getElevatorId();
+        if (tov instanceof ElevatorVertex) toVElevatorId = ((ElevatorVertex) tov).getElevatorId();
+
+        if (fromVElevatorId == null && toVElevatorId == null) return false;//not an elevator pathway
+
+        for (TransitAlert alert : s0.getOptions().rctx.graph.getTransitAlertService().getAllAlerts()) {
+            if (alert.elevatorId != null &&
+                    (alert.elevatorId.equals(fromVElevatorId) || alert.elevatorId.equals(toVElevatorId))) {
+                return true;//matching alert found
+            }
+        }
+        return false;//no matching alerts found
     }
 }

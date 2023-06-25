@@ -2,6 +2,7 @@ package org.opentripplanner.updater.alerts;
 
 import com.google.protobuf.ExtensionRegistry;
 import com.google.transit.realtime.GtfsRealtime.FeedMessage;
+import com.google.transit.realtime.GtfsRealtimeOneBusAway;
 import com.google.transit.realtime.GtfsRealtimeServiceStatus;
 import org.opentripplanner.routing.RoutingService;
 import org.opentripplanner.routing.graph.Graph;
@@ -39,6 +40,7 @@ public class GtfsRealtimeAlertsUpdater extends PollingGraphUpdater {
     static {
         registry.add(GtfsRealtimeServiceStatus.mercuryAlert);
         registry.add(GtfsRealtimeServiceStatus.mercuryEntitySelector);
+        registry.add(GtfsRealtimeOneBusAway.obaEntitySelector);
     }
     private GraphUpdaterManager updaterManager;
 
