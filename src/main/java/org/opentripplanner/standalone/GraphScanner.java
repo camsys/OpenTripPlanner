@@ -39,7 +39,7 @@ public class GraphScanner {
     /**
      * check for a new graph.
      */
-    public void scan() {
+    public synchronized void scan() {
         if (graphChanged()) {
             long start = System.currentTimeMillis();
             LOG.info("loading new graph with file date " + new Date(inputGraph.lastModified()));
@@ -51,17 +51,22 @@ public class GraphScanner {
             Router newRouter = new Router(graph, app.config().routerConfig());
             newRouter.startup();
             app.reloadConfig();
+            Router oldRouter = routerService.getRouter();
             routerService.setRouter(newRouter);
+            if (oldRouter != null) {
+                oldRouter.reset();
+            }
+            oldRouter = null;
+            lastGraphAge = inputGraph.lastModified();
+            System.gc(); // give a hint to JVM to clean up now
             LOG.info("new graph load complete in " + (System.currentTimeMillis()-start) + "ms");
         } else {
             LOG.debug("graph stable");
         }
     }
 
-    private boolean graphChanged() {
-        boolean hasChanged = lastGraphAge != inputGraph.lastModified();
-        if (hasChanged) lastGraphAge = inputGraph.lastModified();
-        return hasChanged;
+    private synchronized boolean graphChanged() {
+        return lastGraphAge != inputGraph.lastModified();
     }
 
 

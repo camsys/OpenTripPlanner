@@ -187,4 +187,12 @@ public class TransferService implements Serializable {
             }
         }
     }
+
+    public void reset() {
+        guaranteedTransferByToPoint.clear();
+        trip2tripTransfers.clear();
+        trip2StopTransfers.clear();
+        stop2TripTransfers.clear();
+        stop2StopTransfers.clear();
+    }
 }

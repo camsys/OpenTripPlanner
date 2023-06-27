@@ -65,10 +65,12 @@ public class RoutingRequestToFilterChainMapper {
       builder.withFlexFilter(request.maxWalkDistance);
     }
 
-      builder.withMaxLimitReachedSubscriber(maxLimitReachedSubscriber)
-        .withRemoveWalkAllTheWayResults(removeWalkAllTheWayResults)
-        .withDebugEnabled(p.debug);
-
+    builder.withMaxLimitReachedSubscriber(maxLimitReachedSubscriber)
+      .withRemoveWalkAllTheWayResults(false)
+      .withDebugEnabled(p.debug)
+      .setStreetOnlyGenCostBuffer(p.streetOnlyGenCostBuffer)
+      .setMaxHoursBetweenArrivalAndTarget(p.maxHoursBetweenArrivalAndTarget)
+      .setTargetTime(request.dateTime*1000);
 
     return builder.build();
   }

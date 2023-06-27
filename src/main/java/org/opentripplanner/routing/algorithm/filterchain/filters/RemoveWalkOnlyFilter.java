@@ -11,6 +11,16 @@ import java.util.stream.Collectors;
  */
 public class RemoveWalkOnlyFilter implements ItineraryFilter {
 
+    private final boolean preventEmptyItineraries;
+
+    public RemoveWalkOnlyFilter() {
+        this.preventEmptyItineraries = false;
+    }
+
+    public RemoveWalkOnlyFilter(boolean preventEmptyItineraries) {
+        this.preventEmptyItineraries = preventEmptyItineraries;
+    }
+
     @Override
     public String name() {
         return "remove-walk-only-filter";
@@ -18,9 +28,13 @@ public class RemoveWalkOnlyFilter implements ItineraryFilter {
 
     @Override
     public List<Itinerary> filter(List<Itinerary> itineraries) {
-        return itineraries
-            .stream().filter(it -> !it.isWalkingAllTheWay())
-            .collect(Collectors.toList());
+        List<Itinerary> filteredItineraries =  itineraries
+                                                .stream().filter(it -> !it.isWalkingAllTheWay())
+                                                .collect(Collectors.toList());
+        if(preventEmptyItineraries && filteredItineraries.size() == 0){
+            return itineraries;
+        }
+        return filteredItineraries;
     }
 
     @Override

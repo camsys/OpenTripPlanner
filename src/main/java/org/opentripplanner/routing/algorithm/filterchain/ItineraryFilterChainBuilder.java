@@ -1,26 +1,11 @@
 package org.opentripplanner.routing.algorithm.filterchain;
 
 import org.opentripplanner.model.plan.Itinerary;
-import org.opentripplanner.routing.algorithm.filterchain.filters.AddMinSafeTransferCostFilter;
-import org.opentripplanner.routing.algorithm.filterchain.filters.DebugFilterWrapper;
-import org.opentripplanner.routing.algorithm.filterchain.filters.FilterChain;
-import org.opentripplanner.routing.algorithm.filterchain.filters.FlexFilter;
-import org.opentripplanner.routing.algorithm.filterchain.filters.GroupBySimilarLegsFilter;
-import org.opentripplanner.routing.algorithm.filterchain.filters.LatestDepartureTimeFilter;
-import org.opentripplanner.routing.algorithm.filterchain.filters.MaxLimitFilter;
-import org.opentripplanner.routing.algorithm.filterchain.filters.NonTransitGeneralizedCostFilter;
-import org.opentripplanner.routing.algorithm.filterchain.filters.OtpDefaultSortOrder;
-import org.opentripplanner.routing.algorithm.filterchain.filters.RemoveBikerentalWithMostlyWalkingFilter;
-import org.opentripplanner.routing.algorithm.filterchain.filters.RemoveParkAndRideWithMostlyWalkingFilter;
-import org.opentripplanner.routing.algorithm.filterchain.filters.RemoveTransitIfStreetOnlyIsBetterFilter;
-import org.opentripplanner.routing.algorithm.filterchain.filters.RemoveWalkOnlyFilter;
-import org.opentripplanner.routing.algorithm.filterchain.filters.SortOnGeneralizedCost;
-import org.opentripplanner.routing.algorithm.filterchain.filters.TransitGeneralizedCostFilter;
+import org.opentripplanner.routing.algorithm.filterchain.filters.*;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.DoubleFunction;
@@ -49,6 +34,9 @@ public class ItineraryFilterChainBuilder {
     private DoubleFunction<Double> nonTransitGeneralizedCostLimit;
     private Instant latestDepartureTimeLimit = null;
     private Consumer<Itinerary> maxLimitReachedSubscriber;
+    private int streetOnlyGenCostBuffer =0;
+    private Long targetTime = null;
+    private int maxHoursBetweenArrivalAndTarget = 6;
 
 
     /**
@@ -212,8 +200,41 @@ public class ItineraryFilterChainBuilder {
         return this;
     }
 
+    /**
+     this is used by RemoveTransitIfStreetOnlyIsBetterFilter to
+     determine whether to remove a trip. This buffer is added to the
+     lowest street trip generalized cost to determine the maxiumum
+     generalized cost permitted for itteneraries to pass through this
+     filter
+     */
+    public ItineraryFilterChainBuilder setStreetOnlyGenCostBuffer(int buffer) {
+        this.streetOnlyGenCostBuffer = buffer;
+        return this;
+    }
+
+
+    public ItineraryFilterChainBuilder setMaxHoursBetweenArrivalAndTarget(int hours){
+        this.maxHoursBetweenArrivalAndTarget = hours;
+        return this;
+    }
+
+
+    /**
+     this is required by the FutureDepartureTimeOnlyFilter to act as a
+     reference point for determining if a request is made for future trips
+     or past trips
+     */
+    public ItineraryFilterChainBuilder setTargetTime(long targetTime){
+        this.targetTime = targetTime;
+        return this;
+    }
+
     public ItineraryFilter build() {
         List<ItineraryFilter> filters = new ArrayList<>();
+
+        filters.add(new FutureDepartureTimeOnlyFilter()
+                .setTargetTime(targetTime)
+                .setMaxHoursBeforeTarget(maxHoursBetweenArrivalAndTarget));
 
         if(minSafeTransferTimeFactor > 0.01) {
             filters.add(new AddMinSafeTransferCostFilter(minSafeTransferTimeFactor));
@@ -263,11 +284,11 @@ public class ItineraryFilterChainBuilder {
         // what we want, since both itineraries are none optimal.
         {
         	if (removeTransitWithHigherCostThanBestOnStreetOnly) {
-                filters.add(new RemoveTransitIfStreetOnlyIsBetterFilter());
+                filters.add(new RemoveTransitIfStreetOnlyIsBetterFilter().setStreetOnlyGenCostBuffer(streetOnlyGenCostBuffer));
             }
 
             if(removeWalkAllTheWayResults) {
-                filters.add(new RemoveWalkOnlyFilter());
+                filters.add(new RemoveWalkOnlyFilter(true));
             }
 
             if (latestDepartureTimeLimit != null) {

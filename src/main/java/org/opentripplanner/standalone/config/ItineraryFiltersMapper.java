@@ -19,7 +19,9 @@ public class ItineraryFiltersMapper {
         c.asLinearFunction("transitGeneralizedCostLimit", dft.transitGeneralizedCostLimit),
         c.asLinearFunction("nonTransitGeneralizedCostLimit", dft.nonTransitGeneralizedCostLimit),
         c.asDouble("bikeRentalDistanceRatio", dft.bikeRentalDistanceRatio),
-        c.asDouble("parkAndRideDurationRatio", dft.parkAndRideDurationRatio)
+        c.asDouble("parkAndRideDurationRatio", dft.parkAndRideDurationRatio),
+        c.asInt("streetOnlyGenCostBuffer", dft.streetOnlyGenCostBuffer),
+        c.asInt("maxHoursBetweenArrivalAndTarget",dft.maxHoursBetweenArrivalAndTarget)
     );
   }
 }

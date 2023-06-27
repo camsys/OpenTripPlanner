@@ -15,6 +15,7 @@ import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.routing.graph.Graph;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -39,51 +40,78 @@ public class FlexIndex {
   public Multimap<String, String> flexTripStopsWithDropoff = HashMultimap.create();
 
   public FlexIndex(Graph graph) {
-    for (SimpleTransfer transfer : graph.transfersByStop.values()) {
+    processTransfers(graph.transfersByStop.values());
+    processFlexTrips(graph.flexTripsById.values());
+    processLocationGroups(graph.locationGroupsById.values());
+    processStopLocations(graph.locationsById.values());
+  }
+
+  private void processTransfers(Collection<SimpleTransfer> transfers) {
+    for (SimpleTransfer transfer : transfers) {
       transfersToStop.put(transfer.to, transfer);
     }
+  }
 
-    for (FlexTrip flexTrip : graph.flexTripsById.values()) {
-      routeById.put(flexTrip.getTrip().getRoute().getId(), flexTrip.getTrip().getRoute());
-      tripById.put(flexTrip.getTrip().getId(), flexTrip.getTrip());
-      for (StopLocation stop : flexTrip.getStops()) {
-        if (stop instanceof FlexLocationGroup) {
-          for (StopLocation stopElement : ((FlexLocationGroup) stop).getLocations()) {
-            flexTripsByStop.put(stopElement, flexTrip);
-          }
-        } else {
-          flexTripsByStop.put(stop, flexTrip);
-        }
+  private void processFlexTrips(Collection<FlexTrip> flexTrips) {
+    for (FlexTrip flexTrip : flexTrips) {
+      addTripAndRouteToMaps(flexTrip);
+      addStopsToFlexTripsMap(flexTrip);
+      processStopTimes(flexTrip);
+    }
+  }
+
+  private void addTripAndRouteToMaps(FlexTrip flexTrip) {
+    Trip trip = flexTrip.getTrip();
+    routeById.put(trip.getRoute().getId(), trip.getRoute());
+    tripById.put(trip.getId(), trip);
+  }
+
+  private void addStopsToFlexTripsMap(FlexTrip flexTrip) {
+    for (StopLocation stop : flexTrip.getStops()) {
+      addStopToMultimap(flexTripsByStop, stop, flexTrip);
+    }
+  }
+
+  private void processStopTimes(FlexTrip flexTrip) {
+    for(FlexTripStopTime flexTripStopTime : flexTrip.getStopTimes()){
+      StopLocation flexStopLocation = flexTripStopTime.stop;
+      if(flexTripStopTime.pickupType != PICKDROP_NONE){
+        addStopToMultimap(flexTripStopsWithPickup, flexTrip.getId().toString(), flexStopLocation);
       }
-      // Adding map to track stops that allow pickups
-      for(FlexTripStopTime flexTripStopTime : flexTrip.getStopTimes()){
-        StopLocation flexStopLocation = flexTripStopTime.stop;
-        if(flexTripStopTime.pickupType != PICKDROP_NONE){
-          flexTripStopsWithPickup.put(flexTrip.getId().toString(), flexStopLocation.getId().toString());
-          if(flexStopLocation instanceof FlexLocationGroup){
-            for (StopLocation stopElement : ((FlexLocationGroup) flexStopLocation).getLocations()) {
-              flexTripStopsWithPickup.put(flexTrip.getId().toString(), stopElement.getId().toString());
-            }
-          }
-        }
-        if(flexTripStopTime.dropOffType != PICKDROP_NONE){
-          flexTripStopsWithDropoff.put(flexTrip.getId().toString(), flexStopLocation.getId().toString());
-          if(flexStopLocation instanceof FlexLocationGroup){
-            for (StopLocation stopElement : ((FlexLocationGroup) flexStopLocation).getLocations()) {
-              flexTripStopsWithDropoff.put(flexTrip.getId().toString(), stopElement.getId().toString());
-            }
-          }
-        }
+      if(flexTripStopTime.dropOffType != PICKDROP_NONE){
+        addStopToMultimap(flexTripStopsWithDropoff, flexTrip.getId().toString(), flexStopLocation);
       }
     }
-    
-    for (FlexLocationGroup flexLocationGroup : graph.locationGroupsById.values()) {
+  }
+
+  private void addStopToMultimap(Multimap<String, String> multimap, String tripId, StopLocation stop) {
+    multimap.put(tripId, stop.getId().toString());
+    if (stop instanceof FlexLocationGroup) {
+      for (StopLocation stopElement : ((FlexLocationGroup) stop).getLocations()) {
+        multimap.put(tripId, stopElement.getId().toString());
+      }
+    }
+  }
+
+  private void addStopToMultimap(Multimap<StopLocation, FlexTrip> multimap, StopLocation stop, FlexTrip flexTrip) {
+    multimap.put(stop, flexTrip);
+    if (stop instanceof FlexLocationGroup) {
+      for (StopLocation stopElement : ((FlexLocationGroup) stop).getLocations()) {
+        multimap.put(stopElement, flexTrip);
+      }
+    }
+  }
+
+  private void processLocationGroups(Collection<FlexLocationGroup> locationGroups) {
+    for (FlexLocationGroup flexLocationGroup : locationGroups) {
       for (StopLocation stop : flexLocationGroup.getLocations()) {
         locationGroupsByStop.put(stop, flexLocationGroup);
       }
     }
-    
-    for (FlexStopLocation flexStopLocation : graph.locationsById.values()) {
+  }
+
+  private void processStopLocations(Collection<FlexStopLocation> stopLocations) {
+    for (FlexStopLocation flexStopLocation : stopLocations) {
       locationIndex.insert(flexStopLocation.getGeometry().getEnvelopeInternal(), flexStopLocation);
     }
   }
@@ -106,4 +134,15 @@ public class FlexIndex {
     return false;
   }
 
+
+  public void reset() {
+    transfersToStop.clear();
+    flexTripsByStop.clear();
+    locationGroupsByStop.clear();
+    locationIndex.reset();
+    routeById.clear();
+    tripById.clear();
+    flexTripStopsWithPickup.clear();
+    flexTripStopsWithDropoff.clear();
+  }
 }

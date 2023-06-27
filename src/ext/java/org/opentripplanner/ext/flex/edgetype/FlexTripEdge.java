@@ -26,8 +26,13 @@ import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
+
+import static org.opentripplanner.model.StopPattern.PICKDROP_NONE;
 
 import static org.opentripplanner.model.StopPattern.PICKDROP_NONE;
 
@@ -64,8 +69,8 @@ public class FlexTripEdge extends Edge {
     
     FlexTrip trip = flexTemplate.getFlexTrip();
     if(trip instanceof ScheduledDeviatedTrip) {
-    	FlexTripStopTime fromST = trip.getStopTime(fromIndex);
-    	FlexTripStopTime toST = trip.getStopTime(toIndex);
+        FlexTripStopTime fromST = trip.getStopTime(fromIndex);
+        FlexTripStopTime toST = trip.getStopTime(toIndex);
 
     	int newFromST = 0;
     	int newToST = 0;
@@ -149,13 +154,30 @@ public class FlexTripEdge extends Edge {
       if(flexTemplate.getFlexTrip() instanceof UnscheduledTrip)
           return getFlexPath().geometry;
       else if(flexTemplate.getFlexTrip() instanceof ScheduledDeviatedTrip) {
-
           LineString geometry = GeometryUtils.makeLineString(((ScheduledDeviatedTrip)getFlexTrip()).geometryCoords);
 
           if(flexTemplate.request.from.getCoordinate() != null && flexTemplate.request.to.getCoordinate() != null) {
 
-              Coordinate from = getClosestPointOnLine(geometry, flexTemplate.request.from.getCoordinate());
-              Coordinate to = getClosestPointOnLine(geometry, flexTemplate.request.to.getCoordinate());
+              Coordinate from = null;
+              Coordinate to = null;
+
+              List<String> stIds = Arrays.stream(this.flexTemplate.getFlexTrip().getStopTimes()).map(st->st.stop.getId().getId()).collect(Collectors.toList());
+
+              int stopIndex = stIds.indexOf(this.getOriginStop().getId().getId());
+              StopLocation originStopLocation = flexTemplate.getFlexTrip().getStopTime(stopIndex).stop;
+              if (originStopLocation.isArea() || originStopLocation.isLine()) {
+                  from = getClosestPointOnLine(geometry, flexTemplate.request.from.getCoordinate());
+              } else {
+                  from = originStopLocation.getCoordinate().asJtsCoordinate();
+              }
+
+              stopIndex = stIds.indexOf(this.getDestinationStop().getId().getId());
+              StopLocation destinationStopLocation = flexTemplate.getFlexTrip().getStopTime(stopIndex).stop;
+              if (destinationStopLocation.isArea() || destinationStopLocation.isLine()) {
+                  to = getClosestPointOnLine(geometry, flexTemplate.request.to.getCoordinate());
+              } else {
+                  to = destinationStopLocation.getCoordinate().asJtsCoordinate();
+              }
 
               LineString l = GeometryUtils.getInteriorSegment(geometry, from, to);
 
@@ -171,29 +193,29 @@ public class FlexTripEdge extends Edge {
   }
   
   private Coordinate getClosestPointOnLine(Geometry line, Coordinate coord) {
-	  Geometry g = line.getGeometryN(0);
-	  GeometryFactory gf = g.getFactory();
-		  
-	  Point p = gf.createPoint(coord);
-		  
-	  Coordinate[] nearestCoords = DistanceOp.nearestPoints(g, p.getGeometryN(0));
-	  return nearestCoords[0];
+      Geometry g = line.getGeometryN(0);
+      GeometryFactory gf = g.getFactory();
+
+      Point p = gf.createPoint(coord);
+
+      Coordinate[] nearestCoords = DistanceOp.nearestPoints(g, p.getGeometryN(0));
+      return nearestCoords[0];
   }
   
   
 
   public StopLocation getOriginStop() {
-	  return this.from;
+      return this.from;
 //	  return flexTemplate.getFlexTrip().getStops().get(flexTemplate.fromStopIndex);
   }
 
   public StopLocation getDestinationStop() {
-	  return this.to;	  
+      return this.to;
 //	  return flexTemplate.getFlexTrip().getStops().get(flexTemplate.toStopIndex);
   }
 
   public FlexPath getFlexPath() {
-	  return this.flexPath;
+      return this.flexPath;
   }
   
   public FlexTrip getFlexTrip() {
@@ -213,6 +235,6 @@ public class FlexTripEdge extends Edge {
 
   @Override
   public String getName(Locale locale) {
- 	return getName();
+      return getName();
   }
 }

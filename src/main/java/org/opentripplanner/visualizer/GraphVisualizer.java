@@ -17,7 +17,7 @@ import org.opentripplanner.routing.spt.DominanceFunction;
 import org.opentripplanner.routing.spt.GraphPath;
 import org.opentripplanner.routing.spt.ShortestPathTree;
 import org.opentripplanner.routing.vertextype.IntersectionVertex;
-import org.opentripplanner.standalone.server.Router;
+import org.opentripplanner.standalone.server.RouterService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -335,7 +335,7 @@ public class GraphVisualizer extends JFrame implements VertexSelectionListener {
     private JList<String> metadataList;
 
     /* The router we are visualizing. */
-    private final Router router;
+    private final RouterService routerService;
 
     /* The graph from the router we are visualizing, note that it will not be updated if the router reloads. */
     private final Graph graph;
@@ -408,12 +408,12 @@ public class GraphVisualizer extends JFrame implements VertexSelectionListener {
 
 	private JCheckBox longDistanceModeCheckbox;
 
-    public GraphVisualizer(Router router) {
+    public GraphVisualizer(RouterService routerService) {
         super();
         LOG.info("Starting up graph visualizer...");
         setTitle("GraphVisualizer");
-        this.router = router;
-        this.graph = router.graph;
+        this.routerService = routerService;
+        this.graph = routerService.getRouter().graph;
         init();
     }
 
@@ -1381,7 +1381,7 @@ public class GraphVisualizer extends JFrame implements VertexSelectionListener {
         // if( dontUseGraphicalCallbackCheckBox.isSelected() ){
         // TODO perhaps avoid using a GraphPathFinder and go one level down the call chain directly to a GenericAStar
         // TODO perhaps instead of giving the pathservice a callback, we can just put the visitor in the routing request
-        GraphPathFinder finder = new GraphPathFinder(router);
+        GraphPathFinder finder = new GraphPathFinder(routerService.getRouter());
 
         long t0 = System.currentTimeMillis();
         // TODO: check options properly intialized (AMB)

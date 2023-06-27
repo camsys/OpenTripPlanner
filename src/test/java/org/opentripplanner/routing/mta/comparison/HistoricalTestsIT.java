@@ -20,11 +20,11 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.transfer.MultipleFileDownload;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
-import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
-import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
-import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
-import com.amazonaws.services.securitytoken.model.AssumeRoleResult;
-import com.amazonaws.services.securitytoken.model.Credentials;
+//import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
+//import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
+//import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
+//import com.amazonaws.services.securitytoken.model.AssumeRoleResult;
+//import com.amazonaws.services.securitytoken.model.Credentials;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -97,7 +97,7 @@ public class HistoricalTestsIT extends RoutingResource {
 		String secretKey = System.getProperty("secretKey");
 
 		try {
-			TransferManager tm;
+			TransferManager tm = null;
 			if (accessKey != null && secretKey != null) {
 				LOG.info("using S3 directly with accessKey '" + accessKey);
 				AWSCredentials awsCredentials = new BasicAWSCredentials(accessKey, secretKey);
@@ -107,28 +107,31 @@ public class HistoricalTestsIT extends RoutingResource {
 				tm = TransferManagerBuilder.standard().withS3Client(AmazonS3ClientBuilder.standard()
 						.withCredentials(new AWSStaticCredentialsProvider(awsCredentials)).build()).build();
 			} else {
-				LOG.info("attempting to assume role " + assumeRoleArn + " to bucket " + bucketName);
-				AWSSecurityTokenService stsClient = AWSSecurityTokenServiceClientBuilder.standard()
-						.withCredentials(new DefaultAWSCredentialsProviderChain())
-						.withRegion("us-east-1")
-						.build();
+					LOG.error("not implemented in onebusaway-cloud-services!");
+					return;
+//				LOG.info("attempting to assume role " + assumeRoleArn + " to bucket " + bucketName);
 
-				AssumeRoleRequest roleRequest = new AssumeRoleRequest()
-						.withRoleArn(assumeRoleArn)
-						.withRoleSessionName(UUID.randomUUID().toString());
-
-				AssumeRoleResult roleResponse = stsClient.assumeRole(roleRequest);
-				Credentials sessionCredentials = roleResponse.getCredentials();
-
-				BasicSessionCredentials awsCredentials = new BasicSessionCredentials(
-						sessionCredentials.getAccessKeyId(),
-						sessionCredentials.getSecretAccessKey(),
-						sessionCredentials.getSessionToken());
-
-				AmazonS3ClientBuilder.standard()
-						.withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
-						.build();
-				tm = TransferManagerBuilder.standard().build();
+//				AWSSecurityTokenService stsClient = AWSSecurityTokenServiceClientBuilder.standard()
+//						.withCredentials(new DefaultAWSCredentialsProviderChain())
+//						.withRegion("us-east-1")
+//						.build();
+//
+//				AssumeRoleRequest roleRequest = new AssumeRoleRequest()
+//						.withRoleArn(assumeRoleArn)
+//						.withRoleSessionName(UUID.randomUUID().toString());
+//
+//				AssumeRoleResult roleResponse = stsClient.assumeRole(roleRequest);
+//				Credentials sessionCredentials = roleResponse.getCredentials();
+//
+//				BasicSessionCredentials awsCredentials = new BasicSessionCredentials(
+//						sessionCredentials.getAccessKeyId(),
+//						sessionCredentials.getSecretAccessKey(),
+//						sessionCredentials.getSessionToken());
+//
+//				AmazonS3ClientBuilder.standard()
+//						.withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
+//						.build();
+//				tm = TransferManagerBuilder.standard().build();
 			}
 
 			LOG.info("Got credentials.");

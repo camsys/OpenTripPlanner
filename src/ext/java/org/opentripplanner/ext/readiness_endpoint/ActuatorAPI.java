@@ -1,5 +1,6 @@
 package org.opentripplanner.ext.readiness_endpoint;
 
+import org.opentripplanner.standalone.server.RouterService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.opentripplanner.standalone.server.OTPServer;
@@ -18,10 +19,10 @@ public class ActuatorAPI {
 
     private static final Logger LOG = LoggerFactory.getLogger(ActuatorAPI.class);
 
-    private final Router router;
+    private final RouterService routerService;
 
     public ActuatorAPI(@Context OTPServer otpServer) {
-        this.router = otpServer.getRouter();
+        this.routerService = otpServer.getRouterService();
     }
 
     /**
@@ -49,6 +50,7 @@ public class ActuatorAPI {
     @GET
     @Path("/health")
     public Response health() {
+        Router router = routerService.getRouter();
         if (router.graph.updaterManager != null) {
             Collection<String> waitingUpdaters = router.graph.updaterManager.waitingUpdaters();
 

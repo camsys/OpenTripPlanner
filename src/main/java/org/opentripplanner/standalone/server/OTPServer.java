@@ -42,6 +42,10 @@ public class OTPServer {
         return routerService.getRouter();
     }
 
+    public RouterService getRouterService() {
+        return routerService;
+    }
+
     /**
      * This method is used to create a {@link RoutingService} valid for one request. It grantees
      * that the data and services used are consistent and operate on the same transit snapshot.

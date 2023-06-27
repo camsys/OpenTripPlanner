@@ -179,7 +179,7 @@ public class OTPMain {
 
         /* Start visualizer if requested. */
         if (params.visualize) {
-            router.graphVisualizer = new GraphVisualizer(router);
+            router.graphVisualizer = new GraphVisualizer(routerService);
             router.graphVisualizer.run();
         }
 
