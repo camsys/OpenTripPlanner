@@ -84,10 +84,10 @@ public class UnscheduledTrip extends FlexTrip {
         ArrayList<FlexAccessTemplate> res = new ArrayList<>();
 
         for(Integer fromIndex : fromIndices) {
-            for(int i= fromIndex; i< stopTimes.length; i++){
-                for (StopLocation stop : expandStops(stopTimes[i].stop)) {
-                    if(stopTimes[i].dropOffType != PICKDROP_NONE){
-                        res.add(new FlexAccessTemplate(access, this, fromIndex, i, stop, serviceDate, calculator, request));
+            for(int toIndex= fromIndex; toIndex< stopTimes.length; toIndex++){
+                if(stopTimes[toIndex].dropOffType != PICKDROP_NONE) {
+                    for (StopLocation stop : expandStops(stopTimes[toIndex].stop)) {
+                        res.add(new FlexAccessTemplate(access, this, fromIndex, toIndex, stop, serviceDate, calculator, request));
                     }
                 }
             }
@@ -106,10 +106,10 @@ public class UnscheduledTrip extends FlexTrip {
         ArrayList<FlexEgressTemplate> res = new ArrayList<>();
 
         for(Integer toIndex : toIndices)
-            for(int i= 0; i< toIndex; i++) {
-                if (stopTimes[i].pickupType != PICKDROP_NONE) {
+            for(int fromIndex= 0; fromIndex <= toIndex; fromIndex++) {
+                if (stopTimes[fromIndex].pickupType != PICKDROP_NONE) {
                     for (StopLocation stop : expandStops(stopTimes[toIndex].stop)) {
-                        res.add(new FlexEgressTemplate(egress, this, i, toIndex, stop, serviceDate, calculator, request));
+                        res.add(new FlexEgressTemplate(egress, this, fromIndex, toIndex, stop, serviceDate, calculator, request));
                     }
                 }
             }
@@ -164,7 +164,7 @@ public class UnscheduledTrip extends FlexTrip {
     }
 
     private List<Integer> getFromIndex(StopLocation accessEgress, Integer time) {
-        ArrayList<Integer> r = new ArrayList<Integer>();
+        List<Integer> r = new ArrayList<>();
         for (int i = 0; i < stopTimes.length; i++) {
             if (stopTimes[i].pickupType == PICKDROP_NONE) continue;
             if(time != null) {
@@ -185,7 +185,7 @@ public class UnscheduledTrip extends FlexTrip {
     }
 
     private List<Integer> getToIndex(StopLocation accessEgress, Integer time) {
-        ArrayList<Integer> r = new ArrayList<Integer>();
+        List<Integer> r = new ArrayList<>();
         for (int i = 0; i < stopTimes.length; i++) {
             if (stopTimes[i].dropOffType == PICKDROP_NONE) continue;
             if(time != null) {

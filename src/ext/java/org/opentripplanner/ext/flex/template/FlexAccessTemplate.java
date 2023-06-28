@@ -34,7 +34,7 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 		super(accessEgress, trip, fromStopTime, toStopTime, transferStop, serviceDate, calculator, request);
 	}
 	  
-	public Itinerary createDirectItinerary(NearbyStop egress, boolean arriveBy, int time,
+	public Itinerary createDirectItinerary(NearbyStop egress, boolean arriveBy, int departureTime,
 			ZonedDateTime departureServiceDate, FlexIndex flexIndex) {
 
 		List<Edge> egressEdges = egress.edges;
@@ -59,21 +59,21 @@ public class FlexAccessTemplate extends FlexAccessEgressTemplate {
 		if(trip instanceof UnscheduledTrip) {
 		    if (arriveBy) {
 		    	FlexTripStopTime ftst = this.trip.getStopTime(this.toStopIndex);
-		    	int newTime = time - itinerary.durationSeconds;
+		    	int newTime = departureTime - itinerary.durationSeconds;
 				if(newTime > ftst.flexWindowStart && newTime + itinerary.durationSeconds < ftst.flexWindowEnd) {
 					ZonedDateTime zdt = departureServiceDate.plusSeconds(newTime);
 					Calendar c = Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone()));
 					c.setTimeInMillis(zdt.toInstant().toEpochMilli());
 					itinerary.timeShiftToStartAt(c);
-					itinerary.generalizedCost += Math.abs(time - newTime);
+					itinerary.generalizedCost += Math.abs(departureTime - newTime);
 				} else{
 					return null;
 				}
 		    } else {		
 		    	FlexTripStopTime ftst = this.trip.getStopTime(this.fromStopIndex);
 	
-		    	if(time > ftst.flexWindowStart && time + itinerary.durationSeconds < ftst.flexWindowEnd) {
-			    	ZonedDateTime zdt = departureServiceDate.plusSeconds(time);
+		    	if(departureTime > ftst.flexWindowStart && departureTime + itinerary.durationSeconds < ftst.flexWindowEnd) {
+			    	ZonedDateTime zdt = departureServiceDate.plusSeconds(departureTime);
 					Calendar c = Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone()));
 					c.setTimeInMillis(zdt.toInstant().toEpochMilli());
 					itinerary.timeShiftToStartAt(c);	 
