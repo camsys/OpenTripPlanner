@@ -113,44 +113,45 @@ public class ScheduledDeviatedTrip extends FlexTrip {
 
   @Override
   public List<FlexAccessTemplate> getFlexAccessTemplates(
-      NearbyStop access, FlexServiceDate serviceDate, FlexPathCalculator calculator, RoutingRequest request
+          NearbyStop access, FlexServiceDate serviceDate, FlexPathCalculator calculator, RoutingRequest request
   ) {
-    List<Integer> fromIndices = getFromIndex(access.stop, null);
-    if (fromIndices.isEmpty()) { return List.of(); }
+      List<Integer> fromIndices = getFromIndex(access.stop, null);
+      if (fromIndices.isEmpty()) { return List.of(); }
 
-    ArrayList<FlexAccessTemplate> res = new ArrayList<>();
+      ArrayList<FlexAccessTemplate> res = new ArrayList<>();
 
-	for(Integer fromIndex : fromIndices) {
-	    for (int toIndex = fromIndex; toIndex < stopTimes.length; toIndex++) {
-	      if (stopTimes[toIndex].dropOffType == PICKDROP_NONE) continue;
-	        for (StopLocation stop : expandStops(stopTimes[toIndex].stop)) {
-	          res.add(new FlexAccessTemplate(access, this, fromIndex, toIndex, stop, serviceDate, calculator, request));
-	      }
-	    }
-	}
+      for(Integer fromIndex : fromIndices) {
+          for(int toIndex= fromIndex; toIndex< stopTimes.length; toIndex++){
+              if(stopTimes[toIndex].dropOffType != PICKDROP_NONE) {
+                  for (StopLocation stop : expandStops(stopTimes[toIndex].stop)) {
+                      res.add(new FlexAccessTemplate(access, this, fromIndex, toIndex, stop, serviceDate, calculator, request));
+                  }
+              }
+          }
+      }
 
-    return res;
+      return res;
   }
 
   @Override
   public List<FlexEgressTemplate> getFlexEgressTemplates(
-      NearbyStop egress, FlexServiceDate serviceDate, FlexPathCalculator calculator, RoutingRequest request
+          NearbyStop egress, FlexServiceDate serviceDate, FlexPathCalculator calculator, RoutingRequest request
   ) {
-    List<Integer> toIndices = getToIndex(egress.stop, null);
-    if (toIndices.isEmpty()) { return List.of(); }
+      List<Integer> toIndices = getToIndex(egress.stop, null);
+      if (toIndices.isEmpty()) { return List.of(); }
 
-    ArrayList<FlexEgressTemplate> res = new ArrayList<>();
+      ArrayList<FlexEgressTemplate> res = new ArrayList<>();
 
-	for(Integer toIndex : toIndices) {
-	    for (int fromIndex = stopTimes.length - 1; fromIndex >= toIndex; fromIndex--) {
-	      if (stopTimes[fromIndex].pickupType == PICKDROP_NONE) continue;
-	      for (StopLocation stop : expandStops(stopTimes[fromIndex].stop)) {
-	        res.add(new FlexEgressTemplate(egress, this, fromIndex, toIndex, stop, serviceDate, calculator, request));
-	      }
-	    }
-	}
-	
-    return res;
+      for(Integer toIndex : toIndices)
+          for(int fromIndex= 0; fromIndex <= toIndex; fromIndex++) {
+              if (stopTimes[fromIndex].pickupType != PICKDROP_NONE) {
+                  for (StopLocation stop : expandStops(stopTimes[toIndex].stop)) {
+                      res.add(new FlexEgressTemplate(egress, this, fromIndex, toIndex, stop, serviceDate, calculator, request));
+                  }
+              }
+          }
+
+      return res;
   }
 
   // See RaptorTransfer for definitions/semantics
