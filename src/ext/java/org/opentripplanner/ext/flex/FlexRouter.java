@@ -135,19 +135,6 @@ public class FlexRouter {
                 itineraries.add(itin);
             }
         }
-      } else {
-          for (FlexEgressTemplate flexEgressTemplate : this.flexEgressTemplates){
-              FlexTripStopTime[] accessStopTimes = flexEgressTemplate.getFlexTrip().getStopTimes();
-              for (FlexTripStopTime st : accessStopTimes) {
-                  StopLocation sl = st.stop;
-                  if (sl.equals(transferStop) && st.dropOffType!=PICKDROP_NONE) {
-                      Itinerary itin = makeItinerary(template, flexEgressTemplate, flexIndex);
-                      if (itin != null) {
-                          itineraries.add(itin);
-                      }
-                  }
-              }
-          }
       }
     }
     
@@ -165,7 +152,7 @@ public class FlexRouter {
               departureTime,departureServiceDate, flexIndex);
 
       if (itinerary != null) {
-          LOG.info("Creating itin for trip " + egressTemplate.getFlexTrip()+"/" +template.getFlexTrip() + " from:" + template.getAccessEgressStop() + " to:" +
+          LOG.debug("Creating itin for trip " + egressTemplate.getFlexTrip()+"/" +template.getFlexTrip() + " from:" + template.getAccessEgressStop() + " to:" +
                   egressTemplate.getAccessEgressStop() + " xfr=" + template.getTransferStop() + " itin=" + itinerary);
       }
 
