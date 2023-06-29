@@ -92,7 +92,9 @@ public class RoutingWorker {
 
         // Direct street routing
         try {
-            itineraries.addAll(DirectStreetRouter.route(router, request));
+            List<Itinerary> itins = DirectStreetRouter.route(router, request);
+            LOG.info("Street itineraries: " + itins.size());
+            itineraries.addAll(itins);
         } catch (RoutingValidationException e) {
             routingErrors.addAll(e.getRoutingErrors());
         }
@@ -100,7 +102,9 @@ public class RoutingWorker {
         // Direct flex routing
         if (OTPFeature.FlexRouting.isOn()) {
             try {
-                itineraries.addAll(DirectFlexRouter.route(router, request));
+                List<Itinerary> itins = DirectFlexRouter.route(router, request);
+                LOG.info("Direct flex itineraries: " + itins.size());
+                itineraries.addAll(itins);
             }
             catch (RoutingValidationException e) {
                 routingErrors.addAll(e.getRoutingErrors());
@@ -111,7 +115,9 @@ public class RoutingWorker {
 
         // Transit routing
         try {
-            itineraries.addAll(routeTransit(router));
+            Collection<Itinerary> itins = routeTransit(router);
+            LOG.info("Transit itineraries: " + itins.size());
+            itineraries.addAll(itins);
         } catch (RoutingValidationException e) {
             routingErrors.addAll(e.getRoutingErrors());
         }
