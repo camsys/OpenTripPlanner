@@ -121,7 +121,7 @@ public class ScheduledDeviatedTrip extends FlexTrip {
       ArrayList<FlexAccessTemplate> res = new ArrayList<>();
 
       for(Integer fromIndex : fromIndices) {
-          for(int toIndex= fromIndex + 1; toIndex< stopTimes.length; toIndex++){
+          for(int toIndex= fromIndex; toIndex< stopTimes.length; toIndex++){
               if(stopTimes[toIndex].dropOffType != PICKDROP_NONE) {
                   for (StopLocation stop : expandStops(stopTimes[toIndex].stop)) {
                       res.add(new FlexAccessTemplate(access, this, fromIndex, toIndex, stop, serviceDate, calculator, request));
@@ -143,7 +143,7 @@ public class ScheduledDeviatedTrip extends FlexTrip {
       ArrayList<FlexEgressTemplate> res = new ArrayList<>();
 
       for(Integer toIndex : toIndices)
-          for(int fromIndex= 0; fromIndex < toIndex; fromIndex++) {
+          for(int fromIndex= 0; fromIndex <= toIndex; fromIndex++) {
               if (stopTimes[fromIndex].pickupType != PICKDROP_NONE) {
                   for (StopLocation stop : expandStops(stopTimes[toIndex].stop)) {
                       res.add(new FlexEgressTemplate(egress, this, fromIndex, toIndex, stop, serviceDate, calculator, request));
