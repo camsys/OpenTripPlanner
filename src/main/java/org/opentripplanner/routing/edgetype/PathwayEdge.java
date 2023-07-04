@@ -117,7 +117,8 @@ public class PathwayEdge extends Edge implements BikeWalkableEdge {
             if (!this.wheelchairAccessible) {
                 return null;
             }
-            else if (realtimeElevatorAlertExists(s0)) {
+
+            if (realtimeElevatorAlertExists(s0)) {
                 return null;//can't use this pathway since there is a realtime alert
             }
 

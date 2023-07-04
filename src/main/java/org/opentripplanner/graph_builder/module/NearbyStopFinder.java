@@ -38,11 +38,7 @@ import org.opentripplanner.util.OTPFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -221,9 +217,13 @@ public class NearbyStopFinder {
                 if (targetVertex instanceof TransitEntranceVertex && state.isFinal()) {
                     if (targetVertex.getStationElement() != null
                             && targetVertex.getStationElement().getParentStation() != null) {
+                      TransitEntranceVertex tVertex = (TransitEntranceVertex)  targetVertex;
+                      // prevent teleporting to stops if pathways are present
+                      if (!tVertex.hasPathways()) {
                         for (Stop childStop : targetVertex.getStationElement().getParentStation().getChildStops()) {
-                            stopsFound.add(NearbyStop.nearbyStopForState(state, childStop));
+                          stopsFound.add(NearbyStop.nearbyStopForState(state, childStop));
                         }
+                      }
                     }
                 }
 

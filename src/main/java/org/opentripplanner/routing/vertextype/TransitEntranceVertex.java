@@ -3,6 +3,8 @@ package org.opentripplanner.routing.vertextype;
 import org.opentripplanner.model.Entrance;
 import org.opentripplanner.model.StationElement;
 import org.opentripplanner.model.WheelChairBoarding;
+import org.opentripplanner.routing.edgetype.PathwayEdge;
+import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.Vertex;
 import org.slf4j.Logger;
@@ -51,4 +53,19 @@ public class TransitEntranceVertex extends Vertex {
   public StationElement getStationElement() {
     return this.entrance;
   }
+
+  public boolean hasPathways() {
+    for (Edge e : this.getOutgoing()) {
+      if (e instanceof PathwayEdge) {
+        return true;
+      }
+    }
+    for (Edge e : this.getIncoming()) {
+      if (e instanceof PathwayEdge) {
+        return true;
+      }
+    }
+    return false;
+  }
+
 }

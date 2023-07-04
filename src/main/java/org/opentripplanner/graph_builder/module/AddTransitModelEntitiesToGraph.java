@@ -278,8 +278,9 @@ public class AddTransitModelEntitiesToGraph {
             toVertexLevelName
         );
 
-        new PathwayEdge(fromVertex, fromOffboardVertex, fromVertex.getName());
-        new PathwayEdge(toOffboardVertex, toVertex, toVertex.getName());
+        // pathways need a traversal time to be considered accessible
+        new PathwayEdge(fromVertex, fromOffboardVertex, null, fromVertex.getName(), 5, 0.01, 0, 0, true);
+        new PathwayEdge(toOffboardVertex, toVertex, null, toVertex.getName(), 5, 0.01, 0, 0, true);
 
         ElevatorOnboardVertex fromOnboardVertex = new ElevatorOnboardVertex(
             graph,
@@ -309,8 +310,9 @@ public class AddTransitModelEntitiesToGraph {
         );
 
         if (pathway.isBidirectional()) {
-            new PathwayEdge(fromOffboardVertex, fromVertex, fromVertex.getName());
-            new PathwayEdge(toVertex, toOffboardVertex, toVertex.getName());
+            // pathways need a traversal time to be considered accessible
+            new PathwayEdge(fromOffboardVertex, fromVertex, null, fromVertex.getName(), 5, 0.01, 0, 0, true);
+            new PathwayEdge(toVertex, toOffboardVertex, null, toVertex.getName(), 5, 0.01, 0, 0, true);
             new ElevatorBoardEdge(toOffboardVertex, toOnboardVertex);
             new ElevatorAlightEdge(
                 fromOnboardVertex,
