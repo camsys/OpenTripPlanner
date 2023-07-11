@@ -218,6 +218,17 @@ public class StateEditor {
         child.walkDistance = walkDistance;
     }
 
+    public void setTransferNotPermissible() {
+        child.stateData.transferPermissible = false;
+    }
+
+    public void setPreTransitNumBoardings() {
+        child.stateData.preTransitNumBoardings = child.stateData.numBoardings;
+    }
+
+    public void incrementNumBoardings() {
+        child.stateData.numBoardings++;
+    }
     public void beginFloatingVehicleRenting(
             TraverseMode vehicleMode,
             Set<String> networks,
@@ -322,6 +333,7 @@ public class StateEditor {
         child.stateData.carParked = state.stateData.carParked;
         child.stateData.bikeParked = state.stateData.bikeParked;
         child.stateData.backWalkingBike = state.stateData.backWalkingBike;
+        child.stateData.transferPermissible = state.stateData.transferPermissible;
     }
 
     public void setNonTransitOptionsFromState(State state) {
@@ -330,6 +342,7 @@ public class StateEditor {
         child.stateData.carParked = state.isCarParked();
         child.stateData.bikeParked = state.isBikeParked();
         child.stateData.bikeRentalState = state.stateData.bikeRentalState;
+        child.stateData.numBoardings = state.getNumBoardings();
     }
 
     public void setCarPickupState(CarPickupState carPickupState) {

@@ -13,6 +13,7 @@ import org.opentripplanner.routing.core.StateEditor;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.vertextype.StreetVertex;
+import org.opentripplanner.routing.vertextype.TransitStopVertex;
 
 /**
  * This represents the connection between a street vertex and a transit vertex.
@@ -93,6 +94,26 @@ public abstract class StreetTransitEntityLink<T extends Vertex> extends Edge imp
 
         StateEditor s1 = s0.edit(this);
 
+        // Require that if we enter the transit network, we use transit before leaving.
+        // This forbids shortcuts through the transit network, in the context of pathways -
+        // conceptually it's similar to (s0.backEdge instanceof StreetTransitLink) but with
+        // intervening pathways.
+        boolean leavingTransit = isLeavingTransitNetwork(req);
+
+        boolean firstLink = s0.getPreTransitNumBoardings() == 0
+                && s0.getOptions().rctx.fromVertices.stream().anyMatch(l -> l instanceof TransitStopVertex);
+        if (s0.getPreTransitNumBoardings() >= 0 && leavingTransit && !firstLink) {
+            if (s0.getNumBoardings() == s0.getPreTransitNumBoardings()) {
+                return null;
+            }
+        } else if (!leavingTransit) {
+            s1.setPreTransitNumBoardings();
+        }
+        // Don't reenter street network following a transfer which has been followed by intervening pathways
+        if (leavingTransit && !s0.isTransferPermissible()) {
+            return null;
+        }
+
         switch (s0.getNonTransitMode()) {
             case BICYCLE:
                 // Forbid taking your own bike in the station if bike P+R activated.
@@ -138,6 +159,8 @@ public abstract class StreetTransitEntityLink<T extends Vertex> extends Edge imp
         int streetToStopTime = getStreetToStopTime();
         s1.incrementTimeInSeconds(streetToStopTime);
         s1.incrementWeight(STEL_TRAVERSE_COST + streetToStopTime);
+        s1.incrementNumBoardings();
+        s1.setTransferNotPermissible();
         return s1.makeState();
     }
 
@@ -158,6 +181,15 @@ public abstract class StreetTransitEntityLink<T extends Vertex> extends Edge imp
     }
 
     public boolean isRoundabout() {
+        return false;
+    }
+
+    private boolean isLeavingTransitNetwork(RoutingRequest options) {
+        if (options.arriveBy && tov == transitEntityVertex) {
+            return true;
+        } else if (!options.arriveBy && fromv == transitEntityVertex) {
+            return true;
+        }
         return false;
     }
 
