@@ -72,10 +72,6 @@ public class Transfer {
             if (s == null) {
                 return Optional.empty();
             }
-            if (!s.isTransferPermissible()) {
-                // ban this transfer
-                return Optional.empty();
-            }
         }
 
         return Optional.of(new TransferWithDuration(

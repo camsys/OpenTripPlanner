@@ -623,18 +623,4 @@ public class State implements Cloneable {
     public boolean mayKeepRentedBicycleAtDestination() {
         return stateData.mayKeepRentedBicycleAtDestination;
     }
-
-    public int getNumBoardings() {
-        return stateData.numBoardings;
-    }
-
-    public int getPreTransitNumBoardings() {
-        return stateData.preTransitNumBoardings;
-    }
-
-    public boolean isTransferPermissible() {
-        return stateData.transferPermissible
-                || getBackState() == null || getBackState().getBackEdge() == null;
-    }
-
 }
