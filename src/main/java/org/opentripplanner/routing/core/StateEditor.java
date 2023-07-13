@@ -7,6 +7,7 @@ import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -397,7 +398,8 @@ public class StateEditor {
 
     // record that station was entered
     public void markTransitStation(Station station) {
-        child.transitStationList.add(station);
+        if (station != null)
+            child.transitStationList.add(station);
     }
 
     // how many stations have been entered
