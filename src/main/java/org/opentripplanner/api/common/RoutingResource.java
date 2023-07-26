@@ -322,7 +322,12 @@ public abstract class RoutingResource {
     @Deprecated
     @QueryParam("preferredAgencies")
     protected String preferredAgencies;
-    
+
+    /**
+     * The comma-seperated list of GTFS-route types to prefer
+     */
+    @QueryParam("preferredRouteTypes")
+    protected String preferredRouteTypes;
 
     /**
      * The comma-separated list of unpreferred agencies.
@@ -814,6 +819,9 @@ public abstract class RoutingResource {
         }
         if (preferredAgencies != null) {
             request.setPreferredAgenciesFromString(preferredAgencies);
+        }
+        if (preferredRouteTypes != null) {
+            request.setPreferredRouteTypesFromString(preferredRouteTypes);
         }
         if (unpreferredRoutes != null) {
             request.setUnpreferredRoutesFromSting(unpreferredRoutes);

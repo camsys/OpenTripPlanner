@@ -432,6 +432,8 @@ public class RoutingRequest implements AutoCloseable, Cloneable, Serializable {
     @Deprecated
     private Set<FeedScopedId> preferredAgencies = Set.of();
 
+    public Set<Integer> preferredRouteTypes = Set.of();
+
     /**
      * Set of unpreferred agencies for given user.
      */
@@ -811,6 +813,16 @@ public class RoutingRequest implements AutoCloseable, Cloneable, Serializable {
         }
     }
 
+    public void setPreferredRouteTypesFromString(String s) {
+        Set<Integer> newPreferredRouteTypes = new HashSet<>();
+        if (!s.isEmpty()) {
+            for (String s1 : s.split(",")) {
+                newPreferredRouteTypes.add(Integer.parseInt(s1));
+            }
+        }
+        preferredRouteTypes = newPreferredRouteTypes;
+    }
+
     public void setPreferredAgencies(Collection<FeedScopedId> ids) {
         if(ids != null) {
             preferredAgencies = Set.copyOf(ids);
@@ -1088,6 +1100,7 @@ public class RoutingRequest implements AutoCloseable, Cloneable, Serializable {
             clone.streetSubRequestModes = streetSubRequestModes.clone();
 
             clone.preferredAgencies = Set.copyOf(preferredAgencies);
+            clone.preferredRouteTypes = Set.copyOf(preferredRouteTypes);
             clone.unpreferredAgencies = Set.copyOf(unpreferredAgencies);
             clone.whiteListedAgencies = Set.copyOf(whiteListedAgencies);
             clone.bannedAgencies = Set.copyOf(bannedAgencies);
@@ -1348,8 +1361,9 @@ public class RoutingRequest implements AutoCloseable, Cloneable, Serializable {
         if (!preferredRoutes.equals(RouteMatcher.emptyMatcher()) || !preferredAgencies.isEmpty()) {
             boolean isPreferedRoute = preferredRoutes.matches(route);
             boolean isPreferedAgency = preferredAgencies.contains(agencyID);
+            boolean isPreferredRouteType = preferredRouteTypes.contains(route.getType());
 
-            if (!isPreferedRoute && !isPreferedAgency) {
+            if (!isPreferedRoute && !isPreferedAgency && !isPreferredRouteType) {
                 preferences_penalty += otherThanPreferredRoutesPenalty;
             }
         }

@@ -101,6 +101,7 @@ public class RoutingRequestTest {
 
     private static class RoutePenaltyTC {
         final boolean prefAgency;
+
         final boolean prefRoute;
         final boolean unPrefAgency;
         final boolean unPrefRoute;
