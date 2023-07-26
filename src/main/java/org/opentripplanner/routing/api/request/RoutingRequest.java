@@ -445,6 +445,11 @@ public class RoutingRequest implements AutoCloseable, Cloneable, Serializable {
      */
     private RouteMatcher bannedRoutes = RouteMatcher.emptyMatcher();
 
+    /**
+     * List of GTFS Route Types (Bus=3) to ban.  Can be used to ban modes.
+     */
+    public Set<Integer> bannedRouteTypes = new HashSet<>();
+
     /** Only use certain named routes
      */
     private RouteMatcher whiteListedRoutes = RouteMatcher.emptyMatcher();
@@ -842,6 +847,16 @@ public class RoutingRequest implements AutoCloseable, Cloneable, Serializable {
         }
     }
 
+    public void setBannedRouteTypesFromString(String s) {
+        Set<Integer> newBannedRouteTypes = new HashSet<>();
+        if (!s.isEmpty()) {
+            for (String s1 : s.split(",")) {
+                newBannedRouteTypes.add(Integer.parseInt(s1));
+            }
+        }
+        bannedRouteTypes = newBannedRouteTypes;
+    }
+
     public void setWhiteListedAgencies(Collection<FeedScopedId> ids) {
         if (ids != null) {
             whiteListedAgencies = Set.copyOf(ids);
@@ -1083,6 +1098,7 @@ public class RoutingRequest implements AutoCloseable, Cloneable, Serializable {
             clone.unpreferredRoutes = unpreferredRoutes.clone();
 
             clone.bannedTrips = (HashMap<FeedScopedId, BannedStopSet>) bannedTrips.clone();
+            clone.bannedRouteTypes = Set.copyOf(bannedRouteTypes);
 
             return clone;
         } catch (CloneNotSupportedException e) {
@@ -1272,6 +1288,10 @@ public class RoutingRequest implements AutoCloseable, Cloneable, Serializable {
             }
         }
         return bannedRoutes;
+    }
+
+    public Set<Integer> getBannedRouteTypes() {
+        return bannedRouteTypes;
     }
 
     /**

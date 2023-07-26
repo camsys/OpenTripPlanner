@@ -342,6 +342,12 @@ public abstract class RoutingResource {
     protected String bannedAgencies;
 
     /**
+     * The comma-seperated list of banned GTFS route types.
+     */
+    @QueryParam("bannedRouteTypes")
+    protected String bannedRouteTypes;
+
+    /**
      * Functions the same as banned agencies, except only the listed agencies are allowed.
      *
      * @deprecated TODO OTP2 Regression. Not currently working in OTP2.
@@ -829,6 +835,9 @@ public abstract class RoutingResource {
         }
         if (bannedAgencies != null) {
             request.setBannedAgenciesFromSting(bannedAgencies);
+        }
+        if (bannedRouteTypes != null) {
+            request.setBannedRouteTypesFromString(bannedRouteTypes);
         }
         if (whiteListedAgencies != null) {
             request.setWhiteListedAgenciesFromSting(whiteListedAgencies);

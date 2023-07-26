@@ -25,12 +25,15 @@ public class RoutingRequestTransitDataProviderFilter implements TransitDataProvi
 
   private final Set<FeedScopedId> bannedRoutes;
 
+  private final Set<Integer> bannedRouteTypes;
+
   public RoutingRequestTransitDataProviderFilter(
       boolean requireBikesAllowed,
       boolean requireWheelchairAccessible,
       boolean includePlannedCancellations,
       Set<TransitMode> transitModes,
-      Set<FeedScopedId> bannedRoutes
+      Set<FeedScopedId> bannedRoutes,
+      Set<Integer> bannedRouteTypes
   ) {
     this.requireBikesAllowed = requireBikesAllowed;
     this.requireWheelchairAccessible = requireWheelchairAccessible;
@@ -39,6 +42,7 @@ public class RoutingRequestTransitDataProviderFilter implements TransitDataProvi
         ? EnumSet.noneOf(TransitMode.class)
         : EnumSet.copyOf(transitModes);
     this.bannedRoutes = bannedRoutes;
+    this.bannedRouteTypes = bannedRouteTypes;
   }
 
   public RoutingRequestTransitDataProviderFilter(
@@ -50,13 +54,15 @@ public class RoutingRequestTransitDataProviderFilter implements TransitDataProvi
         request.wheelchairAccessible,
         request.includePlannedCancellations,
         request.modes.transitModes,
-        request.getBannedRoutes(graphIndex.getAllRoutes())
+        request.getBannedRoutes(graphIndex.getAllRoutes()),
+        request.getBannedRouteTypes()
     );
   }
 
   @Override
   public boolean tripPatternPredicate(TripPatternForDate tripPatternForDate) {
-    return routeIsNotBanned(tripPatternForDate) && transitModeIsAllowed(tripPatternForDate);
+    return routeIsNotBanned(tripPatternForDate) && transitModeIsAllowed(tripPatternForDate)
+            && routeTypeIsNotBanned(tripPatternForDate);
   }
 
   @Override
@@ -75,6 +81,11 @@ public class RoutingRequestTransitDataProviderFilter implements TransitDataProvi
     }
 
     return true;
+  }
+
+  private boolean routeTypeIsNotBanned(TripPatternForDate tripPatternForDate) {
+    int routeType = tripPatternForDate.getTripPattern().getPattern().route.getType();
+    return !bannedRouteTypes.contains(routeType);
   }
 
   private boolean routeIsNotBanned(TripPatternForDate tripPatternForDate) {

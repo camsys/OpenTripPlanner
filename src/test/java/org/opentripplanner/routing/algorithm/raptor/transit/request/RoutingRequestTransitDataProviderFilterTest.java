@@ -31,6 +31,7 @@ public class RoutingRequestTransitDataProviderFilterTest {
         false,
         false,
         Set.of(TransitMode.BUS),
+        Set.of(),
         Set.of()
     );
 
@@ -48,7 +49,26 @@ public class RoutingRequestTransitDataProviderFilterTest {
         false,
         false,
         Set.of(TransitMode.BUS),
-        Set.of(TEST_ROUTE_ID)
+        Set.of(TEST_ROUTE_ID),
+        Set.of()
+    );
+
+    boolean valid = filter.tripPatternPredicate(tripPatternForDate);
+
+    assertFalse(valid);
+  }
+
+  @Test
+  public void bannedRouteTypeFilteringTest() {
+    TripPatternForDate tripPatternForDate = createTestTripPatternForDate();
+
+    var filter = new RoutingRequestTransitDataProviderFilter(
+            false,
+            false,
+            false,
+            Set.of(TransitMode.BUS),
+            Set.of(),
+            Set.of(3)
     );
 
     boolean valid = filter.tripPatternPredicate(tripPatternForDate);
@@ -64,6 +84,7 @@ public class RoutingRequestTransitDataProviderFilterTest {
         false,
         false,
         false,
+        Set.of(),
         Set.of(),
         Set.of()
     );
@@ -82,6 +103,7 @@ public class RoutingRequestTransitDataProviderFilterTest {
         false,
         false,
         Set.of(),
+        Set.of(),
         Set.of()
     );
 
@@ -98,6 +120,7 @@ public class RoutingRequestTransitDataProviderFilterTest {
         true,
         false,
         false,
+        Set.of(),
         Set.of(),
         Set.of()
     );
@@ -116,6 +139,7 @@ public class RoutingRequestTransitDataProviderFilterTest {
         true,
         false,
         Set.of(),
+        Set.of(),
         Set.of()
     );
 
@@ -129,6 +153,7 @@ public class RoutingRequestTransitDataProviderFilterTest {
   private TripPatternForDate createTestTripPatternForDate() {
     Route route = new Route(TEST_ROUTE_ID);
     route.setMode(TransitMode.BUS);
+    route.setType(3);// GTFS Bus
 
     var stopTime = new StopTime();
     stopTime.setStop(STOP_FOR_TEST);
@@ -169,6 +194,7 @@ public class RoutingRequestTransitDataProviderFilterTest {
         false,
         true,
         Set.of(),
+        Set.of(),
         Set.of()
     );
 
@@ -187,6 +213,7 @@ public class RoutingRequestTransitDataProviderFilterTest {
         false,
         false,
         false,
+        Set.of(),
         Set.of(),
         Set.of()
     );
