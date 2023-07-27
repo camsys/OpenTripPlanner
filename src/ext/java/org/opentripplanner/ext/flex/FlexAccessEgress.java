@@ -12,6 +12,10 @@ import org.opentripplanner.routing.graph.Edge;
  *
  */
 public class FlexAccessEgress {
+  /**
+   * (description borrowed from AcessEgress)
+   * "To stop" in the case of access, "from stop" in the case of egress.
+   */
   public final Stop stop;
   public final int[] flexTimes; // pre, flex, post
   public final int fromStopIndex;
@@ -21,13 +25,13 @@ public class FlexAccessEgress {
   public final boolean directToStop;
 
   public FlexAccessEgress(
-      Stop stop, // used by AccessEgressAdapter
+      Stop stop, // used by FlexAccessEgressAdapter
       int[] flexTimes, // pre, flex, post
       int fromStopIndex,
       int toStopIndex,
       FlexTrip trip,
       State lastState,
-      boolean directToStop // used by AccessEgressAdapter
+      boolean directToStop // used by FlexAccessEgressAdapter
   ) {
     this.stop = stop;
     this.flexTimes = flexTimes;
