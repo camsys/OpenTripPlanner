@@ -177,7 +177,7 @@ public class FlexRouter {
   }
 
   public Collection<FlexAccessEgress> createFlexEgresses() {
-    calculateFlexEgressTemplates();
+      calculateFlexEgressTemplatesForRaptor();
 
     return this.flexEgressTemplates
         .stream()
@@ -219,6 +219,22 @@ public class FlexRouter {
     	}
     }
   }
+
+    private void calculateFlexEgressTemplatesForRaptor() {
+        if (this.flexEgressTemplates != null) { return; }
+
+        this.flexEgressTemplates = new ArrayList<>();
+        for(Entry<NearbyStop, Collection<FlexTrip>> e : getClosestFlexTrips(streetEgresses, false)) {
+            for(FlexTrip trip : e.getValue()) {
+                for(int i = 0; i < dates.length - 1; i++) {
+                    FlexServiceDate date = dates[i];
+                    if(date.isFlexTripRunning(trip, graph))
+                        flexEgressTemplates.addAll(
+                                trip.getFlexEgressTemplatesForRaptor(e.getKey(), date, egressFlexPathCalculator, request));
+                }
+            }
+        }
+    }
 
   private Set<Entry<NearbyStop, Collection<FlexTrip>>> getClosestFlexTrips(Collection<NearbyStop> nearbyStops, boolean isAccess) {
 
