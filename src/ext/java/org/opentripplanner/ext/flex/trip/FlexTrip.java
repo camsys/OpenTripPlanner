@@ -12,6 +12,7 @@ import org.opentripplanner.model.Trip;
 import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Collection;
 import java.util.stream.Stream;
@@ -78,4 +79,10 @@ public abstract class FlexTrip extends TransitEntity {
   // Note: This method returns seconds since midnight. departureTime is also seconds since midnight/service date
   public abstract int latestArrivalTime(int arrivalTime, int fromStopIndex, int toStopIndex);
 
+  @Override
+  public String toString(){
+    String out = trip.toString();
+    out+= Arrays.stream(stopTimes).map(x->x.stop.getId().toString()).reduce("", (subtotal, element) -> subtotal + element);
+    return out;
+  }
 }

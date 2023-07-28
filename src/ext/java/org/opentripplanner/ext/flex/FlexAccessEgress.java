@@ -101,5 +101,17 @@ public class FlexAccessEgress {
     result = prime * result + stop.getId().hashCode();
     return result;
   }
+
+  @Override
+  public String toString(){
+    String out = stop.toString();
+    out+=flexTimes.toString();
+    out+=String.valueOf(fromStopIndex);
+    out+=String.valueOf(toStopIndex);
+    out+=trip.toString();
+    out+=lastState.toStringVerbose();
+    out+=String.valueOf(directToStop);
+    return out;
+  }
   
 }
