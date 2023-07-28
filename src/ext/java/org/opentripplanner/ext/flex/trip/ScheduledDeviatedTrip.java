@@ -154,7 +154,29 @@ public class ScheduledDeviatedTrip extends FlexTrip {
       return res;
   }
 
-  // See RaptorTransfer for definitions/semantics
+    @Override
+    public List<FlexEgressTemplate> getFlexEgressTemplatesForRaptor(
+            NearbyStop egress, FlexServiceDate serviceDate, FlexPathCalculator calculator, RoutingRequest request
+    ) {
+      return getFlexEgressTemplates(egress,serviceDate,calculator,request);
+//        List<Integer> toIndices = getToIndex(egress.stop, null);
+//        if (toIndices.isEmpty()) { return List.of(); }
+//
+//        ArrayList<FlexEgressTemplate> res = new ArrayList<>();
+//
+//        for(Integer toIndex : toIndices)
+//            for(int fromIndex= 0; fromIndex <= toIndex; fromIndex++) {
+//                if (stopTimes[fromIndex].pickupType != PICKDROP_NONE) {
+//                    for (StopLocation stop : expandStops(stopTimes[fromIndex].stop)) {
+//                        res.add(new FlexEgressTemplate(egress, this, fromIndex, toIndex, stop, serviceDate, calculator, request));
+//                    }
+//                }
+//            }
+//
+//        return res;
+    }
+
+    // See RaptorTransfer for definitions/semantics
   @Override
   public int earliestDepartureTime(int departureTime, int fromStopIndex, int toStopIndex) {
 		FlexTripStopTime ftst = stopTimes[fromStopIndex];

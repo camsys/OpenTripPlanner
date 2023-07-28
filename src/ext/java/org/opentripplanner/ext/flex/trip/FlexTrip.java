@@ -42,6 +42,10 @@ public abstract class FlexTrip extends TransitEntity {
       NearbyStop egress, FlexServiceDate servicedate, FlexPathCalculator calculator, RoutingRequest request
   );
 
+  public abstract List<FlexEgressTemplate> getFlexEgressTemplatesForRaptor(
+          NearbyStop egress, FlexServiceDate servicedate, FlexPathCalculator calculator, RoutingRequest request
+  );
+
   public FlexTripStopTime getStopTime(int i) {
     return stopTimes[i];
   }
