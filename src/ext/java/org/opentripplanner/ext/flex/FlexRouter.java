@@ -225,18 +225,18 @@ public class FlexRouter {
 	// Find all trips reachable from the nearbyStops
     Collection<T2<NearbyStop, FlexTrip>> flexTripsReachableFromNearbyStops = nearbyStops
         .parallelStream()
-        .flatMap(accessEgress -> flexIndex
-            .getFlexTripsByStop(accessEgress.stop)
+        .flatMap(nearbyStop -> flexIndex
+            .getFlexTripsByStop(nearbyStop.stop)
                 .filter(flexTrip -> {
                     boolean hasStopThatAllowsPickupDropoff;
                     if(isAccess) {
-                        hasStopThatAllowsPickupDropoff = flexIndex.hasStopThatAllowsPickup(flexTrip, accessEgress.stop);
+                        hasStopThatAllowsPickupDropoff = flexIndex.hasStopThatAllowsPickup(flexTrip, nearbyStop.stop);
                     } else {
-                        hasStopThatAllowsPickupDropoff = flexIndex.hasStopThatAllowsDropoff(flexTrip, accessEgress.stop);
+                        hasStopThatAllowsPickupDropoff = flexIndex.hasStopThatAllowsDropoff(flexTrip, nearbyStop.stop);
                     }
                     return hasStopThatAllowsPickupDropoff;
                 })
-            .map(flexTrip -> new T2<>(accessEgress, flexTrip)))
+            .map(flexTrip -> new T2<>(nearbyStop, flexTrip)))
         .collect(Collectors.toList());
 
     // Group all (NearbyStop, FlexTrip) tuples by flexTrip
