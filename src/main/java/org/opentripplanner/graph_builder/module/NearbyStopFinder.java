@@ -101,6 +101,7 @@ public class NearbyStopFinder {
 
         /* Track the closest stop on each pattern passing nearby. */
         MinMap<TripPattern, NearbyStop> closestStopForPattern = new MinMap<TripPattern, NearbyStop>();
+        MinMap<TripPattern, NearbyStop> closestAccessibleStopForPattern = new MinMap<TripPattern, NearbyStop>();
 
         /* Track the closest stop on each flex trip nearby. */
         MinMap<FlexTrip, NearbyStop> closestStopForFlexTrip = new MinMap<>();
@@ -114,18 +115,34 @@ public class NearbyStopFinder {
                 for (TripPattern pattern : graph.index.getPatternsForStop(ts1)) {
                     closestStopForPattern.putMin(pattern, nearbyStop);
                 }
-            } if (OTPFeature.FlexRouting.isOn()) {
+            }
+            if (OTPFeature.FlexRouting.isOn()) {
                 for (FlexTrip trip : graph.index.getFlexIndex().flexTripsByStop.get(ts1)) {
                     closestStopForFlexTrip.putMin(trip, nearbyStop);
                 }
             }
         }
 
-        /* Make a transfer from the origin stop to each destination stop that was the closest stop on any pattern. */
-        Set<NearbyStop> uniqueStops = Sets.newHashSet();
-        uniqueStops.addAll(closestStopForFlexTrip.values());
-        uniqueStops.addAll(closestStopForPattern.values());
-        return uniqueStops;
+      // and once again for accessible stops that may be pruned above
+      RoutingRequest accessibleRequest = routingRequest.clone();
+      accessibleRequest.wheelchairAccessible = true;
+      for (NearbyStop nearbyStop : findNearbyStops(vertex, accessibleRequest, reverseDirection)) {
+        StopLocation ts1 = nearbyStop.stop;
+
+        if (ts1 instanceof Stop){
+          /* Consider this destination stop as a candidate for every trip pattern passing through it. */
+          for (TripPattern pattern : graph.index.getPatternsForStop(ts1)) {
+            closestAccessibleStopForPattern.putMin(pattern, nearbyStop);
+          }
+        }
+      }
+
+      /* Make a transfer from the origin stop to each destination stop that was the closest stop on any pattern. */
+      Set<NearbyStop> uniqueStops = Sets.newHashSet();
+      uniqueStops.addAll(closestStopForFlexTrip.values());
+      uniqueStops.addAll(closestStopForPattern.values());
+      uniqueStops.addAll(closestAccessibleStopForPattern.values());
+      return uniqueStops;
 
     }
 
