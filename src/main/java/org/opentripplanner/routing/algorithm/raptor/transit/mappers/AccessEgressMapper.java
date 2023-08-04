@@ -23,10 +23,15 @@ public class AccessEgressMapper {
 
   public AccessEgress mapNearbyStop(NearbyStop nearbyStop, boolean isEgress) {
     if (!(nearbyStop.stop instanceof StopLocation)) { return null; }
-    return new AccessEgress(
-    	stopIndex.indexByStop.get(nearbyStop.stop),
-        isEgress ? nearbyStop.state.reverse() : nearbyStop.state
-    );
+    try {
+      return new AccessEgress(
+              stopIndex.indexByStop.get(nearbyStop.stop),
+              isEgress ? nearbyStop.state.reverse() : nearbyStop.state
+      );
+    } catch (Throwable t) {
+      t.printStackTrace();
+      return null;
+    }
   }
 
   public List<AccessEgress> mapNearbyStops(Collection<NearbyStop> accessStops, boolean isEgress) {
