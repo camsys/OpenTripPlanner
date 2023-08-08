@@ -795,10 +795,11 @@ public abstract class RoutingResource {
                     break;
                 case TRANSFERS:
                     request.waitReluctance = 3.0;
-                    request.transferCost = 60;
+                    request.transferCost = 120;
                     break;
                 case QUICK:
                     request.walkReluctance = 3.0;
+                    request.transferCost = 60;
             }
         }
 
