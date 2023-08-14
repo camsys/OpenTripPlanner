@@ -789,17 +789,20 @@ public abstract class RoutingResource {
 
         if (hint != null) {
             // TODO: these should be configurable per deployment
+            request.waitReluctance = 1.0;
             switch (hint) {
                 case WALKING:
-                    request.waitReluctance = 40;
+                    request.walkReluctance = 5.0;
+                    request.transferCost = 60;
                     break;
                 case TRANSFERS:
-                    request.waitReluctance = 3.0;
+                    request.walkReluctance = 2.0;
                     request.transferCost = 120;
                     break;
                 case QUICK:
                     request.walkReluctance = 3.0;
                     request.transferCost = 60;
+                    break;
             }
         }
 
