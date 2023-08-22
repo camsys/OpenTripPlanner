@@ -24,6 +24,7 @@ import static org.opentripplanner.model.StopPattern.PICKDROP_NONE;
 import org.opentripplanner.common.model.T2;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
 import org.opentripplanner.ext.flex.flexpathcalculator.StreetFlexPathCalculator;
+import org.opentripplanner.ext.flex.template.FlexAccessEgressTemplate;
 import org.opentripplanner.ext.flex.template.FlexAccessTemplate;
 import org.opentripplanner.ext.flex.template.FlexEgressTemplate;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
@@ -121,12 +122,13 @@ public class FlexRouter {
     LOG.info("Direct Routing - Egresses: " + this.flexEgressTemplates.stream()
     	.map(e -> e.getFlexTrip() + " " + e.getTransferStop().getId() + " -> " + e.getAccessEgressStop().getId() + "\n")
 		.distinct().collect(Collectors.toList()));
-    
-    for (FlexAccessTemplate template : this.flexAccessTemplates.stream().distinct().collect(Collectors.toList())) {
-      StopLocation transferStop = template.getTransferStop();
+      Collection<FlexAccessTemplate> filteredAccessTemplates =
+              this.flexAccessTemplates.stream().filter(distinctByKey(FlexAccessEgressTemplate::detailedHashCode)).collect(Collectors.toList());
+    for (FlexAccessTemplate template : filteredAccessTemplates) {
+        StopLocation transferStop = template.getTransferStop();
 
       List<FlexEgressTemplate> egressTemplates =
-    		  this.flexEgressTemplates.parallelStream().distinct().filter(t -> t.getTransferStop().equals(transferStop)).collect(Collectors.toList());
+    		  this.flexEgressTemplates.parallelStream().filter(distinctByKey(FlexAccessEgressTemplate::detailedHashCode)).filter(t -> t.getTransferStop().equals(transferStop)).collect(Collectors.toList());
 
       if (!egressTemplates.isEmpty()) {
         for(FlexEgressTemplate egressTemplate : egressTemplates) {
