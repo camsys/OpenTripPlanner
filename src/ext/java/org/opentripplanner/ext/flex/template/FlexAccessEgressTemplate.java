@@ -192,4 +192,20 @@ public abstract class FlexAccessEgressTemplate {
     result = prime * result + transferStop.getId().hashCode();
     return result;
   }
+
+
+
+
+  public static int detailedHashCode(FlexAccessEgressTemplate t) {
+
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + t.serviceDate.serviceDate.getAsDate().hashCode();
+    result = prime * result + t.accessEgress.stop.getId().hashCode();
+    result = prime * result + t.trip.getId().hashCode();
+    result = prime * result + t.transferStop.getId().hashCode();
+    result = prime * result + t.fromStopIndex;
+    result = prime * result + t.toStopIndex;
+    return result;
+  }
 }
