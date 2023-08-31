@@ -47,9 +47,10 @@ public class FutureDepartureTimeOnlyFilter implements ItineraryFilter {
         for (Itinerary itin : itineraries) {
             Calendar itinStart = itin.startTime();
             Calendar now = Calendar.getInstance(itinStart.getTimeZone());
-            if (itin.endTime().after(earliestAllowedItinEndTime)) {
+            Calendar itinEnd = itin.endTime();
+            if (itinEnd.after(earliestAllowedItinEndTime)) {
                 if (now.before(targetTime)) {
-                    if (itin.startTime().after(now)) {
+                    if (itinStart.after(now)) {
                         filteredItineraries.add(itin);
                     }
                 } else {

@@ -48,7 +48,9 @@ public class DirectFlexRouter {
               request
       );
 
-      return new ArrayList<>(flexRouter.createFlexOnlyItineraries());
+      Collection<Itinerary> itins = flexRouter.createFlexOnlyItineraries();
+
+      return new ArrayList<>(itins);
     }
   }
 }
