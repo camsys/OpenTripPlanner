@@ -72,9 +72,7 @@ public class RoutingRequestToFilterChainMapper {
       .setMaxHoursBetweenArrivalAndTarget(p.maxHoursBetweenArrivalAndTarget)
       .setTargetTime(request.dateTime*1000);
 
-    long seconds = request.dateTime + ((long) request.additionalSearchDaysAfterToday-1)*24*60*60;
-    Instant instant = Instant.ofEpochSecond(seconds);
-    builder.withLatestDepartureTimeLimit(instant);
+    builder.withLatestDepartureTimeLimit(filterOnLatestDepartureTime);
 
     return builder.build();
   }
