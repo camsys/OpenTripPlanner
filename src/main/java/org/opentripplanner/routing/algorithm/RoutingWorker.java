@@ -1,6 +1,6 @@
 package org.opentripplanner.routing.algorithm;
 
-import java.time.Instant;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -152,7 +152,7 @@ public class RoutingWorker {
 
         this.debugTimingAggregator.finishedPatternFiltering();
 
-        AccessEgressMapper accessEgressMapper = new AccessEgressMapper(transitLayer.getStopIndex());
+             AccessEgressMapper accessEgressMapper = new AccessEgressMapper(transitLayer.getStopIndex());
         Collection<AccessEgress> accessList;
         Collection<AccessEgress> egressList;
 
@@ -276,8 +276,16 @@ public class RoutingWorker {
         // the raptor to prune the results. These itineraries are often not ideal, but if they
         // pareto optimal for the "next" window, they will appear when a "next" search is performed.
         searchWindowUsedInSeconds = transitResponse.requestUsed().searchParams().searchWindowInSeconds();
+        // determining latest time to allow trips (this value is filtered against later)
+
+        ZoneId tz = router.graph.getTimeZone().toZoneId();
+        LocalDate searchDateStart = LocalDate.ofInstant(Instant.ofEpochSecond(request.dateTime), tz);
+        Instant firstSearchDay = ZonedDateTime.of(searchDateStart, LocalTime.of(0,0),tz).toInstant();
+        long additionalSecondsAfterToday = ((long) request.additionalSearchDaysAfterToday)*24*60*60;
+        Instant lastAcceptableTripTime = Instant.ofEpochSecond(firstSearchDay.getEpochSecond()+additionalSecondsAfterToday);
+
         if(!request.arriveBy && searchWindowUsedInSeconds > 0) {
-            filterOnLatestDepartureTime = Instant.ofEpochSecond(request.dateTime + searchWindowUsedInSeconds);
+            filterOnLatestDepartureTime = Instant.ofEpochSecond(lastAcceptableTripTime.getEpochSecond());
         }
 
         this.debugTimingAggregator.finishedItineraryCreation();
