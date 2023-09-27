@@ -2,6 +2,8 @@
 package org.opentripplanner.model;
 
 
+import org.opentripplanner.transit.model.framework.FeedScopedId;
+
 /**
  * This class is tha same as a GTFS Agency and Netex Authority.
  */

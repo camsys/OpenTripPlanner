@@ -131,16 +131,26 @@ public final class GtfsFaresV2Service implements Serializable {
 }
 
 /**
- * @param itineraryProducts The fare products that cover the entire itinerary, like a daily pass.
- * @param legProducts       The fare products that cover only individual legs.
+ *  itineraryProducts The fare products that cover the entire itinerary, like a daily pass.
+ *  legProducts       The fare products that cover only individual legs.
  */
-record ProductResult(Set<FareProduct> itineraryProducts, Set<LegProducts> legProducts) {
+public class ProductResult {
+
+  public Set<FareProduct> itineraryProducts;
+  public Set<LegProducts> legProducts;
+
+  public ProductResult (Set<FareProduct> itineraryProducts, Set<LegProducts> legProducts) {
+    this.itineraryProducts = itineraryProducts;
+    this.legProducts = legProducts;
+  }
+
   public Set<FareProduct> getProducts(Leg leg) {
-    return legProducts
+    //TODO FIXME something funky here with lists and sets
+    return (Set<FareProduct>) legProducts
       .stream()
       .filter(lp -> lp.leg().equals(leg))
       .findFirst()
       .map(LegProducts::products)
-      .orElse(Set.of());
+      .orElse(List.of());
   }
 }

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 import java.io.IOException;
 

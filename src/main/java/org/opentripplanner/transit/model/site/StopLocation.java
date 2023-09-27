@@ -1,6 +1,8 @@
-package org.opentripplanner.model;
+package org.opentripplanner.transit.model.site;
 
 import org.locationtech.jts.geom.Geometry;
+import org.opentripplanner.model.WgsCoordinate;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 import javax.annotation.Nullable;
 

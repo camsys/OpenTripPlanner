@@ -1,7 +1,7 @@
 /* This file is based on code copied from project OneBusAway, see the LICENSE file for further information. */
 package org.opentripplanner.model;
 
-import java.util.Objects;
+import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.util.time.TimeUtils;
 
 

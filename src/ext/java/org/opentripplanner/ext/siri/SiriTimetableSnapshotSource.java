@@ -2,7 +2,7 @@ package org.opentripplanner.ext.siri;
 
 import com.google.common.base.Preconditions;
 import org.opentripplanner.model.Agency;
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.Operator;
 import org.opentripplanner.model.Route;
 import org.opentripplanner.model.Stop;

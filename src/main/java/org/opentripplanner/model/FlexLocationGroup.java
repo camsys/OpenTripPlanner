@@ -5,6 +5,8 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryCollection;
 import org.locationtech.jts.geom.Point;
 import org.opentripplanner.common.geometry.GeometryUtils;
+import org.opentripplanner.transit.model.site.StopLocation;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 import java.util.HashSet;
 import java.util.Set;

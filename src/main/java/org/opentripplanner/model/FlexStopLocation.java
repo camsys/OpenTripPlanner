@@ -2,6 +2,8 @@ package org.opentripplanner.model;
 
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
+import org.opentripplanner.transit.model.site.StopLocation;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 /**
  * Location corresponding to a location where riders may request pickup or drop off, defined in the

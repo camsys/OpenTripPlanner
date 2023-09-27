@@ -4,6 +4,8 @@ import org.locationtech.jts.algorithm.ConvexHull;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryCollection;
 import org.locationtech.jts.geom.Point;
+import org.opentripplanner.transit.model.site.StopLocation;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 import javax.annotation.Nonnull;
 import java.util.*;

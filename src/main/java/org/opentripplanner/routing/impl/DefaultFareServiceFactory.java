@@ -3,7 +3,7 @@ package org.opentripplanner.routing.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.opentripplanner.model.FareAttribute;
 import org.opentripplanner.model.FareRule;
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.OtpTransitService;
 import org.opentripplanner.model.Route;
 import org.opentripplanner.routing.bike_rental.TimeBasedBikeRentalFareServiceFactory;

@@ -11,7 +11,7 @@ import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.api.model.ApiPlace;
 import org.opentripplanner.model.Agency;
 import org.opentripplanner.model.BookingInfo;
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.Operator;
 import org.opentripplanner.model.Route;
 import org.opentripplanner.model.StreetNote;

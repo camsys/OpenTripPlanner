@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.opentripplanner.model.Stop;
-import org.opentripplanner.model.StopLocation;
+import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.model.StopTransferPriority;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.transit.raptor.api.transit.RaptorCostConverter;

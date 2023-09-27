@@ -1,7 +1,7 @@
 package org.opentripplanner.transit.raptor.speed_test.model;
 
-import org.opentripplanner.model.FeedScopedId;
-import org.opentripplanner.model.StopLocation;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.model.WgsCoordinate;
 
 import javax.annotation.Nullable;

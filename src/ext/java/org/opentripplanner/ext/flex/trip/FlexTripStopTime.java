@@ -2,7 +2,7 @@ package org.opentripplanner.ext.flex.trip;
 
 import java.io.Serializable;
 
-import org.opentripplanner.model.StopLocation;
+import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.model.StopTime;
 
 public class FlexTripStopTime implements Serializable {

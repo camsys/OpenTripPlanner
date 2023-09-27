@@ -6,7 +6,7 @@ import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
 import org.opentripplanner.ext.flex.template.FlexAccessTemplate;
 import org.opentripplanner.ext.flex.template.FlexEgressTemplate;
 import org.opentripplanner.model.BookingInfo;
-import org.opentripplanner.model.StopLocation;
+import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.model.TransitEntity;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.routing.api.request.RoutingRequest;
@@ -14,8 +14,6 @@ import org.opentripplanner.routing.graphfinder.NearbyStop;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Collection;
-import java.util.stream.Stream;
 
 /**
  * This class represents the different variations of what is considered flexible transit, and its

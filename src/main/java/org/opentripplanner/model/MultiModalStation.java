@@ -1,5 +1,7 @@
 package org.opentripplanner.model;
 
+import org.opentripplanner.transit.model.framework.FeedScopedId;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;

@@ -3,7 +3,7 @@ package org.opentripplanner.model.impl;
 import org.junit.Before;
 import org.junit.Test;
 import org.opentripplanner.model.Direction;
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.Route;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopPattern;

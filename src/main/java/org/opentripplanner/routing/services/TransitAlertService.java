@@ -1,6 +1,6 @@
 package org.opentripplanner.routing.services;
 
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.routing.alertpatch.TransitAlert;
 
 import java.util.Collection;

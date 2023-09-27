@@ -1,7 +1,7 @@
 package org.opentripplanner.routing.impl;
 
 import com.google.common.collect.Iterables;
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 import java.util.List;
 

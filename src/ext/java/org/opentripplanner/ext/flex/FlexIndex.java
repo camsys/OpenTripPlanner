@@ -6,12 +6,12 @@ import com.google.common.collect.Multimap;
 import org.opentripplanner.common.geometry.HashGridSpatialIndex;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
 import org.opentripplanner.ext.flex.trip.FlexTripStopTime;
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.FlexStopLocation;
 import org.opentripplanner.model.FlexLocationGroup;
 import org.opentripplanner.model.Route;
 import org.opentripplanner.model.SimpleTransfer;
-import org.opentripplanner.model.StopLocation;
+import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.routing.graph.Graph;
 

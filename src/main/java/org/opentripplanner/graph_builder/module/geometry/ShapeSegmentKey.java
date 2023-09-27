@@ -5,7 +5,7 @@
  */
 package org.opentripplanner.graph_builder.module.geometry;
 
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 class ShapeSegmentKey {
     private FeedScopedId shapeId;

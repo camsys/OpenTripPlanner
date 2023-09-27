@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import org.locationtech.jts.geom.LineString;
-import org.opentripplanner.model.StopLocation;
+import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.spt.GraphPath;

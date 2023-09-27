@@ -77,7 +77,7 @@ import org.opentripplanner.ext.transmodelapi.model.timetable.ServiceJourneyType;
 import org.opentripplanner.ext.transmodelapi.model.timetable.TimetabledPassingTimeType;
 import org.opentripplanner.ext.transmodelapi.model.timetable.TripMetadataType;
 import org.opentripplanner.ext.transmodelapi.support.GqlUtil;
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.Route;
 import org.opentripplanner.model.TransitMode;
 import org.opentripplanner.routing.RoutingService;

@@ -1,7 +1,7 @@
 package org.opentripplanner.routing.trippattern;
 
 import org.junit.Test;
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.Frequency;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopTime;

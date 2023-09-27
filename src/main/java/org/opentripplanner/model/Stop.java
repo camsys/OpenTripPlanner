@@ -3,6 +3,8 @@ package org.opentripplanner.model;
 
 import org.locationtech.jts.geom.Geometry;
 import org.opentripplanner.common.geometry.GeometryUtils;
+import org.opentripplanner.transit.model.site.StopLocation;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 import java.util.Collection;
 import java.util.Collections;

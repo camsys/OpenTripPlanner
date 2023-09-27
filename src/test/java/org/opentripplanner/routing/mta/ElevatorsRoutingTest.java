@@ -13,7 +13,7 @@
 package org.opentripplanner.routing.mta;
 
 import org.junit.Test;
-import org.opentripplanner.model.StopLocation;
+import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.routing.algorithm.raptor.transit.TripSchedule;

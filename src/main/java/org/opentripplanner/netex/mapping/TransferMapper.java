@@ -5,7 +5,7 @@ import static org.apache.commons.lang3.BooleanUtils.isTrue;
 import com.google.common.collect.ArrayListMultimap;
 import javax.annotation.Nullable;
 import org.opentripplanner.graph_builder.DataImportIssueStore;
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.model.impl.EntityById;
 import org.opentripplanner.model.transfer.Transfer;

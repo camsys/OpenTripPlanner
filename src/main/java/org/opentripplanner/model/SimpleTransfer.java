@@ -3,6 +3,7 @@ package org.opentripplanner.model;
 import java.io.Serializable;
 import java.util.List;
 import org.opentripplanner.model.base.ToStringBuilder;
+import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.routing.graph.Edge;
 
 /**

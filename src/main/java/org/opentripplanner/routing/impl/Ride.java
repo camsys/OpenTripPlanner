@@ -1,8 +1,7 @@
 package org.opentripplanner.routing.impl;
 
-import org.opentripplanner.model.FeedScopedId;
-import org.opentripplanner.model.Stop;
-import org.opentripplanner.model.StopLocation;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.transit.model.site.StopLocation;
 
 import java.util.HashSet;
 import java.util.Set;

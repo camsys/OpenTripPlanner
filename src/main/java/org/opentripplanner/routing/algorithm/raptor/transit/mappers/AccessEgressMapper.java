@@ -1,10 +1,7 @@
 package org.opentripplanner.routing.algorithm.raptor.transit.mappers;
 
-import org.opentripplanner.common.StreetUtils;
 import org.opentripplanner.ext.flex.FlexAccessEgress;
-import org.opentripplanner.ext.flex.FlexIndex;
-import org.opentripplanner.model.Stop;
-import org.opentripplanner.model.StopLocation;
+import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.routing.algorithm.raptor.transit.AccessEgress;
 import org.opentripplanner.routing.algorithm.raptor.transit.FlexAccessEgressAdapter;
 import org.opentripplanner.routing.algorithm.raptor.transit.StopIndexForRaptor;

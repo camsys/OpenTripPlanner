@@ -1,6 +1,6 @@
 package org.opentripplanner.ext.transmodelapi.model;
 
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.Station;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.TripTimeShort;

@@ -1,7 +1,7 @@
 package org.opentripplanner.model.plan;
 
 import org.junit.Test;
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

@@ -1,6 +1,8 @@
 /* This file is based on code copied from project OneBusAway, see the LICENSE file for further information. */
 package org.opentripplanner.model;
 
+import org.opentripplanner.transit.model.framework.FeedScopedId;
+
 import javax.validation.constraints.NotNull;
 
 public final class Trip extends TransitEntity {
