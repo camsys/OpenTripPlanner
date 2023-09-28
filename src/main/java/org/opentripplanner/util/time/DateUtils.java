@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -250,5 +251,9 @@ public class DateUtils implements DateConstants {
         else {
             return System.currentTimeMillis() + (long) (relativeTimeoutSeconds * 1000.0);
         }
+    }
+    
+    public static ZonedDateTime calendarToZonedDateTime(Calendar calendar) {
+        return ZonedDateTime.ofInstant(calendar.toInstant(),calendar.getTimeZone().toZoneId());
     }
 }

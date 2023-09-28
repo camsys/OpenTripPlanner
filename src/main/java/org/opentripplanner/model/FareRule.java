@@ -1,6 +1,8 @@
 /* This file is based on code copied from project OneBusAway, see the LICENSE file for further information. */
 package org.opentripplanner.model;
 
+import org.opentripplanner.ext.fares.model.FareAttribute;
+
 import java.io.Serializable;
 
 public final class FareRule implements Serializable {

@@ -1,11 +1,11 @@
 package org.opentripplanner.routing.impl;
 
-import org.opentripplanner.model.FareAttribute;
+import org.opentripplanner.ext.fares.model.FareAttribute;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.routing.algorithm.raptor.transit.TransitLayer;
 import org.opentripplanner.routing.algorithm.raptor.transit.TripSchedule;
-import org.opentripplanner.routing.core.Fare;
-import org.opentripplanner.routing.core.Fare.FareType;
+//import org.opentripplanner.routing.core.Fare;
+import org.opentripplanner.routing.core.FareType;
 import org.opentripplanner.routing.core.FareComponent;
 import org.opentripplanner.routing.core.FareRuleSet;
 import org.opentripplanner.routing.core.Money;
@@ -67,7 +67,7 @@ class FareAndId {
  * It cannot necessarily handle multi-feed graphs, because a rule-less fare attribute
  * might be applied to rides on routes in another feed, for example.
  * For more interesting fare structures like New York's MTA, or cities with multiple
- * feeds and inter-feed transfer rules, you get to implement your own FareService. 
+ * feeds and inter-feed transfer rules, you get to implement your own FareService.
  * See this thread on gtfs-changes explaining the proper interpretation of fares.txt:
  * http://groups.google.com/group/gtfs-changes/browse_thread/thread/8a4a48ae1e742517/4f81b826cb732f3b
  */
@@ -234,7 +234,7 @@ public class DefaultFareServiceImpl implements FareService {
         Set<FeedScopedId> routes = new HashSet<>();
         Set<FeedScopedId> trips = new HashSet<>();
         int transfersUsed = -1;
-        
+
         Ride firstRide = rides.get(0);
         long   startTime = firstRide.startTime;
         String startZone = firstRide.startZone;
@@ -256,12 +256,12 @@ public class DefaultFareServiceImpl implements FareService {
             trips.add(ride.trip);
             transfersUsed += 1;
         }
-        
+
         FareAttribute bestAttribute = null;
         float bestFare = Float.POSITIVE_INFINITY;
         long tripTime = lastRideStartTime - startTime;
         long journeyTime = lastRideEndTime - startTime;
-        	
+
         // find the best fare that matches this set of rides
         for (FareRuleSet ruleSet : fareRules) {
             FareAttribute attribute = ruleSet.getFareAttribute();
@@ -269,7 +269,7 @@ public class DefaultFareServiceImpl implements FareService {
             // check only if the fare is not mapped to an agency
             if (!attribute.getId().getFeedId().equals(feedId))
                 continue;
-            
+
             if (ruleSet.matches(startZone, endZone, zones, routes, trips)) {
                 // TODO Maybe move the code below in FareRuleSet::matches() ?
                 if (attribute.isTransfersSet() && attribute.getTransfers() < transfersUsed) {
@@ -277,11 +277,11 @@ public class DefaultFareServiceImpl implements FareService {
                 }
                 // assume transfers are evaluated at boarding time,
                 // as trimet does
-                if (attribute.isTransferDurationSet() && 
+                if (attribute.isTransferDurationSet() &&
                     tripTime > attribute.getTransferDuration()) {
                     continue;
                 }
-                if (attribute.isJourneyDurationSet() && 
+                if (attribute.isJourneyDurationSet() &&
                     journeyTime > attribute.getJourneyDuration()) {
                     continue;
                 }
@@ -298,7 +298,7 @@ public class DefaultFareServiceImpl implements FareService {
         }
         return new FareAndId(bestFare, bestAttribute == null ? null : bestAttribute.getId());
     }
-    
+
     private float getFarePrice(FareAttribute fare, FareType type) {
     	switch(type) {
 		case senior:

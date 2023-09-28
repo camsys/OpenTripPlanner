@@ -1,6 +1,6 @@
 package org.opentripplanner.ext.fares.model;
 
-import org.onebusaway.gtfs.model.FareProduct;
+import org.opentripplanner.ext.fares.model.FareProduct;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

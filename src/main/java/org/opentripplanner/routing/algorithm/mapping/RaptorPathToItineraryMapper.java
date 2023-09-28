@@ -112,19 +112,21 @@ public class RaptorPathToItineraryMapper {
         // Map egress leg
         EgressPathLeg<TripSchedule> egressPathLeg = pathLeg.asEgressLeg();
         Itinerary mapped = mapEgressLeg(egressPathLeg);
-        legs.addAll(mapped == null ? List.of() : mapped.legs);
+        legs.addAll(mapped == null ? List.of() : mapped.getLegs());
         propagateStopPlaceNamesToWalkingLegs(legs);
 
         Itinerary itinerary = new Itinerary(legs);
 
         // Map general itinerary fields
-        itinerary.generalizedCost = path.otpDomainCost();
-        itinerary.arrivedAtDestinationWithRentedBicycle = mapped != null && mapped.arrivedAtDestinationWithRentedBicycle;
+        itinerary.setGeneralizedCost(path.otpDomainCost());
+        //TODO FIXME Bike stuff
+//        itinerary.arrivedAtDestinationWithRentedBicycle = mapped != null && mapped.arrivedAtDestinationWithRentedBicycle;
 
+        //TODO FIXME changed waitTimeAdjustedGeneralizedCost to setWaitTimeOptimizedCost - not sure if same thing
         if(optimizedPath != null) {
-            itinerary.waitTimeAdjustedGeneralizedCost = RaptorCostConverter.toOtpDomainCost(
+            itinerary.setWaitTimeOptimizedCost(RaptorCostConverter.toOtpDomainCost(
                     optimizedPath.getWaitTimeOptimizedCost()
-            );
+            ));
         }
 
         return itinerary;
@@ -140,11 +142,11 @@ public class RaptorPathToItineraryMapper {
         Itinerary subItinerary = GraphPathToItineraryMapper
             .generateItinerary(graphPath, request.locale);
 
-        if (subItinerary.legs.isEmpty()) { return List.of(); }
+        if (subItinerary.getLegs().isEmpty()) { return List.of(); }
 
         subItinerary.timeShiftToStartAt(createCalendar(accessPathLeg.fromTime()));
 
-        return subItinerary.legs;
+        return subItinerary.getLegs();
     }
 
     private Leg mapTransitLeg(
@@ -252,7 +254,7 @@ public class RaptorPathToItineraryMapper {
         Itinerary subItinerary = GraphPathToItineraryMapper
             .generateItinerary(graphPath, request.locale);
 
-        if (subItinerary.legs.isEmpty()) { return null; }
+        if (subItinerary.getLegs().isEmpty()) { return null; }
 
         subItinerary.timeShiftToStartAt(createCalendar(egressPathLeg.fromTime()));
 
@@ -300,12 +302,12 @@ public class RaptorPathToItineraryMapper {
                 Itinerary subItinerary = GraphPathToItineraryMapper
                         .generateItinerary(graphPath, request.locale);
 
-                if (subItinerary.legs.isEmpty()) {
+                if (subItinerary.getLegs().isEmpty()) {
                     return List.of();
                 }
 
-                if (!onlyIfNonZeroDistance || subItinerary.nonTransitDistanceMeters > 0) {
-                    return subItinerary.legs;
+                if (!onlyIfNonZeroDistance || subItinerary.getNonTransitDistanceMeters() > 0) {
+                    return subItinerary.getLegs();
                 }
             }
         }

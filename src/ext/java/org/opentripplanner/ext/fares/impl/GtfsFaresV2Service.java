@@ -16,7 +16,7 @@ import org.opentripplanner.ext.fares.model.FareProduct;
 import org.opentripplanner.ext.fares.model.LegProducts;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.Leg;
-import org.opentripplanner.model.plan.ScheduledTransitLeg;
+//import org.opentripplanner.model.plan.ScheduledTransitLeg;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.GroupOfRoutes;
 import org.opentripplanner.transit.model.site.StopLocation;
@@ -84,7 +84,7 @@ public final class GtfsFaresV2Service implements Serializable {
     }
   }
 
-  private LegProducts getLegProduct(ScheduledTransitLeg leg) {
+  private LegProducts getLegProduct(Leg leg) {
     var products = legRules
       .stream()
       // make sure that you only get rules for the correct feed
@@ -93,15 +93,15 @@ public final class GtfsFaresV2Service implements Serializable {
       // apply only those fare leg rules which have the correct area ids
       // if area id is null, the rule applies to all legs UNLESS there is another rule that
       // covers this area
-      .filter(rule -> filterByArea(leg.getFrom().stop, rule.fromAreaId(), fromAreasWithRules))
-      .filter(rule -> filterByArea(leg.getTo().stop, rule.toAreadId(), toAreasWithRules))
+      .filter(rule -> filterByArea(leg.from.stopId, rule.fromAreaId(), fromAreasWithRules))
+      .filter(rule -> filterByArea(leg.to.stopId, rule.toAreadId(), toAreasWithRules))
       .map(FareLegRule::fareProduct)
-      .collect(Collectors.toSet());
+      .collect(Collectors.toList());
     return new LegProducts(leg, products);
   }
 
-  private boolean filterByArea(StopLocation stop, String areaId, Set<String> areasWithRules) {
-    var stopAreas = this.stopAreas.get(stop.getId());
+  private boolean filterByArea(FeedScopedId stopId, String areaId, Set<String> areasWithRules) {
+    var stopAreas = this.stopAreas.get(stopId);
     return (
       (isNull(areaId) && stopAreas.stream().noneMatch(areasWithRules::contains)) ||
       (nonNull(areaId) && stopAreas.contains(areaId))
@@ -112,7 +112,7 @@ public final class GtfsFaresV2Service implements Serializable {
    * Get the fare products that match the network_id. If the network id of the product is null it
    * depends on the presence/absence of other rules with that network id.
    */
-  private boolean filterByNetworkId(ScheduledTransitLeg leg, FareLegRule rule) {
+  private boolean filterByNetworkId(Leg leg, FareLegRule rule) {
     var routesNetworkIds = leg
       .getRoute()
       .getGroupsOfRoutes()
@@ -134,7 +134,7 @@ public final class GtfsFaresV2Service implements Serializable {
  *  itineraryProducts The fare products that cover the entire itinerary, like a daily pass.
  *  legProducts       The fare products that cover only individual legs.
  */
-public class ProductResult {
+class ProductResult {
 
   public Set<FareProduct> itineraryProducts;
   public Set<LegProducts> legProducts;

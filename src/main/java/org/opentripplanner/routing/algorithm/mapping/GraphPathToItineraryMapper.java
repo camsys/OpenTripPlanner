@@ -64,7 +64,7 @@ public abstract class GraphPathToItineraryMapper {
         List<Itinerary> itineraries = new LinkedList<>();
         for (GraphPath path : paths) {
             Itinerary itinerary = generateItinerary(path, request.locale);
-            if (itinerary.legs.isEmpty()) { continue; }
+            if (itinerary.getLegs().isEmpty()) { continue; }
             itineraries.add(itinerary);
         }
 
@@ -112,8 +112,9 @@ public abstract class GraphPathToItineraryMapper {
 
         calculateElevations(itinerary, edges);
 
-        itinerary.generalizedCost = (int) lastState.weight;
-        itinerary.arrivedAtDestinationWithRentedBicycle = lastState.isBikeRentingFromStation();
+        itinerary.setGeneralizedCost((int) lastState.weight);
+//        itinerary.arrivedAtDestinationWithRentedBicycle = lastState.isBikeRentingFromStation();
+        //TODO FIXME rented bike stuff
 
         return itinerary;
     }
@@ -133,7 +134,7 @@ public abstract class GraphPathToItineraryMapper {
      * @return The coordinates of the points on the edges
      */
     private static CoordinateArrayListSequence makeCoordinates(Edge[] edges) {
-    	
+
         CoordinateArrayListSequence coordinates = new CoordinateArrayListSequence();
 
         for (Edge edge : edges) {
@@ -237,7 +238,7 @@ public abstract class GraphPathToItineraryMapper {
         if (OTPFeature.FlexRouting.isOn()) {
             flexEdge = (FlexTripEdge)Stream
                 .of(states)
-               	.skip(1) // first state has no backEdge
+                    .skip(1) // first state has no backEdge
                 .map(state -> state.backEdge)
                 .filter(edge -> edge instanceof FlexTripEdge)
                 .findFirst().orElse(null);
@@ -503,9 +504,9 @@ public abstract class GraphPathToItineraryMapper {
                 double change = coordinates.getOrdinate(i + 1, 1) - coordinates.getOrdinate(i, 1);
 
                 if (change > 0) {
-                    itinerary.elevationGained += change;
+                    itinerary.setElevationGained(itinerary.getElevationGained() + change);
                 } else if (change < 0) {
-                    itinerary.elevationLost -= change;
+                    itinerary.setElevationGained(itinerary.getElevationGained() - change);
                 }
             }
         }

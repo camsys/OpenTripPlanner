@@ -1,10 +1,8 @@
 package org.opentripplanner.ext.fares.model;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import org.opentripplanner.model.FareAttribute;
 import org.opentripplanner.model.FareRule;
 
 public final class FareRulesData {

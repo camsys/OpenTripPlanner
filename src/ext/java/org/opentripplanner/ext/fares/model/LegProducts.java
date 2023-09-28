@@ -9,7 +9,7 @@ public final class LegProducts {
     private final Leg leg;
     private final List<FareProduct> products;
 
-    LegProducts(Leg leg, List<FareProduct> products) {
+    public LegProducts(Leg leg, List<FareProduct> products) {
         this.leg = leg;
         this.products = products;
     }

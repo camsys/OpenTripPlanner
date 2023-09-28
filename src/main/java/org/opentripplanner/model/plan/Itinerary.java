@@ -8,12 +8,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.opentripplanner.ext.flex.FlexibleTransitLeg;
+//import org.opentripplanner.ext.flex.FlexibleTransitLeg;
 import org.opentripplanner.model.SystemNotice;
 import org.opentripplanner.routing.core.ItineraryFares;
-import org.opentripplanner.transit.raptor.api.path.PathStringBuilder;
+import org.opentripplanner.transit.raptor.util.PathStringBuilder;
 import org.opentripplanner.util.lang.DoubleUtils;
-import org.opentripplanner.util.lang.ToStringBuilder;
+import org.opentripplanner.model.base.ToStringBuilder;
+import org.opentripplanner.util.time.DateUtils;
 
 /**
  * An Itinerary is one complete way of getting from the start location to the end location.
@@ -55,16 +56,17 @@ public class Itinerary {
 
     // Set aggregated data
     ItinerariesCalculateLegTotals totals = new ItinerariesCalculateLegTotals(legs);
-    this.duration = totals.totalDuration;
+    this.duration = Duration.ofSeconds(totals.totalDurationSeconds);
     this.numberOfTransfers = totals.transfers();
-    this.transitDuration = totals.transitDuration;
-    this.nonTransitDuration = totals.nonTransitDuration;
+    this.transitDuration = Duration.ofSeconds(totals.transitTimeSeconds);
+    this.nonTransitDuration = Duration.ofSeconds(totals.nonTransitTimeSeconds);
     this.nonTransitDistanceMeters = DoubleUtils.roundTo2Decimals(totals.nonTransitDistanceMeters);
-    this.waitingDuration = totals.walkingDuration;
+    this.waitingDuration = Duration.ofSeconds(totals.waitingTimeSeconds);
     this.walkOnly = totals.walkOnly;
     this.streetOnly = totals.streetOnly;
-    this.setElevationGained(totals.totalElevationGained);
-    this.setElevationLost(totals.totalElevationLost);
+    //TODO FIXME Removed elevation for now
+//    this.setElevationGained(totals.totalElevationGained);
+//    this.setElevationLost(totals.totalElevationLost);
   }
 
   /**
@@ -83,28 +85,28 @@ public class Itinerary {
    * Time that the trip departs.
    */
   public ZonedDateTime startTime() {
-    return firstLeg().getStartTime();
+    return DateUtils.calendarToZonedDateTime(firstLeg().startTime);
   }
 
   /**
    * Time that the trip arrives.
    */
   public ZonedDateTime endTime() {
-    return lastLeg().getEndTime();
+    return DateUtils.calendarToZonedDateTime(lastLeg().endTime);
   }
 
   /**
    * Reflects the departureDelay on the first Leg Unit: seconds.
    */
   public int departureDelay() {
-    return firstLeg().getDepartureDelay();
+    return firstLeg().departureDelay;
   }
 
   /**
    * Reflects the arrivalDelay on the last Leg Unit: seconds.
    */
   public int arrivalDelay() {
-    return lastLeg().getArrivalDelay();
+    return lastLeg().arrivalDelay;
   }
 
   /**
@@ -118,7 +120,7 @@ public class Itinerary {
    * Total distance in meters.
    */
   public double distanceMeters() {
-    return getLegs().stream().mapToDouble(Leg::getDistanceMeters).sum();
+    return getLegs().stream().mapToDouble(l -> l.distanceMeters).sum();
   }
 
   /**
@@ -139,7 +141,7 @@ public class Itinerary {
   public boolean hasTransit() {
     return legs
       .stream()
-      .anyMatch(l -> l instanceof ScheduledTransitLeg || l instanceof FlexibleTransitLeg);
+      .anyMatch(Leg::isTransitLeg);
   }
 
   public Leg firstLeg() {
@@ -180,7 +182,7 @@ public class Itinerary {
   }
 
   public Itinerary withTimeShiftToStartAt(ZonedDateTime afterTime) {
-    Duration duration = Duration.between(firstLeg().getStartTime(), afterTime);
+    Duration duration = Duration.between(DateUtils.calendarToZonedDateTime(firstLeg().startTime), afterTime);
     List<Leg> timeShiftedLegs = getLegs()
       .stream()
       .map(leg -> leg.withTimeShift(duration))
@@ -210,10 +212,10 @@ public class Itinerary {
   public String toString() {
     return ToStringBuilder
       .of(Itinerary.class)
-      .addStr("from", firstLeg().getFrom().toStringShort())
-      .addStr("to", lastLeg().getTo().toStringShort())
-      .addTime("start", firstLeg().getStartTime())
-      .addTime("end", lastLeg().getEndTime())
+      .addStr("from", firstLeg().from.toStringShort())
+      .addStr("to", lastLeg().to.toStringShort())
+      .addCalTime("start", firstLeg().startTime)
+      .addCalTime("end", lastLeg().endTime)
       .addNum("nTransfers", numberOfTransfers, -1)
       .addDuration("duration", duration)
       .addNum("generalizedCost", generalizedCost)
@@ -244,26 +246,26 @@ public class Itinerary {
    */
   public String toStr() {
     // No translater needed, stop indexes are never passed to the builder
-    PathStringBuilder buf = new PathStringBuilder(null);
-    buf.stop(firstLeg().getFrom().name.toString());
+    PathStringBuilder buf = new PathStringBuilder(false);
+    buf.stop(firstLeg().from.name.toString());
 
     for (Leg leg : legs) {
       buf.sep();
       if (leg.isWalkingLeg()) {
-        buf.walk((int) leg.getDuration().toSeconds());
+        buf.walk((int) leg.getDuration());
       } else if (leg.isTransitLeg()) {
         buf.transit(
-          leg.getMode().name(),
-          leg.getTrip().logName(),
-          leg.getStartTime(),
-          leg.getEndTime()
+          leg.mode,
+          leg.getTrip().logInfo(),
+          leg.startTime,
+          leg.endTime
         );
       } else {
-        buf.other(leg.getMode().name(), leg.getStartTime(), leg.getEndTime());
+        buf.other(leg.mode, leg.startTime, leg.endTime);
       }
 
       buf.sep();
-      buf.stop(leg.getTo().name.toString());
+      buf.stop(leg.to.name.toString());
     }
 
     buf.space().append(String.format(ROOT, "[ $%d ]", generalizedCost));
@@ -466,7 +468,7 @@ public class Itinerary {
   }
 
   /**
-   * If {@link org.opentripplanner.routing.api.request.RoutingRequest#allowKeepingRentedVehicleAtDestination}
+   * If {@link org.opentripplanner.routing.api.request.RoutingRequest#}
    * is set than it is possible to end a trip without dropping off the rented bicycle.
    */
   public boolean isArrivedAtDestinationWithRentedVehicle() {
@@ -493,8 +495,8 @@ public class Itinerary {
       for (int i = 0; i < legs.size() - 1; i++) {
         var currentLeg = legs.get(i);
         if (
-          currentLeg.getFrom().sameLocation(leg.getFrom()) &&
-          currentLeg.getTo().sameLocation(leg.getTo())
+          currentLeg.from.sameLocation(leg.from) &&
+          currentLeg.to.sameLocation(leg.to)
         ) {
           return i;
         }
@@ -514,11 +516,11 @@ public class Itinerary {
     this.fare = fare;
   }
 
-  public List<ScheduledTransitLeg> getScheduledTransitLegs() {
+  public List<Leg> getScheduledTransitLegs() {
     return getLegs()
       .stream()
-      .filter(ScheduledTransitLeg.class::isInstance)
-      .map(ScheduledTransitLeg.class::cast)
-      .toList();
+      .filter(Leg::isScheduled)
+      .filter(Leg::isTransitLeg)
+      .collect(Collectors.toList());
   }
 }
