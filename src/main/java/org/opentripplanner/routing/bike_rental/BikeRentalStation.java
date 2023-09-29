@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.io.Serializable;
 import java.util.Locale;
 import java.util.Set;
-import org.opentripplanner.util.I18NString;
+import org.opentripplanner.transit.model.basic.I18NString;
 import org.opentripplanner.util.ResourceBundleSingleton;
 
 // TODO OTP2 - This class is used both for internal and external API representation,

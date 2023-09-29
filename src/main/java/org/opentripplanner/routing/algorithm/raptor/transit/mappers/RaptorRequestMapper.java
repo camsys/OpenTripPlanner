@@ -4,7 +4,7 @@ import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
-import org.opentripplanner.model.TransitMode;
+import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.routing.algorithm.raptor.transit.SlackProvider;
 import org.opentripplanner.routing.algorithm.raptor.transit.TripSchedule;
 import org.opentripplanner.routing.api.request.RoutingRequest;

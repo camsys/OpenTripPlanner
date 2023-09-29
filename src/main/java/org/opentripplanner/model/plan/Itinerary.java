@@ -5,6 +5,7 @@ import static java.util.Locale.ROOT;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -190,6 +191,20 @@ public class Itinerary {
     var newItin = new Itinerary(timeShiftedLegs);
     newItin.setGeneralizedCost(getGeneralizedCost());
     return newItin;
+  }
+
+  public void timeShiftToStartAt(Calendar afterTime) {
+    Calendar startTimeFirstLeg = firstLeg().startTime;
+    long adjustmentMilliSeconds =
+            afterTime.getTimeInMillis() - startTimeFirstLeg.getTimeInMillis();
+    timeShift(adjustmentMilliSeconds);
+  }
+
+  private void timeShift(long adjustmentMilliSeconds) {
+    for (Leg leg : this.legs) {
+      leg.startTime.setTimeInMillis(leg.startTime.getTimeInMillis() + adjustmentMilliSeconds);
+      leg.endTime.setTimeInMillis(leg.endTime.getTimeInMillis() + adjustmentMilliSeconds);
+    }
   }
 
   /** @see #equals(Object) */

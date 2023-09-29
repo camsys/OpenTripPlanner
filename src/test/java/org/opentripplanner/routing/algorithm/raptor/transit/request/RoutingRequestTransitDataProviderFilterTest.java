@@ -7,7 +7,9 @@ import org.opentripplanner.routing.algorithm.raptor.transit.TripPatternForDate;
 import org.opentripplanner.routing.algorithm.raptor.transit.TripPatternWithRaptorStopIndexes;
 import org.opentripplanner.routing.trippattern.Deduplicator;
 import org.opentripplanner.routing.trippattern.TripTimes;
+import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.transit.model.network.Route;
 
 import java.time.LocalDate;
 import java.util.List;

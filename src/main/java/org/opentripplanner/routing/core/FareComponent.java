@@ -16,7 +16,7 @@ public final class FareComponent {
     private final Money price;
     private final List<FeedScopedId> routes;
 
-    FareComponent(
+    public FareComponent(
             FeedScopedId fareId,
             String name,
             Money price,

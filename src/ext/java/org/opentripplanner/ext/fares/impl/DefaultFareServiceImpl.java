@@ -11,11 +11,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.ning.http.util.DateUtil;
 import org.opentripplanner.ext.fares.model.FareAttribute;
-import org.opentripplanner.ext.flex.FlexibleTransitLeg;
+//import org.opentripplanner.ext.flex.FlexibleTransitLeg;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.Leg;
-import org.opentripplanner.model.plan.ScheduledTransitLeg;
+//import org.opentripplanner.model.plan.ScheduledTransitLeg;
+import org.opentripplanner.routing.algorithm.mapping.RaptorPathToItineraryMapper;
 import org.opentripplanner.routing.core.FareComponent;
 import org.opentripplanner.routing.core.FareRuleSet;
 import org.opentripplanner.routing.core.FareType;
@@ -24,6 +28,7 @@ import org.opentripplanner.routing.core.Money;
 import org.opentripplanner.routing.fares.FareService;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.site.FareZone;
+import org.opentripplanner.util.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,9 +100,9 @@ public class DefaultFareServiceImpl implements FareService {
     var fareLegs = itinerary
       .getLegs()
       .stream()
-      .filter(l -> l instanceof ScheduledTransitLeg || l instanceof FlexibleTransitLeg)
+      .filter(Leg::isTransitLeg)
       .map(Leg.class::cast)
-      .toList();
+      .collect(Collectors.toList());
 
     if (shouldCombineInterlinedLegs()) {
       fareLegs = combineInterlinedLegs(fareLegs);
@@ -215,22 +220,15 @@ public class DefaultFareServiceImpl implements FareService {
   private static List<Leg> combineInterlinedLegs(List<Leg> fareLegs) {
     var result = new ArrayList<Leg>();
     for (var leg : fareLegs) {
-      if (leg.isInterlinedWithPreviousLeg() && leg instanceof ScheduledTransitLeg stl) {
-        var previousLeg = (ScheduledTransitLeg) result.get(result.size() - 1);
-        var combinedLeg = new ScheduledTransitLeg(
-          previousLeg.getTripTimes(),
-          previousLeg.getTripPattern(),
-          0,
-          0,
-          previousLeg.getStartTime(),
-          stl.getEndTime(),
-          stl.getServiceDate(),
-          stl.getZoneId(),
-          null,
-          null,
-          0,
-          null
+      if (leg.isInterlinedWithPreviousLeg() && leg.isScheduled()) {
+        var previousLeg = result.get(result.size() - 1);
+        var combinedLeg = new Leg(previousLeg.getTrip()
         );
+        combinedLeg.endTime = leg.endTime;
+        combinedLeg.serviceDate = leg.serviceDate;
+
+//        stl.getZoneId(), TODO FIXME Something about ZoneId was lost here
+//
         result.add(result.size() - 1, combinedLeg);
       } else {
         result.add(leg);
@@ -289,8 +287,8 @@ public class DefaultFareServiceImpl implements FareService {
     int transfersUsed = -1;
 
     var firstRide = legs.get(0);
-    ZonedDateTime startTime = firstRide.getStartTime();
-    String startZone = firstRide.getFrom().stop.getFirstZoneAsString();
+    ZonedDateTime startTime = DateUtils.calendarToZonedDateTime(firstRide.startTime);
+    String startZone = firstRide.from.stop.getFirstZoneAsString();
     String endZone = null;
     // stops don't really have an agency id, they have the per-feed default id
     String feedId = firstRide.getTrip().getId().getFeedId();
@@ -301,9 +299,9 @@ public class DefaultFareServiceImpl implements FareService {
         LOG.debug("skipped multi-feed ride sequence {}", legs);
         return new FareAndId(Float.POSITIVE_INFINITY, null);
       }
-      lastRideStartTime = leg.getStartTime();
-      lastRideEndTime = leg.getEndTime();
-      endZone = leg.getTo().stop.getFirstZoneAsString();
+      lastRideStartTime = DateUtils.calendarToZonedDateTime(leg.startTime);
+      lastRideEndTime = DateUtils.calendarToZonedDateTime(leg.endTime);
+      endZone = leg.to.stop.getFirstZoneAsString();
       routes.add(leg.getRoute().getId());
       trips.add(leg.getTrip().getId());
       for (FareZone z : leg.getFareZones()) {

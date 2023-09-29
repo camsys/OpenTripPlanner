@@ -13,7 +13,7 @@ import org.opentripplanner.ext.transmodelapi.support.DataFetcherDecorator;
 import org.opentripplanner.ext.transmodelapi.support.GqlUtil;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.GenericLocation;
-import org.opentripplanner.model.TransitMode;
+import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.routing.api.request.BannedStopSet;
 import org.opentripplanner.routing.api.request.RequestModes;
 import org.opentripplanner.routing.api.request.RoutingRequest;

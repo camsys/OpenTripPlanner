@@ -37,7 +37,7 @@ public class TimeBasedVehicleRentalFareService implements FareService, Serializa
     var totalCost = itinerary
       .getLegs()
       .stream()
-      .filter(Leg::getRentedVehicle)
+//      .filter(Leg::getRentedVehicle) TODO FIXME REMOVED RENTED VEHICLE
       .mapToInt(this::getLegCost)
       .sum();
 
@@ -48,7 +48,7 @@ public class TimeBasedVehicleRentalFareService implements FareService, Serializa
 
   private int getLegCost(Leg pathLeg) {
     int rideCost = 0;
-    long rideTime = pathLeg.getDuration().toSeconds();
+    long rideTime = pathLeg.getDuration();
     for (P2<Integer> bracket : pricing_by_second) {
       int time = bracket.first;
       if (rideTime < time) {

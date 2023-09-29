@@ -1,5 +1,6 @@
 package org.opentripplanner.model.plan;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -7,13 +8,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.api.model.ApiPlace;
 import org.opentripplanner.model.Agency;
 import org.opentripplanner.model.BookingInfo;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.Operator;
-import org.opentripplanner.model.Route;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.model.StreetNote;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.model.base.ToStringBuilder;
@@ -21,6 +25,7 @@ import org.opentripplanner.model.calendar.ServiceDate;
 import org.opentripplanner.model.transfer.Transfer;
 import org.opentripplanner.routing.alertpatch.TransitAlert;
 import org.opentripplanner.routing.core.TraverseMode;
+import org.opentripplanner.transit.model.site.FareZone;
 
 /**
 * One leg of a trip -- that is, a temporally continuous piece of the journey that takes place on a
@@ -234,6 +239,13 @@ public class Leg {
        return mode.isTransit();
    }
 
+    public Boolean isInterlinedWithPreviousLeg() {
+        if (transferFromPrevLeg == null) {
+            return false;
+        }
+        return transferFromPrevLeg.isStaySeated();
+    }
+
 
   /**
    * A scheduled leg is a leg riding a public scheduled transport including frequency based
@@ -260,6 +272,17 @@ public class Leg {
     public long getDuration() {
         // Round to closest second; Hence subtract 500 ms before dividing by 1000
         return (500 + endTime.getTimeInMillis() - startTime.getTimeInMillis()) / 1000;
+    }
+
+
+    public Leg withTimeShift(Duration duration) {
+        Leg copy = new Leg(trip);
+
+        copy.startTime.add(Calendar.SECOND, (int) duration.getSeconds());
+        copy.endTime.add(Calendar.SECOND, (int) duration.getSeconds());
+        copy.transitAlerts.addAll(transitAlerts);
+
+        return copy;
     }
 
     public void addStretNote(StreetNote streetNote) {
@@ -374,4 +397,22 @@ public class Leg {
                 .toString();
     }
 
+    public Set<FareZone> getFareZones() {
+        var intermediate = intermediateStops
+                .stream()
+                .flatMap(stopArrival -> stopArrival.place.stop.getFareZones().stream());
+
+        var start = getFareZones(this.from);
+        var end = getFareZones(this.to);
+
+        return (Set<FareZone>) Stream.of(intermediate, start, end).flatMap(s -> s).collect(Collectors.toSet());
+    }
+
+    private static Stream<FareZone> getFareZones(Place place) {
+        if (place.stop == null) {
+            return Stream.empty();
+        } else {
+            return place.stop.getFareZones().stream();
+        }
+    }
 }

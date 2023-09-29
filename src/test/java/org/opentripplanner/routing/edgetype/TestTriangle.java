@@ -15,7 +15,7 @@ import org.opentripplanner.routing.vertextype.StreetVertex;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
-import org.opentripplanner.util.NonLocalizedString;
+import org.opentripplanner.transit.model.basic.NonLocalizedString;
 
 public class TestTriangle extends TestCase {
 

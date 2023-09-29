@@ -1,11 +1,12 @@
 package org.opentripplanner.netex.mapping;
 
-import org.opentripplanner.gtfs.mapping.TransitModeMapper;
+import org.opentripplanner.transit.model.basic.TransitModeMapper;
 import org.opentripplanner.model.Agency;
 import org.opentripplanner.model.Operator;
 import org.opentripplanner.model.impl.EntityById;
 import org.opentripplanner.netex.index.api.NetexEntityIndexReadOnlyView;
 import org.opentripplanner.netex.mapping.support.FeedScopedIdFactory;
+import org.opentripplanner.transit.model.network.Route;
 import org.rutebanken.netex.model.FlexibleLine_VersionStructure;
 import org.rutebanken.netex.model.Line_VersionStructure;
 import org.rutebanken.netex.model.Network;
@@ -47,8 +48,8 @@ class RouteMapper {
         this.authorityMapper = new AuthorityToAgencyMapper(idFactory, timeZone);
     }
 
-    org.opentripplanner.model.Route mapRoute(Line_VersionStructure line){
-        org.opentripplanner.model.Route otpRoute = new org.opentripplanner.model.Route(
+    Route mapRoute(Line_VersionStructure line){
+        Route otpRoute = new Route(
             idFactory.createId(line.getId())
         );
         otpRoute.setAgency(findOrCreateAuthority(line));

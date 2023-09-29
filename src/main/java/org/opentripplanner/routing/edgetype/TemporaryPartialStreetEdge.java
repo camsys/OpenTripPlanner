@@ -8,7 +8,7 @@ import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.util.ElevationUtils;
 import org.opentripplanner.routing.vertextype.StreetVertex;
 import org.opentripplanner.routing.vertextype.TemporaryVertex;
-import org.opentripplanner.util.I18NString;
+import org.opentripplanner.transit.model.basic.I18NString;
 
 import java.util.List;
 

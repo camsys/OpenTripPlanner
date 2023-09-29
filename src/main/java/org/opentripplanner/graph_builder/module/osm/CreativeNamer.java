@@ -1,7 +1,7 @@
 package org.opentripplanner.graph_builder.module.osm;
 
 import org.opentripplanner.openstreetmap.model.OSMWithTags;
-import org.opentripplanner.util.I18NString;
+import org.opentripplanner.transit.model.basic.I18NString;
 import org.opentripplanner.util.LocalizedString;
 
 /**

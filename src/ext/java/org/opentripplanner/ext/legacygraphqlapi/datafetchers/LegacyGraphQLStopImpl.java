@@ -8,7 +8,7 @@ import org.opentripplanner.ext.legacygraphqlapi.LegacyGraphQLRequestContext;
 import org.opentripplanner.ext.legacygraphqlapi.generated.LegacyGraphQLDataFetchers;
 import org.opentripplanner.ext.legacygraphqlapi.generated.LegacyGraphQLTypes;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
-import org.opentripplanner.model.Route;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.model.Station;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopTimesInPattern;

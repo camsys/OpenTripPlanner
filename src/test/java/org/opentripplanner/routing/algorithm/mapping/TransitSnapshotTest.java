@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.GenericLocation;
-import org.opentripplanner.model.TransitMode;
+import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.routing.api.request.RequestModes;
 import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.api.request.StreetMode;

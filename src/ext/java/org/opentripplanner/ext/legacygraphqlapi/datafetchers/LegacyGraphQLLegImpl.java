@@ -11,17 +11,12 @@ import org.opentripplanner.ext.legacygraphqlapi.LegacyGraphQLRequestContext;
 import org.opentripplanner.ext.legacygraphqlapi.generated.LegacyGraphQLDataFetchers;
 import org.opentripplanner.model.Agency;
 import org.opentripplanner.model.BookingInfo;
-import org.opentripplanner.model.Route;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.model.plan.StopArrival;
 import org.opentripplanner.model.plan.WalkStep;
 import org.opentripplanner.routing.RoutingService;
-import org.opentripplanner.util.model.EncodedPolylineBean;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class LegacyGraphQLLegImpl implements LegacyGraphQLDataFetchers.LegacyGraphQLLeg {
 

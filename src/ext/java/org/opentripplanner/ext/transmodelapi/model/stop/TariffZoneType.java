@@ -3,9 +3,8 @@ package org.opentripplanner.ext.transmodelapi.model.stop;
 import graphql.Scalars;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
-import graphql.schema.GraphQLTypeReference;
 import org.opentripplanner.ext.transmodelapi.support.GqlUtil;
-import org.opentripplanner.model.FareZone;
+import org.opentripplanner.transit.model.site.FareZone;
 
 public class TariffZoneType {
   private static final String NAME = "TariffZone";

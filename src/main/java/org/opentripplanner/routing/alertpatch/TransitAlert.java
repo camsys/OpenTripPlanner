@@ -1,7 +1,7 @@
 package org.opentripplanner.routing.alertpatch;
 
 import org.opentripplanner.routing.core.State;
-import org.opentripplanner.util.I18NString;
+import org.opentripplanner.transit.model.basic.I18NString;
 
 import java.io.Serializable;
 import java.util.ArrayList;

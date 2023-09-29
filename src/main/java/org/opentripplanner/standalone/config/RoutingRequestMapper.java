@@ -1,6 +1,6 @@
 package org.opentripplanner.standalone.config;
 
-import org.opentripplanner.model.TransitMode;
+import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.routing.api.request.RequestModes;
 import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.api.request.TransferOptimizationRequest;

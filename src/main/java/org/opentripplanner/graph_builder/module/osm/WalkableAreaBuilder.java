@@ -37,7 +37,7 @@ import org.opentripplanner.routing.spt.DominanceFunction;
 import org.opentripplanner.routing.spt.GraphPath;
 import org.opentripplanner.routing.spt.ShortestPathTree;
 import org.opentripplanner.routing.vertextype.IntersectionVertex;
-import org.opentripplanner.util.I18NString;
+import org.opentripplanner.transit.model.basic.I18NString;
 import org.opentripplanner.visibility.Environment;
 import org.opentripplanner.visibility.VLPoint;
 import org.opentripplanner.visibility.VLPolygon;

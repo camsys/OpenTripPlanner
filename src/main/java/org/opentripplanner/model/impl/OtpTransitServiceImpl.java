@@ -14,7 +14,7 @@ import org.opentripplanner.model.Agency;
 import org.opentripplanner.model.BoardingArea;
 import org.opentripplanner.model.Entrance;
 import org.opentripplanner.ext.fares.model.FareAttribute;
-import org.opentripplanner.model.FareRule;
+import org.opentripplanner.ext.fares.model.FareRule;
 import org.opentripplanner.model.FeedInfo;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.FlexLocationGroup;

@@ -6,7 +6,7 @@ import org.opentripplanner.routing.bike_rental.BikeRentalStation;
 import org.opentripplanner.updater.bike_rental.BikeRentalDataSource;
 import org.opentripplanner.updater.bike_rental.datasources.params.BikeRentalDataSourceParameters;
 import org.opentripplanner.util.HttpUtils;
-import org.opentripplanner.util.NonLocalizedString;
+import org.opentripplanner.transit.model.basic.NonLocalizedString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

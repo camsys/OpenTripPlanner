@@ -6,8 +6,8 @@ import org.opentripplanner.common.geometry.PackedCoordinateSequence;
 import org.opentripplanner.routing.util.ElevationUtils;
 import org.opentripplanner.routing.util.SlopeCosts;
 import org.opentripplanner.routing.vertextype.StreetVertex;
-import org.opentripplanner.util.I18NString;
-import org.opentripplanner.util.NonLocalizedString;
+import org.opentripplanner.transit.model.basic.I18NString;
+import org.opentripplanner.transit.model.basic.NonLocalizedString;
 
 /**
  * A StreetEdge with elevation data.

@@ -3,7 +3,7 @@ package org.opentripplanner.netex.mapping;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import org.opentripplanner.graph_builder.DataImportIssueStore;
-import org.opentripplanner.model.FareZone;
+import org.opentripplanner.transit.model.site.FareZone;
 import org.opentripplanner.model.Station;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.impl.EntityById;

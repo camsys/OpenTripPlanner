@@ -1,7 +1,7 @@
 package org.opentripplanner.util;
 
 import org.junit.Test;
-import org.opentripplanner.model.TransitMode;
+import org.opentripplanner.transit.model.basic.TransitMode;
 
 import java.util.HashSet;
 import java.util.List;

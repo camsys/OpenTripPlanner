@@ -4,7 +4,7 @@ import org.junit.Test;
 import org.opentripplanner.model.Agency;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.GenericLocation;
-import org.opentripplanner.model.Route;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.routing.api.request.RoutingRequest;
 
 import java.util.List;

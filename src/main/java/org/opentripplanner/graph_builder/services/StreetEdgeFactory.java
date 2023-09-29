@@ -7,7 +7,7 @@ import org.opentripplanner.routing.edgetype.StreetTraversalPermission;
 import org.opentripplanner.routing.vertextype.IntersectionVertex;
 
 import org.locationtech.jts.geom.LineString;
-import org.opentripplanner.util.I18NString;
+import org.opentripplanner.transit.model.basic.I18NString;
 
 /**
  * Edge factory to build StreetEdge and AreaEdge.

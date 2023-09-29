@@ -24,8 +24,8 @@ import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.location.TemporaryStreetLocation;
 import org.opentripplanner.routing.vertextype.StreetVertex;
 import org.opentripplanner.routing.vertextype.TransitStopVertex;
-import org.opentripplanner.util.I18NString;
-import org.opentripplanner.util.NonLocalizedString;
+import org.opentripplanner.transit.model.basic.I18NString;
+import org.opentripplanner.transit.model.basic.NonLocalizedString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -3,7 +3,7 @@ package org.opentripplanner.updater.bike_rental.datasources;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.opentripplanner.routing.bike_rental.BikeRentalStation;
 import org.opentripplanner.updater.bike_rental.datasources.params.BikeRentalDataSourceParameters;
-import org.opentripplanner.util.NonLocalizedString;
+import org.opentripplanner.transit.model.basic.NonLocalizedString;
 
 import java.util.HashSet;
 import java.util.Map;

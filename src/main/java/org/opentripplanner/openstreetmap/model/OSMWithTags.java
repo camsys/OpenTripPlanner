@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.opentripplanner.graph_builder.module.osm.TemplateLibrary;
-import org.opentripplanner.util.I18NString;
-import org.opentripplanner.util.NonLocalizedString;
+import org.opentripplanner.transit.model.basic.I18NString;
+import org.opentripplanner.transit.model.basic.NonLocalizedString;
 import org.opentripplanner.util.TranslatedString;
 
 /**

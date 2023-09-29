@@ -16,7 +16,7 @@ public final class FareProduct {
   private final RiderCategory category;
   private final FareContainer container;
 
-  FareProduct(
+  public FareProduct(
           FeedScopedId id,
           String name,
           Money amount,

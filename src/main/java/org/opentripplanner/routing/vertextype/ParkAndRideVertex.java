@@ -2,7 +2,7 @@ package org.opentripplanner.routing.vertextype;
 
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.Vertex;
-import org.opentripplanner.util.I18NString;
+import org.opentripplanner.transit.model.basic.I18NString;
 
 /**
  * A vertex for a park and ride area.

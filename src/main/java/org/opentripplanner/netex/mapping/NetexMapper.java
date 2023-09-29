@@ -12,7 +12,7 @@ import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.FlexLocationGroup;
 import org.opentripplanner.model.FlexStopLocation;
 import org.opentripplanner.model.Notice;
-import org.opentripplanner.model.Route;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.model.ShapePoint;
 import org.opentripplanner.model.Station;
 import org.opentripplanner.transit.model.site.StopLocation;

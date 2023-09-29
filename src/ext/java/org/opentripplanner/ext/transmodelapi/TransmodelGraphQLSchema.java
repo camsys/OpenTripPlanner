@@ -78,8 +78,8 @@ import org.opentripplanner.ext.transmodelapi.model.timetable.TimetabledPassingTi
 import org.opentripplanner.ext.transmodelapi.model.timetable.TripMetadataType;
 import org.opentripplanner.ext.transmodelapi.support.GqlUtil;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
-import org.opentripplanner.model.Route;
-import org.opentripplanner.model.TransitMode;
+import org.opentripplanner.transit.model.network.Route;
+import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.routing.RoutingService;
 import org.opentripplanner.routing.alertpatch.TransitAlert;
 import org.opentripplanner.routing.api.request.RoutingRequest;

@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import org.opentripplanner.model.Route;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.model.Trip;

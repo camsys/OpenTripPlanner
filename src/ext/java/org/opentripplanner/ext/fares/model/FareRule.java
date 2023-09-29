@@ -1,7 +1,8 @@
 /* This file is based on code copied from project OneBusAway, see the LICENSE file for further information. */
-package org.opentripplanner.model;
+package org.opentripplanner.ext.fares.model;
 
-import org.opentripplanner.ext.fares.model.FareAttribute;
+import org.opentripplanner.transit.model.network.Route;
+import org.opentripplanner.model.TransitEntity;
 
 import java.io.Serializable;
 

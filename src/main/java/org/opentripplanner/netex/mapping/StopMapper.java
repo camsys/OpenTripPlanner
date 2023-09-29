@@ -3,7 +3,7 @@ package org.opentripplanner.netex.mapping;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.graph_builder.DataImportIssueStore;
-import org.opentripplanner.model.FareZone;
+import org.opentripplanner.transit.model.site.FareZone;
 import org.opentripplanner.model.Station;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.WgsCoordinate;

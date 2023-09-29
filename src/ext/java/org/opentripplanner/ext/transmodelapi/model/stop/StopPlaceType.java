@@ -20,7 +20,7 @@ import org.opentripplanner.model.Station;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopCollection;
 import org.opentripplanner.model.StopTimesInPattern;
-import org.opentripplanner.model.TransitMode;
+import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.model.TripTimeShort;
 import org.opentripplanner.routing.RoutingService;

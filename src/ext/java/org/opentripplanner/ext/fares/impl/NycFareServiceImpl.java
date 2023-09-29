@@ -19,6 +19,7 @@ import org.opentripplanner.routing.fares.FareService;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.site.StopLocation;
+import org.opentripplanner.util.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -342,7 +343,7 @@ public class NycFareServiceImpl implements FareService {
     } else if (leg.isTransitLeg()) {
       Ride ride = rideForTransitPathLeg(leg);
       Route route = leg.getRoute();
-      int routeType = route.getGtfsType();
+      int routeType = route.getType();
 
       // Note the old implementation directly used the ints as classifiers here.
       if (routeType == 1) {
@@ -389,14 +390,14 @@ public class NycFareServiceImpl implements FareService {
 
   private static Ride rideForTransitPathLeg(Leg leg) {
     Ride ride = new Ride();
-    ride.firstStop = leg.getFrom().stop;
-    ride.lastStop = leg.getTo().stop;
+    ride.firstStop = leg.from.stop;
+    ride.lastStop = leg.to.stop;
 
     ride.startZone = ride.firstStop.getFirstZoneAsString();
     ride.endZone = ride.lastStop.getFirstZoneAsString();
 
     var zones = leg
-      .getIntermediateStops()
+      .intermediateStops
       .stream()
       .map(stopArrival -> stopArrival.place.stop.getFirstZoneAsString())
       .collect(Collectors.toSet());
@@ -410,11 +411,11 @@ public class NycFareServiceImpl implements FareService {
     ride.route = leg.getRoute().getId();
     ride.trip = leg.getTrip().getId();
 
-    ride.startTime = leg.getStartTime();
-    ride.endTime = leg.getEndTime();
+    ride.startTime = DateUtils.calendarToZonedDateTime(leg.startTime);
+    ride.endTime = DateUtils.calendarToZonedDateTime(leg.endTime);
 
     // In the default fare service, we classify rides by mode.
-    ride.classifier = leg.getMode();
+    ride.classifier = leg.mode;
     return ride;
   }
 

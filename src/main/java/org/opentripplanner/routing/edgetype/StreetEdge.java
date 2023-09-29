@@ -31,8 +31,8 @@ import org.opentripplanner.routing.vertextype.OsmVertex;
 import org.opentripplanner.routing.vertextype.SplitterVertex;
 import org.opentripplanner.routing.vertextype.StreetVertex;
 import org.opentripplanner.util.BitSetUtils;
-import org.opentripplanner.util.I18NString;
-import org.opentripplanner.util.NonLocalizedString;
+import org.opentripplanner.transit.model.basic.I18NString;
+import org.opentripplanner.transit.model.basic.NonLocalizedString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

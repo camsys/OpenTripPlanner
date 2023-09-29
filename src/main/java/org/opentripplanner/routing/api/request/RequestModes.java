@@ -1,7 +1,7 @@
 package org.opentripplanner.routing.api.request;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.opentripplanner.model.TransitMode;
+import org.opentripplanner.transit.model.basic.TransitMode;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;

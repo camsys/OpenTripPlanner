@@ -20,7 +20,7 @@ import org.opentripplanner.model.PathwayNode;
 import org.opentripplanner.model.Station;
 import org.opentripplanner.model.StationElement;
 import org.opentripplanner.model.Stop;
-import org.opentripplanner.model.TransitMode;
+import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.model.TripPattern;
 import org.opentripplanner.routing.edgetype.ElevatorAlightEdge;
 import org.opentripplanner.routing.edgetype.ElevatorBoardEdge;

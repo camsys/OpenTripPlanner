@@ -1,6 +1,6 @@
 package org.opentripplanner.api.mapping;
 
-import org.opentripplanner.model.TransitMode;
+import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.routing.core.TraverseMode;
 
 import java.util.HashMap;

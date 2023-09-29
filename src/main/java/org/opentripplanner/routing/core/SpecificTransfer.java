@@ -4,7 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.Serializable;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
-import org.opentripplanner.model.Route;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.model.transfer.TransferService;
 

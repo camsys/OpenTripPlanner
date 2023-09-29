@@ -2,7 +2,7 @@ package org.opentripplanner.routing.graphfinder;
 
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.Stop;
-import org.opentripplanner.model.TransitMode;
+import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.model.TripPattern;
 import org.opentripplanner.routing.RoutingService;
 import org.opentripplanner.routing.algorithm.astar.TraverseVisitor;

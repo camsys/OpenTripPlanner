@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.opentripplanner.ext.fares.model.FareAttribute;
+import org.opentripplanner.ext.fares.model.FareRule;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
 import org.opentripplanner.model.transfer.Transfer;
 import org.opentripplanner.transit.model.framework.FeedScopedId;

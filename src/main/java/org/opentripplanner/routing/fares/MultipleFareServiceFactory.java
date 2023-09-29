@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.opentripplanner.ext.fares.impl.AddingMultipleFareService;
 import org.opentripplanner.model.OtpTransitService;
 import org.opentripplanner.routing.impl.DefaultFareServiceFactory;
 import org.opentripplanner.routing.services.FareService;

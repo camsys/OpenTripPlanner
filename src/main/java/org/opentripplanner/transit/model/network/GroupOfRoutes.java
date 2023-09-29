@@ -3,19 +3,17 @@ package org.opentripplanner.transit.model.network;
 import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import org.opentripplanner.transit.model.framework.AbstractTransitEntity;
+
 import org.opentripplanner.transit.model.framework.FeedScopedId;
-import org.opentripplanner.transit.model.framework.LogInfo;
-import org.opentripplanner.util.lang.StringUtils;
+//import org.opentripplanner.transit.model.framework.LogInfo;
+//import org.opentripplanner.util.lang.StringUtils;
 
 /**
  * OTP model for NeTEx GroupOfLines. Not used for GTFS at the moment. This is used to categorize
  * lines based on their particular purposes such as fare harmonization or public presentation. For
  * example divide lines into commercial and non-commercial groups.
  */
-public class GroupOfRoutes
-  extends AbstractTransitEntity<GroupOfRoutes, GroupOfRoutesBuilder>
-  implements LogInfo {
+public class GroupOfRoutes {
 
   private final String name;
   private final String privateCode;

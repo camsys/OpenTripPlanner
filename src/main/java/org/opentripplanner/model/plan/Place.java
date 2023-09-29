@@ -1,8 +1,10 @@
 package org.opentripplanner.model.plan;
 
+import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.WgsCoordinate;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.base.ToStringBuilder;
+import org.opentripplanner.transit.model.site.StopLocation;
 
 /** 
 * A Place is where a journey starts or ends, or a transit stop along the way.
@@ -18,6 +20,8 @@ public class Place {
      * The ID of the stop. This is often something that users don't care about.
      */
     public FeedScopedId stopId = null;
+
+    public StopLocation stop = null;
 
     /** 
      * The "code" of the stop. Depending on the transit agency, this is often

@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
-import org.opentripplanner.model.TransitMode;
+import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.model.TripPattern;
 import org.opentripplanner.model.transfer.Transfer;
 import org.opentripplanner.routing.algorithm.raptor.transit.request.PatternGuaranteedTransferProvider;

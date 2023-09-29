@@ -23,7 +23,7 @@ import org.opentripplanner.routing.vertextype.BikeParkVertex;
 import org.opentripplanner.routing.vertextype.IntersectionVertex;
 import org.opentripplanner.routing.vertextype.ParkAndRideVertex;
 import org.opentripplanner.routing.vertextype.StreetVertex;
-import org.opentripplanner.util.NonLocalizedString;
+import org.opentripplanner.transit.model.basic.NonLocalizedString;
 
 /**
  * Test P+R (both car P+R and bike P+R).

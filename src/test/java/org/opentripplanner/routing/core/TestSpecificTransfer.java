@@ -3,7 +3,7 @@ package org.opentripplanner.routing.core;
 import junit.framework.TestCase;
 
 import org.opentripplanner.transit.model.framework.FeedScopedId;
-import org.opentripplanner.model.Route;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.model.Trip;
 
 public class TestSpecificTransfer extends TestCase {

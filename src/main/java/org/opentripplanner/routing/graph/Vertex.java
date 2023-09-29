@@ -4,8 +4,8 @@ import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.common.geometry.DirectionUtils;
 import org.opentripplanner.model.StationElement;
 import org.opentripplanner.routing.edgetype.StreetEdge;
-import org.opentripplanner.util.I18NString;
-import org.opentripplanner.util.NonLocalizedString;
+import org.opentripplanner.transit.model.basic.I18NString;
+import org.opentripplanner.transit.model.basic.NonLocalizedString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

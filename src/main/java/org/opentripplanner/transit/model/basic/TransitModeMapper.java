@@ -1,6 +1,5 @@
-package org.opentripplanner.gtfs.mapping;
+package org.opentripplanner.transit.model.basic;
 
-import org.opentripplanner.model.TransitMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

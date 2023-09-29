@@ -1,6 +1,8 @@
 package org.opentripplanner.util;
 
 import junit.framework.TestCase;
+import org.opentripplanner.transit.model.basic.I18NString;
+import org.opentripplanner.transit.model.basic.NonLocalizedString;
 
 import java.util.HashMap;
 import java.util.Locale;

@@ -1,6 +1,6 @@
 package org.opentripplanner.routing.core;
 
-import org.opentripplanner.model.TransitMode;
+import org.opentripplanner.transit.model.basic.TransitMode;
 
 import java.util.EnumSet;
 

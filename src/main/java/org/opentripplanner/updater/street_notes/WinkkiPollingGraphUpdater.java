@@ -2,7 +2,7 @@ package org.opentripplanner.updater.street_notes;
 
 import org.opengis.feature.simple.SimpleFeature;
 import org.opentripplanner.model.StreetNote;
-import org.opentripplanner.util.NonLocalizedString;
+import org.opentripplanner.transit.model.basic.NonLocalizedString;
 
 import java.util.Date;
 

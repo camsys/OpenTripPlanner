@@ -4,7 +4,7 @@ import org.opentripplanner.common.model.T2;
 import org.opentripplanner.model.StreetNote;
 import org.opentripplanner.openstreetmap.model.OSMWithTags;
 import org.opentripplanner.routing.services.notes.NoteMatcher;
-import org.opentripplanner.util.I18NString;
+import org.opentripplanner.transit.model.basic.I18NString;
 import org.opentripplanner.util.LocalizedString;
 import org.opentripplanner.util.TranslatedString;
 

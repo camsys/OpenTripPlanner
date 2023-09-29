@@ -41,7 +41,7 @@ import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
-import org.opentripplanner.routing.services.FareService;
+import org.opentripplanner.routing.fares.FareService;
 import org.opentripplanner.standalone.server.Router;
 import org.opentripplanner.transit.raptor.RaptorService;
 import org.opentripplanner.transit.raptor.api.path.Path;
@@ -269,9 +269,10 @@ public class RoutingWorker {
             // Decorate the Itineraries with fare information.
             // Itinerary and Leg are API model classes, lacking internal object references needed for effective
             // fare calculation. We derive the fares from the internal Path objects and add them to the itinerary.
-            if (fareService != null) {
-                itinerary.fare = fareService.getCost(path, transitLayer);
-            }
+//            if (fareService != null) {
+//                itinerary.fare = fareService.getCost(path, transitLayer);
+//            }
+            //TODO FIXME REMOVED ABOVE FARE CALCULATIONS
             itineraries.add(itinerary);
         }
 

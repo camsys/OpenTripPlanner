@@ -1,7 +1,7 @@
 package org.opentripplanner.model.transfer;
 
 import org.opentripplanner.transit.model.framework.FeedScopedId;
-import org.opentripplanner.model.Route;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.Trip;
 

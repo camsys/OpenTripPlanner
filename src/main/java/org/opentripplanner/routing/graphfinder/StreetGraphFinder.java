@@ -6,7 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.GenericLocation;
-import org.opentripplanner.model.TransitMode;
+import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.routing.RoutingService;
 import org.opentripplanner.routing.algorithm.astar.AStar;
 import org.opentripplanner.routing.algorithm.astar.TraverseVisitor;

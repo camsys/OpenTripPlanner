@@ -6,7 +6,7 @@ public final class FareContainer {
     private final String id;
     private final String name;
 
-    FareContainer(String id, String name) {
+    public FareContainer(String id, String name) {
         this.id = id;
         this.name = name;
     }

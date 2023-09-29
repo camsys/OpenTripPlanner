@@ -1,7 +1,7 @@
 package org.opentripplanner.routing.vertextype;
 
 import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.util.NonLocalizedString;
+import org.opentripplanner.transit.model.basic.NonLocalizedString;
 
 /**
  * A vertex for an OSM node that represents a transit stop and has a ref=(stop_code) tag.

@@ -48,7 +48,7 @@ import org.opentripplanner.routing.vertextype.StreetVertex;
 import org.opentripplanner.routing.vertextype.TemporaryVertex;
 import org.opentripplanner.routing.vertextype.TransitEntranceVertex;
 import org.opentripplanner.routing.vertextype.TransitStopVertex;
-import org.opentripplanner.util.NonLocalizedString;
+import org.opentripplanner.transit.model.basic.NonLocalizedString;
 
 public abstract class GraphRoutingTest {
 

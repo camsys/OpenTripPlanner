@@ -14,7 +14,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.opentripplanner.model.TransitMode;
+import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.routing.algorithm.raptor.transit.SlackProvider;
 import org.opentripplanner.routing.algorithm.raptor.transit.TripSchedule;
 import org.opentripplanner.routing.algorithm.raptor.transit.mappers.RaptorRequestMapper;

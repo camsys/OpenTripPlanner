@@ -1,6 +1,7 @@
 package org.opentripplanner.routing.fares;
 
 import junit.framework.TestCase;
+import org.opentripplanner.ext.fares.impl.AddingMultipleFareService;
 import org.opentripplanner.routing.algorithm.raptor.transit.TransitLayer;
 import org.opentripplanner.routing.algorithm.raptor.transit.TripSchedule;
 import org.opentripplanner.routing.core.Fare;

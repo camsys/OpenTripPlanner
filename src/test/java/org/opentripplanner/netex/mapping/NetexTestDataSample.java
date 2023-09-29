@@ -51,7 +51,7 @@ class NetexTestDataSample {
     private final HierarchicalMapById<ServiceJourney> serviceJourneyById = new HierarchicalMapById<>();
     private final HierarchicalMapById<Route> routesById = new HierarchicalMapById<>();
 
-    private final EntityById<org.opentripplanner.model.Route> otpRouteByid = new EntityById<>();
+    private final EntityById<org.opentripplanner.transit.model.network.Route> otpRouteByid = new EntityById<>();
 
     NetexTestDataSample() {
         final int[] stopTimes = {0, 4, 10, 15};
@@ -66,7 +66,7 @@ class NetexTestDataSample {
 
         // Add OTP Route (correspond to Netex Line)
         {
-            org.opentripplanner.model.Route otpRoute = new org.opentripplanner.model.Route(
+            org.opentripplanner.transit.model.network.Route otpRoute = new org.opentripplanner.transit.model.network.Route(
                 ID_FACTORY.createId(line.getId())
             );
             otpRouteByid.add(otpRoute);
@@ -179,7 +179,7 @@ class NetexTestDataSample {
         return journeyPatternById;
     }
 
-    EntityById<org.opentripplanner.model.Route> getOtpRouteByid() {
+    EntityById<org.opentripplanner.transit.model.network.Route> getOtpRouteByid() {
         return otpRouteByid;
     }
 

@@ -14,7 +14,7 @@ public final class Money implements Comparable<Money> {
   private final Currency currency;
   private final int cents;
 
-  Money(Currency currency, int cents) {
+  public Money(Currency currency, int cents) {
     this.currency = currency;
     this.cents = cents;
   }

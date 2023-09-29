@@ -28,7 +28,7 @@ import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.routing.location.TemporaryStreetLocation;
 import org.opentripplanner.routing.vertextype.StreetVertex;
 import org.opentripplanner.transit.raptor.speed_test.model.Place;
-import org.opentripplanner.util.NonLocalizedString;
+import org.opentripplanner.transit.model.basic.NonLocalizedString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

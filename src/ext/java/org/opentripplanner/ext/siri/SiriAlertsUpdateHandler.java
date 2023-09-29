@@ -1,7 +1,7 @@
 package org.opentripplanner.ext.siri;
 
 import org.opentripplanner.transit.model.framework.FeedScopedId;
-import org.opentripplanner.model.Route;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.model.calendar.ServiceDate;
 import org.opentripplanner.routing.alertpatch.AlertUrl;
 import org.opentripplanner.routing.alertpatch.EntitySelector;
@@ -11,8 +11,8 @@ import org.opentripplanner.routing.alertpatch.TransitAlert;
 import org.opentripplanner.routing.algorithm.raptor.transit.mappers.DateMapper;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.services.TransitAlertService;
-import org.opentripplanner.util.I18NString;
-import org.opentripplanner.util.NonLocalizedString;
+import org.opentripplanner.transit.model.basic.I18NString;
+import org.opentripplanner.transit.model.basic.NonLocalizedString;
 import org.opentripplanner.util.TranslatedString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

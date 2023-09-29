@@ -39,8 +39,8 @@ public class ElevatorsRoutingTest extends MTAGraphTest {
             List<Itinerary> itineraries = searchViaRoutingWorker("40.793919,-73.972323", "40.715478,-74.009266", "2018-03-15", "04:00pm", opt);
             assertEquals(2, itineraries.size());
             Itinerary i = itineraries.get(0);
-            assertNotNull(i.legs.get(0));
-            Leg from = i.legs.get(0);
+            assertNotNull(i.getLegs().get(0));
+            Leg from = i.getLegs().get(0);
             assertNotNull(from.from);
             assertNotNull(from.from.stopId);
             assertEquals("120S", from.from.stopId.getId());

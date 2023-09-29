@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.opentripplanner.routing.bike_rental.BikeRentalStation;
 import org.opentripplanner.updater.bike_rental.BikeRentalDataSource;
 import org.opentripplanner.updater.bike_rental.datasources.params.BikeRentalDataSourceParameters;
-import org.opentripplanner.util.NonLocalizedString;
+import org.opentripplanner.transit.model.basic.NonLocalizedString;
 
 /**
  * Implementation of a BikeRentalDataSource for the generic JCDecaux Open-Data API.

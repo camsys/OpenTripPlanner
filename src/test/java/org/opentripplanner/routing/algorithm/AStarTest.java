@@ -15,7 +15,7 @@ import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.location.TemporaryStreetLocation;
 import org.opentripplanner.routing.spt.GraphPath;
 import org.opentripplanner.routing.spt.ShortestPathTree;
-import org.opentripplanner.util.NonLocalizedString;
+import org.opentripplanner.transit.model.basic.NonLocalizedString;
 
 import java.util.HashSet;
 import java.util.List;

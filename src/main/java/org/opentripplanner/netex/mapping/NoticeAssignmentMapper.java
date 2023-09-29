@@ -4,7 +4,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.Notice;
-import org.opentripplanner.model.Route;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.model.StopTimeKey;
 import org.opentripplanner.model.TransitEntity;

@@ -1,6 +1,6 @@
 package org.opentripplanner.api.parameter;
 
-import org.opentripplanner.model.TransitMode;
+import org.opentripplanner.transit.model.basic.TransitMode;
 
 public enum ApiRequestMode {
     WALK, BICYCLE, CAR,

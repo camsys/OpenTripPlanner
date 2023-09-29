@@ -2,7 +2,7 @@ package org.opentripplanner.updater;
 
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
-import org.opentripplanner.model.Route;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.model.TripPattern;
 import org.opentripplanner.model.calendar.ServiceDate;

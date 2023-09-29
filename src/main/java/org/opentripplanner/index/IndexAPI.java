@@ -25,7 +25,7 @@ import org.opentripplanner.api.model.ApiTrip;
 import org.opentripplanner.api.model.ApiTripShort;
 import org.opentripplanner.model.Agency;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
-import org.opentripplanner.model.Route;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopTimesInPattern;
 import org.opentripplanner.model.Timetable;

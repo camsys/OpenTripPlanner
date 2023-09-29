@@ -35,7 +35,7 @@ import org.opentripplanner.api.parameter.ApiRequestMode;
 import org.opentripplanner.api.parameter.QualifiedMode;
 import org.opentripplanner.api.parameter.Qualifier;
 import org.opentripplanner.model.GenericLocation;
-import org.opentripplanner.model.TransitMode;
+import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.model.plan.WalkStep;

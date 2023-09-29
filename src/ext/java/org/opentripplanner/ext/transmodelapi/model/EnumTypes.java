@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.function.Function;
 import org.opentripplanner.model.BookingMethod;
 import org.opentripplanner.model.Direction;
-import org.opentripplanner.model.TransitMode;
+import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.model.TripAlteration;
 import org.opentripplanner.model.plan.AbsoluteDirection;
 import org.opentripplanner.model.plan.RelativeDirection;

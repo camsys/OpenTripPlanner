@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import org.opentripplanner.model.Agency;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.Operator;
-import org.opentripplanner.model.Route;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopPattern;
 import org.opentripplanner.model.StopTime;

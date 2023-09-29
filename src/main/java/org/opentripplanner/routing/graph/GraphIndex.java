@@ -15,7 +15,7 @@ import org.opentripplanner.model.Agency;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.MultiModalStation;
 import org.opentripplanner.model.Operator;
-import org.opentripplanner.model.Route;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.model.Station;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.transit.model.site.StopLocation;

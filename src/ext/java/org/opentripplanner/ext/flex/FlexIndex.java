@@ -9,7 +9,7 @@ import org.opentripplanner.ext.flex.trip.FlexTripStopTime;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.FlexStopLocation;
 import org.opentripplanner.model.FlexLocationGroup;
-import org.opentripplanner.model.Route;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.model.SimpleTransfer;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.model.Trip;

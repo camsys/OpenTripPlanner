@@ -67,7 +67,7 @@ import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.model.TimetableSnapshot;
 import org.opentripplanner.model.TimetableSnapshotProvider;
 import org.opentripplanner.model.TransitEntity;
-import org.opentripplanner.model.TransitMode;
+import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.model.TripPattern;
 import org.opentripplanner.model.WgsCoordinate;

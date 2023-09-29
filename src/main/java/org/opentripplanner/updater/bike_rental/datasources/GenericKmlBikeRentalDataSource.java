@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import org.opentripplanner.routing.bike_rental.BikeRentalStation;
 import org.opentripplanner.updater.bike_rental.datasources.params.GenericKmlBikeRentalDataSourceParameters;
-import org.opentripplanner.util.NonLocalizedString;
+import org.opentripplanner.transit.model.basic.NonLocalizedString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

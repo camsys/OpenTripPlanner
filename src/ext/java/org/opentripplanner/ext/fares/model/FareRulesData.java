@@ -3,8 +3,6 @@ package org.opentripplanner.ext.fares.model;
 import java.util.List;
 import java.util.Objects;
 
-import org.opentripplanner.model.FareRule;
-
 public final class FareRulesData {
   private final List<FareAttribute> fareAttributes;
   private final List<FareRule> fareRules;

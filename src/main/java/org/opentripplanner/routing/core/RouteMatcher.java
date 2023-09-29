@@ -2,7 +2,7 @@ package org.opentripplanner.routing.core;
 
 import org.opentripplanner.common.model.T2;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
-import org.opentripplanner.model.Route;
+import org.opentripplanner.transit.model.network.Route;
 
 import java.io.Serializable;
 import java.util.Collection;

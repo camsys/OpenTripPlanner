@@ -2,7 +2,7 @@ package org.opentripplanner.netex.mapping;
 
 import org.junit.Test;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
-import org.opentripplanner.model.Route;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.model.impl.OtpTransitServiceBuilder;
 import org.opentripplanner.netex.index.hierarchy.HierarchicalMap;

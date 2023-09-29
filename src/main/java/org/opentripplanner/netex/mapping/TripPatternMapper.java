@@ -46,7 +46,7 @@ class TripPatternMapper {
 
     private final FeedScopedIdFactory idFactory;
 
-    private final EntityById<org.opentripplanner.model.Route> otpRouteById;
+    private final EntityById<org.opentripplanner.transit.model.network.Route> otpRouteById;
 
     private final ReadOnlyHierarchicalMap<String, Route> routeById;
 
@@ -66,7 +66,7 @@ class TripPatternMapper {
             EntityById<Stop> stopsById,
             EntityById<FlexStopLocation> flexStopLocationsById,
             EntityById<FlexLocationGroup> flexLocationGroupsById,
-            EntityById<org.opentripplanner.model.Route> otpRouteById,
+            EntityById<org.opentripplanner.transit.model.network.Route> otpRouteById,
             Set<FeedScopedId> shapePointsIds,
             ReadOnlyHierarchicalMap<String, Route> routeById,
             ReadOnlyHierarchicalMap<String, JourneyPattern> journeyPatternById,
@@ -184,7 +184,7 @@ class TripPatternMapper {
         return result;
     }
 
-    private org.opentripplanner.model.Route lookupRoute(
+    private org.opentripplanner.transit.model.network.Route lookupRoute(
             JourneyPattern journeyPattern
     ) {
         Route route = routeById.lookup(journeyPattern.getRouteRef().getRef());

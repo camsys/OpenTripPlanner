@@ -12,7 +12,7 @@ import java.util.Set;
 import org.opentripplanner.ext.fares.model.FareProduct;
 import org.opentripplanner.ext.fares.model.LegProducts;
 import org.opentripplanner.model.plan.Leg;
-import org.opentripplanner.util.lang.ToStringBuilder;
+import org.opentripplanner.model.base.ToStringBuilder;
 
 /**
  * <p>
