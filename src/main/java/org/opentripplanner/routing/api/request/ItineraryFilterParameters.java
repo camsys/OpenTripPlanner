@@ -93,6 +93,8 @@ public class ItineraryFilterParameters {
    */
   public DoubleFunction<Double> nonTransitGeneralizedCostLimit;
 
+  public String sortOrder;
+
 
   private ItineraryFilterParameters() {
     this.debug = false;
@@ -105,6 +107,7 @@ public class ItineraryFilterParameters {
         RequestFunctions.createLinearFunction(3600, 2);
     this.nonTransitGeneralizedCostLimit =
         RequestFunctions.createLinearFunction(3600, 2);
+    this.sortOrder = "default";
   }
 
   public static ItineraryFilterParameters createDefault() {
@@ -119,7 +122,8 @@ public class ItineraryFilterParameters {
       DoubleFunction<Double> transitGeneralizedCostLimit,
       DoubleFunction<Double> nonTransitGeneralizedCostLimit,
       double bikeRentalDistanceRatio,
-      double parkAndRideDurationRatio
+      double parkAndRideDurationRatio,
+      String sortOrder
   ) {
     this.debug = debug;
     this.groupSimilarityKeepOne = groupSimilarityKeepOne;
@@ -129,5 +133,6 @@ public class ItineraryFilterParameters {
     this.nonTransitGeneralizedCostLimit = nonTransitGeneralizedCostLimit;
     this.bikeRentalDistanceRatio = bikeRentalDistanceRatio;
     this.parkAndRideDurationRatio = parkAndRideDurationRatio;
+    this.sortOrder = sortOrder;
   }
 }

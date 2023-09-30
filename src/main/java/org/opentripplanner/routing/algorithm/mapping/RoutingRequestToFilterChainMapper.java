@@ -61,7 +61,9 @@ public class RoutingRequestToFilterChainMapper {
         .withBikeRentalDistanceRatio(p.bikeRentalDistanceRatio)
         .withParkAndRideDurationRatio(p.parkAndRideDurationRatio)
         .withNonTransitGeneralizedCostLimit(p.nonTransitGeneralizedCostLimit)
-        .withRemoveTransitWithHigherCostThanBestOnStreetOnly(true);
+        .withRemoveTransitWithHigherCostThanBestOnStreetOnly(true)
+        .withSortOrder(p.sortOrder);
+
 
     //add flex filter if at least one of the modes is FLEX
     //this is breaking up the pretty method chaining because I didn't want to change the order the filters are added

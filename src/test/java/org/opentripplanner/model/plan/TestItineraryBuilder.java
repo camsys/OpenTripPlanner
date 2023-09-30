@@ -33,6 +33,7 @@ public class TestItineraryBuilder implements PlanTestConstants {
   public static final LocalDate SERVICE_DAY = LocalDate.of(2020, Month.FEBRUARY, 2);
   public static final Route BUS_ROUTE = route(TransitMode.BUS);
   public static final Route RAIL_ROUTE = route(TransitMode.RAIL);
+  public static final Route SUBWAY_ROUTE = route(TransitMode.SUBWAY);
 
   /**
    * For Transit Legs the stopIndex in from/to palce should be increasing. We do not use/lookup
@@ -116,6 +117,13 @@ public class TestItineraryBuilder implements PlanTestConstants {
     return transit(RAIL_ROUTE, tripId, startTime, endTime, to);
   }
 
+  /**
+   * Add a subway leg to the itinerary
+   */
+  public TestItineraryBuilder subway(int tripId, int startTime, int endTime, Place to) {
+    return transit(SUBWAY_ROUTE, tripId, startTime, endTime, to);
+  }
+
 
   public Itinerary egress(int walkDuration) {
     walk(walkDuration, null);
@@ -174,6 +182,7 @@ public class TestItineraryBuilder implements PlanTestConstants {
       case WALK: return WALK_SPEED;
       case BICYCLE: return BICYCLE_SPEED;
       case BUS: return BUS_SPEED;
+      case SUBWAY:
       case RAIL: return RAIL_SPEED;
       case CAR: return CAR_SPEED;
       default: throw new IllegalStateException("Unsupported mode: " + mode);

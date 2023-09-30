@@ -59,6 +59,9 @@ public class OtpDefaultSortOrder extends SortFilter {
         arriveBy ? ARRIVAL_TIME : DEPARTURE_TIME
     ));
   }
+  protected OtpDefaultSortOrder(Comparator<Itinerary> comparator) {
+    super(comparator);
+  }
 
   @Override
   public String name() {
