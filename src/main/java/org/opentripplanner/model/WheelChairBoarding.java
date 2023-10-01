@@ -3,7 +3,8 @@ package org.opentripplanner.model;
 public enum WheelChairBoarding {
     NO_INFORMATION(0),
     POSSIBLE(1),
-    NOT_POSSIBLE(2);
+    NOT_POSSIBLE(2),
+    PARTIAL(3);
 
     WheelChairBoarding(int gtfsCode) {
         this.gtfsCode = gtfsCode;
