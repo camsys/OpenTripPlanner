@@ -82,4 +82,13 @@ public class RoutingRequestToFilterChainMapper {
 
     return builder.build();
   }
+
+  public static ItineraryFilter postFilterSort(
+          RoutingRequest request
+  ) {
+    var builder = new ItineraryFilterChainBuilder(request.arriveBy);
+    var p = request.itineraryFilters;
+    builder.withResultsOrder(p.resultsOrder);
+    return builder.sortOnly();
+  }
 }

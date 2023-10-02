@@ -35,6 +35,7 @@ public class ItineraryFilterChainBuilder {
     private Instant latestDepartureTimeLimit = null;
     private Consumer<Itinerary> maxLimitReachedSubscriber;
     private String sortOrder = "default";
+    private String resultsOrder = "default";
 
 
     /**
@@ -203,6 +204,11 @@ public class ItineraryFilterChainBuilder {
         return this;
     }
 
+    public ItineraryFilterChainBuilder withResultsOrder(String resultsOrder) {
+        this.resultsOrder = resultsOrder;
+        return this;
+    }
+
     public ItineraryFilter build() {
         List<ItineraryFilter> filters = new ArrayList<>();
 
@@ -284,14 +290,21 @@ public class ItineraryFilterChainBuilder {
                     maxLimitReachedSubscriber
                 )
             );
+        } else {
+            // Do the final itineraries sort
+            filters.add(createSortOrder(arriveBy));
         }
-
-        // Do the final itineraries sort
-        filters.add(new OtpDefaultSortOrder(arriveBy));
-        
         if(debug) {
             filters = addDebugWrappers(filters);
         }
+
+        return new FilterChain(filters);
+    }
+
+    public ItineraryFilter sortOnly() {
+        List<ItineraryFilter> filters = new ArrayList<>();
+        // Do the final itineraries sort
+        filters.add(new OtpConfigurableSortOrder(arriveBy, resultsOrder));
 
         return new FilterChain(filters);
     }

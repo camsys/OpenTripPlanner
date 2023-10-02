@@ -794,14 +794,17 @@ public abstract class RoutingResource {
                 case WALKING:
                     request.walkReluctance = 5.0;
                     request.transferCost = 60;
+                    request.itineraryFilters.resultsOrder = "GENERALIZED_COST";
                     break;
                 case TRANSFERS:
                     request.walkReluctance = 2.0;
                     request.transferCost = 1200;
+                    request.itineraryFilters.resultsOrder = "NUM_OF_TRANSFERS,GENERALIZED_COST";
                     break;
                 case QUICK:
                     request.walkReluctance = 3.0;
                     request.transferCost = 1200;
+                    request.itineraryFilters.resultsOrder = "NUM_OF_TRANSFERS,ARRIVAL_DEPARTURE_TIME";
                     break;
             }
         }

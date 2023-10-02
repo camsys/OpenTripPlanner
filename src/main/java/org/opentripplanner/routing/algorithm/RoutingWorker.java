@@ -120,6 +120,7 @@ public class RoutingWorker {
 
         // Filter itineraries
         itineraries = filterItineraries(itineraries);
+        itineraries = orderItineraries(itineraries);
         LOG.debug("Return TripPlan with {} itineraries", itineraries.size());
 
         this.debugTimingAggregator.finishedFiltering();
@@ -313,6 +314,13 @@ public class RoutingWorker {
         );
         return filterChain.filter(itineraries);
     }
+    private List<Itinerary> orderItineraries(List<Itinerary> itineraries) {
+        ItineraryFilter filterChain = RoutingRequestToFilterChainMapper.postFilterSort(
+                request
+        );
+        return filterChain.filter(itineraries);
+    }
+
 
     private void verifyEgressAccess(
             Collection<?> access,
