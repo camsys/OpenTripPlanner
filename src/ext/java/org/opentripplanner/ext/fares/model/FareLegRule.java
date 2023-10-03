@@ -13,11 +13,11 @@ public final class FareLegRule {
   private final String toAreadId;
   private final FareProduct fareProduct;
 
-  FareLegRule(@Nonnull String feedId,
-              @Nullable String networkId,
-              @Nullable String fromAreaId,
-              @Nullable String toAreadId,
-              @Nonnull FareProduct fareProduct
+  public FareLegRule(@Nonnull String feedId,
+                     @Nullable String networkId,
+                     @Nullable String fromAreaId,
+                     @Nullable String toAreadId,
+                     @Nonnull FareProduct fareProduct
   ) {
     this.feedId = feedId;
     this.networkId = networkId;

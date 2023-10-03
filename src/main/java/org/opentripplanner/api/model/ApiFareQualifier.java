@@ -13,7 +13,7 @@ public final class ApiFareQualifier {
     private final String id;
     private final String name;
 
-    ApiFareQualifier(String id, String name) {
+    public ApiFareQualifier(String id, String name) {
         this.id = id;
         this.name = name;
     }

@@ -1,6 +1,5 @@
 package org.opentripplanner.gtfs.mapping;
 
-import org.opentripplanner.transit.model.basic.TransitModeMapper;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.transit.model.site.FareZone;

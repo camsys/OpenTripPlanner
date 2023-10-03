@@ -146,7 +146,7 @@ public class AddMinSafeTransferCostFilter implements ItineraryFilter {
    */
   int minSafeTransferTime(Collection<Itinerary> list) {
     int minTransitTime = list.stream()
-        .mapToInt(it -> it.transitTimeSeconds)
+        .mapToInt(it -> Math.toIntExact(it.getTransitDuration().getSeconds()))
         .min()
         .orElse(0);
     int minSafeTravelTime = (int)Math.round(minTransitTime * P / 100.0);

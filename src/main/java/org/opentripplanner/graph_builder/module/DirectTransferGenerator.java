@@ -3,7 +3,7 @@ package org.opentripplanner.graph_builder.module;
 import com.google.common.collect.Iterables;
 import org.opentripplanner.graph_builder.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issues.StopNotLinkedForTransfers;
-import org.opentripplanner.graph_builder.services.GraphBuilderModule;
+import org.opentripplanner.graph_builder.model.GraphBuilderModule;
 import org.opentripplanner.model.SimpleTransfer;
 import org.opentripplanner.model.Stop;
 import org.opentripplanner.routing.algorithm.raptor.transit.Transfer;
@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * {@link org.opentripplanner.graph_builder.services.GraphBuilderModule} module that links up the stops of a transit
+ * {@link GraphBuilderModule} module that links up the stops of a transit
  * network among themselves. This is necessary for routing in long-distance mode.
  *
  * It will use the street network if OSM data has already been loaded into the graph.

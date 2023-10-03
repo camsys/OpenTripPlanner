@@ -1,4 +1,4 @@
-package org.opentripplanner.graph_builder.services;
+package org.opentripplanner.graph_builder.model;
 
 import org.opentripplanner.graph_builder.DataImportIssueStore;
 import org.opentripplanner.routing.graph.Graph;

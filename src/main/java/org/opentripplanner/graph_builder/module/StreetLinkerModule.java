@@ -2,7 +2,7 @@ package org.opentripplanner.graph_builder.module;
 
 import org.opentripplanner.graph_builder.DataImportIssueStore;
 import org.opentripplanner.graph_builder.linking.LinkingDirection;
-import org.opentripplanner.graph_builder.services.GraphBuilderModule;
+import org.opentripplanner.graph_builder.model.GraphBuilderModule;
 import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.core.TraverseModeSet;
 import org.opentripplanner.routing.edgetype.StreetBikeParkLink;
@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * {@link org.opentripplanner.graph_builder.services.GraphBuilderModule} plugin that links various
+ * {@link GraphBuilderModule} plugin that links various
  * objects in the graph to the street network. It should be run after both the transit network and
  * street network are loaded. It links four things: transit stops, transit entrances, bike rental
  * stations, and bike parks. Therefore it should be run even when there's no GTFS data present

@@ -16,7 +16,7 @@ import org.opentripplanner.graph_builder.issues.ElevationFlattened;
 import org.opentripplanner.graph_builder.issues.ElevationPropagationLimit;
 import org.opentripplanner.graph_builder.issues.Graphwide;
 import org.opentripplanner.graph_builder.module.extra_elevation_data.ElevationPoint;
-import org.opentripplanner.graph_builder.services.GraphBuilderModule;
+import org.opentripplanner.graph_builder.model.GraphBuilderModule;
 import org.opentripplanner.graph_builder.services.ned.ElevationGridCoverageFactory;
 import org.opentripplanner.routing.edgetype.StreetEdge;
 import org.opentripplanner.routing.edgetype.StreetWithElevationEdge;
@@ -49,7 +49,7 @@ import static org.opentripplanner.util.ElevationUtils.computeEllipsoidToGeoidDif
  * THIS CLASS IS MULTI-THREADED
  * (When configured to do so, it uses parallel streams to distribute elevation calculation tasks for edges.)
  *
- * {@link org.opentripplanner.graph_builder.services.GraphBuilderModule} plugin that applies elevation data to street
+ * {@link GraphBuilderModule} plugin that applies elevation data to street
  * data that has already been loaded into a (@link Graph}, creating elevation profiles for each Street encountered
  * in the Graph. Data sources that could be used include auto-downloaded and cached National Elevation Dataset (NED)
  * raster data or a GeoTIFF file. The elevation profiles are stored as {@link PackedCoordinateSequence} objects, where

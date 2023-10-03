@@ -1,7 +1,7 @@
 package org.opentripplanner.api.configuration;
 
 import static org.opentripplanner.util.OTPFeature.APIBikeRental;
-import static org.opentripplanner.util.OTPFeature.APIExternalGeocoder;
+//import static org.opentripplanner.util.OTPFeature.APIExternalGeocoder;
 import static org.opentripplanner.util.OTPFeature.APIGraphInspectorTile;
 import static org.opentripplanner.util.OTPFeature.APIServerInfo;
 import static org.opentripplanner.util.OTPFeature.APIUpdaterStatus;
@@ -11,7 +11,7 @@ import static org.opentripplanner.util.OTPFeature.SandboxAPILegacyGraphQLApi;
 import static org.opentripplanner.util.OTPFeature.SandboxAPIMapboxVectorTilesApi;
 import static org.opentripplanner.util.OTPFeature.SandboxAPIParkAndRideApi;
 import static org.opentripplanner.util.OTPFeature.SandboxAPITransmodelApi;
-import static org.opentripplanner.util.OTPFeature.SandboxExampleAPIGraphStatistics;
+//import static org.opentripplanner.util.OTPFeature.SandboxExampleAPIGraphStatistics;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -49,7 +49,7 @@ public class APIEndpoints {
 
         // Add feature enabled APIs, these can be enabled by default, some is not.
         // See the OTPFeature enum for details.
-        addIfEnabled(APIExternalGeocoder, ExternalGeocoderResource.class);
+//        addIfEnabled(APIExternalGeocoder, ExternalGeocoderResource.class);
         addIfEnabled(APIBikeRental, BikeRental.class);
         addIfEnabled(APIServerInfo, ServerInfo.class);
         addIfEnabled(APIGraphInspectorTile, GraphInspectorTileResource.class);
@@ -58,7 +58,7 @@ public class APIEndpoints {
         // Sandbox extension APIs
         addIfEnabled(ActuatorAPI, ActuatorAPI.class);
         addIfEnabled(ReportApi, ReportResource.class);
-        addIfEnabled(SandboxExampleAPIGraphStatistics, GraphStatisticsResource.class);
+//        addIfEnabled(SandboxExampleAPIGraphStatistics, GraphStatisticsResource.class);
         addIfEnabled(SandboxAPITransmodelApi, TransmodelAPI.class);
         addIfEnabled(SandboxAPILegacyGraphQLApi, LegacyGraphQLAPI.class);
         addIfEnabled(SandboxAPIMapboxVectorTilesApi, VectorTilesResource.class);

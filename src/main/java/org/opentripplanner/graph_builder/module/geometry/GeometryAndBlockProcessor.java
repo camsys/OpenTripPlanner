@@ -17,6 +17,7 @@ import org.opentripplanner.common.geometry.GeometryUtils;
 import org.opentripplanner.common.geometry.PackedCoordinateSequence;
 import org.opentripplanner.common.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.common.model.P2;
+import org.opentripplanner.ext.fares.model.FareRulesData;
 import org.opentripplanner.graph_builder.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issues.BogusShapeDistanceTraveled;
 import org.opentripplanner.graph_builder.issues.BogusShapeGeometry;
@@ -32,8 +33,8 @@ import org.opentripplanner.model.Timetable;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.model.TripPattern;
 import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.routing.impl.DefaultFareServiceFactory;
-import org.opentripplanner.routing.services.FareService;
+import org.opentripplanner.ext.fares.impl.DefaultFareServiceFactory;
+import org.opentripplanner.routing.fares.FareService;
 import org.opentripplanner.routing.fares.FareServiceFactory;
 import org.opentripplanner.routing.trippattern.TripTimes;
 import org.opentripplanner.util.ProgressTracker;
@@ -98,16 +99,19 @@ public class GeometryAndBlockProcessor {
 
     // TODO OTP2 - Instead of exposing the graph (the entire world) to this class, this class should
     //           - Create a datastructure and return it, then that should be injected into the graph.
-    public void run(Graph graph) {
-        run(graph, new DataImportIssueStore(false));
-    }
+//    public void run(Graph graph) {
+//        run(graph, new DataImportIssueStore(false));
+//    }
 
     /** Generate the edges. Assumes that there are already vertices in the graph for the stops. */
     @SuppressWarnings("Convert2MethodRef")
-    public void run(Graph graph, DataImportIssueStore issueStore) {
+    public void run(Graph graph, DataImportIssueStore issueStore, FareRulesData fareRulesService) {
         this.issueStore = issueStore;
 
-        fareServiceFactory.processGtfs(transitService);
+//        fareServiceFactory.processGtfs(transitService);
+        fareServiceFactory.processGtfs(fareRulesService, transitService);
+
+
 
         /* Assign 0-based numeric codes to all GTFS service IDs. */
         for (FeedScopedId serviceId : transitService.getAllServiceIds()) {

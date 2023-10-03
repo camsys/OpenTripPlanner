@@ -63,7 +63,7 @@ public class FareMapper {
           // eventually we want to implement products that span multiple legs (but not the entire itinerary)
           return new ApiLegProducts(List.of(index), toApiFareProducts(legProducts.get(leg)));
         })
-        .toList();
+        .collect(Collectors.toList());
     }
   }
 
@@ -94,7 +94,7 @@ public class FareMapper {
             toApiFareQualifier(p.container())
           )
         )
-        .toList();
+        .collect(Collectors.toList());
     }
   }
 
@@ -103,7 +103,7 @@ public class FareMapper {
       .getTypes()
       .stream()
       .map(key -> {
-        var money = fare.getDetails(key).stream().map(this::toApiFareComponent).toList();
+        var money = fare.getDetails(key).stream().map(this::toApiFareComponent).collect(Collectors.toSet());
         return new SimpleEntry<>(key, money);
       })
       .collect(Collectors.toMap(e -> e.getKey().name(), Entry::getValue));

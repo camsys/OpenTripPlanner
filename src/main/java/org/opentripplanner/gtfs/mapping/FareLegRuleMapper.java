@@ -2,8 +2,11 @@ package org.opentripplanner.gtfs.mapping;
 
 import java.util.Collection;
 import java.util.Objects;
+import java.util.stream.Collectors;
+
 import org.opentripplanner.ext.fares.model.FareLegRule;
 import org.opentripplanner.ext.fares.model.FareProduct;
+import org.opentripplanner.graph_builder.DataImportIssue;
 import org.opentripplanner.graph_builder.DataImportIssueStore;
 
 public final class FareLegRuleMapper {
@@ -32,16 +35,18 @@ public final class FareLegRuleMapper {
             productForRule
           );
         } else {
-          issueStore.add(
-            "UnknownFareProductId",
-            "Fare leg rule %s refers to unknown fare product %s",
-            r.getId(),
-            r.getFareProduct().getId()
+          issueStore.add(new DataImportIssue() {
+                             @Override
+                             public String getMessage() {
+                                 return "UnknownFareProductId. Fare leg rule refers to unknown fare product" + r.getId() + " " + r.getFareProduct().getId();
+                             }
+                         }
+
           );
           return null;
         }
       })
       .filter(Objects::nonNull)
-      .toList();
+      .collect(Collectors.toList());
   }
 }

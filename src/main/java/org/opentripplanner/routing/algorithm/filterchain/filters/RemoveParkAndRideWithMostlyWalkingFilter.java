@@ -40,7 +40,7 @@ public class RemoveParkAndRideWithMostlyWalkingFilter implements ItineraryFilter
                     .filter(l -> l.mode == TraverseMode.CAR)
                     .mapToDouble(Leg::getDuration)
                     .sum();
-            double totalDuration = itinerary.durationSeconds;
+            double totalDuration = itinerary.getDuration().getSeconds();
 
             if (containsTransit
                     || itineraries.size() == 1

@@ -24,7 +24,7 @@ public class LatestDepartureTimeFilter implements ItineraryFilter {
     public List<Itinerary> filter(List<Itinerary> itineraries) {
         return itineraries
                 .stream()
-                .filter(it -> it.startTime().getTimeInMillis() <= limitMs)
+                .filter(it -> it.startTime().toInstant().toEpochMilli() <= limitMs)
                 .collect(Collectors.toList());
     }
 

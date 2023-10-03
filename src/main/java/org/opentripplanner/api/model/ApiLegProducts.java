@@ -12,7 +12,7 @@ public final class ApiLegProducts {
     private final List<Integer> legIndices;
     private final Collection<ApiFareProduct> products;
 
-    ApiLegProducts(List<Integer> legIndices, Collection<ApiFareProduct> products) {
+    public ApiLegProducts(List<Integer> legIndices, Collection<ApiFareProduct> products) {
         this.legIndices = legIndices;
         this.products = products;
     }

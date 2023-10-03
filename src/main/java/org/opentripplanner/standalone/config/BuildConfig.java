@@ -8,7 +8,7 @@ import org.opentripplanner.graph_builder.module.osm.WayPropertySetSource;
 import org.opentripplanner.graph_builder.services.osm.CustomNamer;
 import org.opentripplanner.model.calendar.ServiceDate;
 import org.opentripplanner.model.calendar.ServiceDateInterval;
-import org.opentripplanner.routing.impl.DefaultFareServiceFactory;
+import org.opentripplanner.ext.fares.impl.DefaultFareServiceFactory;
 import org.opentripplanner.routing.fares.FareServiceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

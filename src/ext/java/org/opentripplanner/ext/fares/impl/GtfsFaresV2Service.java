@@ -18,7 +18,7 @@ import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.Leg;
 //import org.opentripplanner.model.plan.ScheduledTransitLeg;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
-import org.opentripplanner.transit.model.network.GroupOfRoutes;
+//import org.opentripplanner.transit.model.network.GroupOfRoutes;
 import org.opentripplanner.transit.model.site.StopLocation;
 
 public final class GtfsFaresV2Service implements Serializable {
@@ -89,7 +89,7 @@ public final class GtfsFaresV2Service implements Serializable {
       .stream()
       // make sure that you only get rules for the correct feed
       .filter(legRule -> leg.getAgency().getId().getFeedId().equals(legRule.feedId()))
-      .filter(rule -> filterByNetworkId(leg, rule))
+//      .filter(rule -> filterByNetworkId(leg, rule)) TODO FIXME possibly not needed?
       // apply only those fare leg rules which have the correct area ids
       // if area id is null, the rule applies to all legs UNLESS there is another rule that
       // covers this area
@@ -112,22 +112,22 @@ public final class GtfsFaresV2Service implements Serializable {
    * Get the fare products that match the network_id. If the network id of the product is null it
    * depends on the presence/absence of other rules with that network id.
    */
-  private boolean filterByNetworkId(Leg leg, FareLegRule rule) {
-    var routesNetworkIds = leg
-      .getRoute()
-      .getGroupsOfRoutes()
-      .stream()
-      .map(group -> group.getId().getId())
-      .filter(Objects::nonNull)
-      .toList();
-
-    return (
-      (
-        isNull(rule.networkId()) && networksWithRules.stream().noneMatch(routesNetworkIds::contains)
-      ) ||
-      routesNetworkIds.contains(rule.networkId())
-    );
-  }
+//  private boolean filterByNetworkId(Leg leg, FareLegRule rule) {
+//    var routesNetworkIds = leg
+//      .getRoute()
+//      .getGroupsOfRoutes()
+//      .stream()
+//      .map(group -> group.getId().getId())
+//      .filter(Objects::nonNull)
+//      .toList();
+//
+//    return (
+//      (
+//        isNull(rule.networkId()) && networksWithRules.stream().noneMatch(routesNetworkIds::contains)
+//      ) ||
+//      routesNetworkIds.contains(rule.networkId())
+//    );
+//  }
 }
 
 /**

@@ -35,10 +35,10 @@ public class Itinerary {
   /* mutable primitive properties */
   private Double elevationLost = 0.0;
   private Double elevationGained = 0.0;
-  private int generalizedCost = -1;
+  public int generalizedCost = -1;
   private int waitTimeOptimizedCost = -1;
   private int transferPriorityCost = -1;
-  private boolean tooSloped = false;
+  public boolean tooSloped = false;
   private Double maxSlope = null;
   private boolean arrivedAtDestinationWithRentedVehicle = false;
 
@@ -48,7 +48,7 @@ public class Itinerary {
   /* other properties */
 
   private final List<SystemNotice> systemNotices = new ArrayList<>();
-  private List<Leg> legs;
+  public List<Leg> legs;
 
   private ItineraryFares fare = ItineraryFares.empty();
 

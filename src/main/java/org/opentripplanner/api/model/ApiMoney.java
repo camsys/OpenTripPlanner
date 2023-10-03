@@ -6,7 +6,7 @@ public final class ApiMoney {
     private final int cents;
     private final ApiCurrency currency;
 
-    ApiMoney(int cents, ApiCurrency currency) {
+    public ApiMoney(int cents, ApiCurrency currency) {
         this.cents = cents;
         this.currency = currency;
     }

@@ -4,7 +4,7 @@ import static org.opentripplanner.datastore.FileType.DEM;
 import static org.opentripplanner.datastore.FileType.GTFS;
 import static org.opentripplanner.datastore.FileType.NETEX;
 import static org.opentripplanner.datastore.FileType.OSM;
-import static org.opentripplanner.netex.configure.NetexConfig.netexModule;
+//import static org.opentripplanner.netex.configure.NetexConfig.netexModule;
 
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -28,7 +28,7 @@ import org.opentripplanner.graph_builder.module.ned.GeotiffGridCoverageFactoryIm
 import org.opentripplanner.graph_builder.module.ned.NEDGridCoverageFactoryImpl;
 import org.opentripplanner.graph_builder.module.osm.OpenStreetMapModule;
 import org.opentripplanner.graph_builder.services.DefaultStreetEdgeFactory;
-import org.opentripplanner.graph_builder.services.GraphBuilderModule;
+import org.opentripplanner.graph_builder.model.GraphBuilderModule;
 import org.opentripplanner.graph_builder.services.ned.ElevationGridCoverageFactory;
 import org.opentripplanner.openstreetmap.BinaryOpenStreetMapProvider;
 import org.opentripplanner.routing.api.request.RoutingRequest;
@@ -173,9 +173,9 @@ public class GraphBuilder implements Runnable {
 
         }
 
-        if( hasNetex ) {
-            graphBuilder.addModule(netexModule(config, dataSources.get(NETEX)));
-        }
+//        if( hasNetex ) {
+//            graphBuilder.addModule(netexModule(config, dataSources.get(NETEX)));
+//        }
 
         if(hasTransitData && (hasOsm || graphBuilder.graph.hasStreets)) {
             if (config.matchBusRoutesToStreets) {

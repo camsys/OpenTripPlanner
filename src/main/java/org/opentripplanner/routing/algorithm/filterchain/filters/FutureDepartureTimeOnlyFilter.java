@@ -2,7 +2,9 @@ package org.opentripplanner.routing.algorithm.filterchain.filters;
 
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.routing.algorithm.filterchain.ItineraryFilter;
+import org.opentripplanner.util.time.DateUtils;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -45,12 +47,12 @@ public class FutureDepartureTimeOnlyFilter implements ItineraryFilter {
 
 
         for (Itinerary itin : itineraries) {
-            Calendar itinStart = itin.startTime();
-            Calendar now = Calendar.getInstance(itinStart.getTimeZone());
-            Calendar itinEnd = itin.endTime();
-            if (itinEnd.after(earliestAllowedItinEndTime)) {
-                if (now.before(targetTime)) {
-                    if (itinStart.after(now)) {
+            ZonedDateTime itinStart = itin.startTime();
+            ZonedDateTime now = ZonedDateTime.now();
+            ZonedDateTime itinEnd = itin.endTime();
+            if (itinEnd.isAfter(DateUtils.calendarToZonedDateTime(earliestAllowedItinEndTime))) {
+                if (now.isBefore(DateUtils.calendarToZonedDateTime(targetTime))) {
+                    if (itinStart.isAfter(now)) {
                         filteredItineraries.add(itin);
                     }
                 } else {

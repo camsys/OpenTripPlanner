@@ -11,7 +11,7 @@ public final class ApiFareComponent {
     private final ApiMoney price;
     private final List<FeedScopedId> routes;
 
-    ApiFareComponent(
+    public ApiFareComponent(
             FeedScopedId fareId,
             String name,
             ApiMoney price,

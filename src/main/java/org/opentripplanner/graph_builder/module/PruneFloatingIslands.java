@@ -2,7 +2,7 @@ package org.opentripplanner.graph_builder.module;
 
 import org.opentripplanner.common.StreetUtils;
 import org.opentripplanner.graph_builder.DataImportIssueStore;
-import org.opentripplanner.graph_builder.services.GraphBuilderModule;
+import org.opentripplanner.graph_builder.model.GraphBuilderModule;
 import org.opentripplanner.routing.graph.Graph;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * this module is part of the  {@link org.opentripplanner.graph_builder.services.GraphBuilderModule} process. it design to remove small isolated
+ * this module is part of the  {@link GraphBuilderModule} process. it design to remove small isolated
  * islands form the graph. Islands are created when there is no connectivity in the map, island 
  * acts like trap since there is no connectivity there is no way in or out the island.
  * The module distinguish between two island types one with transit stops and one without stops.

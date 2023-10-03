@@ -1,5 +1,6 @@
 package org.opentripplanner.ext.fares.model;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -8,7 +9,7 @@ public final class FareRulesData {
   private final List<FareRule> fareRules;
   private final List<FareLegRule> fareLegRules;
 
-  FareRulesData(
+  public FareRulesData(
           List<FareAttribute> fareAttributes,
           List<FareRule> fareRules,
           List<FareLegRule> fareLegRules
@@ -16,6 +17,10 @@ public final class FareRulesData {
     this.fareAttributes = fareAttributes;
     this.fareRules = fareRules;
     this.fareLegRules = fareLegRules;
+  }
+
+  public FareRulesData() {
+    this(new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
   }
 
   public List<FareAttribute> fareAttributes() {

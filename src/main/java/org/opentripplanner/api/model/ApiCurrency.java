@@ -8,7 +8,7 @@ public final class ApiCurrency {
     private final String currencyCode;
     private final String symbol;
 
-    ApiCurrency(
+    public ApiCurrency(
             String currency,
             int defaultFractionDigits,
             String currencyCode,
