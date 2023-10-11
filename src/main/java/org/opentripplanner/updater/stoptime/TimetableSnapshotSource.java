@@ -199,6 +199,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
 
                 if (!tripUpdate.hasTrip()) {
                     LOG.trace("Missing TripDescriptor in gtfs-rt trip update: \n{}", tripUpdate);
+                    metrics.addMissingTripDescriptor();
                     metrics.addUnmatchedTripUpdate();
                     // offset the rejected count
                     metrics.removeRejectedTripUpdate();
@@ -247,7 +248,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
                         if (applied) metrics.addCanceledTripUpdate();
                         break;
                     case MODIFIED:
-                        applied = validateAndHandleModifiedTrip(graph, tripUpdate, feedId, serviceDate);
+                        applied = validateAndHandleModifiedTrip(metrics, graph, tripUpdate, feedId, serviceDate);
                         if (applied) metrics.addModifedTripUpdate();
                         break;
                 }
@@ -285,6 +286,14 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
         publishMetric(feedId, "Scheduled", metrics.scheduledTripUpdates);
         publishMetric(feedId, "Unmatched", metrics.unmatchedTripUpdates);
         publishMetric(feedId, "Rejected", metrics.rejectedTripUpdates);
+        publishMetric(feedId, "MISSING_PATTERN", metrics.missingPattern);
+        publishMetric(feedId, "NO_STOP_TIME_UPDATES", metrics.noStoptimeUpdates);
+        publishMetric(feedId, "MISSING_TRIP_DESCRIPTOR", metrics.missingTripDescriptor);
+        publishMetric(feedId, "UNKNOWN_TRIP_ID", metrics.unknownTripId);
+        publishMetric(feedId, "TRIP_ID_NOT_IN_PATTERN", metrics.tripIdNotInPattern);
+        publishMetric(feedId, "BAD_ARRIVAL_TIME", metrics.badArrivalTime);
+        publishMetric(feedId, "BAD_DEPARTURE_TIME", metrics.badDepartureTime);
+        publishMetric(feedId, "DECREASING_TIMES", metrics.decreasingTimes);
         LOG.info("Feed " + feedId + " metrics: " + metrics.toString());
     }
 
@@ -338,6 +347,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
         if (pattern == null) {
             LOG.trace("No pattern found for tripId {}, skipping TripUpdate.", tripId);
             metrics.addUnmatchedTripUpdate();
+            metrics.addMissingPattern();
             // offset the rejected count
             metrics.removeRejectedTripUpdate();
             return false;
@@ -345,6 +355,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
 
         if (tripUpdate.getStopTimeUpdateCount() < 1) {
             LOG.trace("TripUpdate contains no updates, skipping.");
+            metrics.addNoStoptimeUpdates();
             return false;
         }
 
@@ -353,7 +364,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
         cancelPreviouslyAddedTrip(new FeedScopedId(feedId, tripId), serviceDate);
 
         // Apply update on the *scheduled* time table and set the updated trip times in the buffer
-        final TripTimes updatedTripTimes = pattern.scheduledTimetable.createUpdatedTripTimes(tripUpdate,
+        final TripTimes updatedTripTimes = pattern.scheduledTimetable.createUpdatedTripTimes(metrics, tripUpdate,
                 timeZone, serviceDate);
 
         if (updatedTripTimes == null) {
@@ -829,7 +840,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
      * @param serviceDate
      * @return true iff successful
      */
-    private boolean validateAndHandleModifiedTrip(final Graph graph, final TripUpdate tripUpdate, final String feedId, final ServiceDate serviceDate) {
+    private boolean validateAndHandleModifiedTrip(TimetableSnapshotSourceMetrics metrics, final Graph graph, final TripUpdate tripUpdate, final String feedId, final ServiceDate serviceDate) {
         // Preconditions
         Preconditions.checkNotNull(graph);
         Preconditions.checkNotNull(tripUpdate);
