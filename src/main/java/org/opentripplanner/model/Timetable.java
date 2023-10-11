@@ -9,6 +9,7 @@ import org.opentripplanner.model.calendar.ServiceDate;
 import org.opentripplanner.routing.core.ServiceDay;
 import org.opentripplanner.routing.trippattern.FrequencyEntry;
 import org.opentripplanner.routing.trippattern.TripTimes;
+import org.opentripplanner.updater.stoptime.TimetableSnapshotSourceMetrics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -218,7 +219,7 @@ public class Timetable implements Serializable {
      *           - its job without sending in GTFS specific classes. A generic update would support
      *           - other RealTime updats, not just from GTFS.
      */
-    public TripTimes createUpdatedTripTimes(TripUpdate tripUpdate, TimeZone timeZone, ServiceDate updateServiceDate) {
+    public TripTimes createUpdatedTripTimes(TimetableSnapshotSourceMetrics metrics, TripUpdate tripUpdate, TimeZone timeZone, ServiceDate updateServiceDate) {
         if (tripUpdate == null) {
             LOG.trace("A null TripUpdate pointer was passed to the Timetable class update method.");
             return null;
@@ -229,18 +230,21 @@ public class Timetable implements Serializable {
         // However, we want to apply trip updates on top of *scheduled* times
         if (!tripUpdate.hasTrip()) {
             LOG.trace("TripUpdate object has no TripDescriptor field.");
+            metrics.addMissingTripDescriptor();
             return null;
         }
 
         TripDescriptor tripDescriptor = tripUpdate.getTrip();
         if (!tripDescriptor.hasTripId()) {
             LOG.trace("TripDescriptor object has no TripId field");
+            metrics.addUnknownTripId();
             return null;
         }
         String tripId = tripDescriptor.getTripId();
         int tripIndex = getTripIndex(tripId);
         if (tripIndex == -1) {
             LOG.trace("tripId {} not found in pattern.", tripId);
+            metrics.addTripIdNotInPattern();
             return null;
         } else {
             LOG.trace("tripId {} found at index {} in timetable.", tripId, tripIndex);
@@ -256,6 +260,7 @@ public class Timetable implements Serializable {
             Iterator<StopTimeUpdate> updates = tripUpdate.getStopTimeUpdateList().iterator();
             if (!updates.hasNext()) {
                 LOG.trace("Won't apply zero-length trip update to trip {}.", tripId);
+                metrics.addNoStoptimeUpdates();
                 return null;
             }
             StopTimeUpdate update = updates.next();
@@ -305,6 +310,7 @@ public class Timetable implements Serializable {
                                 delay = newTimes.getArrivalDelay(i);
                             } else {
                                 LOG.trace("Arrival time at index {} is erroneous.", i);
+                                metrics.addBadArrivalTime();
                                 return null;
                             }
                         } else {
@@ -331,6 +337,7 @@ public class Timetable implements Serializable {
                                 delay = newTimes.getDepartureDelay(i);
                             } else {
                                 LOG.trace("Departure time at index {} is erroneous.", i);
+                                metrics.addBadDepartureTime();
                                 return null;
                             }
                         } else {
@@ -364,11 +371,16 @@ public class Timetable implements Serializable {
         }
         if (!newTimes.timesIncreasing()) {
             LOG.trace("TripTimes are non-increasing after applying GTFS-RT delay propagation to trip {}.", tripId);
+            metrics.addDecreasingTimes();
             return null;
         }
 
         LOG.debug("A valid TripUpdate object was applied to trip {} using the Timetable class update method.", tripId);
         return newTimes;
+    }
+
+    public TripTimes createUpdatedTripTimes(TripUpdate tripUpdate, TimeZone timeZone, ServiceDate updateServiceDate) {
+        return createUpdatedTripTimes(new TimetableSnapshotSourceMetrics(), tripUpdate, timeZone, updateServiceDate);
     }
 
     /**

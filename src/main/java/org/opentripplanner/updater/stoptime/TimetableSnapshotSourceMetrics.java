@@ -14,6 +14,40 @@ public class TimetableSnapshotSourceMetrics {
   int unscheduledTripUpdates = 0;
   int canceledTripUpdates = 0;
   int modifedTripUpdates = 0;
+  int missingPattern = 0;
+  int noStoptimeUpdates = 0;
+  int missingTripDescriptor = 0;
+  int unknownTripId = 0;
+  int tripIdNotInPattern = 0;
+  int badArrivalTime = 0;
+  int badDepartureTime = 0;
+  int decreasingTimes = 0;
+
+  public void addMissingPattern() {
+    missingPattern++;
+  }
+  public void addNoStoptimeUpdates() {
+    noStoptimeUpdates++;
+  }
+  public void addMissingTripDescriptor() {
+    missingTripDescriptor++;
+  }
+  public void addUnknownTripId() {
+    unknownTripId++;
+  }
+  public void addTripIdNotInPattern() {
+    tripIdNotInPattern++;
+  }
+  public void addBadArrivalTime() {
+    badArrivalTime++;
+  }
+  public void addBadDepartureTime() {
+    badDepartureTime++;
+  }
+  public void addDecreasingTimes() {
+    decreasingTimes++;
+  }
+
   public void addTripUpdate() {
     tripUpdates++;
   }
@@ -57,6 +91,14 @@ public class TimetableSnapshotSourceMetrics {
     sb.append("Updates: ").append(scheduledTripUpdates).append(" ");
     sb.append("Unmatched: ").append(unmatchedTripUpdates).append(" ");
     sb.append("Rejected: ").append(rejectedTripUpdates).append(" ");
+    sb.append("Missing Pattern: ").append(missingPattern).append(" ");
+    sb.append("NoStoptimeUpdates: ").append(noStoptimeUpdates).append(" ");
+    sb.append("MissingTripDescriptor: ").append(missingTripDescriptor).append(" ");
+    sb.append("UnknownTripId: ").append(unknownTripId).append(" ");
+    sb.append("TripIdNotInPattern: ").append(tripIdNotInPattern).append(" ");
+    sb.append("BadArrivalTime: ").append(badArrivalTime).append(" ");
+    sb.append("BadDepartureTime: ").append(badDepartureTime).append(" ");
+    sb.append("DecreasingTimes: ").append(decreasingTimes).append(" ");
     return sb.toString();
   }
 
