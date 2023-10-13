@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
+import com.google.transit.realtime.GtfsRealtimeOneBusAway;
 import org.onebusaway.cloud.api.ExternalServices;
 import org.onebusaway.cloud.api.ExternalServicesBridgeFactory;
 import org.opentripplanner.model.Agency;
@@ -627,6 +628,9 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
 
         // TODO: which Agency ID to use? Currently use feed id.
         final Trip trip = new Trip(new FeedScopedId(feedId, tripUpdate.getTrip().getTripId()));
+
+        setTripHeadsignFromUpdate(tripUpdate, trip);
+
         trip.setRoute(route);
 
         // Find service ID running on this service date
@@ -860,6 +864,9 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
         // Check whether trip id already exists in graph
         String tripId = tripDescriptor.getTripId();
         Trip trip = getTripForTripId(feedId, tripId);
+
+        setTripHeadsignFromUpdate(tripUpdate, trip);
+
         if (trip == null) {
             // TODO: should we support this and consider it an ADDED trip?
             LOG.trace("Graph does not contain trip id of MODIFIED trip, skipping.");
@@ -900,6 +907,20 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
         final boolean success = handleModifiedTrip(graph, trip, tripUpdate, stops, feedId, serviceDate);
 
         return success;
+    }
+
+    /**
+     * Set tripheadsign from a realtime update
+     * @param tripUpdate
+     * @param trip
+     */
+    public static void setTripHeadsignFromUpdate(TripUpdate tripUpdate, Trip trip) {
+        if (tripUpdate.hasExtension(GtfsRealtimeOneBusAway.obaTripUpdate)) {
+            GtfsRealtimeOneBusAway.OneBusAwayTripUpdate updateExtension= tripUpdate.getExtension(GtfsRealtimeOneBusAway.obaTripUpdate);
+            if (!updateExtension.getTripHeadsign().isEmpty()) {
+                trip.setTripHeadsign(updateExtension.getTripHeadsign());
+            }
+        }
     }
 
     /**
