@@ -865,13 +865,13 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
         String tripId = tripDescriptor.getTripId();
         Trip trip = getTripForTripId(feedId, tripId);
 
-        setTripHeadsignFromUpdate(tripUpdate, trip);
-
         if (trip == null) {
             // TODO: should we support this and consider it an ADDED trip?
             LOG.trace("Graph does not contain trip id of MODIFIED trip, skipping.");
             return false;
         }
+
+        setTripHeadsignFromUpdate(tripUpdate, trip);
 
         // Check whether a start date exists
         if (!tripDescriptor.hasStartDate()) {
@@ -915,9 +915,13 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
      * @param trip
      */
     public static void setTripHeadsignFromUpdate(TripUpdate tripUpdate, Trip trip) {
+        if (trip == null) {
+            LOG.debug("Null trip found in realtime tripheadsign setter");
+            return;
+        }
         if (tripUpdate.hasExtension(GtfsRealtimeOneBusAway.obaTripUpdate)) {
             GtfsRealtimeOneBusAway.OneBusAwayTripUpdate updateExtension= tripUpdate.getExtension(GtfsRealtimeOneBusAway.obaTripUpdate);
-            if (!updateExtension.getTripHeadsign().isEmpty()) {
+            if (!updateExtension.hasTripHeadsign()) {
                 trip.setTripHeadsign(updateExtension.getTripHeadsign());
             }
         }
