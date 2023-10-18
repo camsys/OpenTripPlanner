@@ -99,6 +99,7 @@ public class RoutingWorker {
             routingErrors.addAll(e.getRoutingErrors());
         }
 
+
         // Direct flex routing
         if (OTPFeature.FlexRouting.isOn()) {
             try {
@@ -124,8 +125,9 @@ public class RoutingWorker {
 
         this.debugTimingAggregator.finishedTransitRouter();
 
+
         // Filter itineraries
-        itineraries = filterItineraries(itineraries);
+        itineraries = filterItineraries(itineraries, router.graph.getService(FareService.class));
         LOG.debug("Return TripPlan with {} itineraries", itineraries.size());
 
         this.debugTimingAggregator.finishedFiltering();
@@ -321,12 +323,13 @@ public class RoutingWorker {
         return new RoutingRequestTransitDataProviderFilter(request, graphIndex);
     }
 
-    private List<Itinerary> filterItineraries(List<Itinerary> itineraries) {
+    private List<Itinerary> filterItineraries(List<Itinerary> itineraries, FareService fareService) {
         ItineraryFilter filterChain = RoutingRequestToFilterChainMapper.createFilterChain(
             request,
             filterOnLatestDepartureTime,
             emptyDirectModeHandler.removeWalkAllTheWayResults(),
-            it -> firstRemovedItinerary = it
+            it -> firstRemovedItinerary = it,
+            fareService
         );
         return filterChain.filter(itineraries);
     }

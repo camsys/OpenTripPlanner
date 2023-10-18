@@ -61,10 +61,10 @@ public class DebugFilterWrapper implements ItineraryFilter {
 
   private void markItineraryAsDeleted(Itinerary itinerary) {
     deletedItineraries.add(itinerary);
-    itinerary.addSystemNotice(new SystemNotice(
-        delegate.name(),
-        "This itinerary is marked as deleted by the " + delegate.name() + " filter. "
-    ));
+//    itinerary.addSystemNotice(new SystemNotice(
+//        delegate.name(),
+//        "This itinerary is marked as deleted by the " + delegate.name() + " filter. "
+//    ));
   }
 
 }

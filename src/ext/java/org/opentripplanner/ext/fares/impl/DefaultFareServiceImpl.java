@@ -13,13 +13,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.ning.http.util.DateUtil;
 import org.opentripplanner.ext.fares.model.FareAttribute;
 //import org.opentripplanner.ext.flex.FlexibleTransitLeg;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.Leg;
 //import org.opentripplanner.model.plan.ScheduledTransitLeg;
-import org.opentripplanner.routing.algorithm.mapping.RaptorPathToItineraryMapper;
+import org.opentripplanner.model.plan.VertexType;
 import org.opentripplanner.routing.core.FareComponent;
 import org.opentripplanner.routing.core.FareRuleSet;
 import org.opentripplanner.routing.core.FareType;
@@ -101,6 +100,7 @@ public class DefaultFareServiceImpl implements FareService {
       .getLegs()
       .stream()
       .filter(Leg::isTransitLeg)
+      .filter(l -> l.from.vertexType != VertexType.NORMAL)
       .map(Leg.class::cast)
       .collect(Collectors.toList());
 
@@ -288,7 +288,7 @@ public class DefaultFareServiceImpl implements FareService {
 
     var firstRide = legs.get(0);
     ZonedDateTime startTime = DateUtils.calendarToZonedDateTime(firstRide.startTime);
-    String startZone = firstRide.from.stop.getFirstZoneAsString();
+    String startZone = firstRide.from.zoneId;
     String endZone = null;
     // stops don't really have an agency id, they have the per-feed default id
     String feedId = firstRide.getTrip().getId().getFeedId();
@@ -301,7 +301,7 @@ public class DefaultFareServiceImpl implements FareService {
       }
       lastRideStartTime = DateUtils.calendarToZonedDateTime(leg.startTime);
       lastRideEndTime = DateUtils.calendarToZonedDateTime(leg.endTime);
-      endZone = leg.to.stop.getFirstZoneAsString();
+      endZone = leg.to.zoneId;
       routes.add(leg.getRoute().getId());
       trips.add(leg.getTrip().getId());
       for (FareZone z : leg.getFareZones()) {

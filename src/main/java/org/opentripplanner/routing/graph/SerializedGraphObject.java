@@ -209,10 +209,15 @@ public class SerializedGraphObject implements Serializable {
             LOG.info("Reading graph from '{}'", sourceDescription);
             Input input = new Input(inputStream);
 
+
+            LOG.debug("begin Graph Id validation.");
+
             validateGraphSerializationId(
                 input.readBytes(GraphFileHeader.headerLength()),
                 sourceDescription
             );
+
+            LOG.debug("Graph Id validated.");
 
             Kryo kryo = makeKryo();
             SerializedGraphObject serObj = (SerializedGraphObject) kryo.readClassAndObject(input);

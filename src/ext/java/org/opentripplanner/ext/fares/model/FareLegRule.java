@@ -4,9 +4,10 @@ import org.opentripplanner.ext.fares.model.FareProduct;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.Objects;
 
-public final class FareLegRule {
+public final class FareLegRule implements Serializable {
   private final String feedId;
   private final String networkId;
   private final String fromAreaId;

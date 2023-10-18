@@ -1,14 +1,15 @@
 package org.opentripplanner.ext.fares.model;
 
+import java.io.Serializable;
 import java.time.Duration;
 import java.util.Objects;
 
-import org.onebusaway.gtfs.model.RiderCategory;
+import org.opentripplanner.ext.fares.model.RiderCategory;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.routing.core.Money;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 
-public final class FareProduct {
+public final class FareProduct implements Serializable {
   private final FeedScopedId id;
   private final String name;
   private final Money amount;

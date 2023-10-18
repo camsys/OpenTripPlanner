@@ -1,10 +1,28 @@
 package org.opentripplanner.api.model;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public final class ApiMoney {
-    private final int cents;
-    private final ApiCurrency currency;
+public final class ApiMoney implements Serializable {
+    public int cents;
+    public ApiCurrency currency;
+
+    public void setCents(int cents) {
+        this.cents = cents;
+    }
+
+    public void setCurrency(ApiCurrency currency) {
+        this.currency = currency;
+    }
+
+    public int getCents() {
+        return cents;
+    }
+
+    public ApiCurrency getCurrency() {
+        return currency;
+    }
+
 
     public ApiMoney(int cents, ApiCurrency currency) {
         this.cents = cents;

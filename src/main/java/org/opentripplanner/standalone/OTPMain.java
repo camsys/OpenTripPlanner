@@ -205,6 +205,7 @@ public class OTPMain {
     }
 
     private static boolean isGraphScanningEnabled() {
-        return OTPFeature.AutoScan.isOn();
+//        return OTPFeature.AutoScan.isOn(); TODO FIXME
+        return true;
     }
 }

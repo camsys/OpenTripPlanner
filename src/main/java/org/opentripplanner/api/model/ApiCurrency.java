@@ -3,10 +3,42 @@ package org.opentripplanner.api.model;
 import java.util.Objects;
 
 public final class ApiCurrency {
-    private final String currency;
-    private final int defaultFractionDigits;
-    private final String currencyCode;
-    private final String symbol;
+    public String currency;
+    public int defaultFractionDigits;
+    public String currencyCode;
+    public String symbol;
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    public int getDefaultFractionDigits() {
+        return defaultFractionDigits;
+    }
+
+    public void setDefaultFractionDigits(int defaultFractionDigits) {
+        this.defaultFractionDigits = defaultFractionDigits;
+    }
+
+    public String getCurrencyCode() {
+        return currencyCode;
+    }
+
+    public void setCurrencyCode(String currencyCode) {
+        this.currencyCode = currencyCode;
+    }
+
+    public String getSymbol() {
+        return symbol;
+    }
+
+    public void setSymbol(String symbol) {
+        this.symbol = symbol;
+    }
 
     public ApiCurrency(
             String currency,

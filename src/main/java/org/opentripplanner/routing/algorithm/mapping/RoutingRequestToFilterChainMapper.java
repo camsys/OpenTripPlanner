@@ -6,6 +6,7 @@ import org.opentripplanner.routing.algorithm.filterchain.ItineraryFilter;
 import org.opentripplanner.routing.algorithm.filterchain.ItineraryFilterChainBuilder;
 import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
+import org.opentripplanner.routing.fares.FareService;
 
 import java.time.Instant;
 import java.util.function.Consumer;
@@ -23,7 +24,8 @@ public class RoutingRequestToFilterChainMapper {
       RoutingRequest request,
       Instant filterOnLatestDepartureTime,
       boolean removeWalkAllTheWayResults,
-      Consumer<Itinerary> maxLimitReachedSubscriber
+      Consumer<Itinerary> maxLimitReachedSubscriber,
+      FareService fareService
   ) {
     var builder = new ItineraryFilterChainBuilder(request.arriveBy);
     var p = request.itineraryFilters;
@@ -59,7 +61,8 @@ public class RoutingRequestToFilterChainMapper {
       .withBikeRentalDistanceRatio(p.bikeRentalDistanceRatio)
       .withParkAndRideDurationRatio(p.parkAndRideDurationRatio)
       .withNonTransitGeneralizedCostLimit(p.nonTransitGeneralizedCostLimit)
-      .withRemoveTransitWithHigherCostThanBestOnStreetOnly(true);
+      .withRemoveTransitWithHigherCostThanBestOnStreetOnly(true)
+      .withFares(fareService);
 
     if(request.modes.contains(StreetMode.FLEXIBLE)){
       builder.withFlexFilter(request.maxWalkDistance);

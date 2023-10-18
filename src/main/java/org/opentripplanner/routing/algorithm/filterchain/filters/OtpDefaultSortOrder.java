@@ -48,11 +48,12 @@ public class OtpDefaultSortOrder extends SortFilter {
   static final Comparator<Itinerary> ARRIVAL_TIME = comparing(Itinerary::endTime);
   static final Comparator<Itinerary> DEPARTURE_TIME = comparing(Itinerary::startTime).reversed();
   static final Comparator<Itinerary> GENERALIZED_COST = comparingInt(a -> a.generalizedCost);
-  static final Comparator<Itinerary> NUM_OF_TRANSFERS = comparingInt(a -> a.nTransfers);
+  static final Comparator<Itinerary> NUM_OF_TRANSFERS = comparingInt(Itinerary::getNumberOfTransfers);
 
   static final Comparator<Itinerary> NON_FLEX_FIRST = (a, b) -> Boolean.compare(
-      a.hasFlex(),
-      b.hasFlex()
+      b.hasTransit(),
+      a.hasTransit()
+      //TODO FIXME changed this to has transit instead of flex
   );
 
   public OtpDefaultSortOrder(boolean arriveBy) {

@@ -6,10 +6,42 @@ import java.util.Optional;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 public final class ApiFareComponent {
-    private final FeedScopedId fareId;
-    private final String name;
-    private final ApiMoney price;
-    private final List<FeedScopedId> routes;
+    public FeedScopedId fareId;
+    public String name;
+    public ApiMoney price;
+    public List<FeedScopedId> routes;
+
+    public FeedScopedId getFareId() {
+        return fareId;
+    }
+
+    public void setFareId(FeedScopedId fareId) {
+        this.fareId = fareId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public ApiMoney getPrice() {
+        return price;
+    }
+
+    public void setPrice(ApiMoney price) {
+        this.price = price;
+    }
+
+    public List<FeedScopedId> getRoutes() {
+        return routes;
+    }
+
+    public void setRoutes(List<FeedScopedId> routes) {
+        this.routes = routes;
+    }
 
     public ApiFareComponent(
             FeedScopedId fareId,

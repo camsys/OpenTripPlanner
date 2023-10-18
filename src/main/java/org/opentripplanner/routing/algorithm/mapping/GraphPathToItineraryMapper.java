@@ -39,6 +39,7 @@ import org.opentripplanner.routing.location.TemporaryStreetLocation;
 import org.opentripplanner.routing.spt.GraphPath;
 import org.opentripplanner.routing.vertextype.*;
 import org.opentripplanner.transit.model.network.Route;
+import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.util.OTPFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -245,7 +246,7 @@ public abstract class GraphPathToItineraryMapper {
                 .findFirst().orElse(null);
                 
             if (flexEdge != null) {
-                leg = new Leg(flexEdge.getTrip());
+                leg = new Leg(flexEdge);
                 leg.flexibleTrip = true;
             }
         }
@@ -607,6 +608,7 @@ public abstract class GraphPathToItineraryMapper {
             place.vertexType = VertexType.BIKEPARK;
         } else {
             place.vertexType = VertexType.NORMAL;
+            place.stop = stop;
         }
 
         return place;

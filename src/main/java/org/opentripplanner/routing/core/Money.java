@@ -1,5 +1,6 @@
 package org.opentripplanner.routing.core;
 
+import java.io.Serializable;
 import java.text.NumberFormat;
 import java.util.Currency;
 import java.util.Locale;
@@ -10,7 +11,7 @@ import java.util.Objects;
  * @param cents    The actual currency value in decimal fixed-point, with the default number of
  *                 fraction digits from currency after the decimal point.
  */
-public final class Money implements Comparable<Money> {
+public final class Money implements Comparable<Money>, Serializable {
   private final Currency currency;
   private final int cents;
 

@@ -1,7 +1,9 @@
 package org.opentripplanner.routing.algorithm.filterchain;
 
+import org.opentripplanner.ext.fares.FaresFilter;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.routing.algorithm.filterchain.filters.*;
+import org.opentripplanner.routing.fares.FareService;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -37,6 +39,8 @@ public class ItineraryFilterChainBuilder {
     private int streetOnlyGenCostBuffer =0;
     private Long targetTime = null;
     private int maxHoursBetweenArrivalAndTarget = 6;
+
+    private FareService faresService;
 
 
     /**
@@ -229,6 +233,11 @@ public class ItineraryFilterChainBuilder {
         return this;
     }
 
+    public ItineraryFilterChainBuilder withFares(FareService fareService) {
+        this.faresService = fareService;
+        return this;
+    }
+
     public ItineraryFilter build() {
         List<ItineraryFilter> filters = new ArrayList<>();
 
@@ -272,6 +281,8 @@ public class ItineraryFilterChainBuilder {
         if(flexFilter) {
             filters.add(new FlexFilter(maxWalkDistance));
         }
+
+        filters.add(new FaresFilter(faresService));
 
         // Apply all absolute filters AFTER the groupBy filters. Absolute filters are filters that
         // remove elements/ based on the given itinerary properties - not considering other

@@ -57,7 +57,7 @@ public class RaptorRequestMapper {
                 .searchParams()
                 .searchWindow(request.searchWindow)
                 .timetableEnabled(request.timetableView)
-                .guaranteedTransfersEnabled(OTPFeature.GuaranteedTransfers.isOn())
+//                .guaranteedTransfersEnabled(OTPFeature.GuaranteedTransfers.isOn())
                 .addAccessPaths(accessPaths)
                 .addEgressPaths(egressPaths);
 

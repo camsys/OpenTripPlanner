@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.api.model.ApiPlace;
+import org.opentripplanner.ext.flex.edgetype.FlexTripEdge;
 import org.opentripplanner.model.Agency;
 import org.opentripplanner.model.BookingInfo;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
@@ -39,8 +40,9 @@ public class Leg {
   public final TraverseMode mode;
 
   private final Trip trip;
+  public FlexTripEdge flexTripEdge;
 
-  /**
+    /**
    * The date and time this leg begins.
    */
   public Calendar startTime = null;
@@ -226,10 +228,16 @@ public class Leg {
     this.trip = null;
   }
 
-  public Leg(Trip trip) {
-    this.mode = TraverseMode.fromTransitMode(trip.getRoute().getMode());
-    this.trip = trip;
-  }
+    public Leg(Trip trip) {
+        this.mode = TraverseMode.fromTransitMode(trip.getRoute().getMode());
+        this.trip = trip;
+    }
+
+    public Leg(FlexTripEdge flexTripEdge) {
+        this.trip = flexTripEdge.getTrip();
+        this.mode = TraverseMode.fromTransitMode(trip.getRoute().getMode());
+        this.flexTripEdge = flexTripEdge;
+    }
 
   /**
     * Whether this leg is a transit leg or not.
@@ -400,7 +408,7 @@ public class Leg {
     public Set<FareZone> getFareZones() {
         var intermediate = intermediateStops
                 .stream()
-                .flatMap(stopArrival -> stopArrival.place.stop.getFareZones().stream());
+                .flatMap(stopArrival -> List.of().stream());
 
         var start = getFareZones(this.from);
         var end = getFareZones(this.to);

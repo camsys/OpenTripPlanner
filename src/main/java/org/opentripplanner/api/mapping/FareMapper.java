@@ -29,9 +29,17 @@ import org.opentripplanner.routing.core.Money;
 
 public class FareMapper {
 
-  private final Locale locale;
+  public Locale locale;
 
   public FareMapper(Locale locale) {
+    this.locale = locale;
+  }
+
+  public Locale getLocale() {
+    return locale;
+  }
+
+  public void setLocale(Locale locale) {
     this.locale = locale;
   }
 
@@ -90,7 +98,7 @@ public class FareMapper {
             p.id().toString(),
             p.name(),
             toApiMoney(p.amount()),
-            toApiFareQualifier(p.category()),
+            FareMapper.toApiFareQualifier(p.category()),
             toApiFareQualifier(p.container())
           )
         )
@@ -103,10 +111,10 @@ public class FareMapper {
       .getTypes()
       .stream()
       .map(key -> {
-        var money = fare.getDetails(key).stream().map(this::toApiFareComponent).collect(Collectors.toSet());
+        var money = fare.getDetails(key).stream().map(this::toApiFareComponent).collect(Collectors.toList());
         return new SimpleEntry<>(key, money);
       })
-      .collect(Collectors.toMap(e -> e.getKey().name(), Entry::getValue));
+      .collect(Collectors.toMap(e -> e.getKey().name(), SimpleEntry::getValue));
   }
 
   private Map<String, ApiMoney> toApiMoneys(ItineraryFares fare) {

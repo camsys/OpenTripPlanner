@@ -12,13 +12,53 @@ import java.util.Objects;
  * @param category  The rider category like senior, youth, veteran.
  */
 public final class ApiFareProduct {
-    private final String id;
-    private final String name;
-    private final ApiMoney amount;
-    private final ApiFareQualifier container;
-    private final ApiFareQualifier category;
+    public String id;
+    public String name;
+    public ApiMoney amount;
+    public ApiFareQualifier container;
+    public ApiFareQualifier category;
 
-    ApiFareProduct(
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public ApiMoney getAmount() {
+        return amount;
+    }
+
+    public void setAmount(ApiMoney amount) {
+        this.amount = amount;
+    }
+
+    public ApiFareQualifier getContainer() {
+        return container;
+    }
+
+    public void setContainer(ApiFareQualifier container) {
+        this.container = container;
+    }
+
+    public ApiFareQualifier getCategory() {
+        return category;
+    }
+
+    public void setCategory(ApiFareQualifier category) {
+        this.category = category;
+    }
+
+    public ApiFareProduct(
             String id,
             String name,
             ApiMoney amount,

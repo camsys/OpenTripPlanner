@@ -58,7 +58,7 @@ import org.opentripplanner.ext.transmodelapi.model.network.PresentationType;
 import org.opentripplanner.ext.transmodelapi.model.plan.LegType;
 import org.opentripplanner.ext.transmodelapi.model.plan.PathGuidanceType;
 import org.opentripplanner.ext.transmodelapi.model.plan.PlanPlaceType;
-import org.opentripplanner.ext.transmodelapi.model.plan.TripPatternType;
+//import org.opentripplanner.ext.transmodelapi.model.plan.TripPatternType;
 import org.opentripplanner.ext.transmodelapi.model.plan.TripQuery;
 import org.opentripplanner.ext.transmodelapi.model.plan.TripType;
 import org.opentripplanner.ext.transmodelapi.model.siri.et.EstimatedCallType;
@@ -1151,9 +1151,10 @@ public class TransmodelGraphQLSchema {
           pathGuidanceType,
           gqlUtil
       );
-      GraphQLObjectType tripPatternType = TripPatternType.create(
-            systemNoticeType, legType, gqlUtil
-      );
+      GraphQLObjectType tripPatternType = null;
+//              TripPatternType.create(
+//            systemNoticeType, legType, gqlUtil
+//      );
 
       return TripType.create(placeType, tripPatternType, tripMetadataType, gqlUtil);
     }
