@@ -921,7 +921,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
         }
         if (tripUpdate.hasExtension(GtfsRealtimeOneBusAway.obaTripUpdate)) {
             GtfsRealtimeOneBusAway.OneBusAwayTripUpdate updateExtension= tripUpdate.getExtension(GtfsRealtimeOneBusAway.obaTripUpdate);
-            if (!updateExtension.hasTripHeadsign()) {
+            if (updateExtension.hasTripHeadsign()) {
                 trip.setTripHeadsign(updateExtension.getTripHeadsign());
             }
         }

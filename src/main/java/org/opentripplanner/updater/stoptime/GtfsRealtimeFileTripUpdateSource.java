@@ -1,9 +1,11 @@
 package org.opentripplanner.updater.stoptime;
 
+import com.google.protobuf.ExtensionRegistry;
 import com.google.transit.realtime.GtfsRealtime;
 import com.google.transit.realtime.GtfsRealtime.FeedEntity;
 import com.google.transit.realtime.GtfsRealtime.FeedMessage;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
+import com.google.transit.realtime.GtfsRealtimeOneBusAway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +19,11 @@ import java.util.List;
 public class GtfsRealtimeFileTripUpdateSource implements TripUpdateSource {
     private static final Logger LOG =
             LoggerFactory.getLogger(GtfsRealtimeFileTripUpdateSource.class);
+    private static final ExtensionRegistry registry = ExtensionRegistry.newInstance();
+
+    static {
+        registry.add(GtfsRealtimeOneBusAway.obaTripUpdate);
+    }
 
     private final File file;
 
@@ -46,7 +53,7 @@ public class GtfsRealtimeFileTripUpdateSource implements TripUpdateSource {
             InputStream is = new FileInputStream(file);
 
             // Decode message
-            feedMessage = FeedMessage.PARSER.parseFrom(is);
+            feedMessage = FeedMessage.PARSER.parseFrom(is, registry);
             feedEntityList = feedMessage.getEntityList();
 
             // Change fullDataset value if this is an incremental update
