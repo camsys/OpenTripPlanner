@@ -23,6 +23,7 @@ public class GtfsRealtimeFileTripUpdateSource implements TripUpdateSource {
 
     static {
         registry.add(GtfsRealtimeOneBusAway.obaTripUpdate);
+        registry.add(GtfsRealtimeOneBusAway.obaStopTimeUpdate);
     }
 
     private final File file;

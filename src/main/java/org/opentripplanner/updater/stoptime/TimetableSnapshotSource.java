@@ -685,6 +685,13 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
             if (!skippedStop) {
                 // Create stop time
                 final StopTime stopTime = new StopTime();
+                // if we have a stop headsign set it -- just like with SIRI
+                if (stopTimeUpdate.hasExtension(GtfsRealtimeOneBusAway.obaStopTimeUpdate)) {
+                    GtfsRealtimeOneBusAway.OneBusAwayStopTimeUpdate extension = stopTimeUpdate.getExtension(GtfsRealtimeOneBusAway.obaStopTimeUpdate);
+                    if (extension.hasStopHeadsign()) {
+                        stopTime.setStopHeadsign(extension.getStopHeadsign());
+                    }
+                }
                 stopTime.setTrip(trip);
                 stopTime.setStop(stop);
                 // Set arrival time
