@@ -268,6 +268,8 @@ public class AlertToLegMapper {
         if (alertPatches != null) {
             for (TransitAlert alert : alertPatches) {
                 if (alert.displayDuring(fromTime.getTime() / 1000, toTime.getTime() / 1000)) {
+                    // stop conditions apply mainly to SIRI
+                    // but elevator alerts take advantage of them as well
                     if (!alert.getStopConditions().isEmpty() &&  // Skip if stopConditions are not set for alert
                             stopConditions != null && !stopConditions.isEmpty()) { // ...or specific stopConditions are not requested
                         for (StopCondition stopCondition : stopConditions) {
@@ -277,6 +279,8 @@ public class AlertToLegMapper {
                             }
                         }
                     } else {
+                        // GTFS-RT does not support stop conditions
+                        // just add the alert
                         leg.addAlert(alert);
                     }
                 }

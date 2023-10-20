@@ -9,6 +9,7 @@ import com.google.transit.realtime.GtfsRealtimeOneBusAway;
 import com.google.transit.realtime.GtfsRealtimeServiceStatus;
 import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.routing.alertpatch.EntitySelector;
+import org.opentripplanner.routing.alertpatch.StopCondition;
 import org.opentripplanner.routing.alertpatch.TimePeriod;
 import org.opentripplanner.routing.alertpatch.TransitAlert;
 import org.opentripplanner.routing.services.TransitAlertService;
@@ -92,8 +93,11 @@ public class AlertsUpdateHandler {
 
             if (informed.hasExtension(GtfsRealtimeOneBusAway.obaEntitySelector)) {
                 GtfsRealtimeOneBusAway.OneBusAwayEntitySelector obaEntitySelector = informed.getExtension(GtfsRealtimeOneBusAway.obaEntitySelector);
-                if (obaEntitySelector.getElevatorId() != null) {
+                if (obaEntitySelector.hasElevatorId()) {
                     alertText.elevatorId = obaEntitySelector.getElevatorId().split("-")[0];
+                    // mark this alert as not applicable to PASSING stops
+                    alertText.getStopConditions().add(StopCondition.START_POINT);
+                    alertText.getStopConditions().add(StopCondition.DESTINATION);
                 }
             }
 
