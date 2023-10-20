@@ -4,6 +4,7 @@ import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.util.CompositeComparator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -18,6 +19,25 @@ public class OtpConfigurableSortOrder extends OtpDefaultSortOrder {
   private static Comparator<Itinerary> createComparator(boolean arriveBy, String defaultSortOrder) {
     List<Comparator<Itinerary>> chain = new ArrayList<>();
     int adCount = 0;
+
+    if ("default".equalsIgnoreCase(defaultSortOrder)) {
+      // if the sortOrder isn't specified in configuration use:
+      //ARRIVAL_DEPARTURE_TIME,GENERALIZED_COST,NUM_OF_TRANSFERS,ARRIVAL_DEPARTURE_TIME
+      if (arriveBy) {
+        chain.add(DEPARTURE_TIME);
+      } else {
+        chain.add(ARRIVAL_TIME);
+      }
+      chain.add(GENERALIZED_COST);
+      chain.add(NUM_OF_TRANSFERS);
+      if (arriveBy) {
+        chain.add(ARRIVAL_TIME);
+      } else {
+        chain.add(DEPARTURE_TIME);
+      }
+      return new CompositeComparator<>(chain.toArray(new Comparator[0]));
+    }
+
     String[] sortDirectives = defaultSortOrder.split(",");
     for (String sortDirective : sortDirectives) {
       if (sortDirective == null) continue;
@@ -44,7 +64,7 @@ public class OtpConfigurableSortOrder extends OtpDefaultSortOrder {
         chain.add(NUM_OF_TRANSFERS);
       } else {
         throw new IllegalStateException("Unsupported sort order "
-        + sortDirective + " in configuration " + sortDirectives);
+        + sortDirective + " in configuration " + Arrays.asList(sortDirectives));
       }
     }
     if (chain.isEmpty()) {
