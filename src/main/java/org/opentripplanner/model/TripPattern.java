@@ -353,7 +353,7 @@ public class TripPattern extends TransitEntity implements Cloneable, Serializabl
         return trips.get(0).getDirection();
     }
 
-    boolean isCreatedByRealtimeUpdater() {
+    public boolean isCreatedByRealtimeUpdater() {
         return createdByRealtimeUpdater;
     }
 

@@ -308,7 +308,9 @@ public class TimetableSnapshot {
      * @return true if the timetable changed as a result of the call
      */
     protected boolean clearTimetable(String feedId) {
-        return timetables.keySet().removeIf(tripPattern -> feedId.equals(tripPattern.getFeedId()));
+        // hold on to dynamic updates as the pattern may change in successive updates
+        return timetables.keySet().removeIf(tripPattern -> feedId.equals(tripPattern.getFeedId())
+        && !tripPattern.isCreatedByRealtimeUpdater());
     }
 
     /**
@@ -318,10 +320,18 @@ public class TimetableSnapshot {
      * @return true if the lastAddedTripPattern changed as a result of the call
      */
     protected boolean clearLastAddedTripPattern(String feedId) {
-        return lastAddedTripPattern.keySet().removeIf(
-            lastAddedTripPattern ->
-                feedId.equals(lastAddedTripPattern.getTripId().getFeedId())
-        );
+        boolean modified = false;
+        // hold on to dynamic updates as the pattern may change in successive updates
+        Iterator<Entry<TripIdAndServiceDate, TripPattern>> iterator = lastAddedTripPattern.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Entry<TripIdAndServiceDate, TripPattern> entry = iterator.next();
+            if (feedId.equals(entry.getKey().getTripId().getFeedId())
+                && !entry.getValue().isCreatedByRealtimeUpdater()) {
+                iterator.remove();
+                modified = true;
+            }
+        }
+        return modified;
     }
 
     /**
