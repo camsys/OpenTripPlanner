@@ -220,14 +220,22 @@ public class TimetableSnapshot {
         // Assume all trips in a pattern are from the same feed, which should be the case.
         // Find trip index
         int tripIndex = tt.getTripIndex(updatedTripTimes.trip.getId());
+        // Remember this pattern for the added trip id and service date
+        FeedScopedId tripId = updatedTripTimes.trip.getId();
+        TripIdAndServiceDate tripIdAndServiceDate = new TripIdAndServiceDate(tripId, serviceDate);
+
         if (tripIndex == -1) {
             // Trip not found, add it
             tt.addTripTimes(updatedTripTimes);
-            // Remember this pattern for the added trip id and service date
-            FeedScopedId tripId = updatedTripTimes.trip.getId();
-            TripIdAndServiceDate tripIdAndServiceDate = new TripIdAndServiceDate(tripId, serviceDate);
             lastAddedTripPattern.put(tripIdAndServiceDate, pattern);
         } else {
+            // dynamic trips need extra state in case the pattern changes between updates
+            if (pattern.isCreatedByRealtimeUpdater()) {
+                TripPattern lastPattern = lastAddedTripPattern.get(tripIdAndServiceDate);
+                if (lastPattern == null || !lastPattern.equals(pattern)) {
+                    lastAddedTripPattern.put(tripIdAndServiceDate, pattern);
+                }
+            }
             // Set updated trip times of trip
             tt.setTripTimes(tripIndex, updatedTripTimes);
         }
