@@ -803,8 +803,8 @@ public abstract class RoutingResource {
                     break;
                 case QUICK:
                     request.walkReluctance = 3.0;
-                    request.transferCost = 1200;
-                    request.itineraryFilters.resultsOrder = "NUM_OF_TRANSFERS,ARRIVAL_DEPARTURE_TIME";
+                    request.transferCost = 2400;
+                    request.itineraryFilters.resultsOrder = "default";
                     break;
             }
         }
