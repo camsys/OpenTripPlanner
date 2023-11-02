@@ -2,7 +2,7 @@ package org.opentripplanner.api.mapping;
 
 import org.opentripplanner.api.model.ApiRoute;
 import org.opentripplanner.api.model.ApiRouteShort;
-import org.opentripplanner.model.Route;
+import org.opentripplanner.transit.model.network.Route;
 
 import java.util.Collection;
 import java.util.List;

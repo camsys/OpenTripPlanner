@@ -4,7 +4,7 @@ import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import org.opentripplanner.ext.legacygraphqlapi.LegacyGraphQLRequestContext;
 import org.opentripplanner.ext.legacygraphqlapi.generated.LegacyGraphQLDataFetchers;
-import org.opentripplanner.model.Agency;
+import org.opentripplanner.transit.model.organization.Agency;
 import org.opentripplanner.routing.RoutingService;
 
 import java.util.stream.Collectors;

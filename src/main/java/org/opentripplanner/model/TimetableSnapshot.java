@@ -6,6 +6,8 @@ import com.google.common.collect.SetMultimap;
 import org.opentripplanner.model.calendar.ServiceDate;
 import org.opentripplanner.routing.algorithm.raptor.transit.mappers.TransitLayerUpdater;
 import org.opentripplanner.routing.trippattern.TripTimes;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.transit.model.site.Stop;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

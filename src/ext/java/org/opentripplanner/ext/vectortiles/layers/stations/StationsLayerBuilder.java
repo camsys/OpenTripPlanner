@@ -8,7 +8,7 @@ import org.opentripplanner.common.geometry.GeometryUtils;
 import org.opentripplanner.ext.vectortiles.LayerBuilder;
 import org.opentripplanner.ext.vectortiles.PropertyMapper;
 import org.opentripplanner.ext.vectortiles.VectorTilesResource;
-import org.opentripplanner.model.Station;
+import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.routing.graph.Graph;
 
 import java.util.List;

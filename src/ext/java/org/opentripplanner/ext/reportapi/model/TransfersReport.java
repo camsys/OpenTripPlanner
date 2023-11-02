@@ -6,7 +6,7 @@ import static org.opentripplanner.util.time.DurationUtils.durationToStr;
 import java.util.List;
 import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.common.geometry.SphericalDistanceLibrary;
-import org.opentripplanner.model.Stop;
+import org.opentripplanner.transit.model.site.Stop;
 import org.opentripplanner.model.transfer.StopTransferPoint;
 import org.opentripplanner.model.transfer.Transfer;
 import org.opentripplanner.model.transfer.TransferPoint;

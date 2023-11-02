@@ -1,8 +1,8 @@
 package org.opentripplanner.ext.transmodelapi.model;
 
-import org.opentripplanner.model.FeedScopedId;
-import org.opentripplanner.model.Station;
-import org.opentripplanner.model.Stop;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.transit.model.site.Station;
+import org.opentripplanner.transit.model.site.Stop;
 import org.opentripplanner.model.TripTimeShort;
 import org.opentripplanner.model.calendar.ServiceDate;
 import org.opentripplanner.model.plan.Leg;

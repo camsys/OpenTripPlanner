@@ -1,6 +1,6 @@
 package org.opentripplanner.gtfs.mapping;
 
-import org.opentripplanner.model.Station;
+import org.opentripplanner.transit.model.site.Station;
 
 import java.util.HashMap;
 import java.util.Map;

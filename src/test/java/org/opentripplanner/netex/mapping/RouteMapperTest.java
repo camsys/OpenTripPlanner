@@ -1,8 +1,8 @@
 package org.opentripplanner.netex.mapping;
 
 import org.junit.Test;
-import org.opentripplanner.model.Agency;
-import org.opentripplanner.model.Route;
+import org.opentripplanner.transit.model.organization.Agency;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.model.impl.EntityById;
 import org.opentripplanner.model.impl.OtpTransitServiceBuilder;
 import org.opentripplanner.netex.index.NetexEntityIndex;

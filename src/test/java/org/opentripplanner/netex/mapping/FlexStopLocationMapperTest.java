@@ -7,7 +7,7 @@ import net.opengis.gml._3.PolygonType;
 import org.junit.Test;
 import org.opentripplanner.model.FlexLocationGroup;
 import org.opentripplanner.model.FlexStopLocation;
-import org.opentripplanner.model.Stop;
+import org.opentripplanner.transit.model.site.Stop;
 import org.opentripplanner.model.WgsCoordinate;
 import org.opentripplanner.model.WheelChairBoarding;
 import org.rutebanken.netex.model.FlexibleArea;

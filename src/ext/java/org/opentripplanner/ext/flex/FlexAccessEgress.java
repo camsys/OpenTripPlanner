@@ -2,7 +2,7 @@ package org.opentripplanner.ext.flex;
 
 import org.opentripplanner.ext.flex.edgetype.FlexTripEdge;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
-import org.opentripplanner.model.Stop;
+import org.opentripplanner.transit.model.site.Stop;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.graph.Edge;
 

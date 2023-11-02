@@ -1,7 +1,7 @@
 package org.opentripplanner.api.mapping;
 
 import org.opentripplanner.api.model.ApiAgency;
-import org.opentripplanner.model.Agency;
+import org.opentripplanner.transit.model.organization.Agency;
 
 import java.util.Collection;
 import java.util.List;

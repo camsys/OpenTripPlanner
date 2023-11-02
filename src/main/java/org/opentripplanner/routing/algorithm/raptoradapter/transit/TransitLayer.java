@@ -1,4 +1,4 @@
-package org.opentripplanner.routing.algorithm.raptor.transit;
+package org.opentripplanner.routing.algorithm.raptoradapter.transit;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -9,8 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import org.opentripplanner.model.Stop;
-import org.opentripplanner.model.StopLocation;
+
+import org.opentripplanner.routing.algorithm.raptor.transit.StopIndexForRaptor;
+import org.opentripplanner.routing.algorithm.raptor.transit.Transfer;
+import org.opentripplanner.routing.algorithm.raptor.transit.TripPatternForDate;
+import org.opentripplanner.transit.model.site.Stop;
+import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.model.transfer.TransferService;
 import org.opentripplanner.routing.algorithm.raptor.transit.request.RaptorRequestTransferCache;
 import org.opentripplanner.routing.api.request.RoutingRequest;

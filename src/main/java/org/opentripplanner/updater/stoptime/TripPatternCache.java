@@ -1,8 +1,8 @@
 package org.opentripplanner.updater.stoptime;
 
 import org.opentripplanner.gtfs.GenerateTripPatternsOperation;
-import org.opentripplanner.model.FeedScopedId;
-import org.opentripplanner.model.Route;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.model.StopPattern;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.model.TripPattern;

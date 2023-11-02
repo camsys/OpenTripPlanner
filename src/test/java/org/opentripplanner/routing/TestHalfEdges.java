@@ -11,7 +11,7 @@ import org.locationtech.jts.linearref.LinearLocation;
 import org.opentripplanner.common.geometry.GeometryUtils;
 import org.opentripplanner.graph_builder.module.StreetLinkerModule;
 import org.opentripplanner.model.GenericLocation;
-import org.opentripplanner.model.Stop;
+import org.opentripplanner.transit.model.site.Stop;
 import org.opentripplanner.model.StreetNote;
 import org.opentripplanner.model.TransitMode;
 import org.opentripplanner.routing.algorithm.astar.AStar;

@@ -1,8 +1,8 @@
 package org.opentripplanner.routing.impl;
 
 import org.opentripplanner.model.FareAttribute;
-import org.opentripplanner.model.FeedScopedId;
-import org.opentripplanner.routing.algorithm.raptor.transit.TransitLayer;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.TransitLayer;
 import org.opentripplanner.routing.algorithm.raptor.transit.TripSchedule;
 import org.opentripplanner.routing.core.Fare;
 import org.opentripplanner.routing.core.Fare.FareType;
@@ -10,7 +10,7 @@ import org.opentripplanner.routing.core.FareComponent;
 import org.opentripplanner.routing.core.FareRuleSet;
 import org.opentripplanner.routing.core.Money;
 import org.opentripplanner.routing.core.WrappedCurrency;
-import org.opentripplanner.routing.services.FareService;
+import org.opentripplanner.routing.fares.FareService;
 import org.opentripplanner.transit.raptor.api.path.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

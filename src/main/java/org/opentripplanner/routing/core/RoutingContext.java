@@ -1,7 +1,7 @@
 package org.opentripplanner.routing.core;
 
 import org.opentripplanner.graph_builder.linking.SameEdgeAdjuster;
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.routing.algorithm.astar.strategies.EuclideanRemainingWeightHeuristic;
 import org.opentripplanner.routing.algorithm.astar.strategies.RemainingWeightHeuristic;
 import org.opentripplanner.routing.api.request.RoutingRequest;

@@ -2,8 +2,7 @@ package org.opentripplanner.routing.algorithm.transferoptimization.configure;
 
 import java.util.function.IntFunction;
 
-import org.opentripplanner.model.StopLocation;
-import org.opentripplanner.model.Stop;
+import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.model.transfer.TransferService;
 import org.opentripplanner.routing.algorithm.transferoptimization.OptimizeTransferService;
 import org.opentripplanner.routing.algorithm.transferoptimization.api.TransferOptimizationParameters;

@@ -19,6 +19,7 @@ import org.locationtech.jts.linearref.LocationIndexedLine;
 import org.opentripplanner.common.geometry.GeometryUtils;
 import org.opentripplanner.common.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
+import org.opentripplanner.ext.flex.trip.ScheduledDeviatedTrip;
 import org.opentripplanner.graph_builder.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issues.BogusShapeDistanceTraveled;
 import org.opentripplanner.graph_builder.issues.BogusShapeGeometry;
@@ -33,7 +34,7 @@ import org.opentripplanner.model.TripPattern;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.service.TransitModel;
-import org.opentripplanner.util.logging.ProgressTracker;
+import org.opentripplanner.util.ProgressTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -253,7 +254,8 @@ public class GeometryProcessor {
   }
 
   private List<LinearLocation> getLinearLocations(List<StopTime> stopTimes, LineString shape) {
-    var isFlexTrip = FlexTrip.containsFlexStops(stopTimes);
+//    var isFlexTrip = FlexTrip.containsFlexStops(stopTimes);
+    var isFlexTrip = ScheduledDeviatedTrip.isScheduledFlexTrip(stopTimes);
     // This trip does not have shape_dist in stop_times, but does have an associated shape.
     ArrayList<IndexedLineSegment> segments = new ArrayList<>();
     for (int i = 0; i < shape.getNumPoints() - 1; ++i) {

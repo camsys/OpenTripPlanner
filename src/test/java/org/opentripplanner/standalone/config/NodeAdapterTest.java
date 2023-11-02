@@ -2,7 +2,7 @@ package org.opentripplanner.standalone.config;
 
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.util.OtpAppException;
 import org.slf4j.Logger;
 

@@ -15,6 +15,10 @@ import org.opentripplanner.graph_builder.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issues.NonUniqueRouteName;
 import org.opentripplanner.routing.trippattern.FrequencyEntry;
 import org.opentripplanner.routing.trippattern.TripTimes;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.transit.model.network.Route;
+import org.opentripplanner.transit.model.site.Stop;
+import org.opentripplanner.transit.model.site.StopLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /**
  * Represents a group of trips on a route, with the same direction id that all call at the same
@@ -151,12 +156,39 @@ public class TripPattern extends TransitEntity implements Cloneable, Serializabl
         }
     }
 
+    public int numberOfStops() {
+        return stopPattern.getSize();
+    }
+
+    public StopLocation firstStop() {
+        return getStop(0);
+    }
+
+    public StopLocation lastStop() {
+        return getStop(stopPattern.getSize() - 1);
+    }
+
     public void setHopGeometries(LineString[] hopGeometries) {
         this.hopGeometries = new byte[hopGeometries.length][];
 
         for (int i = 0; i < hopGeometries.length; i++) {
             setHopGeometry(i, hopGeometries[i]);
         }
+    }
+
+    /**
+     * This pattern may have multiple Timetable objects, but they should all contain TripTimes for the
+     * same trips, in the same order (that of the scheduled Timetable). An exception to this rule may
+     * arise if unscheduled trips are added to a Timetable. For that case we need to search for
+     * trips/TripIds in the Timetable rather than the enclosing TripPattern.
+     */
+    public Stream<Trip> scheduledTripsAsStream() {
+        var trips = scheduledTimetable.tripTimes.stream().map(t -> t.trip);
+        var freqTrips = scheduledTimetable
+                .frequencyEntries
+                .stream()
+                .map(e -> e.tripTimes.trip);
+        return Stream.concat(trips, freqTrips).distinct();
     }
 
     public void setHopGeometry(int i, LineString hopGeometry) {

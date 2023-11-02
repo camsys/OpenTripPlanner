@@ -1,9 +1,11 @@
-package org.opentripplanner.model;
+package org.opentripplanner.transit.model.site;
 
 import org.locationtech.jts.algorithm.ConvexHull;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryCollection;
 import org.locationtech.jts.geom.Point;
+import org.opentripplanner.model.*;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -38,7 +40,7 @@ public class Station extends TransitEntity implements StopCollection {
 
   private final TimeZone timezone;
 
-  private final Set<Stop> childStops = new HashSet<>();
+  private final Set<StopLocation> childStops = new HashSet<>();
 
   private GeometryCollection geometry;
 
@@ -115,7 +117,8 @@ public class Station extends TransitEntity implements StopCollection {
     return timezone;
   }
 
-  public Collection<Stop> getChildStops() {
+  @Nonnull
+  public Collection<StopLocation> getChildStops() {
     return childStops;
   }
 
@@ -138,7 +141,7 @@ public class Station extends TransitEntity implements StopCollection {
 
   private static GeometryCollection computeGeometry(
           WgsCoordinate coordinate,
-          Set<Stop> childStops
+          Set<StopLocation> childStops
   ) {
     Point stationPoint = null;
     var childGeometries = childStops

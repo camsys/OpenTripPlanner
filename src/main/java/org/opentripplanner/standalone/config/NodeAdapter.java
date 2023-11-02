@@ -1,7 +1,7 @@
 package org.opentripplanner.standalone.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.routing.api.request.RequestFunctions;
 import org.opentripplanner.util.OtpAppException;
 import org.slf4j.Logger;

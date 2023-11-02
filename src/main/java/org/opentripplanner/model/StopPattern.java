@@ -3,6 +3,7 @@ package org.opentripplanner.model;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
+import org.opentripplanner.transit.model.site.Stop;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -100,6 +101,10 @@ public class StopPattern implements Serializable {
         } else {
             return false;
         }
+    }
+
+    int getSize() {
+        return stops.length;
     }
 
     public int hashCode() {

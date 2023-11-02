@@ -1,8 +1,8 @@
 package org.opentripplanner.ext.siri;
 
 import org.opentripplanner.gtfs.GenerateTripPatternsOperation;
-import org.opentripplanner.model.FeedScopedId;
-import org.opentripplanner.model.Route;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.model.Trip;
 
 import java.util.concurrent.atomic.AtomicInteger;

@@ -13,6 +13,7 @@ import org.opentripplanner.model.calendar.CalendarServiceData;
 import org.opentripplanner.model.calendar.ServiceDate;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.trippattern.TripTimes;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;

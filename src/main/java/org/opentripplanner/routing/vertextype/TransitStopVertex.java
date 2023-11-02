@@ -1,7 +1,7 @@
 package org.opentripplanner.routing.vertextype;
 
 import org.opentripplanner.model.StationElement;
-import org.opentripplanner.model.Stop;
+import org.opentripplanner.transit.model.site.Stop;
 import org.opentripplanner.model.WheelChairBoarding;
 import org.opentripplanner.routing.RoutingService;
 import org.opentripplanner.routing.edgetype.PathwayEdge;

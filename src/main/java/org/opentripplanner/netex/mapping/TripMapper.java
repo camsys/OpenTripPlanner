@@ -1,6 +1,6 @@
 package org.opentripplanner.netex.mapping;
 
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.Operator;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.model.impl.EntityById;
@@ -28,7 +28,7 @@ class TripMapper {
     private static final Logger LOG = LoggerFactory.getLogger(TripMapper.class);
 
     private final FeedScopedIdFactory idFactory;
-    private final EntityById<org.opentripplanner.model.Route> otpRouteById;
+    private final EntityById<org.opentripplanner.transit.model.network.Route> otpRouteById;
     private final ReadOnlyHierarchicalMap<String, Route> routeById;
     private final ReadOnlyHierarchicalMap<String, JourneyPattern> journeyPatternsById;
     private final Map<String, FeedScopedId> serviceIds;
@@ -38,7 +38,7 @@ class TripMapper {
     TripMapper(
             FeedScopedIdFactory idFactory,
             EntityById<Operator> operatorsById,
-            EntityById<org.opentripplanner.model.Route> otpRouteById,
+            EntityById<org.opentripplanner.transit.model.network.Route> otpRouteById,
             ReadOnlyHierarchicalMap<String, Route> routeById,
             ReadOnlyHierarchicalMap<String, JourneyPattern> journeyPatternsById,
             Map<String, FeedScopedId> serviceIds,
@@ -67,7 +67,7 @@ class TripMapper {
             return null;
         }
 
-        org.opentripplanner.model.Route route = resolveRoute(serviceJourney);
+        org.opentripplanner.transit.model.network.Route route = resolveRoute(serviceJourney);
 
         if(route == null) {
             LOG.warn("Unable to map ServiceJourney, missing serviceId. SJ id: {}", serviceJourney.getId());
@@ -131,7 +131,7 @@ class TripMapper {
         return null;
     }
 
-    private org.opentripplanner.model.Route resolveRoute(ServiceJourney serviceJourney) {
+    private org.opentripplanner.transit.model.network.Route resolveRoute(ServiceJourney serviceJourney) {
         String lineRef = null;
         // Check for direct connection to Line
         JAXBElement<? extends LineRefStructure> lineRefStruct = serviceJourney.getLineRef();
@@ -147,7 +147,7 @@ class TripMapper {
             String routeRef = journeyPattern.getRouteRef().getRef();
             lineRef = routeById.lookup(routeRef).getLineRef().getValue().getRef();
         }
-        org.opentripplanner.model.Route route = otpRouteById.get(idFactory.createId(lineRef));
+        org.opentripplanner.transit.model.network.Route route = otpRouteById.get(idFactory.createId(lineRef));
 
         if(route == null) {
             LOG.warn(

@@ -1,6 +1,6 @@
 package org.opentripplanner.routing.alertpatch;
 
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 public interface EntitySelector {
   class Agency implements EntitySelector {

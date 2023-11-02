@@ -6,6 +6,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
 import org.onebusaway.gtfs.model.Transfer;
 import org.opentripplanner.graph_builder.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issues.IgnoredGtfsTransfer;
@@ -25,7 +27,7 @@ import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.transit.model.site.Stop;
 import org.opentripplanner.transit.model.site.StopLocation;
-import org.opentripplanner.transit.model.timetable.Trip;
+import org.opentripplanner.model.Trip;
 
 /**
  * Responsible for mapping GTFS Transfer into the OTP model.
@@ -129,13 +131,13 @@ class TransferMapper {
       .stream()
       .map(this::map)
       .filter(Objects::nonNull)
-      .toList();
+      .collect(Collectors.toList());
 
     List<StaySeatedNotAllowed> staySeatedNotAllowed = allTransfers
       .stream()
       .map(this::toStaySeatedNotAllowed)
       .filter(Objects::nonNull)
-      .toList();
+      .collect(Collectors.toList());
 
     return new TransferMappingResult(constrainedTransfers, staySeatedNotAllowed);
   }

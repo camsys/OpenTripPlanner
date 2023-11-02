@@ -1,5 +1,8 @@
 package org.opentripplanner.model;
 
+import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.transit.model.organization.Agency;
+
 /**
  * A company which is responsible for operating public transport services.
  * The operator will often operate under contract with an Authority (Agency).

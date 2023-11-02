@@ -2,7 +2,7 @@ package org.opentripplanner.api.mapping;
 
 import org.opentripplanner.api.model.ApiTrip;
 import org.opentripplanner.api.model.ApiTripShort;
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.Trip;
 
 import java.util.Collection;

@@ -55,7 +55,7 @@ public class AgencyMapperTest {
 
     @Test
     public void testMap() throws Exception {
-        org.opentripplanner.model.Agency result = subject.map(AGENCY);
+        org.opentripplanner.transit.model.organization.Agency result = subject.map(AGENCY);
 
         assertEquals("FEED:ID", result.getId().toString());
         assertEquals(NAME, result.getName());
@@ -71,7 +71,7 @@ public class AgencyMapperTest {
     public void testMapWithNulls() throws Exception {
         Agency orginal = new Agency();
         orginal.setId(ID);
-        org.opentripplanner.model.Agency result = subject.map(orginal);
+        org.opentripplanner.transit.model.organization.Agency result = subject.map(orginal);
 
         assertNotNull(result.getId());
         assertNull(result.getName());
@@ -86,8 +86,8 @@ public class AgencyMapperTest {
     /** Mapping the same object twice, should return the the same instance. */
     @Test
     public void testMapCache() throws Exception {
-        org.opentripplanner.model.Agency result1 = subject.map(AGENCY);
-        org.opentripplanner.model.Agency result2 = subject.map(AGENCY);
+        org.opentripplanner.transit.model.organization.Agency result1 = subject.map(AGENCY);
+        org.opentripplanner.transit.model.organization.Agency result2 = subject.map(AGENCY);
 
         assertTrue(result1 == result2);
     }

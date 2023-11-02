@@ -5,8 +5,7 @@ import java.util.Map;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 
-import org.opentripplanner.model.StopLocation;
-import org.opentripplanner.model.Stop;
+import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.model.transfer.Transfer;
 import org.opentripplanner.model.transfer.TransferService;

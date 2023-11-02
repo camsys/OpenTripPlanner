@@ -57,6 +57,15 @@ public class ToStringBuilder {
         return new ToStringBuilder(clazz.getSimpleName());
     }
 
+    /**
+     * Create a ToStringBuilder for a regular POJO type without including the type in the name. Some
+     * classes are always embedded in other classes and the type is given, for these cases this
+     * builder make the toString a bit easier to read.
+     */
+    public static ToStringBuilder of() {
+        return new ToStringBuilder("");
+    }
+
 
     /* General purpose formatters */
 

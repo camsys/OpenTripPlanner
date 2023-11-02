@@ -1,12 +1,10 @@
 package org.opentripplanner.routing.connectivity;
 
 import org.opentripplanner.model.StationElement;
-import org.opentripplanner.model.Stop;
+import org.opentripplanner.transit.model.site.Stop;
 import org.opentripplanner.model.WheelChairBoarding;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.graph.Graph;
-
-import java.util.List;
 
 /**
  * Extends default strategy to handle MTASBWY stops by finding first path to accessible entrance:

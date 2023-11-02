@@ -1,7 +1,7 @@
 package org.opentripplanner.netex.mapping;
 
 import org.junit.Test;
-import org.opentripplanner.model.Agency;
+import org.opentripplanner.transit.model.organization.Agency;
 import org.rutebanken.netex.model.Authority;
 import org.rutebanken.netex.model.ContactStructure;
 import org.rutebanken.netex.model.MultilingualString;

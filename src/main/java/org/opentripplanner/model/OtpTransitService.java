@@ -5,6 +5,10 @@ import java.util.Collection;
 import java.util.List;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
 import org.opentripplanner.model.transfer.Transfer;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.transit.model.organization.Agency;
+import org.opentripplanner.transit.model.site.Station;
+import org.opentripplanner.transit.model.site.Stop;
 
 /**
  * Methods for accessing imported entities.
@@ -77,4 +81,10 @@ public interface OtpTransitService {
     Collection<Trip> getAllTrips();
 
     Collection<FlexTrip> getAllFlexTrips();
+
+    /**
+     * @return if transit service has any active services. The graph build might filter out all
+     * transit services if they are outside the configured 'transitServiceStart' and 'transitServiceEnd'
+     */
+    boolean hasActiveTransit();
 }

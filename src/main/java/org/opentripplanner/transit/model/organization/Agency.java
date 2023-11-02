@@ -1,6 +1,9 @@
 /* This file is based on code copied from project OneBusAway, see the LICENSE file for further information. */
-package org.opentripplanner.model;
+package org.opentripplanner.transit.model.organization;
 
+
+import org.opentripplanner.model.TransitEntity;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 /**
  * This class is tha same as a GTFS Agency and Netex Authority.

@@ -1,7 +1,7 @@
 package org.opentripplanner.model.plan;
 
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.routing.core.TraverseMode;
 
 import java.util.GregorianCalendar;

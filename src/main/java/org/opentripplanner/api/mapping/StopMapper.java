@@ -3,7 +3,7 @@ package org.opentripplanner.api.mapping;
 import org.opentripplanner.api.model.ApiStop;
 import org.opentripplanner.api.model.ApiStopShort;
 import org.opentripplanner.model.StationElement;
-import org.opentripplanner.model.Stop;
+import org.opentripplanner.transit.model.site.Stop;
 
 import java.util.Collection;
 import java.util.List;

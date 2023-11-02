@@ -1,6 +1,8 @@
-package org.opentripplanner.model;
+package org.opentripplanner.transit.model.site;
 
 import org.locationtech.jts.geom.Geometry;
+import org.opentripplanner.model.WgsCoordinate;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 import javax.annotation.Nullable;
 
@@ -28,8 +30,21 @@ public interface StopLocation {
 
   @Nullable
   Geometry getGeometry();
+
+  default double getLat() {
+    return getCoordinate().latitude();
+  }
+
+  default double getLon() {
+    return getCoordinate().longitude();
+  }
   
   boolean isLine();
 
   boolean isArea();
+
+  @Nullable
+  default Station getParentStation() {
+    return null;
+  }
 }

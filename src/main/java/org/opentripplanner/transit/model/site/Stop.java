@@ -1,8 +1,10 @@
 /* This file is based on code copied from project OneBusAway, see the LICENSE file for further information. */
-package org.opentripplanner.model;
+package org.opentripplanner.transit.model.site;
 
 import org.locationtech.jts.geom.Geometry;
 import org.opentripplanner.common.geometry.GeometryUtils;
+import org.opentripplanner.model.*;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 import java.util.Collection;
 import java.util.Collections;

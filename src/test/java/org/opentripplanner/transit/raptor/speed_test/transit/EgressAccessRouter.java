@@ -3,7 +3,7 @@ package org.opentripplanner.transit.raptor.speed_test.transit;
 import gnu.trove.map.TIntIntMap;
 import org.opentripplanner.graph_builder.linking.VertexLinker;
 import org.opentripplanner.graph_builder.module.NearbyStopFinder;
-import org.opentripplanner.routing.algorithm.raptor.transit.TransitLayer;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.TransitLayer;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.transit.raptor.speed_test.SpeedTestRequest;

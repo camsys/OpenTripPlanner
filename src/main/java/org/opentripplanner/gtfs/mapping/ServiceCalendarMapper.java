@@ -1,24 +1,25 @@
 package org.opentripplanner.gtfs.mapping;
 
-import org.opentripplanner.model.calendar.ServiceCalendar;
-import org.opentripplanner.util.MapUtils;
+import static org.opentripplanner.gtfs.mapping.AgencyAndIdMapper.mapAgencyAndId;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.opentripplanner.gtfs.mapping.AgencyAndIdMapper.mapAgencyAndId;
+import org.opentripplanner.model.calendar.ServiceCalendar;
+import org.opentripplanner.util.MapUtils;
 
 /** Responsible for mapping GTFS ServiceCalendar into the OTP model. */
 class ServiceCalendarMapper {
-    private Map<org.onebusaway.gtfs.model.ServiceCalendar, ServiceCalendar> mappedCalendars = new HashMap<>();
+
+    private final Map<org.onebusaway.gtfs.model.ServiceCalendar, ServiceCalendar> mappedCalendars = new HashMap<>();
 
     Collection<ServiceCalendar> map(
-            Collection<org.onebusaway.gtfs.model.ServiceCalendar> allServiceCalendars) {
+            Collection<org.onebusaway.gtfs.model.ServiceCalendar> allServiceCalendars
+    ) {
         return MapUtils.mapToList(allServiceCalendars, this::map);
     }
 
-    /** Map from GTFS to OTP model, {@code null} safe.  */
+    /** Map from GTFS to OTP model, {@code null} safe. */
     ServiceCalendar map(org.onebusaway.gtfs.model.ServiceCalendar orginal) {
         return orginal == null ? null : mappedCalendars.computeIfAbsent(orginal, this::doMap);
     }
@@ -34,12 +35,7 @@ class ServiceCalendarMapper {
         lhs.setFriday(rhs.getFriday());
         lhs.setSaturday(rhs.getSaturday());
         lhs.setSunday(rhs.getSunday());
-        lhs.setPeriod(
-                ServiceDateMapper.mapServiceDateInterval(
-                        rhs.getStartDate(),
-                        rhs.getEndDate()
-                )
-        );
+        lhs.setPeriod(ServiceDateMapper.mapServiceDateInterval(rhs.getStartDate(), rhs.getEndDate()));
         return lhs;
     }
 }

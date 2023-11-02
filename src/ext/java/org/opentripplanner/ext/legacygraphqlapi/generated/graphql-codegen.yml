@@ -25,7 +25,7 @@ config:
     Polyline: String
     GeoJson: org.locationtech.jts.geom.Geometry
   mappers:
-    Agency: org.opentripplanner.model.Agency#Agency
+    Agency: org.opentripplanner.transit.model.organization.Agency#Agency
     Alert: org.opentripplanner.routing.alertpatch.TransitAlert#TransitAlert
     AlertCauseType: String
     AlertEffectType: String
@@ -58,7 +58,7 @@ config:
     placeAtDistanceEdge: graphql.relay.Edge#Edge<PlaceAtDistance>
     Plan: org.opentripplanner.routing.api.response.RoutingResponse#RoutingResponse
     RealtimeState: String
-    Route: org.opentripplanner.model.Route#Route
+    Route: org.opentripplanner.transit.model.network.Route#Route
     serviceTimeRange: Object
     step: org.opentripplanner.model.plan.WalkStep#WalkStep
     Stop: Object # Can be either Stop or Station

@@ -1,5 +1,9 @@
 package org.opentripplanner.model;
 
+import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.transit.model.site.Station;
+import org.opentripplanner.transit.model.site.Stop;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -53,6 +57,10 @@ public class MultiModalStation extends TransitEntity implements StopCollection {
 
     public void setCoordinate(WgsCoordinate coordinate) {
         this.coordinate = coordinate;
+    }
+
+    public WgsCoordinate getCoordinate() {
+        return coordinate;
     }
 
     /**

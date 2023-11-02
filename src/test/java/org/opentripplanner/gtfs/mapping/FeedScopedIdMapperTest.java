@@ -1,7 +1,7 @@
 package org.opentripplanner.gtfs.mapping;
 
 import org.junit.Test;
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 import static org.junit.Assert.assertEquals;
 import static org.opentripplanner.gtfs.mapping.AgencyAndIdMapper.mapAgencyAndId;

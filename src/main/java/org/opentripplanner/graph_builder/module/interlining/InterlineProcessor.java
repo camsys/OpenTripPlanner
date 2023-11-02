@@ -9,6 +9,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.opentripplanner.common.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.common.model.P2;
 import org.opentripplanner.graph_builder.DataImportIssueStore;
@@ -23,7 +25,7 @@ import org.opentripplanner.model.transfer.TransferService;
 import org.opentripplanner.model.transfer.TripTransferPoint;
 import org.opentripplanner.routing.trippattern.TripTimes;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
-import org.opentripplanner.transit.model.timetable.Trip;
+import org.opentripplanner.model.Trip;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,7 +76,7 @@ public class InterlineProcessor {
 
         return new ConstrainedTransfer(null, from, to, constraint.build());
       })
-      .toList();
+      .collect(Collectors.toList());
 
     if (!transfers.isEmpty()) {
       LOG.info(
@@ -111,11 +113,11 @@ public class InterlineProcessor {
 
     LOG.info("Finding interlining trips based on block IDs.");
     for (TripPattern pattern : tripPatterns) {
-      Timetable timetable = pattern.getScheduledTimetable();
+      Timetable timetable = pattern.scheduledTimetable;
       /* TODO: Block semantics seem undefined for frequency trips, so skip them? */
-      for (TripTimes tripTimes : timetable.getTripTimes()) {
-        Trip trip = tripTimes.getTrip();
-        if (!Strings.isNullOrEmpty(trip.getGtfsBlockId())) {
+      for (TripTimes tripTimes : timetable.tripTimes) {
+        Trip trip = tripTimes.trip;
+        if (!Strings.isNullOrEmpty(trip.getBlockId())) {
           tripTimesForBlock.put(BlockIdAndServiceId.ofTrip(trip), tripTimes);
           // For space efficiency, only record times that are part of a block.
           patternForTripTimes.put(tripTimes, pattern);
@@ -137,9 +139,9 @@ public class InterlineProcessor {
           if (prev.getDepartureTime(prev.getNumStops() - 1) > curr.getArrivalTime(0)) {
             LOG.error(
               "Trip times within block {} are not increasing on service {} after trip {}.",
-              block.blockId(),
-              block.serviceId(),
-              prev.getTrip().getId()
+              block.blockId,
+              block.serviceId,
+              prev.trip.getId()
             );
             continue SERVICE_BLOCK;
           }
@@ -155,13 +157,13 @@ public class InterlineProcessor {
           );
           if (teleportationDistance > maxInterlineDistance) {
             issueStore.add(
-              new InterliningTeleport(prev.getTrip(), block.blockId(), (int) teleportationDistance)
+              new InterliningTeleport(prev.trip, block.blockId, (int) teleportationDistance)
             );
             // Only skip this particular interline edge; there may be other valid ones in the block.
           } else {
             interlines.put(
               new P2<>(prevPattern, currPattern),
-              new P2<>(prev.getTrip(), curr.getTrip())
+              new P2<>(prev.trip, curr.trip)
             );
           }
         }
@@ -176,9 +178,17 @@ public class InterlineProcessor {
    * This compound key object is used when grouping interlining trips together by (serviceId,
    * blockId).
    */
-  private record BlockIdAndServiceId(String blockId, FeedScopedId serviceId) {
-    static BlockIdAndServiceId ofTrip(Trip trip) {
-      return new BlockIdAndServiceId(trip.getGtfsBlockId(), trip.getServiceId());
+  private static class BlockIdAndServiceId {
+
+    public String blockId;
+    public FeedScopedId serviceId;
+
+    public BlockIdAndServiceId(String blockId, FeedScopedId serviceId) {
+      this.blockId = blockId;
+      this.serviceId = serviceId;
+    }
+    public static BlockIdAndServiceId ofTrip(Trip trip) {
+      return new BlockIdAndServiceId(trip.getBlockId(), trip.getServiceId());
     }
   }
 }

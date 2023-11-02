@@ -4,11 +4,10 @@ import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.GraphQLInputObjectType;
 import org.apache.commons.collections.CollectionUtils;
 import org.opentripplanner.ext.transmodelapi.mapping.TransitIdMapper;
-import org.opentripplanner.model.FeedScopedId;
-import org.opentripplanner.model.Route;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.model.TripTimeShort;
-import org.opentripplanner.routing.RoutingService;
 
 import java.util.Collection;
 import java.util.List;

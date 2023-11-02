@@ -1,6 +1,8 @@
 package org.opentripplanner.ext.transmodelapi.model.stop;
 
 import org.opentripplanner.model.*;
+import org.opentripplanner.transit.model.site.Station;
+import org.opentripplanner.transit.model.site.Stop;
 
 import java.util.Collection;
 import java.util.TimeZone;

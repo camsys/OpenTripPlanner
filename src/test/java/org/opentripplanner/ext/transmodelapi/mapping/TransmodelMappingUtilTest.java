@@ -1,8 +1,8 @@
 package org.opentripplanner.ext.transmodelapi.mapping;
 
 import org.junit.Test;
-import org.opentripplanner.model.Agency;
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.organization.Agency;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 import java.util.List;
 

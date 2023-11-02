@@ -1,6 +1,6 @@
-package org.opentripplanner.routing.services;
+package org.opentripplanner.routing.fares;
 
-import org.opentripplanner.routing.algorithm.raptor.transit.TransitLayer;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.TransitLayer;
 import org.opentripplanner.routing.algorithm.raptor.transit.TripSchedule;
 import org.opentripplanner.routing.core.Fare;
 import org.opentripplanner.transit.raptor.api.path.Path;

@@ -3,10 +3,10 @@ package org.opentripplanner.ext.vectortiles.layers.stations;
 import org.json.simple.JSONArray;
 import org.opentripplanner.common.model.T2;
 import org.opentripplanner.ext.vectortiles.PropertyMapper;
-import org.opentripplanner.model.FeedScopedId;
-import org.opentripplanner.model.Station;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.model.StationElement;
-import org.opentripplanner.model.Stop;
+import org.opentripplanner.transit.model.site.Stop;
 import org.opentripplanner.routing.graph.Graph;
 
 import java.util.Collection;

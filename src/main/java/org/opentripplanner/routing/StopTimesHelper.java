@@ -1,7 +1,7 @@
 package org.opentripplanner.routing;
 
 import com.google.common.collect.MinMaxPriorityQueue;
-import org.opentripplanner.model.Stop;
+import org.opentripplanner.transit.model.site.Stop;
 import org.opentripplanner.model.StopPattern;
 import org.opentripplanner.model.StopTimesInPattern;
 import org.opentripplanner.model.Timetable;

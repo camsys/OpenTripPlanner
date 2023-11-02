@@ -1,6 +1,6 @@
 package org.opentripplanner.routing.impl;
 
-import org.opentripplanner.routing.services.FareService;
+import org.opentripplanner.routing.fares.FareService;
 
 public class SFBayFareServiceFactory extends DefaultFareServiceFactory {
     @Override

@@ -1,10 +1,11 @@
 package org.opentripplanner.routing.algorithm.raptor.transit.request;
 
 import org.opentripplanner.routing.algorithm.raptor.transit.TripPatternForDate;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.TransitLayer;
 import org.opentripplanner.routing.trippattern.TripTimes;
 
 /**
- * Used to filter the elements in a {@link org.opentripplanner.routing.algorithm.raptor.transit.TransitLayer}
+ * Used to filter the elements in a {@link TransitLayer}
  * when constructing a {@link RaptorRoutingRequestTransitData} for a request.
  * <p>
  * {@link TripPatternForDate} and {@link TripTimes} are filtered based on the request parameters to

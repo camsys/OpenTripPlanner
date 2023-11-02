@@ -1,6 +1,6 @@
 package org.opentripplanner.ext.transmodelapi.mapping;
 
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.TransitEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

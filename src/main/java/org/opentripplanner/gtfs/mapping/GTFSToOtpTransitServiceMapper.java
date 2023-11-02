@@ -117,7 +117,6 @@ public class GTFSToOtpTransitServiceMapper {
   }
 
   public void mapStopTripAndRouteDatantoBuilder() {
-    translationHelper.importTranslations(data.getAllTranslations(), data.getAllFeedInfos());
 
     builder.getAgenciesById().addAll(agencyMapper.map(data.getAllAgencies()));
     builder.getCalendarDates().addAll(serviceCalendarDateMapper.map(data.getAllCalendarDates()));

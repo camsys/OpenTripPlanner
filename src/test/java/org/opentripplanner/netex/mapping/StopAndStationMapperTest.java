@@ -2,8 +2,8 @@ package org.opentripplanner.netex.mapping;
 
 import org.junit.Test;
 import org.opentripplanner.graph_builder.DataImportIssueStore;
-import org.opentripplanner.model.Station;
-import org.opentripplanner.model.Stop;
+import org.opentripplanner.transit.model.site.Station;
+import org.opentripplanner.transit.model.site.Stop;
 import org.opentripplanner.netex.index.hierarchy.HierarchicalVersionMapById;
 import org.rutebanken.netex.model.LocationStructure;
 import org.rutebanken.netex.model.MultilingualString;

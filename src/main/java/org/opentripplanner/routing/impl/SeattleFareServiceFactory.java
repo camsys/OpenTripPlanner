@@ -3,12 +3,12 @@ package org.opentripplanner.routing.impl;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.opentripplanner.model.FeedScopedId;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.model.Trip;
 import org.opentripplanner.model.OtpTransitService;
 import org.opentripplanner.routing.core.Fare.FareType;
 import org.opentripplanner.routing.core.FareRuleSet;
-import org.opentripplanner.routing.services.FareService;
+import org.opentripplanner.routing.fares.FareService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
