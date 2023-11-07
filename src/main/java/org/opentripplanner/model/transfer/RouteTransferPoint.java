@@ -30,6 +30,6 @@ public class RouteTransferPoint extends TripTransferPoint implements Serializabl
   public String toString() {
     return "(route: " + route.getId()
             + ", trip: " + getTrip().getId()
-            + ", stopPos: " + getStopPosition() + ")";
+            + ", stopPos: " + getStopPositionInPattern() + ")";
   }
 }

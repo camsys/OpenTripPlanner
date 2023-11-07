@@ -44,7 +44,7 @@ class TripMapper {
         lhs.setTripHeadsign(rhs.getTripHeadsign());
         lhs.setRouteShortName(rhs.getRouteShortName());
         lhs.setDirection(Direction.valueOfGtfsCode(mapDirectionId(rhs)));
-        lhs.setBlockId(rhs.getBlockId());
+        lhs.setGtfsBlockId(rhs.getBlockId());
         lhs.setShapeId(AgencyAndIdMapper.mapAgencyAndId(rhs.getShapeId()));
         lhs.setWheelchairAccessible(rhs.getWheelchairAccessible());
         lhs.setBikesAllowed(BikeAccessMapper.mapForTrip(rhs));

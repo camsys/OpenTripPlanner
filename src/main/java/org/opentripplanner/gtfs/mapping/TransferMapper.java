@@ -12,6 +12,7 @@ import org.onebusaway.gtfs.model.Transfer;
 import org.opentripplanner.graph_builder.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issues.IgnoredGtfsTransfer;
 import org.opentripplanner.graph_builder.issues.InvalidGtfsTransfer;
+import org.opentripplanner.model.StopPattern;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.model.TripStopTimes;
 import org.opentripplanner.model.transfer.ConstrainedTransfer;
@@ -269,10 +270,10 @@ class TransferMapper {
 
     for (int i = firstStopPos; i < lastStopPos; i++) {
       StopTime stopTime = stopTimes.get(i);
-      if (boardTrip && stopTime.getPickupType().isNotRoutable()) {
+      if (boardTrip && stopTime.getPickupType() == StopPattern.PICKDROP_NONE) {
         continue;
       }
-      if (!boardTrip && stopTime.getDropOffType().isNotRoutable()) {
+      if (!boardTrip && stopTime.getDropOffType() == StopPattern.PICKDROP_NONE) {
         continue;
       }
 

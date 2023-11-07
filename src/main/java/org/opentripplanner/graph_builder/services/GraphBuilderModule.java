@@ -2,6 +2,7 @@ package org.opentripplanner.graph_builder.services;
 
 import org.opentripplanner.graph_builder.DataImportIssueStore;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.transit.service.TransitModel;
 
 import java.util.HashMap;
 
@@ -9,17 +10,15 @@ import java.util.HashMap;
 public interface GraphBuilderModule {
 
     /** Process whatever inputs were supplied to this module and add the resulting elements to the given graph. */
-    public void buildGraph(
+    void buildGraph(
             Graph graph,
+            TransitModel transitModel,
             HashMap<Class<?>, Object> extra,
             DataImportIssueStore issueStore
     );
 
-    public default void buildGraph(
-            Graph graph,
-            HashMap<Class<?>, Object> extra
-    ) {
-        buildGraph(graph, extra, new DataImportIssueStore(false));
+    default void buildGraph(Graph graph, TransitModel transitModel, HashMap<Class<?>, Object> extra) {
+        buildGraph(graph, transitModel, extra, new DataImportIssueStore(false));
     }
 
     /** Check that all inputs to the graphbuilder are valid; throw an exception if not. */

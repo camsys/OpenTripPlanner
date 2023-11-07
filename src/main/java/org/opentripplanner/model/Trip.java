@@ -27,7 +27,7 @@ public final class Trip extends TransitEntity {
     @NotNull
     private Direction direction = Direction.UNKNOWN;
 
-    private String blockId;
+    private String gtfsBlockId;
 
     private FeedScopedId shapeId;
 
@@ -61,7 +61,7 @@ public final class Trip extends TransitEntity {
         this.tripHeadsign = obj.tripHeadsign;
         this.routeShortName = obj.routeShortName;
         this.direction = obj.direction;
-        this.blockId = obj.blockId;
+        this.gtfsBlockId = obj.gtfsBlockId;
         this.shapeId = obj.shapeId;
         this.wheelchairAccessible = obj.wheelchairAccessible;
         this.bikesAllowed = obj.bikesAllowed;
@@ -175,12 +175,12 @@ public final class Trip extends TransitEntity {
         this.direction = direction != null ? direction : Direction.UNKNOWN;
     }
 
-    public String getBlockId() {
-        return blockId;
+    public String getGtfsBlockId() {
+        return gtfsBlockId;
     }
 
-    public void setBlockId(String blockId) {
-        this.blockId = blockId;
+    public void setGtfsBlockId(String blockId) {
+        this.gtfsBlockId = blockId;
     }
 
     public FeedScopedId getShapeId() {

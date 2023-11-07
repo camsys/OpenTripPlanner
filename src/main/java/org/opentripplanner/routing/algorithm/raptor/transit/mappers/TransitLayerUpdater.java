@@ -82,7 +82,7 @@ public class TransitLayerUpdater {
     // Map new TriPatternForDate and index for old and new TripPatternsForDate on service date
     for (Timetable timetable : updatedTimetables) {
       @SuppressWarnings("ConstantConditions")
-      LocalDate date = ServiceCalendarMapper.localDateFromServiceDate(timetable.serviceDate);
+      LocalDate date = LocalDate.of(timetable.serviceDate.getYear(), timetable.serviceDate.getMonth(), timetable.serviceDate.getDay());
 
       if(!tripPatternsStartingOnDateMapCache.containsKey(date)) {
         Map<TripPattern, TripPatternForDate> map = realtimeTransitLayer

@@ -21,7 +21,7 @@ public class TripMapper {
         api.tripHeadsign = obj.getTripHeadsign();
         api.routeShortName = obj.getRouteShortName();
         api.directionId = obj.getGtfsDirectionIdAsString(null);
-        api.blockId = obj.getBlockId();
+        api.blockId = obj.getGtfsBlockId();
         api.shapeId = FeedScopedIdMapper.mapToApi(obj.getShapeId());
         api.wheelchairAccessible = obj.getWheelchairAccessible();
         api.bikesAllowed = BikeAccessMapper.mapToApi(obj.getBikesAllowed());

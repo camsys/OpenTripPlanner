@@ -1076,7 +1076,8 @@ public class Graph implements Serializable {
         noticesByElement = null;
         services.clear();
         services = null;
-        transferService.reset();
+//        transferService.reset();
+        //TODO no more transfer service reset?
         transferService = null;
         bundle = null;
         vertices.clear();

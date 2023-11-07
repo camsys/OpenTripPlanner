@@ -35,6 +35,8 @@ import org.opentripplanner.routing.vertextype.TransitBoardingAreaVertex;
 import org.opentripplanner.routing.vertextype.TransitEntranceVertex;
 import org.opentripplanner.routing.vertextype.TransitPathwayNodeVertex;
 import org.opentripplanner.routing.vertextype.TransitStopVertex;
+import org.opentripplanner.transit.model.site.StopLocation;
+import org.opentripplanner.transit.service.TransitModel;
 import org.opentripplanner.util.OTPFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,14 +54,25 @@ public class AddTransitModelEntitiesToGraph {
 
     private final int subwayAccessTime;
 
-    public static void addToGraph(GtfsContext context, Graph graph) {
-        new AddTransitModelEntitiesToGraph(context).applyToGraph(graph);
-    }
+//    public static void addToGraph(GtfsContext context, Graph graph) {
+//        new AddTransitModelEntitiesToGraph(context).applyToGraph(graph, transitModel);
+//    }
+//
+//    public static void addToGraph(
+//            GtfsFeedId feedId, OtpTransitService transitModel, int subwayAccessTime, Graph graph
+//    ) {
+//        new AddTransitModelEntitiesToGraph(feedId, transitModel, subwayAccessTime).applyToGraph(graph);
+//    }
 
     public static void addToGraph(
-            GtfsFeedId feedId, OtpTransitService transitModel, int subwayAccessTime, Graph graph
+            GtfsFeedId feedId,
+            OtpTransitService otpTransitService,
+            int subwayAccessTime,
+            Graph graph,
+            TransitModel transitModel
     ) {
-        new AddTransitModelEntitiesToGraph(feedId, transitModel, subwayAccessTime).applyToGraph(graph);
+        new AddTransitModelEntitiesToGraph(feedId, otpTransitService, subwayAccessTime)
+                .applyToGraph(graph, transitModel);
     }
 
     private AddTransitModelEntitiesToGraph(GtfsContext context) {
@@ -76,11 +89,11 @@ public class AddTransitModelEntitiesToGraph {
         this.subwayAccessTime = Math.max(subwayAccessTime, 0);
     }
 
-    private void applyToGraph(Graph graph) {
-        addStopsToGraphAndGenerateStopVertexes(graph);
-        addStationsToGraph(graph);
-        addMultiModalStationsToGraph(graph);
-        addGroupsOfStationsToGraph(graph);
+    private void applyToGraph(Graph graph, TransitModel transitModel) {
+        addStopsToGraphAndGenerateStopVertexes(graph, transitModel);
+        addStationsToGraph(transitModel);
+        addMultiModalStationsToGraph(transitModel);
+        addGroupsOfStationsToGraph(transitModel);
         addEntrancesToGraph(graph);
         addPathwayNodesToGraph(graph);
         addBoardingAreasToGraph(graph);
@@ -88,29 +101,30 @@ public class AddTransitModelEntitiesToGraph {
         // Although pathways are loaded from GTFS they are street data, so we will put them in the street graph.
         createPathwayEdgesAndAddThemToGraph(graph);
         if (OTPFeature.FlexRouting.isOn()) {
-            addLocationsToGraph(graph);
-            addLocationGroupsToGraph(graph);
+            addLocationsToGraph(transitModel);
+            addLocationGroupsToGraph(transitModel);
         }
-        addFeedInfoToGraph(graph);
-        addAgenciesToGraph(graph);
+        addFeedInfoToGraph(transitModel);
+        addAgenciesToGraph(transitModel);
+        addServicesToTransitModel(transitModel);
+        addTripPatternsToTransitModel(transitModel);
 
         /* Interpret the transfers explicitly defined in transfers.txt. */
-        addTransfersToGraph(graph);
+        addTransfersToGraph(transitModel);
 
         if (OTPFeature.FlexRouting.isOn()) {
-            addFlexTripsToGraph(graph);
+            addFlexTripsToGraph(transitModel);
         }
-
     }
 
-    private void addStopsToGraphAndGenerateStopVertexes(Graph graph) {
+    private void addStopsToGraphAndGenerateStopVertexes(Graph graph, TransitModel transitModel) {
         // Compute the set of modes for each stop based on all the TripPatterns it is part of
-        Map<Stop, Set<TransitMode>> stopModeMap = new HashMap<>();
+        Map<StopLocation, Set<TransitMode>> stopModeMap = new HashMap<>();
 
-        for (TripPattern pattern : transitService.getTripPatterns()) {
+        for (TripPattern pattern : otpTransitService.getTripPatterns()) {
             TransitMode mode = pattern.getMode();
-            graph.addTransitMode(mode);
-            for (Stop stop : pattern.getStops()) {
+            transitModel.addTransitMode(mode);
+            for (var stop : pattern.getStops()) {
                 Set<TransitMode> set = stopModeMap.computeIfAbsent(stop, s -> new HashSet<>());
                 set.add(mode);
             }
@@ -118,9 +132,14 @@ public class AddTransitModelEntitiesToGraph {
 
         // Add a vertex representing the stop.
         // It is now possible for these vertices to not be connected to any edges.
-        for (Stop stop : transitService.getAllStops()) {
+        for (Stop stop : otpTransitService.getAllStops()) {
             Set<TransitMode> modes = stopModeMap.get(stop);
-            TransitStopVertex stopVertex = new TransitStopVertex(graph, stop, modes);
+            TransitStopVertex stopVertex = new TransitStopVertexBuilder()
+                    .withStop(stop)
+                    .withGraph(graph)
+                    .withTransitModel(transitModel)
+                    .withModes(modes)
+                    .build();
             if (modes != null && modes.contains(TransitMode.SUBWAY)) {
                 stopVertex.setStreetToStopTime(subwayAccessTime);
             }
@@ -130,9 +149,9 @@ public class AddTransitModelEntitiesToGraph {
         }
     }
 
-    private void addStationsToGraph(Graph graph) {
-        for (Station station : transitService.getAllStations()) {
-            graph.stationById.put(station.getId(), station);
+    private void addStationsToGraph(TransitModel transitModel) {
+        for (Station station : otpTransitService.getAllStations()) {
+            transitModel.getStopModel().addStation(station);
         }
     }
 

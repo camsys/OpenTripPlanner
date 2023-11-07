@@ -82,7 +82,7 @@ public class LegMapper {
             var trip = domain.getTrip();
             api.tripId = FeedScopedIdMapper.mapToApi(trip.getId());
             api.tripShortName = trip.getTripShortName();
-            api.tripBlockId = trip.getBlockId();
+            api.tripBlockId = trip.getGtfsBlockId();
         }
         else if (domain.pathway) {
             api.route = FeedScopedIdMapper.mapToApi(domain.pathwayId);

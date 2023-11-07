@@ -525,7 +525,7 @@ public class SiriTimetableSnapshotSource implements TimetableSnapshotProvider {
         trip.setShapeId(null);          // Replacement-trip has different shape
 //        trip.setTripPrivateCode(null);
 //        trip.setTripPublicCode(null);
-        trip.setBlockId(null);
+        trip.setGtfsBlockId(null);
         trip.setTripShortName(null);
 //        trip.setKeyValues(null);
 

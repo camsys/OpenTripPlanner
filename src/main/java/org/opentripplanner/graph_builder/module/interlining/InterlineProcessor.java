@@ -117,7 +117,7 @@ public class InterlineProcessor {
       /* TODO: Block semantics seem undefined for frequency trips, so skip them? */
       for (TripTimes tripTimes : timetable.tripTimes) {
         Trip trip = tripTimes.trip;
-        if (!Strings.isNullOrEmpty(trip.getBlockId())) {
+        if (!Strings.isNullOrEmpty(trip.getGtfsBlockId())) {
           tripTimesForBlock.put(BlockIdAndServiceId.ofTrip(trip), tripTimes);
           // For space efficiency, only record times that are part of a block.
           patternForTripTimes.put(tripTimes, pattern);
@@ -188,7 +188,7 @@ public class InterlineProcessor {
       this.serviceId = serviceId;
     }
     public static BlockIdAndServiceId ofTrip(Trip trip) {
-      return new BlockIdAndServiceId(trip.getBlockId(), trip.getServiceId());
+      return new BlockIdAndServiceId(trip.getGtfsBlockId(), trip.getServiceId());
     }
   }
 }

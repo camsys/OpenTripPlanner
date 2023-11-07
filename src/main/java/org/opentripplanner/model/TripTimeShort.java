@@ -70,7 +70,7 @@ public class TripTimeShort {
         }
 
         realtimeState      = tt.getRealTimeState();
-        blockId            = tt.trip.getBlockId();
+        blockId            = tt.trip.getGtfsBlockId();
         headsign           = tt.getHeadsign(i);
         pickupType         = tt.getPickupType(i);
         dropoffType        = tt.getDropoffType(i);

@@ -15,7 +15,6 @@ import org.opentripplanner.model.impl.OtpTransitServiceBuilder;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.transit.model.site.Stop;
-import org.opentripplanner.util.TranslationHelper;
 
 /**
  * This class is responsible for mapping between GTFS DAO objects and into OTP Transit model.
@@ -70,7 +69,6 @@ public class GTFSToOtpTransitServiceMapper {
 
   private final OtpTransitServiceBuilder builder = new OtpTransitServiceBuilder();
 
-  private final TranslationHelper translationHelper;
   private final boolean discardMinTransferTimes;
 
   public GTFSToOtpTransitServiceMapper(
@@ -86,18 +84,17 @@ public class GTFSToOtpTransitServiceMapper {
     this.issueStore = issueStore;
     this.data = data;
     this.discardMinTransferTimes = discardMinTransferTimes;
-    translationHelper = new TranslationHelper();
     feedInfoMapper = new FeedInfoMapper(feedId);
     agencyMapper = new AgencyMapper(feedId);
-    stationMapper = new StationMapper(translationHelper);
-    stopMapper = new StopMapper(translationHelper, stationLookup);
-    entranceMapper = new EntranceMapper(translationHelper, stationLookup);
-    pathwayNodeMapper = new PathwayNodeMapper(translationHelper, stationLookup);
-    boardingAreaMapper = new BoardingAreaMapper(translationHelper, stopLookup);
+    stationMapper = new StationMapper();
+    stopMapper = new StopMapper();
+    entranceMapper = new EntranceMapper();
+    pathwayNodeMapper = new PathwayNodeMapper();
+    boardingAreaMapper = new BoardingAreaMapper();
     locationGroupMapper = new LocationGroupMapper(stopMapper, locationMapper);
     pathwayMapper =
       new PathwayMapper(stopMapper, entranceMapper, pathwayNodeMapper, boardingAreaMapper);
-    routeMapper = new RouteMapper(agencyMapper, issueStore);
+    routeMapper = new RouteMapper(agencyMapper);
     tripMapper = new TripMapper(routeMapper);
     bookingRuleMapper = new BookingRuleMapper();
     stopTimeMapper =

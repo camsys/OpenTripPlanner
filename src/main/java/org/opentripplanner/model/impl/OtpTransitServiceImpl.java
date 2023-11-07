@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
+import org.opentripplanner.model.transfer.ConstrainedTransfer;
 import org.opentripplanner.transit.model.organization.Agency;
 import org.opentripplanner.model.BoardingArea;
 import org.opentripplanner.model.Entrance;
@@ -90,7 +91,7 @@ class OtpTransitServiceImpl implements OtpTransitService {
 
     private final Map<Trip, List<StopTime>> stopTimesByTrip;
 
-    private final Collection<Transfer> transfers;
+    private final Collection<ConstrainedTransfer> transfers;
 
     private final Collection<TripPattern> tripPatterns;
 
@@ -244,7 +245,7 @@ class OtpTransitServiceImpl implements OtpTransitService {
     }
 
     @Override
-    public Collection<Transfer> getAllTransfers() {
+    public Collection<ConstrainedTransfer> getAllTransfers() {
         return transfers;
     }
 
