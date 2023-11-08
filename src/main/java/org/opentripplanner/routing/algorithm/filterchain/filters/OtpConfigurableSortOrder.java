@@ -13,18 +13,23 @@ import java.util.List;
  */
 public class OtpConfigurableSortOrder extends OtpDefaultSortOrder {
 
+  public static float waitWeight = 1;
+
   /**
    * This comparator will sort on wait time plus generalized cost
    */
-  public static final Comparator<Itinerary> WAIT_TIME_AND_GENERALIZED_COST = (a, b) -> {
-    return Integer.compare(
-            b.waitingTimeSeconds * 1 + b.generalizedCost,
-            a.waitingTimeSeconds * 1 + a.generalizedCost
-    );
-  };
+  public static final Comparator<Itinerary> WAIT_TIME_AND_GENERALIZED_COST = (a, b) -> Float.compare(
+          b.waitingTimeSeconds * waitWeight + b.generalizedCost,
+          a.waitingTimeSeconds * waitWeight + a.generalizedCost
+  );
 
   public OtpConfigurableSortOrder(boolean arriveBy, String defaultSortOrder) {
     super(createComparator(arriveBy, defaultSortOrder));
+  }
+
+  public OtpConfigurableSortOrder(boolean arriveBy, String defaultSortOrder, float wW) {
+    super(createComparator(arriveBy, defaultSortOrder));
+    waitWeight = wW;
   }
 
 
