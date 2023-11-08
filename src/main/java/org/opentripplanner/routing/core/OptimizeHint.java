@@ -7,5 +7,6 @@ package org.opentripplanner.routing.core;
 public enum OptimizeHint {
     QUICK,
     WALKING,
-    TRANSFERS
+    TRANSFERS,
+    BEST
 }

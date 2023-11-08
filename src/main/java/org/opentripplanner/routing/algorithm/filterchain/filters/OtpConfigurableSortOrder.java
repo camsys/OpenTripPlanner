@@ -12,9 +12,21 @@ import java.util.List;
  * Configure the precendence of statically defined sorting elements.
  */
 public class OtpConfigurableSortOrder extends OtpDefaultSortOrder {
+
+  /**
+   * This comparator will sort on wait time plus generalized cost
+   */
+  public static final Comparator<Itinerary> WAIT_TIME_AND_GENERALIZED_COST = (a, b) -> {
+    return Integer.compare(
+            b.waitingTimeSeconds * 1 + b.generalizedCost,
+            a.waitingTimeSeconds * 1 + a.generalizedCost
+    );
+  };
+
   public OtpConfigurableSortOrder(boolean arriveBy, String defaultSortOrder) {
     super(createComparator(arriveBy, defaultSortOrder));
   }
+
 
   private static Comparator<Itinerary> createComparator(boolean arriveBy, String defaultSortOrder) {
     List<Comparator<Itinerary>> chain = new ArrayList<>();
@@ -43,7 +55,9 @@ public class OtpConfigurableSortOrder extends OtpDefaultSortOrder {
       if (sortDirective == null) continue;
       sortDirective = sortDirective.trim();
       if (sortDirective == null || sortDirective.length() == 0) continue;
-      if (sortDirective.equals("STREET_ONLY")) {
+      if (sortDirective.equals("WAIT_TIME_AND_GENERALIZED_COST")) {
+        chain.add(WAIT_TIME_AND_GENERALIZED_COST);
+      } else if (sortDirective.equals("STREET_ONLY")) {
         chain.add(STREET_ONLY_FIRST);
       } else if (sortDirective.equals("ARRIVAL_TIME")) {
         chain.add(ARRIVAL_TIME);

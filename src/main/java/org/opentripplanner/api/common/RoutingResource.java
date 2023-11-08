@@ -806,6 +806,11 @@ public abstract class RoutingResource {
                     request.transferCost = 2400;
                     request.itineraryFilters.resultsOrder = "default";
                     break;
+                case BEST:
+                    request.walkReluctance = 3.0;
+                    request.transferCost = 1200;
+                    request.itineraryFilters.resultsOrder = "WAIT_TIME_AND_GENERALIZED_COST";
+                    break;
             }
         }
 
