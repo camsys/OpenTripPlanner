@@ -267,6 +267,9 @@ public abstract class RoutingResource {
     */
      @QueryParam("hint")
     protected OptimizeHint hint;
+
+     @QueryParam("waitWeight")
+     protected float waitWeight;
     
     /**
      * The set of modes that a user is willing to use, with qualifiers stating whether vehicles
@@ -804,9 +807,16 @@ public abstract class RoutingResource {
                 case QUICK:
                     request.walkReluctance = 3.0;
                     request.transferCost = 2400;
-                    request.itineraryFilters.resultsOrder = "default";
+//                    request.itineraryFilters.resultsOrder = "default";
+                    request.itineraryFilters.resultsOrder = "WAIT_TIME_AND_GENERALIZED_COST";
                     break;
             }
+        }
+
+        if (waitWeight != 0) {
+            request.waitWeight = waitWeight;
+        } else {
+            waitWeight = 1f;
         }
 
         if (arriveBy != null) {

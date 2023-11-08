@@ -19,6 +19,7 @@ public class ItineraryFilterChainBuilder {
     private static final int NOT_SET = -1;
 
     private final boolean arriveBy;
+    public float waitWeight = 1f;
     private final List<GroupBySimilarity> groupBySimilarity = new ArrayList<>();
 
     private boolean debug = false;
@@ -304,7 +305,7 @@ public class ItineraryFilterChainBuilder {
     public ItineraryFilter sortOnly() {
         List<ItineraryFilter> filters = new ArrayList<>();
         // Do the final itineraries sort
-        filters.add(new OtpConfigurableSortOrder(arriveBy, resultsOrder));
+        filters.add(new OtpConfigurableSortOrder(arriveBy, resultsOrder, waitWeight));
 
         return new FilterChain(filters);
     }

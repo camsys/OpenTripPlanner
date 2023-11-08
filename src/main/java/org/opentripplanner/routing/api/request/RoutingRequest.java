@@ -221,6 +221,8 @@ public class RoutingRequest implements AutoCloseable, Cloneable, Serializable {
      */
     public boolean wheelchairAccessible = false;
 
+    public float waitWeight = 1f;
+
     /**
      * The maximum distance (in meters) the user is willing to walk. Defaults to unlimited.
      *
