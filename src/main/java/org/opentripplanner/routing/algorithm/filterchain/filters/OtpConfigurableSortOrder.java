@@ -27,7 +27,7 @@ public class OtpConfigurableSortOrder extends OtpDefaultSortOrder {
   );
 
   /**
-   * This comparator will sort on wait time plus generalized cost
+   * This comparator will sort on arrival/departure time difference, generalized cost, and number of transfers
    */
   public static final Comparator<Itinerary> MULTI_WEIGHTED_SORT = (a, b) -> {
     float arrivalTimeWeight = multiWeight.get(0);
