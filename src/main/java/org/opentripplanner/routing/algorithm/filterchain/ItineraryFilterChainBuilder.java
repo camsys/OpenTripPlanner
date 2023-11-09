@@ -21,6 +21,7 @@ public class ItineraryFilterChainBuilder {
     private final boolean arriveBy;
     public float waitWeight = 1f;
     private final List<GroupBySimilarity> groupBySimilarity = new ArrayList<>();
+    public List<Float> multiWeight;
 
     private boolean debug = false;
     private Double maxWalkDistance = null;
@@ -305,7 +306,7 @@ public class ItineraryFilterChainBuilder {
     public ItineraryFilter sortOnly() {
         List<ItineraryFilter> filters = new ArrayList<>();
         // Do the final itineraries sort
-        filters.add(new OtpConfigurableSortOrder(arriveBy, resultsOrder, waitWeight));
+        filters.add(new OtpConfigurableSortOrder(arriveBy, resultsOrder, waitWeight, multiWeight));
 
         return new FilterChain(filters);
     }
