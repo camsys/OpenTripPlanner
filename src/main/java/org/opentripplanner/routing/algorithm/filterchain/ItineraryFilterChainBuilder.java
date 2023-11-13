@@ -19,7 +19,7 @@ public class ItineraryFilterChainBuilder {
     private static final int NOT_SET = -1;
 
     private final boolean arriveBy;
-    public float waitWeight = 1f;
+    public float waitWeight = 1.5f;
     private final List<GroupBySimilarity> groupBySimilarity = new ArrayList<>();
 
     private boolean debug = false;
