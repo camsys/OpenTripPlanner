@@ -269,18 +269,6 @@ public abstract class RoutingResource {
     protected float waitWeight;
 
     /**
-     * comma separated list of floats
-     *  0 - arrival weight
-     *  1 - generalized cost weight
-     *  2 - transfers weight
-     *  3 - departure weight
-     */
-    @QueryParam("multiWeight")
-    protected String multiWeight;
-
-
-
-    /**
      * The set of modes that a user is willing to use, with qualifiers stating whether vehicles
      * should be parked, rented, etc.
      * <p>
@@ -809,12 +797,9 @@ public abstract class RoutingResource {
                     request.itineraryFilters.resultsOrder = "GENERALIZED_COST";
                     break;
                 case TRANSFERS:
-//                    request.walkReluctance = 2.0;
-//                    request.transferCost = 1200;
-//                    request.itineraryFilters.resultsOrder = "NUM_OF_TRANSFERS,GENERALIZED_COST";
-                      request.walkReluctance = 3.0;
-                      request.transferCost = 2400;
-                      request.itineraryFilters.resultsOrder = "MULTI_WEIGHTED_SORT";
+                    request.walkReluctance = 2.0;
+                    request.transferCost = 1200;
+                    request.itineraryFilters.resultsOrder = "NUM_OF_TRANSFERS,GENERALIZED_COST";
                     break;
                 case QUICK:
                     request.walkReluctance = 3.0;
@@ -829,27 +814,6 @@ public abstract class RoutingResource {
             request.waitWeight = waitWeight;
         } else {
             waitWeight = 1.5f;
-        }
-
-        //ParseMultiWeight
-        request.multiWeight = new ArrayList<>();
-        if (!(multiWeight == null)) {
-            String[] s = multiWeight.split(",");
-            if (s.length == 4) {
-                try {
-                    request.multiWeight.add(Float.parseFloat(s[0]));
-                    request.multiWeight.add(Float.parseFloat(s[1]));
-                    request.multiWeight.add(Float.parseFloat(s[2]));
-                    request.multiWeight.add(Float.parseFloat(s[3]));
-                } catch (Exception e) {
-                    LOG.error("unable to parse multi weight value");
-                }
-            } else {
-                request.multiWeight.add(1f);
-                request.multiWeight.add(1f);
-                request.multiWeight.add(1f);
-                request.multiWeight.add(1f);
-            }
         }
 
         if (arriveBy != null) {

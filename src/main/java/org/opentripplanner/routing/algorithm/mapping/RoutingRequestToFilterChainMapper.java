@@ -88,7 +88,6 @@ public class RoutingRequestToFilterChainMapper {
   ) {
     var builder = new ItineraryFilterChainBuilder(request.arriveBy);
     builder.waitWeight = request.waitWeight;
-    builder.multiWeight = request.multiWeight;
     var p = request.itineraryFilters;
     builder.withResultsOrder(p.resultsOrder);
     return builder.sortOnly();
