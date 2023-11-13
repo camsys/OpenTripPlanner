@@ -226,8 +226,6 @@ public class RoutingRequest implements AutoCloseable, Cloneable, Serializable {
      */
     public float waitWeight = 1.5f;
 
-    public List<Float> multiWeight = new ArrayList<>();
-
     /**
      * The maximum distance (in meters) the user is willing to walk. Defaults to unlimited.
      *
