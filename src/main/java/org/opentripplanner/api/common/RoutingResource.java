@@ -819,7 +819,7 @@ public abstract class RoutingResource {
                 case QUICK:
                     request.walkReluctance = 3.0;
                     request.transferCost = 2400;
-//                    request.itineraryFilters.resultsOrder = "default";
+//                  request.itineraryFilters.resultsOrder = "default";
                     request.itineraryFilters.resultsOrder = "WAIT_TIME_AND_GENERALIZED_COST";
                     break;
             }
@@ -828,7 +828,7 @@ public abstract class RoutingResource {
         if (waitWeight != 0) {
             request.waitWeight = waitWeight;
         } else {
-            waitWeight = 1f;
+            waitWeight = 1.5f;
         }
 
         //ParseMultiWeight
