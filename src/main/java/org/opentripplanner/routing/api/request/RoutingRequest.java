@@ -221,7 +221,10 @@ public class RoutingRequest implements AutoCloseable, Cloneable, Serializable {
      */
     public boolean wheelchairAccessible = false;
 
-    public float waitWeight = 1f;
+    /**
+     * Amount of weight given to an itineraries non-transit waiting time when sorting using the QUICK hint
+     */
+    public float waitWeight = 1.5f;
 
     public List<Float> multiWeight = new ArrayList<>();
 

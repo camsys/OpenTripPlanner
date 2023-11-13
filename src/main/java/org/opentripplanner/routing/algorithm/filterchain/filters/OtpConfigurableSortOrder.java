@@ -13,54 +13,22 @@ import java.util.List;
  */
 public class OtpConfigurableSortOrder extends OtpDefaultSortOrder {
 
-  public static float waitWeight = 1;
-
-  public static List<Float> multiWeight = new ArrayList<>();
-
-  public static boolean arriveBy = true;
+  public static float waitWeight = 1.5f;
 
   /**
    * This comparator will sort on wait time plus generalized cost
    */
-  public static final Comparator<Itinerary> WAIT_TIME_AND_GENERALIZED_COST = Comparator.comparingDouble(a ->
-          a.waitingTimeSeconds * waitWeight + a.generalizedCost
+  public static final Comparator<Itinerary> WAIT_TIME_AND_GENERALIZED_COST = Comparator.comparingDouble(
+          a -> a.waitingTimeSeconds * waitWeight + a.generalizedCost
   );
-
-  /**
-   * This comparator will sort on arrival/departure time difference, generalized cost, and number of transfers
-   */
-  public static final Comparator<Itinerary> MULTI_WEIGHTED_SORT = (a, b) -> {
-    float arrivalTimeWeight = multiWeight.get(0);
-    float generalizedCostWeight = multiWeight.get(1);
-    float transferWeight = multiWeight.get(2);
-    float departureTimeWeight = multiWeight.get(3);
-
-    //Arrival/Departure diff is the number of seconds A arrives/departs AFTER B
-    //This was done to try to make arrival time a more comparable metric to the others
-    float arrivalDiff = (a.endTime().getTimeInMillis() - b.endTime().getTimeInMillis())/1000f;
-    float departureDiff = (a.startTime().getTimeInMillis() - b.startTime().getTimeInMillis())/1000f;
-
-    float aCost = (arriveBy ? arrivalTimeWeight * arrivalDiff : departureTimeWeight * departureDiff) +
-                    (generalizedCostWeight * a.generalizedCost) +
-                    (transferWeight * a.nTransfers);
-    float bCost = (generalizedCostWeight * b.generalizedCost) +
-                    (transferWeight * b.nTransfers);
-
-    return Float.compare(
-            bCost,
-            aCost
-    );
-  };
 
   public OtpConfigurableSortOrder(boolean arriveBy, String defaultSortOrder) {
     super(createComparator(arriveBy, defaultSortOrder));
   }
 
-  public OtpConfigurableSortOrder(boolean arriveBy, String defaultSortOrder, float wW, List<Float> mW) {
+  public OtpConfigurableSortOrder(boolean arriveBy, String defaultSortOrder, float wW) {
     super(createComparator(arriveBy, defaultSortOrder));
-    OtpConfigurableSortOrder.arriveBy = arriveBy;
     waitWeight = wW;
-    multiWeight = mW;
   }
 
 
@@ -91,9 +59,7 @@ public class OtpConfigurableSortOrder extends OtpDefaultSortOrder {
       if (sortDirective == null) continue;
       sortDirective = sortDirective.trim();
       if (sortDirective == null || sortDirective.length() == 0) continue;
-      if (sortDirective.equals("MULTI_WEIGHTED_SORT")) {
-        chain.add(MULTI_WEIGHTED_SORT);
-      } else if (sortDirective.equals("WAIT_TIME_AND_GENERALIZED_COST")) {
+      if (sortDirective.equals("WAIT_TIME_AND_GENERALIZED_COST")) {
         chain.add(WAIT_TIME_AND_GENERALIZED_COST);
       } else if (sortDirective.equals("STREET_ONLY")) {
         chain.add(STREET_ONLY_FIRST);
