@@ -798,12 +798,12 @@ public abstract class RoutingResource {
                     break;
                 case TRANSFERS:
                     request.walkReluctance = 2.0;
-                    request.transferCost = 1200;
+                    request.transferCost = 2400;
                     request.itineraryFilters.resultsOrder = "NUM_OF_TRANSFERS,GENERALIZED_COST";
                     break;
                 case QUICK:
                     request.walkReluctance = 3.0;
-                    request.transferCost = 2400;
+                    request.transferCost = 1200;
 //                  request.itineraryFilters.resultsOrder = "default";
                     request.itineraryFilters.resultsOrder = "WAIT_TIME_AND_GENERALIZED_COST";
                     break;
