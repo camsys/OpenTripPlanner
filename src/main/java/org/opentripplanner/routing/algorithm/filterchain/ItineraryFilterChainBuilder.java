@@ -19,6 +19,8 @@ public class ItineraryFilterChainBuilder {
     private static final int NOT_SET = -1;
 
     private final boolean arriveBy;
+
+    private final long searchTimeSeconds;
     public float waitWeight = 1.5f;
     private final List<GroupBySimilarity> groupBySimilarity = new ArrayList<>();
 
@@ -45,6 +47,17 @@ public class ItineraryFilterChainBuilder {
      */
     public ItineraryFilterChainBuilder(boolean arriveBy) {
         this.arriveBy = arriveBy;
+        this.searchTimeSeconds = 0;
+    }
+
+    /**
+     * @param arriveBy Used to set the correct sort order. This si the same flag as the
+     *        {@link org.opentripplanner.routing.api.request.RoutingRequest#arriveBy}.
+     * @param searchTimeSeconds Used to set the correct sort order.
+     */
+    public ItineraryFilterChainBuilder(boolean arriveBy, long searchTimeSeconds) {
+        this.arriveBy = arriveBy;
+        this.searchTimeSeconds = searchTimeSeconds;
     }
 
     /**
@@ -305,7 +318,7 @@ public class ItineraryFilterChainBuilder {
     public ItineraryFilter sortOnly() {
         List<ItineraryFilter> filters = new ArrayList<>();
         // Do the final itineraries sort
-        filters.add(new OtpConfigurableSortOrder(arriveBy, resultsOrder, waitWeight));
+        filters.add(new OtpConfigurableSortOrder(arriveBy, resultsOrder, waitWeight, searchTimeSeconds));
 
         return new FilterChain(filters);
     }
