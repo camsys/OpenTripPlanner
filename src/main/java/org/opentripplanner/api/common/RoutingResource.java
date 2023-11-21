@@ -792,9 +792,9 @@ public abstract class RoutingResource {
             request.waitReluctance = 1.0;
             switch (hint) {
                 case WALKING:
-                    request.walkReluctance = 5.0;
-                    request.transferCost = 60;
-                    request.itineraryFilters.resultsOrder = "GENERALIZED_COST";
+                    request.walkReluctance = 10.0;
+                    request.transferCost = 1200;
+                    request.itineraryFilters.resultsOrder = "WAIT_TIME_AND_GENERALIZED_COST";
                     break;
                 case TRANSFERS:
                     request.walkReluctance = 2.0;
@@ -804,7 +804,6 @@ public abstract class RoutingResource {
                 case QUICK:
                     request.walkReluctance = 3.0;
                     request.transferCost = 1200;
-//                  request.itineraryFilters.resultsOrder = "default";
                     request.itineraryFilters.resultsOrder = "WAIT_TIME_AND_GENERALIZED_COST";
                     break;
             }
