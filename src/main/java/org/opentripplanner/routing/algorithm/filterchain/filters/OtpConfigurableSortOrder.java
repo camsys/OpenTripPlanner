@@ -9,7 +9,7 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Configure the precendence of statically defined sorting elements.
+ * Configure the precedence of statically defined sorting elements.
  */
 public class OtpConfigurableSortOrder extends OtpDefaultSortOrder {
 
