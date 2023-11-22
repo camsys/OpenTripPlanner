@@ -791,17 +791,17 @@ public abstract class RoutingResource {
             // TODO: these should be configurable per deployment
             request.waitReluctance = 1.0;
             switch (hint) {
-                case WALKING:
+                case WALKING: // LEAST_WALKING
                     request.walkReluctance = 10.0;
                     request.transferCost = 1200;
-                    request.itineraryFilters.resultsOrder = "WAIT_TIME_AND_GENERALIZED_COST";
+                    request.itineraryFilters.resultsOrder = "WAIT_TIME_AND_GENERALIZED_COST_AND_WALKING";
                     break;
-                case TRANSFERS:
+                case TRANSFERS: // FEWEST_TRANSFERS
                     request.walkReluctance = 2.0;
                     request.transferCost = 2400;
-                    request.itineraryFilters.resultsOrder = "WAIT_TIME_AND_GENERALIZED_COST";
+                    request.itineraryFilters.resultsOrder = "WAIT_TIME_AND_GENERALIZED_COST_AND_TRANSFERS";
                     break;
-                case QUICK:
+                case QUICK: // BEST_TRIP
                     request.walkReluctance = 3.0;
                     request.transferCost = 1200;
                     request.itineraryFilters.resultsOrder = "WAIT_TIME_AND_GENERALIZED_COST";

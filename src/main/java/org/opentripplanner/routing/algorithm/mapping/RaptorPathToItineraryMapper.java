@@ -13,11 +13,7 @@ import org.opentripplanner.model.Stop;
 import org.opentripplanner.model.StopLocation;
 import org.opentripplanner.model.TripPattern;
 import org.opentripplanner.model.calendar.ServiceDate;
-import org.opentripplanner.model.plan.Itinerary;
-import org.opentripplanner.model.plan.Leg;
-import org.opentripplanner.model.plan.Place;
-import org.opentripplanner.model.plan.StopArrival;
-import org.opentripplanner.model.plan.VertexType;
+import org.opentripplanner.model.plan.*;
 import org.opentripplanner.routing.algorithm.raptor.transit.AccessEgress;
 import org.opentripplanner.routing.algorithm.raptor.transit.Transfer;
 import org.opentripplanner.routing.algorithm.raptor.transit.TransitLayer;
@@ -58,7 +54,7 @@ public class RaptorPathToItineraryMapper {
 
     private final ZonedDateTime startOfTime;
 
-
+    private static final ItineraryStateFactory itineraryStateFactory = new ItineraryStateFactory();
     /**
      * Constructs an itinerary mapper for a request and a set of results
      *
@@ -115,7 +111,8 @@ public class RaptorPathToItineraryMapper {
         legs.addAll(mapped == null ? List.of() : mapped.legs);
         propagateStopPlaceNamesToWalkingLegs(legs);
 
-        Itinerary itinerary = new Itinerary(legs);
+        ItineraryState state = itineraryStateFactory.getFromRequest(this.request);
+        Itinerary itinerary = new Itinerary(legs, state);
 
         // Map general itinerary fields
         itinerary.generalizedCost = path.otpDomainCost();

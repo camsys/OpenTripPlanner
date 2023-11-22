@@ -20,12 +20,7 @@ import org.opentripplanner.common.model.P2;
 import org.opentripplanner.ext.flex.FlexLegMapper;
 import org.opentripplanner.ext.flex.edgetype.FlexTripEdge;
 import org.opentripplanner.model.*;
-import org.opentripplanner.model.plan.Itinerary;
-import org.opentripplanner.model.plan.Leg;
-import org.opentripplanner.model.plan.Place;
-import org.opentripplanner.model.plan.RelativeDirection;
-import org.opentripplanner.model.plan.VertexType;
-import org.opentripplanner.model.plan.WalkStep;
+import org.opentripplanner.model.plan.*;
 import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.core.RoutingContext;
 import org.opentripplanner.routing.core.State;
@@ -55,6 +50,7 @@ public abstract class GraphPathToItineraryMapper {
 
     private static final Logger LOG = LoggerFactory.getLogger(GraphPathToItineraryMapper.class);
     private static final double MAX_ZAG_DISTANCE = 30; // TODO add documentation, what is a "zag"?
+    private static final ItineraryStateFactory itineraryStateFactory = new ItineraryStateFactory();
 
     /**
      * Generates a TripPlan from a set of paths
@@ -108,7 +104,8 @@ public abstract class GraphPathToItineraryMapper {
 
         setPathwayInfo(legs, legsStates);
 
-        Itinerary itinerary = new Itinerary(legs);
+        ItineraryState state = itineraryStateFactory.getFromRequest(path.getRoutingContext().opt);
+        Itinerary itinerary = new Itinerary(legs, state);
 
         calculateElevations(itinerary, edges);
 

@@ -91,7 +91,9 @@ public class RoutingRequestMapper {
         request.walkReluctance = c.asDouble("walkReluctance", dft.walkReluctance);
         request.walkSpeed = c.asDouble("walkSpeed", dft.walkSpeed);
         request.wheelchairAccessible = c.asBoolean("wheelchairAccessible", dft.wheelchairAccessible);
-
+        request.waitWeight = (float) c.asDouble("waitWeight", 1.5);
+        request.transferWeight = (float) c.asDouble("transferWeight", 1.5);
+        request.walkingWeight = (float) c.asDouble("walkingWeight", 1.5);
         mapTransferOptimization(
             (TransferOptimizationRequest)request.transferOptimization,
             c.path("transferOptimization")

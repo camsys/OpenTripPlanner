@@ -120,8 +120,10 @@ public class Itinerary {
      */
     public final List<Leg> legs;
 
+    public final ItineraryState state;
 
-    public Itinerary(List<Leg> legs) {
+    public Itinerary(List<Leg> legs, ItineraryState state) {
+        this.state = state;
         this.legs = List.copyOf(legs);
 
         // Set aggregated data
@@ -239,6 +241,22 @@ public class Itinerary {
             leg.startTime.setTimeInMillis(leg.startTime.getTimeInMillis() + adjustmentMilliSeconds);
             leg.endTime.setTimeInMillis(leg.endTime.getTimeInMillis() + adjustmentMilliSeconds);
         }
+    }
+
+    public long getDateTime() {
+        return state.dateTime;
+    }
+    public float getWaitWeight() {
+        return state.waitWeight;
+    }
+    public float getTransferWeight() {
+        return state.transferWeight;
+    }
+    public float getWalkingWeight() {
+        return state.walkingWeight;
+    }
+    public float getWalkingSpeed() {
+        return state.walkingSpeed;
     }
 
     /**

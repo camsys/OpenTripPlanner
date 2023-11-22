@@ -13,17 +13,14 @@ import java.util.List;
  */
 public class OtpConfigurableSortOrder extends OtpDefaultSortOrder {
 
-  public static float waitWeight = 1.5f;
-
-  public static long searchTimeSeconds = 0;
 
   /**
    * This comparator will sort on wait time plus generalized cost from start of trip
    */
   public static final Comparator<Itinerary> DEPART_AT_WAIT_TIME_AND_GENERALIZED_COST = Comparator.comparingDouble(
           a -> ((
-                  (a.startTime().getTimeInMillis()/1000f) - searchTimeSeconds)
-                  * waitWeight
+                  (a.startTime().getTimeInMillis()/1000f) - a.getDateTime())
+                  * a.getWaitWeight()
           ) + a.generalizedCost
   );
 
@@ -32,21 +29,50 @@ public class OtpConfigurableSortOrder extends OtpDefaultSortOrder {
    */
   public static final Comparator<Itinerary> ARRIVE_BY_WAIT_TIME_AND_GENERALIZED_COST = Comparator.comparingDouble(
           a -> ((
-                  searchTimeSeconds - (a.endTime().getTimeInMillis()/1000f))
-                  * waitWeight
+                  a.getDateTime() - (a.endTime().getTimeInMillis()/1000f))
+                  * a.getWaitWeight()
           ) + a.generalizedCost
   );
+
+  public static final Comparator<Itinerary> DEPART_AT_WAIT_TIME_AND_GENERALIZED_COST_AND_WALKING =
+          Comparator.comparingDouble(
+                  a -> ((
+                          (a.startTime().getTimeInMillis()/1000f) - a.getDateTime())
+                          * a.getWaitWeight()
+                          + ((a.nonTransitDistanceMeters / a.getWalkingSpeed()) * a.getWalkingWeight())
+                  ) + a.generalizedCost
+          );
+
+  public static final Comparator<Itinerary> ARRIVE_BY_WAIT_TIME_AND_GENERALIZED_COST_AND_WALKING =
+          Comparator.comparingDouble(
+                  a -> ((
+                          a.getDateTime() - (a.endTime().getTimeInMillis()/1000f))
+                          * a.getWaitWeight()
+                          + ((a.nonTransitDistanceMeters / a.getWalkingSpeed()) * a.getWalkingWeight())
+                  ) + a.generalizedCost
+          );
+
+  public static final Comparator<Itinerary> DEPART_AT_WAIT_TIME_AND_GENERALIZED_COST_AND_TRANSFERS =
+          Comparator.comparingDouble(
+                  a -> ((
+                          (a.startTime().getTimeInMillis()/1000f) - a.getDateTime())
+                          * a.getWaitWeight()
+                          + (a.nTransfers * a.getTransferWeight())
+                  ) + a.generalizedCost
+          );
+
+  public static final Comparator<Itinerary> ARRIVE_BY_WAIT_TIME_AND_GENERALIZED_COST_AND_TRANSFERS =
+          Comparator.comparingDouble(
+                  a -> ((
+                          a.getDateTime() - (a.endTime().getTimeInMillis()/1000f))
+                          * a.getWaitWeight()
+                          + (a.nTransfers * a.getTransferWeight())
+                  ) + a.generalizedCost
+          );
 
   public OtpConfigurableSortOrder(boolean arriveBy, String defaultSortOrder) {
     super(createComparator(arriveBy, defaultSortOrder));
   }
-
-  public OtpConfigurableSortOrder(boolean arriveBy, String defaultSortOrder, float wW, long searchTime) {
-    super(createComparator(arriveBy, defaultSortOrder));
-    waitWeight = wW;
-    searchTimeSeconds = searchTime;
-  }
-
 
   private static Comparator<Itinerary> createComparator(boolean arriveBy, String defaultSortOrder) {
     List<Comparator<Itinerary>> chain = new ArrayList<>();
@@ -80,6 +106,18 @@ public class OtpConfigurableSortOrder extends OtpDefaultSortOrder {
           chain.add(ARRIVE_BY_WAIT_TIME_AND_GENERALIZED_COST);
         } else {
           chain.add(DEPART_AT_WAIT_TIME_AND_GENERALIZED_COST);
+        }
+      } else if (sortDirective.equals("WAIT_TIME_AND_GENERALIZED_COST_AND_WALKING")) {
+        if (arriveBy) {
+          chain.add(ARRIVE_BY_WAIT_TIME_AND_GENERALIZED_COST_AND_WALKING);
+        } else {
+          chain.add(DEPART_AT_WAIT_TIME_AND_GENERALIZED_COST_AND_WALKING);
+        }
+      } else if (sortDirective.equals("WAIT_TIME_AND_GENERALIZED_COST_AND_TRANSFERS")) {
+        if (arriveBy) {
+          chain.add(ARRIVE_BY_WAIT_TIME_AND_GENERALIZED_COST_AND_TRANSFERS);
+        } else {
+          chain.add(DEPART_AT_WAIT_TIME_AND_GENERALIZED_COST_AND_TRANSFERS);
         }
       } else if (sortDirective.equals("STREET_ONLY")) {
         chain.add(STREET_ONLY_FIRST);

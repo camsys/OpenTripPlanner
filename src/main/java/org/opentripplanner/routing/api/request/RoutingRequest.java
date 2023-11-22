@@ -225,6 +225,14 @@ public class RoutingRequest implements AutoCloseable, Cloneable, Serializable {
      * Amount of weight given to an itineraries non-transit waiting time when sorting using the QUICK hint
      */
     public float waitWeight = 1.5f;
+    /**
+     * Amount of weight given to an itineraries transfers when sorting using the TRANSFER hint
+     */
+    public float transferWeight = 1.5f;
+    /**
+     * Amount of weight given to an itineraries walking legs when sorting using the WALKING hint
+     */
+    public float walkingWeight = 1.5f;
 
     /**
      * The maximum distance (in meters) the user is willing to walk. Defaults to unlimited.
