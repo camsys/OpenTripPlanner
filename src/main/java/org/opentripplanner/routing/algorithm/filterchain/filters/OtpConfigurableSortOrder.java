@@ -18,10 +18,23 @@ public class OtpConfigurableSortOrder extends OtpDefaultSortOrder {
   public static long searchTimeSeconds = 0;
 
   /**
-   * This comparator will sort on wait time plus generalized cost
+   * This comparator will sort on wait time plus generalized cost from start of trip
    */
-  public static final Comparator<Itinerary> WAIT_TIME_AND_GENERALIZED_COST = Comparator.comparingDouble(
-          a -> (((a.startTime().getTimeInMillis()/1000f) - searchTimeSeconds) * waitWeight) + a.generalizedCost
+  public static final Comparator<Itinerary> DEPART_AT_WAIT_TIME_AND_GENERALIZED_COST = Comparator.comparingDouble(
+          a -> ((
+                  (a.startTime().getTimeInMillis()/1000f) - searchTimeSeconds)
+                  * waitWeight
+          ) + a.generalizedCost
+  );
+
+  /**
+   * This comparator will sort on wait time plus generalized cost from end of trip
+   */
+  public static final Comparator<Itinerary> ARRIVE_BY_WAIT_TIME_AND_GENERALIZED_COST = Comparator.comparingDouble(
+          a -> ((
+                  searchTimeSeconds - (a.endTime().getTimeInMillis()/1000f))
+                  * waitWeight
+          ) + a.generalizedCost
   );
 
   public OtpConfigurableSortOrder(boolean arriveBy, String defaultSortOrder) {
@@ -63,7 +76,11 @@ public class OtpConfigurableSortOrder extends OtpDefaultSortOrder {
       sortDirective = sortDirective.trim();
       if (sortDirective == null || sortDirective.length() == 0) continue;
       if (sortDirective.equals("WAIT_TIME_AND_GENERALIZED_COST")) {
-        chain.add(WAIT_TIME_AND_GENERALIZED_COST);
+        if (arriveBy) {
+          chain.add(ARRIVE_BY_WAIT_TIME_AND_GENERALIZED_COST);
+        } else {
+          chain.add(DEPART_AT_WAIT_TIME_AND_GENERALIZED_COST);
+        }
       } else if (sortDirective.equals("STREET_ONLY")) {
         chain.add(STREET_ONLY_FIRST);
       } else if (sortDirective.equals("ARRIVAL_TIME")) {
