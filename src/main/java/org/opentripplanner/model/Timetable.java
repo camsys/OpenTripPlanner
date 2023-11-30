@@ -223,6 +223,7 @@ public class Timetable implements Serializable {
     public TripTimes createUpdatedTripTimes(TimetableSnapshotSourceMetrics metrics, TripUpdate tripUpdate, TimeZone timeZone, ServiceDate updateServiceDate) {
         if (tripUpdate == null) {
             LOG.trace("A null TripUpdate pointer was passed to the Timetable class update method.");
+            metrics.addNullTripupdatePassed();
             return null;
         }
         
@@ -278,7 +279,8 @@ public class Timetable implements Serializable {
                 if (update != null) {
                     if (update.hasStopSequence()) {
                         match = update.getStopSequence() == newTimes.getStopSequence(i);
-                    } else if (update.hasStopId()) {
+                    }
+                    if (match == false && update.hasStopId()) {
                         match = pattern.getStop(i).getId().getId().equals(update.getStopId());
                     }
                 }
@@ -290,6 +292,7 @@ public class Timetable implements Serializable {
                     if (scheduleRelationship == StopTimeUpdate.ScheduleRelationship.SKIPPED) {
                         LOG.trace("Partially canceled trips are unsupported by this method." +
                                 " Skipping TripUpdate.");
+                        metrics.addPartiallyCancelledTrip();
                         return null;
                     } else if (scheduleRelationship ==
                             StopTimeUpdate.ScheduleRelationship.NO_DATA) {
@@ -354,6 +357,7 @@ public class Timetable implements Serializable {
 
                     if (updates.hasNext()) {
                         update = updates.next();
+                        i=-1;
                     } else {
                         update = null;
                     }
@@ -368,7 +372,8 @@ public class Timetable implements Serializable {
                 }
             }
             if (update != null) {
-                LOG.trace("Part of a TripUpdate object could not be applied successfully to trip {}.", tripId);
+                LOG.info("Part of a TripUpdate object could not be applied successfully to trip {}.", tripId);
+                metrics.addInvalidStopSequence();
                 return null;
             }
         }

@@ -22,6 +22,11 @@ public class TimetableSnapshotSourceMetrics {
   int badArrivalTime = 0;
   int badDepartureTime = 0;
   int decreasingTimes = 0;
+  int invalidStopSequence = 0;
+
+  int partiallyCancelled = 0;
+
+  int nullTripupdatePassed = 0;
 
   public void addMissingPattern() {
     missingPattern++;
@@ -46,6 +51,16 @@ public class TimetableSnapshotSourceMetrics {
   }
   public void addDecreasingTimes() {
     decreasingTimes++;
+  }
+  public void addPartiallyCancelledTrip() {
+    partiallyCancelled++;
+  }
+  public void addInvalidStopSequence() {
+    invalidStopSequence++;
+  }
+
+  public void addNullTripupdatePassed() {
+    nullTripupdatePassed++;
   }
 
   public void addTripUpdate() {
@@ -99,6 +114,9 @@ public class TimetableSnapshotSourceMetrics {
     sb.append("BadArrivalTime: ").append(badArrivalTime).append(" ");
     sb.append("BadDepartureTime: ").append(badDepartureTime).append(" ");
     sb.append("DecreasingTimes: ").append(decreasingTimes).append(" ");
+    sb.append("Null trip update passed: ").append(nullTripupdatePassed).append(" ");
+    sb.append("Partially unapplied: ").append(invalidStopSequence).append(" ");
+    sb.append("Partially cancelled: ").append(partiallyCancelled).append(" ");
     return sb.toString();
   }
 
