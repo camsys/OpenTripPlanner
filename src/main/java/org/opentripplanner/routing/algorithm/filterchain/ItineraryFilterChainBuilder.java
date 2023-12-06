@@ -273,6 +273,8 @@ public class ItineraryFilterChainBuilder {
             filters.add(new FlexFilter(maxWalkDistance));
         }
 
+        filters.add(new IfDirectExistsExcludeIndirectFilter());
+
         // Apply all absolute filters AFTER the groupBy filters. Absolute filters are filters that
         // remove elements/ based on the given itinerary properties - not considering other
         // itineraries. This may remove itineraries in the "groupBy" filters that are considered

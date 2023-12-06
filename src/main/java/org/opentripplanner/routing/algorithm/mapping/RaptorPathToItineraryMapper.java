@@ -323,11 +323,11 @@ public class RaptorPathToItineraryMapper {
             Leg nextLeg = legs.get(i + 1);
 
             if (currLeg.isTransitLeg() && !nextLeg.isTransitLeg()) {
-                nextLeg.from = currLeg.to;
+//                nextLeg.from = currLeg.to;
             }
 
             if (!currLeg.isTransitLeg() && nextLeg.isTransitLeg()) {
-                currLeg.to = nextLeg.from;
+//                currLeg.to = nextLeg.from;
             }
         }
     }

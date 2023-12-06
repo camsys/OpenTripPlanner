@@ -62,7 +62,7 @@ public class FlexLegMapper {
 		  leg.to = new Place(to.lat, to.lng, to.label != null ? to.label : "Destination");
 	  }
 
-      leg.to.stopId = flexTripEdge.getDestinationStop().getId();
+	  leg.to.stopId = flexTripEdge.flexTemplate.getFlexTrip().getStops().get(flexTripEdge.flexTemplate.toStopIndex).getId();
       leg.to.vertexType = flexTripEdge.getDestinationStop() instanceof Stop ? VertexType.TRANSIT : VertexType.NORMAL;
       leg.to.stopIndex = flexTripEdge.flexTemplate.toStopIndex;
 
