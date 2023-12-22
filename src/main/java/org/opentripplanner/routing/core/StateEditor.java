@@ -1,13 +1,11 @@
 package org.opentripplanner.routing.core;
 
-import org.opentripplanner.model.Station;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -395,16 +393,4 @@ public class StateEditor {
     public State getBackState() {
         return child.getBackState();
     }
-
-    // record that station was entered
-    public void markTransitStation(Station station) {
-        if (station != null)
-            child.transitStationList.add(station);
-    }
-
-    // how many stations have been entered
-    public Set<Station> getTransitStationsEntered() {
-        return Set.copyOf(child.transitStationList);
-    }
-
 }

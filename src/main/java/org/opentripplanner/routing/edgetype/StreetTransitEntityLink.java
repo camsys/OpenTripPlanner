@@ -138,16 +138,6 @@ public abstract class StreetTransitEntityLink<T extends Vertex> extends Edge imp
         int streetToStopTime = getStreetToStopTime();
         s1.incrementTimeInSeconds(streetToStopTime);
         s1.incrementWeight(STEL_TRAVERSE_COST + streetToStopTime);
-        if (this instanceof StreetTransitEntranceLink) {
-            // if we are entering transit mark it, but allow us to leave!
-            if (isLeavingStreetNetwork(req)) {
-                if (s1.getTransitStationsEntered().size() > 1) {
-                    // ban this entrance, we've already taken an entrance
-                    return null;
-                }
-                s1.markTransitStation(getTransitEntityVertex().getStationElement().getParentStation());
-            }
-        }
         return s1.makeState();
     }
 
