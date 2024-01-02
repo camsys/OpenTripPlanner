@@ -1,10 +1,8 @@
 package org.opentripplanner.routing.core;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+
+import org.opentripplanner.model.Station;
 import org.opentripplanner.routing.algorithm.astar.NegativeWeightException;
 import org.opentripplanner.routing.api.request.RoutingRequest;
 import org.opentripplanner.routing.edgetype.StreetEdge;
@@ -39,6 +37,9 @@ public class State implements Cloneable {
     // TODO(flamholz): this is a very confusing name as it actually applies to all non-transit modes.
     // we should DEFINITELY rename this variable and the associated methods.
     public double walkDistance;
+
+    // keep track of transit stations entered to prevent out-of-system transfers
+    public List<Station> transitStationList = new ArrayList();
 
     /* CONSTRUCTORS */
 
