@@ -1,13 +1,11 @@
 package org.opentripplanner.routing.algorithm;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import javax.annotation.Nullable;
 import org.opentripplanner.ext.flex.FlexAccessEgress;
 import org.opentripplanner.model.Stop;
+import org.opentripplanner.model.TransitMode;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.routing.algorithm.filterchain.ItineraryFilter;
 import org.opentripplanner.routing.algorithm.mapping.RaptorPathToItineraryMapper;
@@ -26,6 +24,7 @@ import org.opentripplanner.routing.algorithm.raptor.transit.mappers.AccessEgress
 import org.opentripplanner.routing.algorithm.raptor.transit.mappers.RaptorRequestMapper;
 import org.opentripplanner.routing.algorithm.raptor.transit.request.RaptorRoutingRequestTransitData;
 import org.opentripplanner.routing.algorithm.raptor.transit.request.RoutingRequestTransitDataProviderFilter;
+import org.opentripplanner.routing.algorithm.raptor.transit.request.TransferWithDuration;
 import org.opentripplanner.routing.algorithm.raptor.transit.request.TransitDataProviderFilter;
 import org.opentripplanner.routing.algorithm.transferoptimization.configure.TransferOptimizationServiceConfigurator;
 import org.opentripplanner.routing.api.request.RoutingRequest;
@@ -35,16 +34,21 @@ import org.opentripplanner.routing.api.response.RoutingError;
 import org.opentripplanner.routing.api.response.RoutingErrorCode;
 import org.opentripplanner.routing.api.response.RoutingResponse;
 import org.opentripplanner.routing.api.response.TripSearchMetadata;
+import org.opentripplanner.routing.core.State;
+import org.opentripplanner.routing.edgetype.StreetTransitEntranceLink;
 import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.routing.framework.DebugTimingAggregator;
+import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.routing.services.FareService;
+import org.opentripplanner.routing.vertextype.TransitStopVertex;
 import org.opentripplanner.standalone.server.Router;
 import org.opentripplanner.transit.raptor.RaptorService;
 import org.opentripplanner.transit.raptor.api.path.Path;
+import org.opentripplanner.transit.raptor.api.path.PathLeg;
 import org.opentripplanner.transit.raptor.api.request.RaptorRequest;
 import org.opentripplanner.transit.raptor.api.response.RaptorResponse;
 import org.opentripplanner.transit.raptor.rangeraptor.configure.RaptorConfig;
@@ -252,20 +256,22 @@ public class RoutingWorker {
         // TODO
         for (Path<TripSchedule> path : paths) {
             // Convert the Raptor/Astar paths to OTP API Itineraries
-        	Itinerary itinerary = null; 
-        	try {
-        		itinerary = itineraryMapper.createItinerary(path);
-        	} catch(Exception e) {
-        		e.printStackTrace();
-        	}
-        	
-            // Decorate the Itineraries with fare information.
-            // Itinerary and Leg are API model classes, lacking internal object references needed for effective
-            // fare calculation. We derive the fares from the internal Path objects and add them to the itinerary.
-            if (fareService != null) {
-                itinerary.fare = fareService.getCost(path, transitLayer);
+        	Itinerary itinerary = null;
+            if (subwayHasNoOutOfSystemTransfer(path)) {
+                try {
+                    itinerary = itineraryMapper.createItinerary(path);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                // Decorate the Itineraries with fare information.
+                // Itinerary and Leg are API model classes, lacking internal object references needed for effective
+                // fare calculation. We derive the fares from the internal Path objects and add them to the itinerary.
+                if (fareService != null) {
+                    itinerary.fare = fareService.getCost(path, transitLayer);
+                }
+                itineraries.add(itinerary);
             }
-            itineraries.add(itinerary);
         }
 
         checkIfTransitConnectionExists(transitResponse);
@@ -282,6 +288,46 @@ public class RoutingWorker {
         this.debugTimingAggregator.finishedItineraryCreation();
 
         return itineraries;
+    }
+
+    private boolean subwayHasNoOutOfSystemTransfer(Path<TripSchedule> path) {
+
+        boolean enteredSubway = false;
+        boolean exitedSubway = false;
+
+        if (path.accessLeg().access() instanceof AccessEgress) {
+            AccessEgress ae = ((AccessEgress)path.accessLeg().access());
+            State s = ae.getLastState();
+            if (s.getVertex() instanceof TransitStopVertex) {
+                TransitStopVertex tsv = (TransitStopVertex) s.getVertex();
+                if (tsv.getModes().contains(TransitMode.SUBWAY)) {
+                    enteredSubway = true;
+                }
+            }
+        }
+
+        PathLeg<TripSchedule> leg = path.accessLeg();
+
+        while (!leg.nextLeg().isEgressLeg()) {
+            leg = leg.nextLeg();
+            if (leg.isTransitLeg()) {
+                if (leg.asTransitLeg().trip().getOriginalTripPattern().getMode() == TransitMode.SUBWAY) {
+                    enteredSubway = true;
+                }
+            }
+            if (leg.isTransferLeg()) {
+                List<Edge> edges = ((TransferWithDuration) leg.asTransferLeg().transfer()).transfer().getEdges();
+                for (Edge e : edges) {
+                    if (e instanceof StreetTransitEntranceLink && enteredSubway) {
+                        if (exitedSubway)
+                            //CANNOT RE-ENTER SUBWAY!
+                            return false;
+                        exitedSubway = true;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     private RaptorRoutingRequestTransitData createRequestTransitDataProvider(
