@@ -793,17 +793,17 @@ public abstract class RoutingResource {
             switch (hint) {
                 case WALKING: // LEAST_WALKING
                     request.walkReluctance = 10.0;
-                    request.transferCost = 1200;
+                    request.transferCost = 600;
                     request.itineraryFilters.resultsOrder = "WAIT_TIME_AND_GENERALIZED_COST_AND_WALKING";
                     break;
                 case TRANSFERS: // FEWEST_TRANSFERS
                     request.walkReluctance = 2.0;
-                    request.transferCost = 2400;
+                    request.transferCost = 1200;
                     request.itineraryFilters.resultsOrder = "WAIT_TIME_AND_GENERALIZED_COST_AND_TRANSFERS";
                     break;
                 case QUICK: // BEST_TRIP
                     request.walkReluctance = 3.0;
-                    request.transferCost = 1200;
+                    request.transferCost = 600;
                     request.itineraryFilters.resultsOrder = "WAIT_TIME_AND_GENERALIZED_COST";
                     break;
             }
