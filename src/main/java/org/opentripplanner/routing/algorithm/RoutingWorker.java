@@ -44,6 +44,7 @@ import org.opentripplanner.routing.graph.GraphIndex;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.routing.services.FareService;
+import org.opentripplanner.routing.vertextype.TransitEntranceVertex;
 import org.opentripplanner.routing.vertextype.TransitStopVertex;
 import org.opentripplanner.standalone.server.Router;
 import org.opentripplanner.transit.raptor.RaptorService;
@@ -319,6 +320,15 @@ public class RoutingWorker {
                 List<Edge> edges = ((TransferWithDuration) leg.asTransferLeg().transfer()).transfer().getEdges();
                 for (Edge e : edges) {
                     if (e instanceof StreetTransitEntranceLink && enteredSubway) {
+                        if (!(e.getToVertex() instanceof TransitEntranceVertex)) {
+                            exitedSubway = true;
+                            continue;
+                        }
+                        TransitEntranceVertex transitEntranceVertex = (TransitEntranceVertex) e.getToVertex();
+                        boolean isSubwayEntrance = transitEntranceVertex.getEntrance().getStopId().getFeedId().equals("MTASBWY");
+                        if (!isSubwayEntrance) {
+                            continue;
+                        }
                         if (exitedSubway)
                             //CANNOT RE-ENTER SUBWAY!
                             return false;
