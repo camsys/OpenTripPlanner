@@ -321,12 +321,16 @@ public class RoutingWorker {
                 for (Edge e : edges) {
                     if (e instanceof StreetTransitEntranceLink && enteredSubway) {
                         if (!(e.getToVertex() instanceof TransitEntranceVertex)) {
+                            //Exiting subway
                             exitedSubway = true;
                             continue;
                         }
                         TransitEntranceVertex transitEntranceVertex = (TransitEntranceVertex) e.getToVertex();
                         boolean isSubwayEntrance = transitEntranceVertex.getEntrance().getStopId().getFeedId().equals("MTASBWY");
                         if (!isSubwayEntrance) {
+                            //We have entered non-subway transit therefore reset out of system subway tracking
+                            exitedSubway = false;
+                            enteredSubway = false;
                             continue;
                         }
                         if (exitedSubway)
