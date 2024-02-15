@@ -4,8 +4,7 @@ import java.time.Instant;
 import java.util.*;
 import javax.annotation.Nullable;
 import org.opentripplanner.ext.flex.FlexAccessEgress;
-import org.opentripplanner.model.Stop;
-import org.opentripplanner.model.TransitMode;
+import org.opentripplanner.model.*;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.routing.algorithm.filterchain.ItineraryFilter;
 import org.opentripplanner.routing.algorithm.mapping.RaptorPathToItineraryMapper;
@@ -36,6 +35,7 @@ import org.opentripplanner.routing.api.response.RoutingResponse;
 import org.opentripplanner.routing.api.response.TripSearchMetadata;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.edgetype.StreetTransitEntranceLink;
+import org.opentripplanner.routing.edgetype.StreetTransitStopLink;
 import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.routing.framework.DebugTimingAggregator;
 import org.opentripplanner.routing.graph.Edge;
@@ -257,8 +257,8 @@ public class RoutingWorker {
         // TODO
         for (Path<TripSchedule> path : paths) {
             // Convert the Raptor/Astar paths to OTP API Itineraries
-        	Itinerary itinerary = null;
-            if (subwayHasNoOutOfSystemTransfer(path)) {
+            Itinerary itinerary = null;
+            if (subwayHasNoOutOfSystemTransfer(path, transitLayer)) {
                 try {
                     itinerary = itineraryMapper.createItinerary(path);
                 } catch (Exception e) {
@@ -291,7 +291,7 @@ public class RoutingWorker {
         return itineraries;
     }
 
-    private boolean subwayHasNoOutOfSystemTransfer(Path<TripSchedule> path) {
+    private boolean subwayHasNoOutOfSystemTransfer(Path<TripSchedule> path, TransitLayer transitLayer) {
 
         boolean enteredSubway = false;
         boolean exitedSubway = false;
@@ -319,29 +319,53 @@ public class RoutingWorker {
             if (leg.isTransferLeg()) {
                 List<Edge> edges = ((TransferWithDuration) leg.asTransferLeg().transfer()).transfer().getEdges();
                 for (Edge e : edges) {
-                    if (e instanceof StreetTransitEntranceLink && enteredSubway) {
-                        if (!(e.getToVertex() instanceof TransitEntranceVertex)) {
+                    if (isTransitEntranceLink(e) && enteredSubway) {
+                        if (!(e.getToVertex() instanceof TransitEntranceVertex || e.getToVertex() instanceof TransitStopVertex)) {
                             //Exiting subway
                             exitedSubway = true;
                             continue;
                         }
-                        TransitEntranceVertex transitEntranceVertex = (TransitEntranceVertex) e.getToVertex();
-                        boolean isSubwayEntrance = transitEntranceVertex.getEntrance().getStopId().getFeedId().equals("MTASBWY");
+                        boolean isSubwayEntrance = false;
+                        if (e.getToVertex() instanceof TransitEntranceVertex) {
+                            TransitEntranceVertex transitEntranceVertex = (TransitEntranceVertex) e.getToVertex();
+                            isSubwayEntrance = transitEntranceVertex.getEntrance().getStopId().getFeedId().equals("2");
+                        } else if (e.getToVertex() instanceof TransitStopVertex) {
+                            TransitStopVertex transitStopVertex = (TransitStopVertex) e.getToVertex();
+                            StationElement stationElement = transitStopVertex.getStationElement();
+                            isSubwayEntrance = stationElement.getStopId().getFeedId().equals("2");
+                        }
+
                         if (!isSubwayEntrance) {
                             //We have entered non-subway transit therefore reset out of system subway tracking
                             exitedSubway = false;
                             enteredSubway = false;
                             continue;
                         }
-                        if (exitedSubway)
-                            //CANNOT RE-ENTER SUBWAY!
-                            return false;
-                        exitedSubway = true;
+                        if (exitedSubway) {
+                            //CANNOT RE-ENTER SUBWAY! ...
+                            //... Unless this is an allowed out of system transfer
+                            List<StopLocation> stopLocations = transitLayer.getStopIndex().stopsByIndex;
+                            StopLocation fromStopLocation = stopLocations.get(leg.fromStop());
+                            StopLocation toStopLocation = stopLocations.get(leg.toStop());
+                            org.opentripplanner.model.transfer.Transfer allowedTransfer = transitLayer.getTransferService().findStopToStopTransfer(fromStopLocation, toStopLocation);
+                            if (allowedTransfer == null)
+                                return false;
+                            else {
+                                exitedSubway = false;
+                                enteredSubway = false;
+                            }
+                        } else {
+                            exitedSubway = true;
+                        }
                     }
                 }
             }
         }
         return true;
+    }
+
+    private boolean isTransitEntranceLink(Edge e) {
+        return e instanceof StreetTransitEntranceLink || e instanceof StreetTransitStopLink;
     }
 
     private RaptorRoutingRequestTransitData createRequestTransitDataProvider(

@@ -108,6 +108,11 @@ public class TransferService implements Serializable {
         return stop2StopTransfers.get(new P2<>(fromStop, toStop));
     }
 
+    @Nullable
+    public Transfer findStopToStopTransfer(StopLocation fromStop, StopLocation toStop){
+        return stop2StopTransfers.get(new P2<>(fromStop, toStop));
+    }
+
     void add(Transfer transfer) {
         TransferPoint from = transfer.getFrom();
         TransferPoint to = transfer.getTo();
