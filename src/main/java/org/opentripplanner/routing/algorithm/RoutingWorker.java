@@ -328,11 +328,11 @@ public class RoutingWorker {
                         boolean isSubwayEntrance = false;
                         if (e.getToVertex() instanceof TransitEntranceVertex) {
                             TransitEntranceVertex transitEntranceVertex = (TransitEntranceVertex) e.getToVertex();
-                            isSubwayEntrance = transitEntranceVertex.getEntrance().getStopId().getFeedId().equals("2");
+                            isSubwayEntrance = transitEntranceVertex.getEntrance().getStopId().getFeedId().equals("MTASBWY");
                         } else if (e.getToVertex() instanceof TransitStopVertex) {
                             TransitStopVertex transitStopVertex = (TransitStopVertex) e.getToVertex();
                             StationElement stationElement = transitStopVertex.getStationElement();
-                            isSubwayEntrance = stationElement.getStopId().getFeedId().equals("2");
+                            isSubwayEntrance = stationElement.getStopId().getFeedId().equals("MTASBWY");
                         }
 
                         if (!isSubwayEntrance) {
