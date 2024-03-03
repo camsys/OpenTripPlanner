@@ -126,15 +126,15 @@ class TransferMapper {
     int transferTime = rhs.getMinTransferTime();
 
     // If this transfer do not give any advantages in the routing, then drop it
-    if(!guaranteed && !staySeated && transferPriority == TransferPriority.ALLOWED) {
-      if(transferTime > 0) {
-        LOG.info("Transfer skipped, issue #3369: " + rhs);
-      }
-      else {
-        LOG.warn("Transfer skipped - no effect on routing: " + rhs);
-      }
-      return List.of();
-    }
+//    if(!guaranteed && !staySeated && transferPriority == TransferPriority.ALLOWED) {
+//      if(transferTime > 0) {
+//        LOG.info("Transfer skipped, issue #3369: " + rhs);
+//      }
+//      else {
+//        LOG.warn("Transfer skipped - no effect on routing: " + rhs);
+//      }
+//      return List.of();
+//    }
 
     // Transfers may be specified using parent stations
     // (https://developers.google.com/transit/gtfs/reference/transfers-file)
