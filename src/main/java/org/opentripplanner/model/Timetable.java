@@ -278,8 +278,11 @@ public class Timetable implements Serializable {
                 if (update != null) {
                     if (update.hasStopSequence()) {
                         match = update.getStopSequence() == newTimes.getStopSequence(i);
-                    } else if (update.hasStopId()) {
-                        match = pattern.getStop(i).getId().getId().equals(update.getStopId());
+                    }
+                    if (!match || !update.hasStopSequence()) {
+                        if (update.hasStopId()) {
+                            match = pattern.getStop(i).getId().getId().equals(update.getStopId());
+                        }
                     }
                 }
 
