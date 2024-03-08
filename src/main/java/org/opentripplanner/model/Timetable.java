@@ -273,23 +273,23 @@ public class Timetable implements Serializable {
 
             final long today = updateServiceDate.getAsDate(timeZone).getTime() / 1000;
 
-            for (int i = 0; i < numStops; i++) {
+            while (update != null) {
                 boolean match = false;
-                if (update != null) {
-                    if (update.hasStopSequence()) {
-                        match = update.getStopSequence() == newTimes.getStopSequence(i);
+                int i;
+                for (i = 0; i < numStops; i++) {
+                    if (update.hasStopSequence() && update.getStopSequence() == newTimes.getStopSequence(i)) {
+                        match = true;
+                        break;
                     }
-                    if (!match || !update.hasStopSequence()) {
-                        if (update.hasStopId()) {
-                            match = pattern.getStop(i).getId().getId().equals(update.getStopId());
-                        }
+                    if (update.hasStopId() && pattern.getStop(i).getId().getId().equals(update.getStopId())) {
+                        match = true;
+                        break;
                     }
                 }
-
                 if (match) {
                     StopTimeUpdate.ScheduleRelationship scheduleRelationship =
                             update.hasScheduleRelationship() ? update.getScheduleRelationship()
-                            : StopTimeUpdate.ScheduleRelationship.SCHEDULED;
+                                    : StopTimeUpdate.ScheduleRelationship.SCHEDULED;
                     if (scheduleRelationship == StopTimeUpdate.ScheduleRelationship.SKIPPED) {
                         LOG.trace("Partially canceled trips are unsupported by this method." +
                                 " Skipping TripUpdate.");
@@ -354,22 +354,22 @@ public class Timetable implements Serializable {
                             }
                         }
                     }
-
-                    if (updates.hasNext()) {
-                        update = updates.next();
-                    } else {
-                        update = null;
-                    }
                 } else {
-                    if (delay == null) {
-                        newTimes.updateArrivalTime(i, TripTimes.UNAVAILABLE);
-                        newTimes.updateDepartureTime(i, TripTimes.UNAVAILABLE);
-                    } else {
-                        newTimes.updateArrivalDelay(i, delay);
-                        newTimes.updateDepartureDelay(i, delay);
-                    }
+//                    if (delay == null) {
+//                        newTimes.updateArrivalTime(i, TripTimes.UNAVAILABLE);
+//                        newTimes.updateDepartureTime(i, TripTimes.UNAVAILABLE);
+//                    } else {
+//                        newTimes.updateArrivalDelay(i, delay);
+//                        newTimes.updateDepartureDelay(i, delay);
+//                    }
+                }
+                if (updates.hasNext()) {
+                    update = updates.next();
+                } else {
+                    update = null;
                 }
             }
+
             if (update != null) {
                 LOG.trace("Part of a TripUpdate object could not be applied successfully to trip {}.", tripId);
                 return null;
