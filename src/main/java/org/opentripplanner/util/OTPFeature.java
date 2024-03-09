@@ -34,7 +34,10 @@ public enum OTPFeature {
     SandboxAPIParkAndRideApi(false),
     TransferAnalyzer(false),
     // graph scanning -- set to false for upstream merge
-    AutoScan(true);
+    AutoScan(true),
+    // make minor corrects to real-time arrivals and departures when
+    // applying to Timetable
+    SmoothRealtime(true);
     private static final Logger LOG = LoggerFactory.getLogger(OTPFeature.class);
 
     OTPFeature(boolean defaultEnabled) {

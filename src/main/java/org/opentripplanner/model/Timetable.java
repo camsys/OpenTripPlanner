@@ -11,6 +11,7 @@ import org.opentripplanner.routing.trippattern.FrequencyEntry;
 import org.opentripplanner.routing.trippattern.TripTimes;
 import org.opentripplanner.updater.stoptime.TimetableSnapshotSource;
 import org.opentripplanner.updater.stoptime.TimetableSnapshotSourceMetrics;
+import org.opentripplanner.util.OTPFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -374,6 +375,9 @@ public class Timetable implements Serializable {
                 LOG.trace("Part of a TripUpdate object could not be applied successfully to trip {}.", tripId);
                 return null;
             }
+        }
+        if (OTPFeature.SmoothRealtime.isOn()) {
+            newTimes.smoothIncreasing();
         }
         if (!newTimes.timesIncreasing()) {
             LOG.trace("TripTimes are non-increasing after applying GTFS-RT delay propagation to trip {}.", tripId);

@@ -575,4 +575,29 @@ public class TripTimes implements Serializable, Comparable<TripTimes>, Cloneable
         }
         return hasher.hash();
     }
+
+    public boolean smoothIncreasing() {
+        final int nStops = scheduledArrivalTimes.length;
+        int prevDep = -1;
+        boolean correct = true;
+        for (int s = 0; s < nStops; s++) {
+            int arr = getArrivalTime(s);
+            int dep = getDepartureTime(s);
+
+            if (prevDep > arr) {
+                LOG.trace("Negative running time in TripTimes after stop index {}.", s);
+                updateArrivalTime(s, prevDep);
+                arr = prevDep;
+                correct = false;
+            }
+            if (dep < arr) {
+                LOG.trace("Negative dwell time in TripTimes at stop index {}.", s);
+                updateDepartureTime(s, arr);
+                dep = arr;
+                correct = false;
+            }
+            prevDep = dep;
+        }
+        return correct;
+    }
 }
