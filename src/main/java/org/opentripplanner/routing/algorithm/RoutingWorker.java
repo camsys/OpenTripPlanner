@@ -313,7 +313,22 @@ public class RoutingWorker {
             leg = leg.nextLeg();
             if (leg.isTransitLeg()) {
                 if (leg.asTransitLeg().trip().getOriginalTripPattern().getMode() == TransitMode.SUBWAY) {
-                    enteredSubway = true;
+                    if (exitedSubway) {
+                        //CANNOT RE-ENTER SUBWAY! ...
+                        //... Unless this is an allowed out of system transfer
+                        List<StopLocation> stopLocations = transitLayer.getStopIndex().stopsByIndex;
+                        StopLocation fromStopLocation = stopLocations.get(leg.fromStop());
+                        StopLocation toStopLocation = stopLocations.get(leg.toStop());
+                        org.opentripplanner.model.transfer.Transfer allowedTransfer = transitLayer.getTransferService().findStopToStopTransfer(fromStopLocation, toStopLocation);
+                        if (allowedTransfer == null)
+                            return false;
+                        else {
+                            exitedSubway = false;
+                            enteredSubway = false;
+                        }
+                    } else {
+                        enteredSubway = true;
+                    }
                 }
             }
             if (leg.isTransferLeg()) {
@@ -339,23 +354,6 @@ public class RoutingWorker {
                             //We have entered non-subway transit therefore reset out of system subway tracking
                             exitedSubway = false;
                             enteredSubway = false;
-                            continue;
-                        }
-                        if (exitedSubway) {
-                            //CANNOT RE-ENTER SUBWAY! ...
-                            //... Unless this is an allowed out of system transfer
-                            List<StopLocation> stopLocations = transitLayer.getStopIndex().stopsByIndex;
-                            StopLocation fromStopLocation = stopLocations.get(leg.fromStop());
-                            StopLocation toStopLocation = stopLocations.get(leg.toStop());
-                            org.opentripplanner.model.transfer.Transfer allowedTransfer = transitLayer.getTransferService().findStopToStopTransfer(fromStopLocation, toStopLocation);
-                            if (allowedTransfer == null)
-                                return false;
-                            else {
-                                exitedSubway = false;
-                                enteredSubway = false;
-                            }
-                        } else {
-                            exitedSubway = true;
                         }
                     }
                 }
