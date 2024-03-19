@@ -115,7 +115,7 @@ public class GenerateTripPatternsOperation {
         Collection<StopTime> stopTimes = transitDaoBuilder.getStopTimesSortedByTrip().get(trip);
 
         // If after filtering this trip does not contain at least 2 stoptimes, it does not serve any purpose.
-        if (stopTimes.size() < 2) {
+        if (stopTimes.size() < 1) {
             issueStore.add(new TripDegenerate(trip));
             return;
         }

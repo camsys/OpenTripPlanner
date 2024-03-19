@@ -51,8 +51,10 @@ public class UnscheduledTrip extends FlexTrip {
                 });
 
         // all areas, all time ranges
-        return stopTimes.stream().allMatch(it -> it.getStop().isArea() && it.getStop().isLine())
-                && stopTimes.stream().allMatch(it -> it.getArrivalTime() == StopTime.MISSING_VALUE
+//        return stopTimes.stream().allMatch(it -> it.getStop().isArea() && it.getStop().isLine())
+//                && stopTimes.stream().allMatch(it -> it.getArrivalTime() == StopTime.MISSING_VALUE
+//                && it.getDepartureTime() == StopTime.MISSING_VALUE);
+        return stopTimes.stream().allMatch(it -> it.getArrivalTime() == StopTime.MISSING_VALUE
                 && it.getDepartureTime() == StopTime.MISSING_VALUE);
     }
 
