@@ -140,7 +140,7 @@ public class UnscheduledTrip extends FlexTrip {
     public int earliestDepartureTime(int departureTime, int fromStopIndex, int toStopIndex) {
         FlexTripStopTime ftst = stopTimes[fromStopIndex];
 
-        if (departureTime < ftst.flexWindowEnd) // latest possible time bus will leave stop
+        if (departureTime > ftst.flexWindowEnd) // latest possible time bus will leave stop
             return -1;
 
         return departureTime;
