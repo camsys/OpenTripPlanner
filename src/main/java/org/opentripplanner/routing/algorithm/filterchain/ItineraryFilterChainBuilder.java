@@ -253,7 +253,7 @@ public class ItineraryFilterChainBuilder {
                     new GroupBySimilarLegsFilter(
                         it.groupByP,
                         it.approximateMinLimit,
-                        new SortOnGeneralizedCost()
+                        new OtpDefaultSortOrder(arriveBy)
                     )
                 );
             }
