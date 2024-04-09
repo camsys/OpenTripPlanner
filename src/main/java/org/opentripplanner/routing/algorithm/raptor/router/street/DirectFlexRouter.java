@@ -45,7 +45,8 @@ public class DirectFlexRouter {
               directRequest.additionalSearchDaysAfterToday,
               accessStops,
               egressStops,
-              request
+              request,
+              true
       );
 
       Collection<Itinerary> itins = flexRouter.createFlexOnlyItineraries();
