@@ -232,6 +232,25 @@ public class ItineraryFilterChainBuilder {
     public ItineraryFilter build() {
         List<ItineraryFilter> filters = new ArrayList<>();
 
+        //filter out itineraries that have a duration > 5 hours
+        filters.add(new ItineraryFilter() {
+            @Override
+            public String name() {
+                return "Max Duration Filter";
+            }
+
+            @Override
+            public List<Itinerary> filter(List<Itinerary> itineraries) {
+                return itineraries.stream().filter(itinerary -> itinerary.durationSeconds < 5 * 60 * 60
+                ).collect(Collectors.toList());
+            }
+
+            @Override
+            public boolean removeItineraries() {
+                return false;
+            }
+        });
+
         filters.add(new FutureDepartureTimeOnlyFilter()
                 .setTargetTime(targetTime)
                 .setMaxHoursBeforeTarget(maxHoursBetweenArrivalAndTarget));
