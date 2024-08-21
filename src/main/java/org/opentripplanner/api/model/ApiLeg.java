@@ -94,6 +94,8 @@ public class ApiLeg {
 
     public int agencyTimeZoneOffset;
 
+     public String bookingUrl;
+
     /**
      * For transit leg, the route's (background) color (if one exists). For non-transit legs, null.
      */

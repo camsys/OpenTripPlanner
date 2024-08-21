@@ -1,8 +1,13 @@
 package org.opentripplanner.api.resource;
 
+import org.opentripplanner.api.model.ApiItinerary;
+import org.opentripplanner.api.model.ApiLeg;
 import org.opentripplanner.api.model.ApiTripPlan;
 import org.opentripplanner.api.model.ApiTripSearchMetadata;
 import org.opentripplanner.api.model.error.PlannerError;
+import org.opentripplanner.ext.flex.FlexTripsMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.UriInfo;
 import java.util.HashMap;
@@ -11,6 +16,8 @@ import java.util.Map.Entry;
 
 /** Represents a trip planner response, will be serialized into XML or JSON by Jersey */
 public class TripPlannerResponse {
+
+    private static final Logger LOG = LoggerFactory.getLogger(TripPlannerResponse.class);
 
     /** A dictionary of the parameters provided in the request that triggered this response. */
     public HashMap<String, String> requestParameters;
@@ -69,5 +76,65 @@ public class TripPlannerResponse {
     public void setError(PlannerError error) {
         this.error = error;
     }
-    
+
+    public void setBookingUrlParams() {
+        for (ApiItinerary i : plan.itineraries) {
+            for (ApiLeg leg : i.legs) {
+                String[] addressArray = leg.from.name.split(",");
+                if (addressArray.length < 5) {
+                    LOG.error("address: " + leg.from.name + "  was parsed incorrectly");
+                    return;
+                }
+                String pickupAddressStreetAddress = addressArray[0].strip();
+                String pickupAddressLocation = addressArray[1].strip() + "," + addressArray[2];
+                String pickupAddressPostalCode = addressArray[3].strip();
+                String pickupAddressLatLon = leg.from.lat.toString() + "," + leg.from.lon.toString();
+                String pickupDateTime = leg.from.departure.getTime().toString();
+
+                addressArray = leg.to.name.split(",");
+                if (addressArray.length < 5) {
+                    LOG.error("address: " + leg.to.name + "  was parsed incorrectly");
+                    return;
+                }
+
+                String dropoffAddressStreetAddress = addressArray[0].strip();
+                String dropoffAddressLocation = addressArray[1].strip() + "," + addressArray[2];
+                String dropoffAddressPostalCode = addressArray[3].strip();
+                String dropoffAddressLatLon = leg.from.lat.toString() + "," + leg.from.lon.toString();
+                String dropoffDateTime = leg.to.arrival.getTime().toString();
+
+                String agencyId = leg.agencyId.replaceAll("[^\\d.]", ""); // remove all non-integers
+
+                String agencyContact = leg.dropOffBookingInfo.getContactInfo().getPhoneNumber().replace("(","").replace(")","");
+
+                StringBuilder sb = new StringBuilder();
+                sb.append("https://booking.qa.mndot.camsys-apps.com/booking-portal?booking-portal?");
+                sb.append("pickupAddressStreetAddress=").append(pickupAddressStreetAddress);
+                sb.append("&");
+                sb.append("pickupAddressLocation=").append(pickupAddressLocation);
+                sb.append("&");
+                sb.append("pickupAddressPostalCode=").append(pickupAddressPostalCode);
+                sb.append("&");
+                sb.append("pickupAddressLatLon=").append(pickupAddressLatLon);
+                sb.append("&");
+                sb.append("pickupDateTime=").append(pickupDateTime);
+                sb.append("&");
+                sb.append("dropoffAddressStreetAddress=").append(dropoffAddressStreetAddress);
+                sb.append("&");
+                sb.append("dropoffAddressLocation=").append(dropoffAddressLocation);
+                sb.append("&");
+                sb.append("dropoffAddressPostalCode=").append(dropoffAddressPostalCode);
+                sb.append("&");
+                sb.append("dropoffAddressLatLon=").append(dropoffAddressLatLon);
+                sb.append("&");
+                sb.append("dropoffDateTime=").append(dropoffDateTime);
+                sb.append("&");
+                sb.append("agencyId=").append(agencyId);
+                sb.append("&");
+                sb.append("agencyContact=").append(agencyContact);
+
+                leg.bookingUrl = sb.toString();
+            }
+        }
+    }
 }

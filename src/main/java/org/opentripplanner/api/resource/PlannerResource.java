@@ -36,7 +36,7 @@ import java.time.ZoneId;
  * In order for inheritance to work, the REST resources are request-scoped (constructed at each request)
  * rather than singleton-scoped (a single instance existing for the lifetime of the OTP server).
  */
-@Path("routers/{ignoreRouterId}/plan") // final element needed here rather than on method to distinguish from routers API
+@Path("routers/{ignoreRouterId}/") // final element needed here rather than on method to distinguish from routers API
 public class PlannerResource extends RoutingResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(PlannerResource.class);
@@ -52,6 +52,7 @@ public class PlannerResource extends RoutingResource {
     // parameters in the outgoing response. This is a TriMet requirement.
     // Jersey uses @Context to inject internal types and @InjectParam or @Resource for DI objects.
     @GET
+    @Path("/plan")
     @Produces(MediaType.APPLICATION_JSON)
     public TripPlannerResponse plan(@Context UriInfo uriInfo, @Context Request grizzlyRequest) {
 
@@ -92,6 +93,7 @@ public class PlannerResource extends RoutingResource {
             // Map to API
             TripPlanMapper tripPlanMapper = new TripPlanMapper(request.locale);
             response.setPlan(tripPlanMapper.mapTripPlan(res.getTripPlan()));
+            response.setBookingUrlParams();
             response.setMetadata(TripSearchMetadataMapper.mapTripSearchMetadata(res.getMetadata()));
             if (!res.getRoutingErrors().isEmpty()) {
                 // The api can only return one error message, so the first one is mapped
@@ -116,6 +118,21 @@ public class PlannerResource extends RoutingResource {
         logRequest(grizzlyRequest, request, router, res);
 
         return response;
+    }
+
+    @GET
+    @Path("/validate")
+    @Produces(MediaType.APPLICATION_JSON)
+    public TripValidationResponse validate(@Context UriInfo uriInfo, @Context Request grizzlyRequest) {
+
+        TripPlannerResponse response = plan(uriInfo, grizzlyRequest);
+        TripValidationResponse validationResponse = new TripValidationResponse();
+        validationResponse.setValidTripPlan(response.getPlan().itineraries.size() > 0);
+
+        /* Log this request if such logging is enabled. */
+//        logRequest(grizzlyRequest, request, router, res);
+
+        return validationResponse;
     }
 
     private void logRequest(
