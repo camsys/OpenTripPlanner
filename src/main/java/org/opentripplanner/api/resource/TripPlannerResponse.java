@@ -106,9 +106,10 @@ public class TripPlannerResponse {
                 String agencyId = leg.agencyId.replaceAll("[^\\d.]", ""); // remove all non-integers
 
                 String agencyContact = leg.dropOffBookingInfo.getContactInfo().getPhoneNumber().replace("(","").replace(")","");
+                String agencyName = leg.agencyName;
 
                 StringBuilder sb = new StringBuilder();
-                sb.append("https://booking.qa.mndot.camsys-apps.com/booking-portal?booking-portal?");
+                sb.append("https://booking.qa.mndot.camsys-apps.com/booking-portal?");
                 sb.append("pickupAddressStreetAddress=").append(pickupAddressStreetAddress);
                 sb.append("&");
                 sb.append("pickupAddressLocation=").append(pickupAddressLocation);
@@ -132,6 +133,8 @@ public class TripPlannerResponse {
                 sb.append("agencyId=").append(agencyId);
                 sb.append("&");
                 sb.append("agencyContact=").append(agencyContact);
+                sb.append("&");
+                sb.append("agencyName=").append(agencyName);
 
                 leg.bookingUrl = sb.toString();
             }
