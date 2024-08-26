@@ -10,6 +10,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.UriInfo;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -89,7 +94,7 @@ public class TripPlannerResponse {
                 String pickupAddressLocation = addressArray[1].strip() + "," + addressArray[2];
                 String pickupAddressPostalCode = addressArray[3].strip();
                 String pickupAddressLatLon = leg.from.lat.toString() + "," + leg.from.lon.toString();
-                String pickupDateTime = leg.from.departure.getTime().toString();
+                String pickupDateTime = Instant.ofEpochMilli(leg.from.departure.getTime().getTime()).atZone(ZoneId.of("-5")).minusHours(1).format(DateTimeFormatter.RFC_1123_DATE_TIME);
 
                 addressArray = leg.to.name.split(",");
                 if (addressArray.length < 5) {
@@ -100,8 +105,8 @@ public class TripPlannerResponse {
                 String dropoffAddressStreetAddress = addressArray[0].strip();
                 String dropoffAddressLocation = addressArray[1].strip() + "," + addressArray[2];
                 String dropoffAddressPostalCode = addressArray[3].strip();
-                String dropoffAddressLatLon = leg.from.lat.toString() + "," + leg.from.lon.toString();
-                String dropoffDateTime = leg.to.arrival.getTime().toString();
+                String dropoffAddressLatLon = leg.to.lat.toString() + "," + leg.to.lon.toString();
+                String dropoffDateTime = Instant.ofEpochMilli(leg.to.arrival.getTime().getTime()).atZone(ZoneId.of("-5")).minusHours(1).format(DateTimeFormatter.RFC_1123_DATE_TIME);
 
                 String agencyId = leg.agencyId.replaceAll("[^\\d.]", ""); // remove all non-integers
 
