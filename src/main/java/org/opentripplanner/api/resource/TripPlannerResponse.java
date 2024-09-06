@@ -5,16 +5,14 @@ import org.opentripplanner.api.model.ApiLeg;
 import org.opentripplanner.api.model.ApiTripPlan;
 import org.opentripplanner.api.model.ApiTripSearchMetadata;
 import org.opentripplanner.api.model.error.PlannerError;
-import org.opentripplanner.ext.flex.FlexTripsMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.UriInfo;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Calendar;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -90,6 +88,10 @@ public class TripPlannerResponse {
                     LOG.error("address: " + leg.from.name + "  was parsed incorrectly");
                     return;
                 }
+                if (addressArray.length > 5) {
+                    LOG.warn("Possible malformed address " + leg.from.name + " detected; truncating");
+                    addressArray = Arrays.copyOfRange(addressArray,addressArray.length-5,addressArray.length);
+                }
                 String pickupAddressStreetAddress = addressArray[0].strip();
                 String pickupAddressLocation = addressArray[1].strip() + "," + addressArray[2];
                 String pickupAddressPostalCode = addressArray[3].strip();
@@ -100,6 +102,10 @@ public class TripPlannerResponse {
                 if (addressArray.length < 5) {
                     LOG.error("address: " + leg.to.name + "  was parsed incorrectly");
                     return;
+                }
+                if (addressArray.length > 5) {
+                    LOG.warn("Possible malformed address " + leg.to.name + " detected; truncating");
+                    addressArray = Arrays.copyOfRange(addressArray,addressArray.length-5,addressArray.length);
                 }
 
                 String dropoffAddressStreetAddress = addressArray[0].strip();
