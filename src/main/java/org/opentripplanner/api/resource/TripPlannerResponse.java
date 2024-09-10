@@ -83,6 +83,9 @@ public class TripPlannerResponse {
     public void setBookingUrlParams() {
         for (ApiItinerary i : plan.itineraries) {
             for (ApiLeg leg : i.legs) {
+                if (leg.dropOffBookingInfo == null || leg.agencyId == null) {
+                    continue;
+                }
                 String[] addressArray = leg.from.name.split(",");
                 if (addressArray.length < 5) {
                     LOG.error("address: " + leg.from.name + "  was parsed incorrectly");
