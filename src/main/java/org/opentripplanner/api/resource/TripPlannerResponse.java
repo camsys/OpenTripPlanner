@@ -12,6 +12,7 @@ import javax.ws.rs.core.UriInfo;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -86,6 +87,18 @@ public class TripPlannerResponse {
                 if (leg.dropOffBookingInfo == null || leg.agencyId == null) {
                     continue;
                 }
+                List<String> validAgencyNames = new ArrayList<>(Arrays.asList("ZIPS","OTTER","ROLLING","ROCHESTER"));
+                boolean hasProperAgency = false;
+                for (String validAgencyName : validAgencyNames) {
+                    if (leg.agencyId.toUpperCase().contains(validAgencyName)) {
+                        hasProperAgency = true;
+                    }
+                }
+                if (!hasProperAgency) {
+                    continue;
+                }
+
+
                 String[] addressArray = leg.from.name.split(",");
                 if (addressArray.length < 5) {
                     LOG.error("address: " + leg.from.name + "  was parsed incorrectly");
