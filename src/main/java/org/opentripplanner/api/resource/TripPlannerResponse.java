@@ -93,7 +93,9 @@ public class TripPlannerResponse {
                 }
                 if (addressArray.length > 5) {
                     LOG.warn("Possible malformed address " + leg.from.name + " detected; truncating");
+                    String addressStart = String.join(",", Arrays.copyOfRange(addressArray,0,addressArray.length-4));
                     addressArray = Arrays.copyOfRange(addressArray,addressArray.length-5,addressArray.length);
+                    addressArray[0] = addressStart;
                 }
                 String pickupAddressStreetAddress = addressArray[0].strip();
                 String pickupAddressLocation = addressArray[1].strip() + "," + addressArray[2];
@@ -108,7 +110,9 @@ public class TripPlannerResponse {
                 }
                 if (addressArray.length > 5) {
                     LOG.warn("Possible malformed address " + leg.to.name + " detected; truncating");
+                    String addressStart = String.join(",", Arrays.copyOfRange(addressArray,0,addressArray.length-4));
                     addressArray = Arrays.copyOfRange(addressArray,addressArray.length-5,addressArray.length);
+                    addressArray[0] = addressStart;
                 }
 
                 String dropoffAddressStreetAddress = addressArray[0].strip();
