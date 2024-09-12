@@ -90,7 +90,7 @@ public class TripPlannerResponse {
                 List<String> validAgencyNames = new ArrayList<>(Arrays.asList("ZIPS","OTTER","ROLLING","ROCHESTER"));
                 boolean hasProperAgency = false;
                 for (String validAgencyName : validAgencyNames) {
-                    if (leg.agencyId.toUpperCase().contains(validAgencyName)) {
+                    if (leg.agencyId.toUpperCase().contains(validAgencyName) || (leg.agencyName != null && leg.agencyName.toUpperCase().contains(validAgencyName))) {
                         hasProperAgency = true;
                     }
                 }
