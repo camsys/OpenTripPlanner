@@ -138,6 +138,7 @@ public class TripPlannerResponse {
 
                 String agencyContact = leg.dropOffBookingInfo.getContactInfo().getPhoneNumber().replace("(","").replace(")","");
                 String agencyName = leg.agencyName;
+                String arriveBy = requestParameters.get("arriveBy") != null ? requestParameters.get("arriveBy") : "false";
 
                 StringBuilder sb = new StringBuilder();
                 sb.append("https://booking.qa.mndot.camsys-apps.com/booking-portal?");
@@ -166,6 +167,8 @@ public class TripPlannerResponse {
                 sb.append("agencyContact=").append(agencyContact);
                 sb.append("&");
                 sb.append("agencyName=").append(agencyName);
+                sb.append("&");
+                sb.append("arriveBy=").append(arriveBy);
 
                 leg.bookingUrl = sb.toString();
             }
