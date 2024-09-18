@@ -9,6 +9,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.UriInfo;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -81,7 +86,7 @@ public class TripPlannerResponse {
         this.error = error;
     }
 
-    public void setBookingUrlParams() {
+    public void setBookingUrlParams() throws IOException, InterruptedException {
         for (ApiItinerary i : plan.itineraries) {
             for (ApiLeg leg : i.legs) {
                 if (leg.dropOffBookingInfo == null || leg.agencyId == null) {
@@ -98,39 +103,46 @@ public class TripPlannerResponse {
                     continue;
                 }
 
-
-                String[] addressArray = leg.from.name.split(",");
-                if (addressArray.length < 5) {
-                    LOG.error("address: " + leg.from.name + "  was parsed incorrectly");
-                    return;
-                }
-                if (addressArray.length > 5) {
+                ArrayList<String> addressList = new ArrayList<>(Arrays.asList(leg.from.name.split(",")));
+                if (addressList.size() < 5) {
+                    String zip = reverseGeocodeZip(leg.from.lon.toString() + "%2C" + leg.from.lat.toString());
+                    if (zip == null) {
+                        LOG.error("address: " + leg.from.name + "  was parsed incorrectly");
+                        return;
+                    }
+                    addressList.add(addressList.size() - 1, zip);
+                } else if (addressList.size() > 5) {
                     LOG.warn("Possible malformed address " + leg.from.name + " detected; truncating");
-                    String addressStart = String.join(",", Arrays.copyOfRange(addressArray,0,addressArray.length-4));
-                    addressArray = Arrays.copyOfRange(addressArray,addressArray.length-5,addressArray.length);
-                    addressArray[0] = addressStart;
+                    String addressStart = String.join(",", addressList.subList(0,addressList.size()-4));
+                    addressList = new ArrayList<>(addressList.subList(addressList.size()-5,addressList.size()));
+                    addressList.remove(0);
+                    addressList.add(0,addressStart);
                 }
-                String pickupAddressStreetAddress = addressArray[0].strip();
-                String pickupAddressLocation = addressArray[1].strip() + "," + addressArray[2];
-                String pickupAddressPostalCode = addressArray[3].strip();
+                String pickupAddressStreetAddress = addressList.get(0).strip();
+                String pickupAddressLocation = addressList.get(1).strip() + "," + addressList.get(2);
+                String pickupAddressPostalCode = addressList.get(3).strip();
                 String pickupAddressLatLon = leg.from.lat.toString() + "," + leg.from.lon.toString();
                 String pickupDateTime = Instant.ofEpochMilli(leg.from.departure.getTime().getTime()).atZone(ZoneId.of("-5")).minusHours(1).format(DateTimeFormatter.RFC_1123_DATE_TIME);
 
-                addressArray = leg.to.name.split(",");
-                if (addressArray.length < 5) {
-                    LOG.error("address: " + leg.to.name + "  was parsed incorrectly");
-                    return;
-                }
-                if (addressArray.length > 5) {
+                addressList = new ArrayList<>(Arrays.asList(leg.to.name.split(",")));
+                if (addressList.size() < 5) {
+                    String zip = reverseGeocodeZip(leg.to.lon.toString() + "%2C" + leg.to.lat.toString());
+                    if (zip == null) {
+                        LOG.error("address: " + leg.to.name + "  was parsed incorrectly");
+                        return;
+                    }
+                    addressList.add(addressList.size() - 1, zip);
+                } else if (addressList.size() > 5) {
                     LOG.warn("Possible malformed address " + leg.to.name + " detected; truncating");
-                    String addressStart = String.join(",", Arrays.copyOfRange(addressArray,0,addressArray.length-4));
-                    addressArray = Arrays.copyOfRange(addressArray,addressArray.length-5,addressArray.length);
-                    addressArray[0] = addressStart;
+                    String addressStart = String.join(",", addressList.subList(0,addressList.size()-4));
+                    addressList = new ArrayList<>(addressList.subList(addressList.size()-5,addressList.size()));
+                    addressList.remove(0);
+                    addressList.add(0,addressStart);
                 }
 
-                String dropoffAddressStreetAddress = addressArray[0].strip();
-                String dropoffAddressLocation = addressArray[1].strip() + "," + addressArray[2];
-                String dropoffAddressPostalCode = addressArray[3].strip();
+                String dropoffAddressStreetAddress = addressList.get(0).strip();
+                String dropoffAddressLocation = addressList.get(1).strip() + "," + addressList.get(2);
+                String dropoffAddressPostalCode = addressList.get(3).strip();
                 String dropoffAddressLatLon = leg.to.lat.toString() + "," + leg.to.lon.toString();
                 String dropoffDateTime = Instant.ofEpochMilli(leg.to.arrival.getTime().getTime()).atZone(ZoneId.of("-5")).minusHours(1).format(DateTimeFormatter.RFC_1123_DATE_TIME);
 
@@ -173,5 +185,20 @@ public class TripPlannerResponse {
                 leg.bookingUrl = sb.toString();
             }
         }
+    }
+
+    private String reverseGeocodeZip(String latlon) throws IOException, InterruptedException {
+        HttpClient client = HttpClient.newBuilder().build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode?location=" + latlon + "&maxLocations=1&f=json&outFields=postal&featureTypes=postal"))
+                .header("Content-Type", "application/json")
+                .GET()
+                .build();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() != 200) {
+            return "";
+        }
+        String postal = response.body().substring(22,27);
+        return postal;
     }
 }
