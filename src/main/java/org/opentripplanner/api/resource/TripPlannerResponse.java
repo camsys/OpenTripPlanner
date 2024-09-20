@@ -104,6 +104,10 @@ public class TripPlannerResponse {
                 }
 
                 ArrayList<String> addressList = new ArrayList<>(Arrays.asList(leg.from.name.split(",")));
+                if (addressList.size() < 4) {
+                    LOG.warn("Address could not be parsed: " + leg.from.name);
+                    return;
+                }
                 if (addressList.size() < 5) {
                     String zip = reverseGeocodeZip(leg.from.lon.toString() + "%2C" + leg.from.lat.toString());
                     if (zip == null) {
@@ -125,6 +129,10 @@ public class TripPlannerResponse {
                 String pickupDateTime = Instant.ofEpochMilli(leg.from.departure.getTime().getTime()).atZone(ZoneId.of("-5")).minusHours(1).format(DateTimeFormatter.RFC_1123_DATE_TIME);
 
                 addressList = new ArrayList<>(Arrays.asList(leg.to.name.split(",")));
+                if (addressList.size() < 4) {
+                    LOG.warn("Address could not be parsed: " + leg.from.name);
+                    return;
+                }
                 if (addressList.size() < 5) {
                     String zip = reverseGeocodeZip(leg.to.lon.toString() + "%2C" + leg.to.lat.toString());
                     if (zip == null) {
