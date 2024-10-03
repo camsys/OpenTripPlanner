@@ -126,7 +126,7 @@ public class TripPlannerResponse {
                 String pickupAddressLocation = addressList.get(1).strip() + "," + addressList.get(2);
                 String pickupAddressPostalCode = addressList.get(3).strip();
                 String pickupAddressLatLon = leg.from.lat.toString() + "," + leg.from.lon.toString();
-                String pickupDateTime = Instant.ofEpochMilli(leg.from.departure.getTime().getTime()).atZone(ZoneId.of("-5")).minusHours(1).format(DateTimeFormatter.RFC_1123_DATE_TIME);
+                String pickupDateTime = Instant.ofEpochMilli(leg.from.departure.getTime().getTime()).atZone(ZoneId.of("-5")).format(DateTimeFormatter.RFC_1123_DATE_TIME);
 
                 addressList = new ArrayList<>(Arrays.asList(leg.to.name.split(",")));
                 if (addressList.size() < 4) {
@@ -152,7 +152,7 @@ public class TripPlannerResponse {
                 String dropoffAddressLocation = addressList.get(1).strip() + "," + addressList.get(2);
                 String dropoffAddressPostalCode = addressList.get(3).strip();
                 String dropoffAddressLatLon = leg.to.lat.toString() + "," + leg.to.lon.toString();
-                String dropoffDateTime = Instant.ofEpochMilli(leg.to.arrival.getTime().getTime()).atZone(ZoneId.of("-5")).minusHours(1).format(DateTimeFormatter.RFC_1123_DATE_TIME);
+                String dropoffDateTime = Instant.ofEpochMilli(leg.to.arrival.getTime().getTime()).atZone(ZoneId.of("-5")).format(DateTimeFormatter.RFC_1123_DATE_TIME);
 
                 String agencyId = leg.agencyId.replaceAll("[^\\d.]", ""); // remove all non-integers
 
