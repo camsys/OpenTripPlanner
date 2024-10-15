@@ -83,8 +83,8 @@ public class FlexRouter {
   ) {
     this.graph = graph;
     this.flexIndex = graph.index.getFlexIndex();
-    this.accessFlexPathCalculator = new StreetFlexPathCalculator(graph, false, isDirectFlexOnly);
-    this.egressFlexPathCalculator = new StreetFlexPathCalculator(graph, true, isDirectFlexOnly);
+    this.accessFlexPathCalculator = new StreetFlexPathCalculator(graph, false);
+    this.egressFlexPathCalculator = new StreetFlexPathCalculator(graph, true);
     this.streetAccesses = streetAccesses;
     this.streetEgresses = egressTransfers;
     this.request = request;
