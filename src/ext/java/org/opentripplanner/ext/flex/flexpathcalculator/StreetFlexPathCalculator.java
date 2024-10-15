@@ -2,7 +2,6 @@ package org.opentripplanner.ext.flex.flexpathcalculator;
 
 import org.locationtech.jts.geom.LineString;
 import org.onebusaway.gtfs.model.StopTime;
-import org.opentripplanner.common.model.P2;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
 import org.opentripplanner.ext.flex.trip.FlexTripStopTime;
 import org.opentripplanner.ext.flex.trip.ScheduledDeviatedTrip;
@@ -42,7 +41,7 @@ public class StreetFlexPathCalculator implements FlexPathCalculator {
 
   private final Graph graph;
 
-  private final Map<P2<Vertex>, ShortestPathTree> cache = new HashMap<>();
+  private final Map<Vertex, ShortestPathTree> cache = new HashMap<>();
   
   private final boolean reverseDirection;
 
@@ -62,13 +61,12 @@ public class StreetFlexPathCalculator implements FlexPathCalculator {
     Vertex destinationVertex = reverseDirection ? fromv : tov;
 
     ShortestPathTree shortestPathTree;
-    P2<Vertex> key = new P2<>(originVertex,destinationVertex);
-    if (cache.containsKey(key)) {
-      shortestPathTree = cache.get(key);
+    if (cache.containsKey(originVertex)) {
+      shortestPathTree = cache.get(originVertex);
     } else {
       shortestPathTree = routeToMany(originVertex, destinationVertex);
 
-      cache.put(key, shortestPathTree);
+      cache.put(originVertex, shortestPathTree);
     }
 
     GraphPath path = shortestPathTree.getPath(destinationVertex, false);
