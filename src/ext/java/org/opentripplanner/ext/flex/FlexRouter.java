@@ -78,7 +78,8 @@ public class FlexRouter {
       int additionalFutureSearchDays,
       Collection<NearbyStop> streetAccesses,
       Collection<NearbyStop> egressTransfers,
-      RoutingRequest request
+      RoutingRequest request,
+      Boolean isDirectFlexOnly
   ) {
     this.graph = graph;
     this.flexIndex = graph.index.getFlexIndex();
@@ -93,6 +94,11 @@ public class FlexRouter {
     this.startOfTime = DateMapper.asStartOfService(searchDate, tz);
     this.departureTime = DateMapper.secondsSinceStartOfTime(startOfTime, searchInstant);
     this.arriveBy = arriveBy;
+
+      if (!isDirectFlexOnly) {
+          additionalPastSearchDays = 0;
+          additionalFutureSearchDays = 1;
+      }
 
     int totalDays = additionalPastSearchDays + 1 + additionalFutureSearchDays;
     this.dates = new FlexServiceDate[totalDays];
