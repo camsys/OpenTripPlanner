@@ -161,7 +161,13 @@ public class TripPlannerResponse {
                 String arriveBy = requestParameters.get("arriveBy") != null ? requestParameters.get("arriveBy") : "false";
 
                 StringBuilder sb = new StringBuilder();
-                sb.append("https://booking.qa.mndot.camsys-apps.com/booking-portal?");
+
+                if (leg.dropOffBookingInfo.getContactInfo().getBookingUrl() == null) {
+                    LOG.info("No base booking URL found");
+                    continue;
+                }
+
+                sb.append(leg.dropOffBookingInfo.getContactInfo().getBookingUrl() + "?");
                 sb.append("pickupAddressStreetAddress=").append(pickupAddressStreetAddress);
                 sb.append("&");
                 sb.append("pickupAddressLocation=").append(pickupAddressLocation);
