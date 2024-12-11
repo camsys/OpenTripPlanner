@@ -201,20 +201,20 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 
 		    	AgencyAndId complexId = new AgencyAndId(gtfsId.getAgencyId(), getGraphIndex(environment)
 		    			.mtaSubwayStations
-		    			.get("GTFS Stop ID")
+		    			.get("gtfs_stop_id")
 		    			.get(gtfsId)
 		    			.get(0)
-		    			.get("Complex ID"));
+		    			.get("complex_id"));
 		    	
 		    	List<HashMap<String, String>> complexRecord = getGraphIndex(environment)
 		    			.mtaSubwayStations
-		    			.get("Complex ID")
+		    			.get("complex_id")
 		    			.get(complexId);
 		    	
 		    	if(complexRecord != null) {		    	
 		    		List<AgencyAndId> gtfsIds = 
 		    			complexRecord.stream().map(r -> { 
-		    				return new AgencyAndId(e.getId().getAgencyId(), r.get("GTFS Stop ID"));
+		    				return new AgencyAndId(e.getId().getAgencyId(), r.get("gtfs_stop_id"));
 		    			})
 		    			.collect(Collectors.toList());
 		    			
@@ -392,14 +392,14 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 
 	    	String candidateComplexID = getGraphIndex(environment)
 	    			.mtaSubwayStations
-	    			.get("GTFS Stop ID")
+	    			.get("gtfs_stop_id")
 	    			.get(gtfsId)
 	    			.get(0)
-	    			.get("Complex ID");
+	    			.get("complex_id");
 	    	
 	    	boolean complexIdExists = getGraphIndex(environment)
 	    			.mtaSubwayComplexes
-	    			.get("Complex ID")
+	    			.get("complex_id")
 	    			.get(new AgencyAndId(e.getId().getAgencyId(), candidateComplexID)) != null;
 	    	
 	    	return complexIdExists ? candidateComplexID : null;
@@ -414,10 +414,10 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	    	
 	    	return getGraphIndex(environment)
 	    			.mtaSubwayStations
-	    			.get("GTFS Stop ID")
+	    			.get("gtfs_stop_id")
 	    			.get(gtfsId)
 	    			.get(0)
-	    			.get("Station ID");
+	    			.get("station_id");
 	    };	
 	}
 	
@@ -469,10 +469,10 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 	    	
 	    	return GraphQLNyMtaAdaFlag.values()[Integer.parseInt(getGraphIndex(environment)
 	    			.mtaSubwayStations
-	    			.get("GTFS Stop ID")
+	    			.get("gtfs_stop_id")
 	    			.get(gtfsId)
 	    			.get(0)
-	    			.get("ADA"))].name();
+	    			.get("ada"))].name();
 	    };	
 	}
 
@@ -484,10 +484,10 @@ public class GraphQLStopImpl implements GraphQLDataFetchers.GraphQLStop {
 
 	    	return getGraphIndex(environment)
 	    			.mtaSubwayStations
-	    			.get("GTFS Stop ID")
+	    			.get("gtfs_stop_id")
 	    			.get(gtfsId)
 	    			.get(0)
-	    			.get("ADA Notes");
+	    			.get("ada_notes");
 		};
 	}
 	

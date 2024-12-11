@@ -76,7 +76,7 @@ public class RemoteCSVBackedHashMap extends HashMap<String, HashMap<AgencyAndId,
 		            		header = splitLine;
 		            		
 		            		for(String column : header) {
-		            			if(column.endsWith("ID")) {
+		            			if(column.toUpperCase().endsWith("ID")) {
 		            				keys.add(column);
 		            			}
 		            		}		            		
