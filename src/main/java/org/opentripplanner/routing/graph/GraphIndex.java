@@ -915,10 +915,10 @@ public class GraphIndex {
                     SphericalDistanceLibrary.metersToDegrees(CLUSTER_RADIUS));
             for (TransitStop ts1 : stopSpatialIndex.query(env)) {
                 Stop s1 = ts1.getStop();
-//                if(s1.getName() == null) {
-//                    LOG.warn("Stop " + s1.getId() + " has an empty name, and so cannot be clustered by name; skipping.");
-//                    continue;
-//                }
+                if(s1.getName() == null) {
+                    LOG.warn("Stop " + s1.getId() + " has an empty name, and so cannot be clustered by name; skipping.");
+                    continue;
+                }
                 double geoDistance = SphericalDistanceLibrary.fastDistance(
                         s0.getLat(), s0.getLon(), s1.getLat(), s1.getLon());
                 if (geoDistance < CLUSTER_RADIUS) {
