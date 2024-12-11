@@ -278,8 +278,8 @@ public class GraphIndex {
         // MTA specific services only used at runtime, not during bundle building
     	if(System.getProperty("isBundleBuilder") == null || !System.getProperty("isBundleBuilder").equals("true")) {
 	    	try {
-	    		mtaSubwayStations = new RemoteCSVBackedHashMap("http://web.mta.info/developers/data/nyct/subway/Stations.csv", "MTASBWY");
-	    		mtaSubwayComplexes = new RemoteCSVBackedHashMap("http://web.mta.info/developers/data/nyct/subway/StationComplexes.csv", "MTASBWY");
+	    		mtaSubwayStations = new RemoteCSVBackedHashMap("https://data.ny.gov/resource/39hk-dx4f.csv", "MTASBWY");
+	    		mtaSubwayComplexes = new RemoteCSVBackedHashMap("https://data.ny.gov/resource/4ta5-wz5s.csv", "MTASBWY");
 	    		lirrSolari = new LIRRSolariDataService(graph);
 	    	} catch(Exception e) {
 	    		e.printStackTrace();
@@ -915,6 +915,10 @@ public class GraphIndex {
                     SphericalDistanceLibrary.metersToDegrees(CLUSTER_RADIUS));
             for (TransitStop ts1 : stopSpatialIndex.query(env)) {
                 Stop s1 = ts1.getStop();
+                if(s1.getName() == null) {
+                    LOG.warn("Stop " + s1.getId() + " has an empty name, and so cannot be clustered by name; skipping.");
+                    continue;
+                }
                 double geoDistance = SphericalDistanceLibrary.fastDistance(
                         s0.getLat(), s0.getLon(), s1.getLat(), s1.getLon());
                 if (geoDistance < CLUSTER_RADIUS) {
