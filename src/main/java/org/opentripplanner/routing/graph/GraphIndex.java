@@ -277,9 +277,12 @@ public class GraphIndex {
 
         // MTA specific services only used at runtime, not during bundle building
     	if(System.getProperty("isBundleBuilder") == null || !System.getProperty("isBundleBuilder").equals("true")) {
+            String subwayStations = System.getProperty("SubwayStationsCsv", "https://data.ny.gov/resource/39hk-dx4f.csv");
+            String subwayComplexes = System.getProperty("SubwayComplexesCsv", "https://data.ny.gov/resource/4ta5-wz5s.csv");
+
 	    	try {
-	    		mtaSubwayStations = new RemoteCSVBackedHashMap("https://data.ny.gov/resource/39hk-dx4f.csv", "MTASBWY");
-	    		mtaSubwayComplexes = new RemoteCSVBackedHashMap("https://data.ny.gov/resource/4ta5-wz5s.csv", "MTASBWY");
+	    		mtaSubwayStations = new RemoteCSVBackedHashMap().process(subwayStations, "MTASBWY");
+	    		mtaSubwayComplexes = new RemoteCSVBackedHashMap().process(subwayComplexes, "MTASBWY");
 	    		lirrSolari = new LIRRSolariDataService(graph);
 	    	} catch(Exception e) {
 	    		e.printStackTrace();
