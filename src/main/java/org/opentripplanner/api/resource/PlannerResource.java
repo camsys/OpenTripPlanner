@@ -8,7 +8,12 @@ import org.opentripplanner.api.mapping.TripPlanMapper;
 import org.opentripplanner.api.mapping.TripSearchMetadataMapper;
 import org.opentripplanner.api.model.error.PlannerError;
 import org.opentripplanner.common.geometry.SphericalDistanceLibrary;
+import org.opentripplanner.ext.flex.trip.FlexTrip;
+import org.opentripplanner.ext.flex.trip.FlexTripStopTime;
+import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.model.GenericLocation;
+import org.opentripplanner.model.Trip;
+import org.opentripplanner.model.calendar.ServiceDate;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.routing.RoutingService;
 import org.opentripplanner.routing.api.request.RoutingRequest;
@@ -16,17 +21,18 @@ import org.opentripplanner.routing.api.response.RoutingResponse;
 import org.opentripplanner.standalone.server.Router;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import shadow.org.assertj.core.internal.bytebuddy.implementation.bytecode.Throw;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Set;
 
 /**
  * This is the primary entry point for the trip planning web service.
@@ -121,17 +127,45 @@ public class PlannerResource extends RoutingResource {
     }
 
     @GET
-    @Path("/validate")
+    @Path("/validate/{date}/{tripId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public TripValidationResponse validate(@Context UriInfo uriInfo, @Context Request grizzlyRequest) {
+    public TripValidationResponse validate(@PathParam("date") long ms, @PathParam("tripId") String tripId) {
 
-        TripPlannerResponse response = plan(uriInfo, grizzlyRequest);
         TripValidationResponse validationResponse = new TripValidationResponse();
-        validationResponse.setValidTripPlan(response.getPlan().itineraries.size() > 0);
+        Router router = otpServer.getRouter();
+        RoutingService routingService = new RoutingService(router.graph);
+        FlexTrip ft = router.graph.flexTripsById.get(FeedScopedId.parseId(tripId));
+        FlexTripStopTime[] ftst = ft.getStopTimes();
+
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(ms);
+        ServiceDate travelServiceDate = new ServiceDate(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
+        Set<ServiceDate> serviceDatesForServiceId = routingService.getCalendarService().getServiceDatesForServiceId(FeedScopedId.parseId(tripId));
+
+        if (serviceDatesForServiceId.contains(travelServiceDate)) {
+            validationResponse.setValidTripPlan(false);
+            return validationResponse;
+        }
+
+        Calendar calDate = Calendar.getInstance();
+        calDate.set(cal.get(Calendar.YEAR),cal.get(Calendar.MONTH),cal.get(Calendar.DAY_OF_MONTH));
+        long msAfterMidnight = (cal.getTimeInMillis() - calDate.getTimeInMillis())/1000;
+
+        for (FlexTripStopTime st : ftst) {
+            if (msAfterMidnight > st.flexWindowStart && msAfterMidnight < st.flexWindowEnd) {
+                validationResponse.setValidTripPlan(true);
+                return validationResponse;
+            }
+        }
+//        TripPlannerResponse response = plan(uriInfo, grizzlyRequest);
+//        TripValidationResponse validationResponse = new TripValidationResponse();
+//        validationResponse.setValidTripPlan(response.getPlan().itineraries.size() > 0);
 
         /* Log this request if such logging is enabled. */
 //        logRequest(grizzlyRequest, request, router, res);
 
+        validationResponse.setValidTripPlan(false);
         return validationResponse;
     }
 
