@@ -3,11 +3,9 @@ package org.opentripplanner.routing.algorithm.filterchain.filters;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.routing.algorithm.filterchain.ItineraryFilter;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class FlexFilter implements ItineraryFilter {
@@ -34,6 +32,7 @@ public class FlexFilter implements ItineraryFilter {
 				  .filter(it -> it != null)
 				  .collect(Collectors.toList())
 				  .toArray(new String[] {}));
+//		  routePathKey = routePathKey.concat(String.valueOf(itin.startTime().getTimeInMillis()));
 
 		  List<Leg> walkingLegs = itin.legs.stream()
 				  .filter(it -> it.isWalkingLeg())
@@ -66,11 +65,14 @@ public class FlexFilter implements ItineraryFilter {
 			  itinerariesByRoutePath.put(routePathKey, itin);
 			  continue;
 		  }
-		  
+
 		  if(itin.generalizedCost < existingItin.generalizedCost) {
 			  itinerariesByRoutePath.put(routePathKey, itin);
-		  	  continue;
-	  	  }
+			  continue;
+		  } else if (itin.generalizedCost == existingItin.generalizedCost && itin.startTime().before(existingItin.startTime())) {
+			  itinerariesByRoutePath.put(routePathKey, itin);
+			  continue;
+		  }
 	  }	 
 	  
 	  // remove walking all the way options
