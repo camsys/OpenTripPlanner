@@ -19,6 +19,11 @@ public class OtpConfig {
      */
     public static int flexMaxTripDurationInHours = 1;
 
+    /**
+     * This is used for TDS booking
+     */
+    public static String environment = "";
+
     public final JsonNode rawConfig;
 
     public final Map<OTPFeature, Boolean> otpFeatures;

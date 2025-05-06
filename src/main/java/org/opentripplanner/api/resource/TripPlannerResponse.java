@@ -5,6 +5,7 @@ import org.opentripplanner.api.model.ApiLeg;
 import org.opentripplanner.api.model.ApiTripPlan;
 import org.opentripplanner.api.model.ApiTripSearchMetadata;
 import org.opentripplanner.api.model.error.PlannerError;
+import org.opentripplanner.standalone.config.OtpConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -162,12 +163,18 @@ public class TripPlannerResponse {
 
                 StringBuilder sb = new StringBuilder();
 
-                if (leg.dropOffBookingInfo.getContactInfo().getBookingUrl() == null) {
+                String baseURL = leg.dropOffBookingInfo.getContactInfo().getBookingUrl();
+
+                if (OtpConfig.environment.toUpperCase().equals("DEV")) {
+                    baseURL = "https://booking.dev.mndot.camsys-apps.com/booking-portal";
+                } else if (OtpConfig.environment.toUpperCase().equals("QA")) {
+                    baseURL = "https://booking.qa.mndot.camsys-apps.com/booking-portal";
+                } else if (leg.dropOffBookingInfo.getContactInfo().getBookingUrl() == null) {
                     LOG.info("No base booking URL found");
                     continue;
                 }
 
-                sb.append(leg.dropOffBookingInfo.getContactInfo().getBookingUrl() + "?");
+                sb.append(baseURL + "?");
                 sb.append("pickupAddressStreetAddress=").append(pickupAddressStreetAddress);
                 sb.append("&");
                 sb.append("pickupAddressLocation=").append(pickupAddressLocation);
