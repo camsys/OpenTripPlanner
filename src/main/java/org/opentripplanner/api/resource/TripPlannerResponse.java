@@ -164,11 +164,13 @@ public class TripPlannerResponse {
                 StringBuilder sb = new StringBuilder();
 
                 String baseURL = leg.dropOffBookingInfo.getContactInfo().getBookingUrl();
-
+                LOG.info("ENV = " + OtpConfig.environment);
                 if (OtpConfig.environment.toUpperCase().equals("DEV")) {
                     baseURL = "https://booking.dev.mndot.camsys-apps.com/booking-portal";
+                    LOG.info("Using DEV TDS booking");
                 } else if (OtpConfig.environment.toUpperCase().equals("QA")) {
                     baseURL = "https://booking.qa.mndot.camsys-apps.com/booking-portal";
+                    LOG.info("Using QA TDS booking");
                 } else if (leg.dropOffBookingInfo.getContactInfo().getBookingUrl() == null) {
                     LOG.info("No base booking URL found");
                     continue;
