@@ -47,6 +47,7 @@ public class OtpConfig {
 
         this.configVersion = adapter.asText("configVersion", null);
         flexMaxTripDurationInHours = adapter.asInt("flexMaxTripDurationInHours", 1);
+        environment = adapter.asText("environment", "PROD");
         this.otpFeatures = adapter.asEnumMap(
                 "otpFeatures",
                 OTPFeature.class,
