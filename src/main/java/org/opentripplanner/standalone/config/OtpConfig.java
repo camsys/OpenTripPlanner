@@ -22,7 +22,7 @@ public class OtpConfig {
     /**
      * This is used for TDS booking
      */
-    public static String environment = "";
+    public static String environment;
 
     public final JsonNode rawConfig;
 
