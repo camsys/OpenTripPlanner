@@ -204,6 +204,8 @@ public class TripPlannerResponse {
                 sb.append("agencyName=").append(agencyName);
                 sb.append("&");
                 sb.append("arriveBy=").append(arriveBy);
+                sb.append("&");
+                sb.append("tripId=").append(leg.tripId);
 
                 leg.bookingUrl = sb.toString();
             }
