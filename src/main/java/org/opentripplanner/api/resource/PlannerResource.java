@@ -144,6 +144,7 @@ public class PlannerResource extends RoutingResource {
         Set<ServiceDate> serviceDatesForServiceId = routingService.getCalendarService().getServiceDatesForServiceId(FeedScopedId.parseId(tripId));
 
         if (!serviceDatesForServiceId.contains(travelServiceDate)) {
+            LOG.info(serviceDatesForServiceId + " does not contain " + travelServiceDate);
             validationResponse.setValidTripPlan(false);
             return validationResponse;
         }
@@ -157,6 +158,7 @@ public class PlannerResource extends RoutingResource {
                 validationResponse.setValidTripPlan(true);
                 return validationResponse;
             }
+            LOG.info(msAfterMidnight + " is not within " + st.flexWindowStart + " to " + st.flexWindowEnd);
         }
 //        TripPlannerResponse response = plan(uriInfo, grizzlyRequest);
 //        TripValidationResponse validationResponse = new TripValidationResponse();
