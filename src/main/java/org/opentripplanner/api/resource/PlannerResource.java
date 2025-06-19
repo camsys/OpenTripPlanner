@@ -135,13 +135,19 @@ public class PlannerResource extends RoutingResource {
         Router router = otpServer.getRouter();
         RoutingService routingService = new RoutingService(router.graph);
         FlexTrip ft = router.graph.flexTripsById.get(FeedScopedId.parseId(tripId));
+        if (ft == null) {
+            LOG.info("Trip " + tripId + " not found");
+            validationResponse.setValidTripPlan(false);
+            return validationResponse;
+        }
         FlexTripStopTime[] ftst = ft.getStopTimes();
 
 
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(ms);
-        ServiceDate travelServiceDate = new ServiceDate(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
-        Set<ServiceDate> serviceDatesForServiceId = routingService.getCalendarService().getServiceDatesForServiceId(FeedScopedId.parseId(tripId));
+        ServiceDate travelServiceDate = new ServiceDate(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
+        FeedScopedId serviceId = ft.getTrip().getServiceId();
+        Set<ServiceDate> serviceDatesForServiceId = routingService.getCalendarService().getServiceDatesForServiceId(serviceId);
 
         if (!serviceDatesForServiceId.contains(travelServiceDate)) {
             LOG.info(serviceDatesForServiceId + " does not contain " + travelServiceDate);
@@ -150,6 +156,7 @@ public class PlannerResource extends RoutingResource {
         }
 
         Calendar calDate = Calendar.getInstance();
+        calDate.clear();
         calDate.set(cal.get(Calendar.YEAR),cal.get(Calendar.MONTH),cal.get(Calendar.DAY_OF_MONTH));
         long msAfterMidnight = (cal.getTimeInMillis() - calDate.getTimeInMillis())/1000;
 
