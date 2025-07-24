@@ -154,6 +154,8 @@ public class PlannerResource extends RoutingResource {
             validationResponse.setValidTripPlan(false);
             return validationResponse;
         }
+        LOG.info(serviceDatesForServiceId + " DOES contain " + travelServiceDate);
+
 
         Calendar calDate = Calendar.getInstance();
         calDate.clear();
@@ -162,6 +164,7 @@ public class PlannerResource extends RoutingResource {
 
         for (FlexTripStopTime st : ftst) {
             if (msAfterMidnight > st.flexWindowStart && msAfterMidnight < st.flexWindowEnd) {
+                LOG.info(msAfterMidnight + " IS within " + st.flexWindowStart + " to " + st.flexWindowEnd);
                 validationResponse.setValidTripPlan(true);
                 return validationResponse;
             }
