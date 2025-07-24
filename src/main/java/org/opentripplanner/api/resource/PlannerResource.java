@@ -33,6 +33,7 @@ import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Set;
+import java.util.TimeZone;
 
 /**
  * This is the primary entry point for the trip planning web service.
@@ -143,7 +144,7 @@ public class PlannerResource extends RoutingResource {
         FlexTripStopTime[] ftst = ft.getStopTimes();
 
 
-        Calendar cal = Calendar.getInstance();
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         cal.setTimeInMillis(ms);
         ServiceDate travelServiceDate = new ServiceDate(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
         FeedScopedId serviceId = ft.getTrip().getServiceId();
@@ -157,7 +158,7 @@ public class PlannerResource extends RoutingResource {
         LOG.info(serviceDatesForServiceId + " DOES contain " + travelServiceDate);
 
 
-        Calendar calDate = Calendar.getInstance();
+        Calendar calDate = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         calDate.clear();
         calDate.set(cal.get(Calendar.YEAR),cal.get(Calendar.MONTH),cal.get(Calendar.DAY_OF_MONTH));
         long msAfterMidnight = (cal.getTimeInMillis() - calDate.getTimeInMillis())/1000;
