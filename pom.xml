@@ -59,10 +59,16 @@
             <resource>
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
+                <excludes>
+                    <exclude>**/Message*.properties</exclude>
+                </excludes>
             </resource>
             <resource>
-                <directory>src/ext/resources</directory>
-                <filtering>true</filtering>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <includes>
+                    <include>**/Message*.properties</include>
+                </includes>
             </resource>
             <resource>
                 <directory>src/client</directory>
