@@ -1,3 +1,36 @@
+# CamSys / MnDOT fork: architecture notes
+
+> **Pre-existing file.** The sections from "OTP Architecture" down are **upstream OpenTripPlanner's**
+> architecture document, kept unchanged. This top section was added for the CamSys/MnDOT fork (MN-168).
+> System-level architecture (deployer, UI, hub, TDS, AWS, promotion): see
+> [`mndot-otp-v2-docker/ARCHITECTURE.md`](https://github.com/camsys/mndot-otp-v2-docker/blob/main/ARCHITECTURE.md).
+
+## Where this fork differs from upstream 2.1.0
+
+Compare with `git log --oneline v2.1.0..origin/v2/dev` (several hundred commits). The MnDOT-relevant ones:
+
+| Area | What | Where |
+|---|---|---|
+| Flex / demand-response booking | Each flex leg gets a `bookingUrl` pointing at the TDS booking portal, with pickup/dropoff address (reverse-geocoded), time, agency and `tripId` as query params. The base URL is chosen by `otp-config.json` `"environment"`: `DEV` → `booking.dev.mndot…`, `QA` → `booking.qa.mndot…`. **Any other value, or none, logs "No base booking URL found" and no booking link is generated.** Which value each environment sets is in the per-branch table of the mndot-otp-v2-docker README. | `api/resource/TripPlannerResponse.java`, `api/model/ApiLeg.bookingUrl`, `model/ContactInfo` |
+| Trip validation for booking | `GET /otp/routers/default/validate/{date}/{tripId}`, called by the TDS booking frontend before a booking | `api/resource/PlannerResource.java` |
+| Routing fixes | MNDOT-224 (don't return indirect trips when a direct trip exists), MN-210, flex departure-time and service-day fixes (several reverted in 2024-10) | `routing/algorithm/...` |
+| Fares v2, feed-id handling, loop trips | Various CamSys features shared with other clients (MTA, NYS) | `ext/`, `model/`, `graph_builder/` |
+
+## Runtime shape in MnDOT
+
+- **Entry point:** `org.opentripplanner.standalone.OTPMain`, run as `--load <graphDir>` in prod (plus
+  `--clientFiles <ui dist> --clientPath / --disableNativeClient` to serve the React UI).
+- **Graph:** built offline by `mndot-otp-deployer` (`--build --save`), stored as `graph.obj` in
+  `s3://camsys-mndot-otp-graph/<env>/graph/`. It's a Java-serialized graph, so the loading OTP
+  must be the same code line that built it.
+- **Config:** `otp-config.json` (feature flags `FlexRouting`, `SandboxAPILegacyGraphQLApi`,
+  `flexMaxTripDurationInHours`, `environment`) and `router-config.json` (realtime updaters
+  pointing at `feedservice-mndot-<env>`), both from `mndot-otp-v2-docker/frontend/`.
+- **APIs used by MnDOT clients:** REST `/otp/routers/default/plan` (UI), `/index/feeds` (mobility-hub),
+  `/validate/...` (TDS frontend), legacy GraphQL (sandbox).
+
+---
+
 # OTP Architecture
 OTP is developed over more than 10 years, and most of the design documentation is in the code 
 as comments and JavaDoc. Over the years the complexity have increased, and the natural developer 
